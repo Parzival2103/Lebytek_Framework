@@ -1,0 +1,25 @@
+---
+description: Guardrails para desarrollo asistido por IA en este proyecto
+alwaysApply: true
+---
+
+# Reglas para IA
+
+Al proponer o implementar cambios, la IA debe:
+
+- Respetar la arquitectura oficial de capas (`Presentation`, `Application`, `Domain`, `Infrastructure`, `Kernel`).
+- Ubicar cada clase, modulo o archivo en su capa correspondiente.
+- Mantener convenciones de nombres y estructura existentes.
+- Integrar cambios al sistema actual, sin crear estructuras paralelas.
+
+## La IA no debe
+
+- Crear estructuras fuera de las capas oficiales.
+- Renombrar componentes estructurales existentes sin justificacion.
+- Colocar logica de negocio en `Presentation`.
+- Colocar logica tecnica de infraestructura en `Domain`.
+- Usar `Kernel` para codigo improvisado o de modulo.
+
+## En caso de inconsistencia
+
+- Si detecta una inconsistencia arquitectonica, reportarla claramente antes de modificar.

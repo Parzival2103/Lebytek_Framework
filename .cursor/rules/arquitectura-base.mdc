@@ -1,0 +1,32 @@
+---
+description: Arquitectura base MVC + Onion y responsabilidades por capa
+alwaysApply: true
+---
+
+# Arquitectura base del proyecto
+
+Este proyecto usa arquitectura hibrida MVC + Onion.
+
+## Principios obligatorios
+
+- Separacion estricta de responsabilidades.
+- Bajo acoplamiento entre capas y alta cohesion interna.
+- El dominio del negocio es el nucleo y debe protegerse.
+- La consistencia estructural tiene prioridad sobre la velocidad de implementacion.
+- No crear atajos que salten capas sin justificacion explicita.
+
+## Capas oficiales
+
+- `Presentation`: rutas, controladores, vistas, respuestas HTTP/JSON, validaciones de entrada basicas y adaptadores de entrada/salida.
+- `Application`: casos de uso, orquestacion, DTOs, comandos/consultas y coordinacion entre dominio e infraestructura.
+- `Domain`: entidades, value objects, reglas de negocio, invariantes, contratos e interfaces de repositorio.
+- `Infrastructure`: persistencia, integraciones, implementaciones tecnicas de contratos y servicios externos.
+- `Kernel`: componentes transversales reutilizables (config base, errores base, utilidades comunes y bootstrapping).
+
+## Prohibiciones clave
+
+- `Presentation` no contiene logica de negocio ni queries complejos.
+- `Application` no contiene logica de presentacion ni detalles tecnicos de infraestructura.
+- `Domain` no depende de frameworks, base de datos, `Presentation` ni `Infrastructure`.
+- `Infrastructure` no define reglas de negocio ni flujo de aplicacion.
+- `Kernel` no se usa como carpeta de codigo improvisado ni para negocio de modulos.

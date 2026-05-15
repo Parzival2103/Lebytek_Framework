@@ -1,0 +1,299 @@
+/**
+ * LEBYTEK UI v0.1 — capa visual sobre Bootstrap 5.3
+ * Convive con app.css; clases .ct-* no sustituyen utilidades Bootstrap.
+ */
+
+/* ── Compatibilidad con tokens de tema ───────────────────────── */
+:root {
+  --ct-primary: var(--app-primary, #0d6efd);
+  --ct-radius: 0.625rem;
+  --ct-radius-sm: 0.375rem;
+  --ct-shadow-card: 0 0.125rem 0.35rem rgba(0, 0, 0, 0.045);
+  --ct-transition: 0.2s ease;
+}
+
+/* ── Densidad / layout (clases en body desde cfg) ────────────── */
+.ct-layout-boxed .main-content {
+  max-width: 1320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.ct-density-compact {
+  --ct-page-py: 0.75rem;
+  --ct-card-p: 0.75rem;
+}
+
+body.ct-density-compact .ct-card .card-body,
+body.ct-density-compact .ct-form-card .card-body {
+  padding: var(--ct-card-p, 0.75rem) !important;
+}
+
+.ct-animations-off *,
+.ct-animations-off *::before,
+.ct-animations-off *::after {
+  transition: none !important;
+}
+
+/* ── Variantes de card (body.ct-card-*) ─────────────────────── */
+.ct-card-soft .ct-card,
+.ct-card-soft.ct-card {
+  box-shadow: var(--ct-shadow-card) !important;
+  border-radius: var(--ct-radius, 0.625rem);
+  border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.06));
+  transition: box-shadow var(--ct-transition, 0.2s ease), transform var(--ct-transition, 0.2s ease);
+}
+
+.ct-card-bordered .ct-card,
+.ct-card-bordered.ct-card {
+  box-shadow: none !important;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: var(--ct-radius, 0.625rem);
+}
+
+.ct-card-flat .ct-card,
+.ct-card-flat.ct-card {
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: var(--ct-radius, 0.625rem);
+  background: var(--bs-body-bg);
+}
+
+/* ── Página ─────────────────────────────────────────────────── */
+.ct-page {
+  --ct-page-py: 1rem;
+}
+
+.ct-page-header {
+  margin-bottom: 1rem;
+}
+
+.ct-page-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+  color: var(--bs-emphasis-color);
+}
+
+.ct-page-subtitle {
+  font-size: 0.8125rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0;
+}
+
+/* ── Cards genéricas ────────────────────────────────────────── */
+.ct-card {
+  border-radius: var(--ct-radius, 0.625rem);
+  transition: box-shadow var(--ct-transition, 0.2s ease);
+}
+
+.ct-card:hover {
+  box-shadow: var(--ct-shadow-card) !important;
+}
+
+.ct-card-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color-translucent);
+  background: transparent;
+}
+
+.ct-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.ct-card-subtitle {
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color);
+  margin: 0.15rem 0 0;
+}
+
+.ct-table-card .table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ct-form-card .form-label {
+  font-weight: 500;
+}
+
+.ct-metric-card {
+  border-radius: var(--ct-radius, 0.625rem);
+}
+
+.ct-detail-card dl.row dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--bs-secondary-color);
+}
+
+/* ── Acciones y badges ─────────────────────────────────────── */
+.ct-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ct-actions--end {
+  justify-content: flex-end;
+}
+
+@media (max-width: 575.98px) {
+  .ct-actions.ct-actions--stack-sm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ct-actions.ct-actions--stack-sm .btn {
+    width: 100%;
+  }
+}
+
+.ct-badge {
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.ct-empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--bs-secondary-color);
+}
+
+.ct-empty-state__icon {
+  font-size: 2.5rem;
+  opacity: 0.45;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.ct-empty-state__title {
+  font-weight: 600;
+  color: var(--bs-body-color);
+  margin-bottom: 0.25rem;
+}
+
+.ct-empty-state__hint {
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+/* ── Login ─────────────────────────────────────────────────── */
+.ct-login-page {
+  min-height: 100vh;
+}
+
+.ct-login-card {
+  max-width: 820px;
+  border-radius: var(--ct-radius, 0.625rem) !important;
+  overflow: hidden;
+}
+
+.ct-login-brand-logo {
+  max-height: 72px;
+  max-width: 200px;
+  object-fit: contain;
+}
+
+/* Vista previa navbar — panel de ajustes (colores vía variables existentes) */
+.ct-navbar-preview-box {
+  background: var(--app-navbar-bg, #1a1d2e);
+  min-height: 60px;
+}
+
+.ct-navbar-preview-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ct-radius-sm, 6px);
+  background: var(--app-primary, #0d6efd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ct-navbar-preview-icon .bi {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.ct-navbar-preview-title {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.ct-navbar-preview-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ct-navbar-preview-dot--muted {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.ct-navbar-preview-dot--accent {
+  background: var(--app-primary, #0d6efd);
+}
+
+/* ── Ajustes admin: acordeón (LEBYTEK UI + Bootstrap 5) ─────── */
+#ajustesAccordion.ct-ajustes-accordion {
+  --bs-accordion-border-width: 0;
+  --bs-accordion-btn-icon-width: 0.75rem;
+}
+
+#ajustesAccordion .ct-ajustes-accordion-btn {
+  font-size: inherit;
+  line-height: 1.35;
+  color: inherit;
+}
+
+#ajustesAccordion .ct-ajustes-accordion-btn:not(.collapsed) {
+  box-shadow: none;
+}
+
+#ajustesAccordion .ct-ajustes-accordion-btn:focus {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+#ajustesAccordion .accordion-body {
+  background-color: var(--bs-body-bg);
+}
+
+@media (max-width: 575.98px) {
+  #ajustesAccordion .ct-ajustes-accordion-btn {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* ── Utilidades ────────────────────────────────────────────── */
+.ct-col-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.ct-table-toolbar-search {
+  max-width: 220px;
+}
+
+@media (max-width: 575.98px) {
+  .ct-table-toolbar-search {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* Focus visible coherente */
+.ct-focus-ring:focus-visible {
+  outline: 2px solid var(--ct-primary, var(--bs-primary));
+  outline-offset: 2px;
+}

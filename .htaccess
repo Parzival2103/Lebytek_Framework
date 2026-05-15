@@ -1,0 +1,18 @@
+# Bloquear acceso directo a archivos sensibles desde la raíz
+<FilesMatch "\.(env|log|sql|json|lock|sh|bat)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Bloquear acceso a carpetas internas
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^app/ - [F,L]
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^database/ - [F,L]
+    RewriteRule ^storage/ - [F,L]
+    RewriteRule ^routes/ - [F,L]
+    RewriteRule ^tests/ - [F,L]
+    RewriteRule ^scripts/ - [F,L]
+    RewriteRule ^docs/ - [F,L]
+</IfModule>

@@ -1,0 +1,65 @@
+---
+description: Convenciones oficiales de nombres para BD, codigo, APIs y variables
+alwaysApply: true
+
+---
+
+# Convenciones de nombres del proyecto
+
+## Reglas generales
+
+- Usar nombres descriptivos y claros.
+- No usar abreviaciones innecesarias.
+- No usar nombres genericos (`data`, `info`, `temp`, `obj`, `var`, `test`).
+- No mezclar idiomas dentro del mismo nombre.
+- Mantener un solo idioma por dominio y consistencia global.
+- No usar espacios ni caracteres especiales.
+- Los nombres deben reflejar el dominio del negocio.
+- Evitar nombres excesivamente largos.
+
+## Base de datos
+
+- Tablas: `snake_case` y plural (ej. `clientes`, `eventos`, `visitas_frecuentes`).
+- Columnas: `snake_case` (ej. `created_at`, `cliente_id`).
+- PK: `id`.
+- FK: `tabla_id` (ej. `usuario_id`, `evento_id`).
+- Tablas pivote: `tabla_tabla` (ej. `usuarios_roles`).
+
+## PHP y codigo
+
+- Clases: `PascalCase` (ej. `ClienteService`).
+- Metodos: `camelCase` (ej. `obtenerUsuarios()`).
+- Variables: `camelCase` (ej. `$clienteNombre`).
+- Constantes: `UPPER_SNAKE_CASE` (ej. `MAX_UPLOAD_SIZE`).
+
+## Archivos y carpetas
+
+- Archivos de clases: `PascalCase.php`.
+- Vistas y rutas: `snake_case.php`.
+- Capas: `PascalCase` (`Presentation`, `Application`, `Domain`, `Infrastructure`, `Kernel`).
+- Modulos: `snake_case`.
+
+## APIs, JSON y entorno
+
+- Rutas API: `/api/recurso`, `/api/recurso/{id}`, `/api/recurso/{id}/accion`.
+- JSON: llaves en `camelCase`.
+- Variables de entorno: `UPPER_SNAKE_CASE` (ej. `DB_HOST`, `JWT_SECRET`).
+
+## Consistencia obligatoria
+
+- El mismo concepto usa el mismo nombre en todo el sistema.
+- Si la tabla es `clientes`, la FK es `cliente_id`.
+- Si la clase es `Cliente`, el archivo es `Cliente.php`.
+- Si existe `/api/clientes`, no crear variantes inconsistentes como `/api/client`.
+- No renombrar elementos existentes sin justificacion.
+
+## Guardrails para IA
+
+- Respetar estas convenciones en todo cambio propuesto o implementado.
+- No inventar nuevos estilos de nombres.
+- No crear sinonimos para la misma entidad.
+- Mantener consistencia entre base de datos, codigo y API.
+
+## Documentacion
+
+- Version legible extendida para el equipo en `docs/core/convenciones_nombres.md` del repositorio; mantener reglas coherentes entre ambos.

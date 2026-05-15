@@ -1,0 +1,142 @@
+{
+  "resource": {
+    "key": "demo_productos",
+    "title": "Demo Productos",
+    "table": "dom_demo_productos",
+    "primary_key": "id",
+    "permission_prefix": "demo_productos"
+  },
+  "security": {
+    "allow_core_table": false,
+    "mode": "restricted"
+  },
+  "list": {
+    "group_by": "status",
+    "aggregation": {
+      "enabled": true,
+      "max_rows": 5000,
+      "require_filter_above": 5000
+    },
+    "table_compact": false,
+    "columns": [
+      {
+        "name": "id",
+        "label": "ID",
+        "sortable": true
+      },
+      {
+        "name": "codigo",
+        "label": "Código",
+        "searchable": true,
+        "sortable": true
+      },
+      {
+        "name": "nombre",
+        "label": "Nombre",
+        "searchable": true,
+        "sortable": true
+      },
+      {
+        "name": "precio_venta",
+        "label": "Precio",
+        "format": "money",
+        "sortable": true
+      },
+      {
+        "name": "stock_actual",
+        "label": "Stock",
+        "sortable": true
+      },
+      {
+        "name": "status",
+        "label": "Estado",
+        "badge": {
+          "activo": "success",
+          "inactivo": "secondary"
+        }
+      }
+    ],
+    "filters": [
+      {
+        "field": "status",
+        "label": "Estado"
+      }
+    ],
+    
+    "summaries": [
+      {
+        "column": "precio_venta",
+        "type": "sum",
+        "format": "money",
+        "label": "Suma precio"
+      },
+      {
+        "column": "stock_actual",
+        "type": "sum",
+        "format": "money",
+        "label": "Suma stock"
+      }
+    ],
+    "actions": ["show", "edit", "delete"]
+  },
+  "form": {
+    "fields": [
+      {
+        "name": "codigo",
+        "label": "Código",
+        "type": "text",
+        "required": true,
+        "col": "col-md-4"
+      },
+      {
+        "name": "nombre",
+        "label": "Nombre",
+        "type": "text",
+        "required": true,
+        "col": "col-md-8"
+      },
+      {
+        "name": "precio_venta",
+        "label": "Precio de venta",
+        "type": "text",
+        "required": true,
+        "col": "col-md-4",
+        "validation": {
+          "type": "decimal",
+          "min": 0
+        },
+        "help_text": "Use punto o coma como separador decimal (ej. 19.99 o 19,99)."
+      },
+      {
+        "name": "stock_actual",
+        "label": "Stock actual",
+        "type": "text",
+        "required": true,
+        "col": "col-md-4",
+        "validation": {
+          "type": "integer",
+          "min": 0
+        }
+      },
+      {
+        "name": "status",
+        "label": "Estado",
+        "type": "select",
+        "required": true,
+        "options": {
+          "activo": "Activo",
+          "inactivo": "Inactivo"
+        },
+        "default": "activo",
+        "col": "col-md-4"
+      }
+    ]
+  },
+  "uploads": {
+    "enabled": false,
+    "public_path": "uploads/cruds/demo_productos"
+  },
+  "hooks": {
+    "handler": null
+  }
+}

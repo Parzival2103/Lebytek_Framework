@@ -1,0 +1,106 @@
+{
+  "resource": {
+    "key": "clientes",
+    "title": "Clientes",
+    "table": "dom_clientes",
+    "primary_key": "id",
+    "permission_prefix": "clientes"
+  },
+  "security": {
+    "allow_core_table": false,
+    "mode": "restricted"
+  },
+  "list": {
+    "columns": [
+      {
+        "name": "id",
+        "label": "ID",
+        "sortable": true
+      },
+      {
+        "name": "nombre",
+        "label": "Nombre",
+        "searchable": true,
+        "sortable": true
+      },
+      {
+        "name": "email",
+        "label": "Email",
+        "searchable": true,
+        "sortable": true
+      },
+      {
+        "name": "status",
+        "label": "Estado",
+        "badge": {
+          "activo": "success",
+          "inactivo": "secondary"
+        }
+      },
+      {
+        "name": "created_at",
+        "label": "Creado",
+        "format": "datetime",
+        "sortable": true
+      }
+    ],
+    "filters": [
+      {
+        "field": "status",
+        "label": "Estado"
+      }
+    ],
+    "actions": ["show", "edit", "delete"]
+  },
+  "form": {
+    "fields": [
+      {
+        "name": "nombre",
+        "label": "Nombre",
+        "type": "text",
+        "required": true,
+        "col": "col-md-6"
+      },
+      {
+        "name": "email",
+        "label": "Correo electrónico",
+        "type": "text",
+        "required": true,
+        "col": "col-md-6"
+      },
+      {
+        "name": "telefono",
+        "label": "Teléfono",
+        "type": "text",
+        "required": false,
+        "col": "col-md-6"
+      },
+      {
+        "name": "status",
+        "label": "Estado",
+        "type": "select",
+        "required": true,
+        "options": {
+          "activo": "Activo",
+          "inactivo": "Inactivo"
+        },
+        "default": "activo",
+        "col": "col-md-6"
+      },
+      {
+        "name": "notas",
+        "label": "Notas",
+        "type": "textarea",
+        "required": false,
+        "col": "col-12"
+      }
+    ]
+  },
+  "uploads": {
+    "enabled": false,
+    "public_path": "uploads/cruds/clientes"
+  },
+  "hooks": {
+    "handler": null
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "anime-js": {
+      "source": "dylantarre/animation-principles",
+      "sourceType": "github",
+      "computedHash": "0eee4547cc4003880840144606c003b5240963dd9d77eda862a1e95839063c3f"
+    },
+    "css-animation-creator": {
+      "source": "onewave-ai/claude-skills",
+      "sourceType": "github",
+      "computedHash": "283c7911f3e72b0a04a0606278d0941c2a2e984c809e7961944e89dd562b68da"
+    },
+    "css-architecture": {
+      "source": "aj-geddes/useful-ai-prompts",
+      "sourceType": "github",
+      "computedHash": "afbd9d491483b0ece46564fdaaf17b30990dfc83b1855aa6817ef3102a97ea91"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "645b891da1edbae76ab79c7b088d4e73397464f8396edaf773c0e01971ce75d6"
+    }
+  }
+}

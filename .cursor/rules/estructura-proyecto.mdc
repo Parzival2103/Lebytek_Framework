@@ -1,0 +1,54 @@
+---
+description: Estructura oficial de carpetas y ubicacion correcta de componentes
+alwaysApply: true
+---
+
+# Estructura oficial del proyecto
+
+Todo cambio debe respetar esta estructura base:
+
+- `/app` con capas: `Presentation`, `Application`, `Domain`, `Infrastructure`, `Kernel`
+- `/config`
+- `/database`
+- `/public`
+- `/routes`
+- `/storage`
+- `/tests`
+- `/docs`
+- `/scripts`
+
+## Reglas por capa en `/app`
+
+- `Presentation`: `Controllers`, `Views`, `Middlewares`, `Requests`, `Responses`, `Api`, `Web`.
+- `Application`: `UseCases`, `Services`, `DTO`, `Commands`, `Queries`, `Validators`, `Mappers`.
+- `Domain`: `Entities`, `ValueObjects`, `Interfaces`, `Rules`, `Policies`, `Events`, `Exceptions`.
+- `Infrastructure`: `Persistence`, `Repositories`, `Database`, `ExternalServices`, `Storage`, `Mail`, `Cache`, `Logging`, `Integrations`, `Queue`.
+- `Kernel`: componentes transversales (`Config`, `Exceptions`, `Helpers`, `Security`, `Http`, `Database`, `Logging`, `Utilities`, `Traits`, `BaseClasses`, `Constants`).
+
+## Reglas por carpeta raiz
+
+- `config`: configuraciones del sistema.
+- `database`: `migrations`, `seeds`, `factories`, `schema`, `backups`.
+- `public`: `index.php` y recursos publicos (`assets`, `css`, `js`, `images`, `uploads`).
+- `routes`: definicion de rutas (`web.php`, `api.php` y modulares por dominio).
+- `storage`: archivos generados (`logs`, `uploads`, `temp`, `cache`, `exports`, `imports`).
+- `tests`: pruebas (`Unit`, `Feature`, `Integration`, `Performance`).
+- `docs`: documentacion del sistema.
+- `scripts`: automatizaciones y tareas programadas.
+
+## Guardrails obligatorios
+
+- No crear carpetas fuera de esta estructura sin documentarlo.
+- Cada archivo debe pertenecer a una capa o carpeta raiz correcta.
+- No mezclar logica entre capas.
+- `Controllers` solo en `Presentation`.
+- Casos de uso solo en `Application`.
+- Entidades solo en `Domain`.
+- Repositorios solo en `Infrastructure`.
+- Utilidades generales solo en `Kernel`.
+- Configuracion solo en `config`.
+- Migraciones solo en `database/migrations`.
+- Archivos publicos solo en `public`.
+- Documentacion solo en `docs`.
+- Scripts solo en `scripts`.
+- Tests solo en `tests`.
