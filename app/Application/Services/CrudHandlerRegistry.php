@@ -30,7 +30,13 @@ final class CrudHandlerRegistry
         return isset($this->map[$key]);
     }
 
-    public function resolve(?string $key): ?CrudHookHandlerInterface
+    /**
+     * Resuelve la clave a una instancia y valida que implemente la interfaz
+     * esperada. Devuelve null si la clave no está registrada.
+     *
+     * @param class-string $expectedInterface
+     */
+    public function resolve(?string $key, string $expectedInterface = CrudHookHandlerInterface::class): ?object
     {
         $class = $this->classForKey($key);
         if ($class === null) {
@@ -38,8 +44,8 @@ final class CrudHandlerRegistry
         }
 
         $instance = new $class();
-        if (!$instance instanceof CrudHookHandlerInterface) {
-            throw new \RuntimeException("Handler {$class} no implementa CrudHookHandlerInterface.");
+        if (!$instance instanceof $expectedInterface) {
+            throw new \RuntimeException("El handler '{$key}' ({$class}) no implementa {$expectedInterface}.");
         }
 
         return $instance;
