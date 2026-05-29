@@ -123,9 +123,52 @@ final class CrudConfigValidator
         $this->validateListAggregations($config, $columnLookup, $errors);
         $this->validateListAggregationConfig($config, $errors);
 
+        foreach (self::newBlockShapeErrors($config) as $shapeError) {
+            $errors[] = $shapeError;
+        }
+
         if (!empty($errors)) {
             throw new ValidationException('La configuración CRUD contiene errores.', $errors);
         }
+    }
+
+    /**
+     * Scaffolding Fase 0: valida solo la forma de nivel superior de los bloques
+     * opcionales nuevos. La validación profunda se agrega en fases posteriores.
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    public static function newBlockShapeErrors(array $config): array
+    {
+        $errors = [];
+
+        if (array_key_exists('actions', $config) && !is_array($config['actions'])) {
+            $errors[] = 'actions debe ser un objeto.';
+        }
+
+        if (array_key_exists('states', $config)) {
+            if (!is_array($config['states'])) {
+                $errors[] = 'states debe ser un objeto.';
+            } elseif (($config['states']['column'] ?? '') === '') {
+                $errors[] = 'states.column es obligatorio cuando se define el bloque states.';
+            }
+        }
+
+        if (array_key_exists('relations', $config) && !is_array($config['relations'])) {
+            $errors[] = 'relations debe ser un objeto.';
+        }
+
+        if (array_key_exists('detail', $config) && !is_array($config['detail'])) {
+            $errors[] = 'detail debe ser un objeto.';
+        }
+
+        $validators = $config['form']['validators'] ?? null;
+        if ($validators !== null && !is_array($validators)) {
+            $errors[] = 'form.validators debe ser un arreglo.';
+        }
+
+        return $errors;
     }
 
     private function validateTableSecurity(string $table, array $config, array &$errors): void
