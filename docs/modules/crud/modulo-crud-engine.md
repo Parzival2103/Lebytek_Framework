@@ -356,3 +356,40 @@ Partials: `app/Presentation/Views/partials/crud/` (vacío de listado, alerta si 
 ## 19. DEFINICIÓN FINAL
 
 El CRUD Engine es un módulo del core que permite generar interfaces CRUD funcionales para tablas existentes mediante configuración JSON, proporcionando formularios, tablas, acciones estándar, seguridad, auditoría y extensibilidad mediante handlers.
+
+
+## Fase 0 — Fundación (contextos tipados)
+
+Los hooks ya no reciben un `array` suelto sino objetos de contexto en
+`app/Application/Crud/Context/`:
+
+- `CrudContext` (base: resourceKey, table, primaryKey, userId, ip)
+- `CrudWriteContext` (create/update/delete) — expone `input()`, `record()`,
+  `recordId()`, `isCreate()` y un `data()` **mutable** (`setData/mergeData/set`).
+  El motor relee `data()` tras `beforeCreate`/`beforeUpdate`, por lo que un
+  handler puede inyectar o transformar columnas antes de persistir. Las
+  columnas de sistema (`created_at/by`, `updated_at/by`, `deleted*`) se
+  re-aplican después del read-back y no pueden ser sobrescritas por un handler.
+- `CrudActionContext`, `CrudTransitionContext`, `CrudValidationContext`,
+  `CrudListContext`, `CrudFormContext` — usados por las fases siguientes.
+
+Vocabulario canónico de hooks: `beforeCreate/afterCreate`,
+`beforeUpdate/afterUpdate`, `beforeDelete/afterDelete`. El runner también
+dispara los alias legacy `beforeStore/afterStore` **solo si el handler los
+define explícitamente** (las clases que extienden `AbstractCrudHookHandler` no
+los definen, así que no hay doble ejecución).
+
+Interfaces segregadas nuevas (en `app/Domain/Interfaces/`):
+`CrudActionHandlerInterface`, `CrudTransitionGuardInterface`,
+`CrudValidatorInterface`, `CrudListScopeInterface`. Se resuelven con
+`CrudHandlerRegistry::resolve($key, $expectedInterface)`, que valida la
+interfaz esperada.
+
+> **Nota de capas:** por decisión del spec (Fase 2), los contextos viven en la
+> capa Application y las interfaces de handler en Domain importan esos
+> contextos. Esto relaja la regla de onion ("Domain sin dependencias externas")
+> de forma deliberada para los puertos del CRUD Engine. Si se prefiere capas
+> estrictas, mover `Crud/Context/` a `app/Domain/`.
+
+Pruebas: `php tests/run.php` (arnés plano sin PHPUnit; PHPUnit aún no está
+instalado en este repo).

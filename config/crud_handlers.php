@@ -11,10 +11,18 @@ declare(strict_types=1);
 |   "hooks": { "handler": "clientes" }
 |
 | NUNCA uses FQCN directamente en JSON.
+|
+| El registro ahora admite, además de hooks de escritura, los handlers de:
+|   - acciones de fila/bulk      (CrudActionHandlerInterface)
+|   - guards de transición       (CrudTransitionGuardInterface)
+|   - validadores de formulario  (CrudValidatorInterface)
+|   - scopes de listado          (CrudListScopeInterface)
+| Una misma clave puede mapear a una clase que implemente varias interfaces.
 |--------------------------------------------------------------------------
 */
 
 return [
     // Ejemplo (descomenta y crea la clase al implementar lógica real):
-    // 'clientes' => \App\Application\Crud\Handlers\ClientesHandler::class,
+    // 'clientes'        => \App\Application\Crud\Handlers\ClientesHandler::class,
+    // 'anticipo_minimo' => \App\Application\Crud\Handlers\AnticipoMinimoValidator::class,
 ];
