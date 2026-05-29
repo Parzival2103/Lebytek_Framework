@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Services;
 
+use App\Application\Crud\Context\CrudWriteContext;
 use App\Domain\Entities\CrudFieldDefinition;
 use App\Domain\Entities\CrudResourceDefinition;
 use App\Domain\Exceptions\ValidationException;
@@ -245,16 +246,35 @@ final class CrudDataService
     public function store(CrudResourceDefinition $definition, array $input, array $files, ?int $userId, string $ip): int
     {
         $payload = $this->buildPayload($definition, $input, $files, true, null);
-        $payload['created_at'] = date('Y-m-d H:i:s');
-        $payload['created_by'] = $userId;
-        $payload['updated_at'] = null;
-        $payload['updated_by'] = null;
-        $payload['deleted'] = 0;
-        $payload['deleted_at'] = null;
-        $payload['deleted_by'] = null;
 
-        $hookPayload = ['data' => $payload, 'resource' => $definition->key(), 'userId' => $userId];
-        $this->hookRunner->run($definition, 'beforeStore', $hookPayload);
+        $systemColumns = [
+            'created_at' => date('Y-m-d H:i:s'),
+            'created_by' => $userId,
+            'updated_at' => null,
+            'updated_by' => null,
+            'deleted' => 0,
+            'deleted_at' => null,
+            'deleted_by' => null,
+        ];
+        $payload = array_merge($payload, $systemColumns);
+
+        $ctx = new CrudWriteContext(
+            $definition->key(),
+            $definition->table(),
+            $definition->primaryKey(),
+            $userId,
+            $ip,
+            $input,
+            null,
+            null,
+            $payload,
+            true
+        );
+        $this->hookRunner->run($definition, 'beforeCreate', $ctx);
+
+        // Read-back: el handler pudo mutar data(); re-aplicamos columnas de
+        // sistema para que no puedan ser sobrescritas por un handler.
+        $payload = array_merge($ctx->data(), $systemColumns);
 
         $id = $this->repository->insertRecord($definition->table(), $payload);
 
@@ -267,7 +287,10 @@ final class CrudDataService
             $ip
         );
 
-        $this->hookRunner->run($definition, 'afterStore', ['id' => $id, 'data' => $payload, 'resource' => $definition->key()]);
+        $ctx->setData($payload);
+        $ctx->setRecordId($id);
+        $this->hookRunner->run($definition, 'afterCreate', $ctx);
+
         return $id;
     }
 
@@ -275,10 +298,29 @@ final class CrudDataService
     {
         $existing = $this->repository->findById($definition->table(), $definition->primaryKey(), $id);
         $payload = $this->buildPayload($definition, $input, $files, false, is_array($existing) ? $existing : null);
-        $payload['updated_at'] = date('Y-m-d H:i:s');
-        $payload['updated_by'] = $userId;
 
-        $this->hookRunner->run($definition, 'beforeUpdate', ['id' => $id, 'data' => $payload, 'resource' => $definition->key()]);
+        $systemColumns = [
+            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_by' => $userId,
+        ];
+        $payload = array_merge($payload, $systemColumns);
+
+        $ctx = new CrudWriteContext(
+            $definition->key(),
+            $definition->table(),
+            $definition->primaryKey(),
+            $userId,
+            $ip,
+            $input,
+            is_array($existing) ? $existing : null,
+            $id,
+            $payload,
+            false
+        );
+        $this->hookRunner->run($definition, 'beforeUpdate', $ctx);
+
+        // Read-back con columnas de sistema preservadas.
+        $payload = array_merge($ctx->data(), $systemColumns);
 
         $this->repository->updateRecord($definition->table(), $definition->primaryKey(), $id, $payload);
         $this->bitacoraRepository->registrar(
@@ -290,11 +332,14 @@ final class CrudDataService
             $ip
         );
 
-        $this->hookRunner->run($definition, 'afterUpdate', ['id' => $id, 'data' => $payload, 'resource' => $definition->key()]);
+        $ctx->setData($payload);
+        $this->hookRunner->run($definition, 'afterUpdate', $ctx);
     }
 
     public function delete(CrudResourceDefinition $definition, int $id, ?int $userId, string $ip): void
     {
+        $existing = $this->repository->findById($definition->table(), $definition->primaryKey(), $id);
+
         $payload = [
             'deleted' => 1,
             'deleted_at' => date('Y-m-d H:i:s'),
@@ -303,7 +348,20 @@ final class CrudDataService
             'updated_by' => $userId,
         ];
 
-        $this->hookRunner->run($definition, 'beforeDelete', ['id' => $id, 'resource' => $definition->key()]);
+        $ctx = new CrudWriteContext(
+            $definition->key(),
+            $definition->table(),
+            $definition->primaryKey(),
+            $userId,
+            $ip,
+            [],
+            is_array($existing) ? $existing : null,
+            $id,
+            $payload,
+            false
+        );
+        $this->hookRunner->run($definition, 'beforeDelete', $ctx);
+
         $this->repository->updateRecord($definition->table(), $definition->primaryKey(), $id, $payload);
 
         $this->bitacoraRepository->registrar(
@@ -315,7 +373,7 @@ final class CrudDataService
             $ip
         );
 
-        $this->hookRunner->run($definition, 'afterDelete', ['id' => $id, 'resource' => $definition->key()]);
+        $this->hookRunner->run($definition, 'afterDelete', $ctx);
     }
 
     private function buildPayload(CrudResourceDefinition $definition, array $input, array $files, bool $isCreate, ?array $existingRow): array
