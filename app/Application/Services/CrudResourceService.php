@@ -14,7 +14,9 @@ final class CrudResourceService
         private readonly CrudDataService $dataService,
         private readonly CrudFormBuilder $formBuilder,
         private readonly CrudTableBuilder $tableBuilder,
-        private readonly RbacService $rbacService
+        private readonly RbacService $rbacService,
+        private readonly CrudActionResolver $actionResolver,
+        private readonly CrudActionService $actionService
     ) {}
 
     public function buildIndexData(string $resource, array $query): array
@@ -25,7 +27,7 @@ final class CrudResourceService
         $result = $this->dataService->list($definition, $query);
         $permissions = $this->resolvePermissions($definition->permissionPrefix());
 
-        return $this->tableBuilder->build(
+        $data = $this->tableBuilder->build(
             definition: $definition,
             rows: $result['rows'],
             paginator: $result['paginator'],
@@ -38,6 +40,18 @@ final class CrudResourceService
             aggregationSkipMessage: isset($result['aggregationSkipMessage']) ? (string) $result['aggregationSkipMessage'] : null,
             tableCompact: $definition->listTableCompact()
         );
+
+        $can = fn(string $slug): bool => $this->rbacService->puede($slug);
+        if (is_array($data['rows'] ?? null)) {
+            foreach ($data['rows'] as &$row) {
+                $row['_actions'] = $this->actionResolver->visibleRowActions($definition, $row, $can);
+            }
+            unset($row);
+        }
+        $data['bulkActions'] = $this->actionResolver->permittedBulkActions($definition, $can);
+        $data['selectable'] = !empty($data['bulkActions']) && empty($data['grouped']);
+
+        return $data;
     }
 
     public function buildCreateData(string $resource): array
@@ -127,6 +141,22 @@ final class CrudResourceService
         }
 
         $this->dataService->delete($definition, $id, $userId, $ip);
+    }
+
+    /** @param array<string, mixed> $input */
+    public function runAction(string $resource, int $id, string $action, array $input, ?int $userId, string $ip): void
+    {
+        $this->actionService->run($resource, $id, $action, $input, $userId, $ip);
+    }
+
+    /**
+     * @param list<int> $ids
+     * @param array<string, mixed> $input
+     * @return array{ok: int, fail: int, errors: list<string>}
+     */
+    public function runBulkAction(string $resource, string $action, array $ids, array $input, ?int $userId, string $ip): array
+    {
+        return $this->actionService->runBulk($resource, $action, $ids, $input, $userId, $ip);
     }
 
     private function resolvePermissions(string $prefix): array
