@@ -79,4 +79,6 @@ $router->group([
     $router->post('/crud/{resource}/{id}',            [CrudController::class, 'update'], [CsrfMiddleware::class]);
     $router->get('/crud/{resource}/{id}',             [CrudController::class, 'show']);
     $router->post('/crud/{resource}/{id}/eliminar',   [CrudController::class, 'delete'], [CsrfMiddleware::class]);
+    $router->post('/crud/{resource}/{id}/accion/{action}',   [CrudController::class, 'action'],     [CsrfMiddleware::class]);
+    $router->post('/crud/{resource}/accion-masiva/{action}', [CrudController::class, 'bulkAction'], [CsrfMiddleware::class]);
 });

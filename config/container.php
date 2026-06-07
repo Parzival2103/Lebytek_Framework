@@ -33,6 +33,8 @@ use App\Application\Services\RbacIntegrityReportService;
 use App\Domain\Interfaces\BitacoraRepositoryInterface;
 use App\Infrastructure\Repositories\BitacoraRepository;
 use App\Infrastructure\Repositories\GenericCrudRepository;
+use App\Application\Services\CrudActionResolver;
+use App\Application\Services\CrudActionService;
 use App\Application\Services\CrudConfigLoader;
 use App\Application\Services\CrudConfigValidator;
 use App\Application\Services\CrudDataService;
@@ -100,12 +102,23 @@ return static function (Container $container): void {
     ));
     $container->singleton(CrudFormBuilder::class, fn() => new CrudFormBuilder());
     $container->singleton(CrudTableBuilder::class, fn() => new CrudTableBuilder());
+    $container->singleton(CrudActionResolver::class, fn() => new CrudActionResolver());
+    $container->singleton(CrudActionService::class, fn(Container $c) => new CrudActionService(
+        $c->get(CrudHandlerRegistry::class),
+        $c->get(CrudConfigLoader::class),
+        $c->get(CrudDataService::class),
+        $c->get(CrudActionResolver::class),
+        $c->get(RbacService::class),
+        $c->get(BitacoraRepositoryInterface::class)
+    ));
     $container->singleton(CrudResourceService::class, fn(Container $c) => new CrudResourceService(
         $c->get(CrudConfigLoader::class),
         $c->get(CrudDataService::class),
         $c->get(CrudFormBuilder::class),
         $c->get(CrudTableBuilder::class),
-        $c->get(RbacService::class)
+        $c->get(RbacService::class),
+        $c->get(CrudActionResolver::class),
+        $c->get(CrudActionService::class)
     ));
 
     foreach ((require ROOT_PATH . '/config/dashboard.php')['providers'] as $fqcnProvider) {
