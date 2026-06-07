@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Entities;
 
+use App\Domain\Entities\Crud\CrudActionDefinition;
+
 final class CrudResourceDefinition
 {
     /**
@@ -25,7 +27,10 @@ final class CrudResourceDefinition
         private readonly string $uploadsPath,
         private readonly ?string $hookHandler,
         private readonly array $listAggregation,
-        private readonly bool $listTableCompact
+        private readonly bool $listTableCompact,
+        private readonly bool $hasActionsBlock,
+        private readonly array $rowActions,
+        private readonly array $bulkActions
     ) {}
 
     public static function fromArray(array $config): self
@@ -59,6 +64,29 @@ final class CrudResourceDefinition
             }
         }
 
+        $hasActionsBlock = array_key_exists('actions', $config) && is_array($config['actions']);
+        $rowActions = [];
+        $bulkActions = [];
+        if ($hasActionsBlock) {
+            foreach (($config['actions']['row'] ?? []) as $raw) {
+                if (is_array($raw) && ($raw['name'] ?? '') !== '') {
+                    $rowActions[] = CrudActionDefinition::fromArray($raw);
+                }
+            }
+            foreach (($config['actions']['bulk'] ?? []) as $raw) {
+                if (is_array($raw) && ($raw['name'] ?? '') !== '') {
+                    $bulkActions[] = CrudActionDefinition::fromArray($raw);
+                }
+            }
+        } else {
+            $listActions = is_array($list['actions'] ?? null) ? $list['actions'] : ['show', 'edit', 'delete'];
+            foreach ($listActions as $builtin) {
+                if (is_string($builtin) && $builtin !== '') {
+                    $rowActions[] = CrudActionDefinition::fromArray(['name' => $builtin, 'type' => 'builtin']);
+                }
+            }
+        }
+
         return new self(
             key: (string) ($resource['key'] ?? ''),
             title: (string) ($resource['title'] ?? ''),
@@ -75,7 +103,10 @@ final class CrudResourceDefinition
             uploadsPath: (string) ($uploads['public_path'] ?? 'uploads/cruds'),
             hookHandler: isset($hooks['handler']) && $hooks['handler'] !== '' ? (string) $hooks['handler'] : null,
             listAggregation: $listAggregation,
-            listTableCompact: $listTableCompact
+            listTableCompact: $listTableCompact,
+            hasActionsBlock: $hasActionsBlock,
+            rowActions: $rowActions,
+            bulkActions: $bulkActions
         );
     }
 
@@ -108,5 +139,22 @@ final class CrudResourceDefinition
     public function permissionFor(string $action): string
     {
         return $this->permissionPrefix . '.' . $action;
+    }
+
+    public function hasActionsBlock(): bool
+    {
+        return $this->hasActionsBlock;
+    }
+
+    /** @return list<CrudActionDefinition> */
+    public function rowActions(): array
+    {
+        return $this->rowActions;
+    }
+
+    /** @return list<CrudActionDefinition> */
+    public function bulkActions(): array
+    {
+        return $this->bulkActions;
     }
 }
