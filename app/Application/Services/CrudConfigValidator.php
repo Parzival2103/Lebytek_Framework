@@ -127,9 +127,70 @@ final class CrudConfigValidator
             $errors[] = $shapeError;
         }
 
+        foreach (self::actionsBlockErrors($config) as $actionError) {
+            $errors[] = $actionError;
+        }
+
         if (!empty($errors)) {
             throw new ValidationException('La configuración CRUD contiene errores.', $errors);
         }
+    }
+
+    /**
+     * Valida la forma del bloque `actions` (Fase 1). Pura, sin DB.
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    public static function actionsBlockErrors(array $config): array
+    {
+        if (!array_key_exists('actions', $config)) {
+            return [];
+        }
+        $actions = $config['actions'];
+        if (!is_array($actions)) {
+            return ['actions debe ser un objeto.'];
+        }
+
+        $errors = [];
+        foreach (['row', 'bulk'] as $group) {
+            if (!array_key_exists($group, $actions)) {
+                continue;
+            }
+            if (!is_array($actions[$group])) {
+                $errors[] = "actions.{$group} debe ser un arreglo.";
+                continue;
+            }
+            foreach ($actions[$group] as $i => $action) {
+                if (!is_array($action)) {
+                    $errors[] = "actions.{$group}[{$i}] debe ser un objeto.";
+                    continue;
+                }
+                $name = (string) ($action['name'] ?? '');
+                $type = (string) ($action['type'] ?? '');
+                if ($name === '') {
+                    $errors[] = "actions.{$group}[{$i}].name es obligatorio.";
+                }
+                if (!in_array($type, ['builtin', 'handler', 'link', 'transition'], true)) {
+                    $errors[] = "actions.{$group}[{$i}].type inválido ('{$type}').";
+                    continue;
+                }
+                if ($type === 'handler' && ($action['handler'] ?? '') === '') {
+                    $errors[] = "actions.{$group}[{$i}] (handler) requiere 'handler'.";
+                }
+                if ($type === 'link' && ($action['route'] ?? '') === '') {
+                    $errors[] = "actions.{$group}[{$i}] (link) requiere 'route'.";
+                }
+                if ($type === 'builtin' && !in_array($name, ['show', 'edit', 'delete'], true)) {
+                    $errors[] = "actions.{$group}[{$i}] builtin debe ser show/edit/delete.";
+                }
+                if (array_key_exists('method', $action)
+                    && !in_array(strtoupper((string) $action['method']), ['GET', 'POST'], true)) {
+                    $errors[] = "actions.{$group}[{$i}].method debe ser GET o POST.";
+                }
+            }
+        }
+        return $errors;
     }
 
     /**
