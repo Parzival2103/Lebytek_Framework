@@ -46,6 +46,10 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
     </header>
 
     <section class="ct-table-card card border-0 shadow-sm ct-card">
+        <?= ViewHelper::partial('crud/partials/actions_bulk', [
+            'bulkActions' => $bulkActions ?? [],
+            'resource' => $resource ?? '',
+        ]) ?>
         <div class="card-header bg-transparent border-bottom p-3 p-md-4">
             <form class="row g-2 g-md-3 align-items-end" method="GET" action="/admin/crud/<?= ViewHelper::e((string) ($resource ?? '')) ?>">
                 <div class="col-12 col-md-4">
@@ -101,6 +105,11 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
                 <table class="<?= ViewHelper::e($tableClass) ?>">
                     <thead class="table-light">
                         <tr>
+                            <?php if (!empty($selectable)): ?>
+                                <th class="px-3" style="width:2.5rem">
+                                    <input type="checkbox" class="form-check-input" data-crud-select-all aria-label="Seleccionar todo">
+                                </th>
+                            <?php endif; ?>
                             <?php foreach (($columns ?? []) as $column): ?>
                                 <th class="px-3 text-nowrap"><?= ViewHelper::e((string) ($column['label'] ?? '')) ?></th>
                             <?php endforeach; ?>
@@ -112,13 +121,19 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
                     <tbody>
                     <?php if (empty($rows)): ?>
                         <?= ViewHelper::partial('crud/list_empty', [
-                            'colspan' => count($columns ?? []) + ($grouped ? 0 : 1),
+                            'colspan' => count($columns ?? []) + ($grouped ? 0 : 1) + (!empty($selectable) ? 1 : 0),
                             'emptyTitle' => 'No hay registros para mostrar',
                             'emptyHint' => 'Crea un registro o ajusta filtros y búsqueda.',
                         ]) ?>
                     <?php else: ?>
                         <?php foreach ($rows as $row): ?>
                             <tr>
+                                <?php if (!empty($selectable)): ?>
+                                    <td class="px-3">
+                                        <input type="checkbox" class="form-check-input" data-crud-row-check
+                                               value="<?= (int) ($row[$primaryKey] ?? 0) ?>" aria-label="Seleccionar registro">
+                                    </td>
+                                <?php endif; ?>
                                 <?php foreach (($columns ?? []) as $column): ?>
                                     <?php
                                         $name = (string) ($column['name'] ?? '');
@@ -137,26 +152,10 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
                                 <?php endforeach; ?>
                                 <?php if (!$grouped): ?>
                                     <td class="text-end px-3">
-                                        <div class="d-flex justify-content-end gap-1 flex-wrap">
-                                            <?php $id = (int) ($row[$primaryKey] ?? 0); ?>
-                                            <?php if (in_array('show', $actions ?? [], true) && !empty($permissions['ver'])): ?>
-                                                <a href="/admin/crud/<?= ViewHelper::e((string) ($resource ?? '')) ?>/<?= $id ?>" class="btn btn-sm btn-outline-info" title="Ver" aria-label="Ver registro"><i class="bi bi-eye" aria-hidden="true"></i></a>
-                                            <?php endif; ?>
-                                            <?php if (in_array('edit', $actions ?? [], true) && !empty($permissions['editar'])): ?>
-                                                <a href="/admin/crud/<?= ViewHelper::e((string) ($resource ?? '')) ?>/<?= $id ?>/editar" class="btn btn-sm btn-outline-primary" title="Editar" aria-label="Editar registro"><i class="bi bi-pencil" aria-hidden="true"></i></a>
-                                            <?php endif; ?>
-                                            <?php if (in_array('delete', $actions ?? [], true) && !empty($permissions['eliminar'])): ?>
-                                                <button type="button"
-                                                        class="btn btn-sm btn-outline-danger js-crud-delete"
-                                                        title="Eliminar"
-                                                        aria-label="Eliminar registro"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#crudDeleteModal"
-                                                        data-action="/admin/crud/<?= ViewHelper::e((string) ($resource ?? '')) ?>/<?= $id ?>/eliminar">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                        </div>
+                                        <?= ViewHelper::partial('crud/partials/actions_row', [
+                                            'rowActions' => $row['_actions'] ?? [],
+                                            'resource' => $resource ?? '',
+                                        ]) ?>
                                     </td>
                                 <?php endif; ?>
                             </tr>
@@ -232,3 +231,4 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
         });
     });
 </script>
+<script src="<?= ViewHelper::asset('js/crud-engine.js') ?>"></script>

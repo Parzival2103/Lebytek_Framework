@@ -40,6 +40,23 @@ test('CrudActionResolver: visibleRowActions filters by visible_when and permissi
     assert_same(['show', 'contrato'], $names2);
 });
 
+test('CrudActionResolver: builtin actions keep standard RBAC gating', function (): void {
+    $resolver = new CrudActionResolver();
+    $def = CrudResourceDefinition::fromArray([
+        'resource' => ['key' => 'clientes', 'table' => 'dom_clientes', 'primary_key' => 'id', 'permission_prefix' => 'clientes'],
+        'list' => ['actions' => ['show', 'edit', 'delete']],
+    ]);
+
+    // sin permiso de eliminar: delete se oculta, show/edit permanecen
+    $can = static fn(string $slug): bool => $slug !== 'clientes.eliminar';
+    $names = array_map(static fn(array $a): string => $a['name'], $resolver->visibleRowActions($def, ['id' => 3], $can));
+    assert_same(['show', 'edit'], $names);
+
+    // sin ningún permiso: no se muestra ninguna acción builtin
+    $deny = static fn(string $slug): bool => false;
+    assert_same([], $resolver->visibleRowActions($def, ['id' => 3], $deny));
+});
+
 test('CrudActionResolver: permission denial hides the action', function (): void {
     $resolver = new CrudActionResolver();
     $deny = static fn(string $slug): bool => $slug !== 'eventos.autorizar';

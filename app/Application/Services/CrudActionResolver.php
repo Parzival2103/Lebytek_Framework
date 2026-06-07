@@ -31,12 +31,27 @@ final class CrudActionResolver
                 continue;
             }
             $permission = $action->resolvePermission($prefix);
+            // Back-compat: builtin show/edit/delete keep the standard RBAC gating
+            // (ver/editar/eliminar) cuando no declaran un permiso explícito.
+            if ($permission === null && $action->isBuiltin()) {
+                $permission = $this->builtinPermission($prefix, $action->name());
+            }
             if ($permission !== null && !$can($permission)) {
                 continue;
             }
             $out[] = $this->rowViewModel($definition, $action, $id, $row, $can);
         }
         return $out;
+    }
+
+    private function builtinPermission(string $prefix, string $name): ?string
+    {
+        return match ($name) {
+            'show'   => $prefix . '.ver',
+            'edit'   => $prefix . '.editar',
+            'delete' => $prefix . '.eliminar',
+            default  => null,
+        };
     }
 
     /**

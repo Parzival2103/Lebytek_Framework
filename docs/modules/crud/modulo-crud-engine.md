@@ -393,3 +393,24 @@ interfaz esperada.
 
 Pruebas: `php tests/run.php` (arnés plano sin PHPUnit; PHPUnit aún no está
 instalado en este repo).
+
+## Fase 1 — Acciones declarativas (custom + bulk)
+
+Bloque `actions` opcional en `config/cruds/{resource}.json`:
+
+```json
+"actions": {
+  "row":  [ { "name": "...", "type": "builtin|handler|link", ... } ],
+  "bulk": [ { "name": "...", "type": "handler", "handler": "<clave>", ... } ]
+}
+```
+
+- **Tipos** (Fase 1): `builtin` (show/edit/delete, usa las rutas existentes; `delete` conserva el modal de confirmación), `handler` (ejecuta una clase `CrudActionHandlerInterface` whitelisteada), `link` (solo navegación, no se ejecuta en servidor). `transition` llega en Fase 2.
+- **`visible_when` / `enabled_when`**: mapa de igualdad simple (escalar o lista) evaluado en el render **y re-validado en el servidor** antes de ejecutar.
+- **`permission`**: slug completo (`modulo.accion`) o sufijo expandido contra `permission_prefix`. Las acciones builtin sin `permission` explícito conservan el gating estándar (`show`→`.ver`, `edit`→`.editar`, `delete`→`.eliminar`).
+- **Endpoints**: `POST /admin/crud/{resource}/{id}/accion/{action}` y `POST /admin/crud/{resource}/accion-masiva/{action}` (ambos con CSRF). Las acciones masivas son best-effort por ítem con resumen en flash y tope de 500 ids.
+- **Auditoría**: cada ejecución registra `crud.action:{name}` en `log_bitacora`.
+- **Compat**: sin bloque `actions`, se usan los `list.actions` (show/edit/delete) actuales y no hay barra bulk.
+- **Vistas agrupadas**: cuando el recurso usa `list.group_by`, la vista no renderiza acciones por fila ni la barra bulk (`selectable` queda en false). Para probar acciones de fila/bulk usa un recurso sin `group_by`.
+
+Componentes: `CrudActionDefinition` (VO), `CrudActionResolver` (puro, view-models + resolución), `CrudActionService` (orquestación: RBAC, carga, re-chequeo, dispatch, auditoría). La lógica de negocio vive en handlers externos (`app/Application/Crud/Handlers/`), nunca en el core.

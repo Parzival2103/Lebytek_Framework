@@ -79,6 +79,20 @@
     ],
     "actions": ["show", "edit", "delete"]
   },
+  "actions": {
+    "row": [
+      { "name": "show", "type": "builtin" },
+      { "name": "edit", "type": "builtin" },
+      { "name": "delete", "type": "builtin" },
+      { "name": "toggle", "type": "handler", "handler": "demo_producto_toggle",
+        "label": "Alternar estado", "icon": "bi-toggle-on", "method": "POST",
+        "permission": "editar", "confirm": "¿Cambiar el estado de este producto?" }
+    ],
+    "bulk": [
+      { "name": "toggle", "type": "handler", "handler": "demo_producto_toggle",
+        "label": "Alternar estado", "permission": "editar", "confirm": "¿Alternar el estado de los seleccionados?" }
+    ]
+  },
   "form": {
     "fields": [
       {

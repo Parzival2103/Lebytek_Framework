@@ -22,6 +22,8 @@ declare(strict_types=1);
 */
 
 return [
+    'demo_producto_toggle' => \App\Application\Crud\Handlers\DemoProductoToggleStatusHandler::class,
+
     // Ejemplo (descomenta y crea la clase al implementar lógica real):
     // 'clientes'        => \App\Application\Crud\Handlers\ClientesHandler::class,
     // 'anticipo_minimo' => \App\Application\Crud\Handlers\AnticipoMinimoValidator::class,
