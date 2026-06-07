@@ -141,4 +141,44 @@ final class CrudController extends AdminBaseController
             return $this->redirectWithFlash('/admin/crud/' . $resource, 'error', $e->getMessage());
         }
     }
+
+    public function action(Request $request): Response
+    {
+        $resource = (string) $request->param('resource');
+        $id = (int) $request->param('id');
+        $action = (string) $request->param('action');
+        try {
+            $this->verifyCsrf($request);
+            $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
+            $this->crudResourceService->runAction($resource, $id, $action, $request->all(), $userId > 0 ? $userId : null, $request->ip());
+            return $this->redirectWithFlash('/admin/crud/' . $resource, 'success', 'Acción ejecutada correctamente.');
+        } catch (AccesoException) {
+            return Response::forbidden();
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash('/admin/crud/' . $resource, 'error', $e->getMessage());
+        }
+    }
+
+    public function bulkAction(Request $request): Response
+    {
+        $resource = (string) $request->param('resource');
+        $action = (string) $request->param('action');
+        try {
+            $this->verifyCsrf($request);
+            $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
+            $idsRaw = $request->all()['ids'] ?? [];
+            $ids = is_array($idsRaw) ? array_map('intval', $idsRaw) : [];
+            if ($ids === []) {
+                return $this->redirectWithFlash('/admin/crud/' . $resource, 'error', 'No se seleccionaron registros.');
+            }
+            $summary = $this->crudResourceService->runBulkAction($resource, $action, $ids, $request->all(), $userId > 0 ? $userId : null, $request->ip());
+            $type = $summary['fail'] > 0 ? 'warning' : 'success';
+            $msg = "Acción masiva: {$summary['ok']} correctos, {$summary['fail']} con error.";
+            return $this->redirectWithFlash('/admin/crud/' . $resource, $type, $msg);
+        } catch (AccesoException) {
+            return Response::forbidden();
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash('/admin/crud/' . $resource, 'error', $e->getMessage());
+        }
+    }
 }
