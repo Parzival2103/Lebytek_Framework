@@ -31,4 +31,17 @@ final class BitacoraRepository extends BaseRepository implements BitacoraReposit
             [$limit]
         );
     }
+
+    public function porRegistro(string $tabla, int $registroId, int $limit = 50): array
+    {
+        return $this->query(
+            "SELECT b.*, u.nombre, u.apellido
+             FROM log_bitacora b
+             LEFT JOIN auth_usuarios u ON u.id = b.usuario_id
+             WHERE b.tabla = ? AND b.registro_id = ?
+             ORDER BY b.created_at DESC
+             LIMIT ?",
+            [$tabla, $registroId, $limit]
+        );
+    }
 }
