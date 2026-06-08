@@ -25,6 +25,10 @@ return [
     'demo_producto_toggle' => \App\Application\Crud\Handlers\DemoProductoToggleStatusHandler::class,
     'demo_producto_state_guard' => \App\Application\Crud\Handlers\DemoProductoStateGuard::class,
 
+    'demo_pedido_total'        => \App\Application\Crud\Handlers\DemoPedidoTotalValidator::class,
+    'demo_pedido_pagar_guard'  => \App\Application\Crud\Handlers\DemoPedidoPagarGuard::class,
+    'demo_cliente_contacto'    => \App\Application\Crud\Handlers\DemoClienteContactoValidator::class,
+
     // Ejemplo (descomenta y crea la clase al implementar lógica real):
     // 'clientes'        => \App\Application\Crud\Handlers\ClientesHandler::class,
     // 'anticipo_minimo' => \App\Application\Crud\Handlers\AnticipoMinimoValidator::class,
