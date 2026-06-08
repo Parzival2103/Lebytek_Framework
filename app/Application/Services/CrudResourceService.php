@@ -86,12 +86,28 @@ final class CrudResourceService
             throw new ValidationException('El registro solicitado no existe.');
         }
 
+        $can = fn(string $slug): bool => $this->rbacService->puede($slug);
+        $actions = $this->actionResolver->visibleRowActions($definition, $row, $can);
+
+        $state = null;
+        $machine = $definition->stateMachine();
+        if ($machine !== null) {
+            $value = (string) ($row[$machine->column()] ?? '');
+            $state = [
+                'value' => $value,
+                'label' => $machine->label($value) ?? $value,
+                'badge' => $machine->badge($value) ?? 'secondary',
+            ];
+        }
+
         return [
             'resource' => $definition->key(),
             'title' => $definition->title(),
             'row' => $row,
             'columns' => $definition->listColumns(),
             'primaryKey' => $definition->primaryKey(),
+            'actions' => $actions,
+            'state' => $state,
         ];
     }
 

@@ -4,6 +4,7 @@ use App\Kernel\Helpers\ViewHelper;
 
 ?>
 <link rel="stylesheet" href="<?= ViewHelper::asset('css/crud-engine.css') ?>">
+<script src="<?= ViewHelper::asset('js/crud-engine.js') ?>" defer></script>
 
 <div class="container-fluid px-3 px-lg-4 py-3 py-lg-4 crud-engine ct-page">
     <div class="row justify-content-center">
@@ -11,16 +12,25 @@ use App\Kernel\Helpers\ViewHelper;
             <div class="ct-detail-card card border-0 shadow-sm ct-card">
                 <div class="card-header bg-transparent border-bottom p-3 p-md-4 d-flex flex-column flex-md-row justify-content-md-between align-items-md-start gap-3">
                     <div>
-                        <h1 class="ct-page-title h4 mb-1"><?= ViewHelper::e((string) ($title ?? 'Detalle')) ?></h1>
+                        <h1 class="ct-page-title h4 mb-1 d-flex align-items-center gap-2">
+                            <?= ViewHelper::e((string) ($title ?? 'Detalle')) ?>
+                            <?php if (!empty($state) && (string) ($state['value'] ?? '') !== ''): ?>
+                                <span class="badge rounded-pill bg-<?= ViewHelper::e((string) $state['badge']) ?>-subtle text-<?= ViewHelper::e((string) $state['badge']) ?> border border-<?= ViewHelper::e((string) $state['badge']) ?>-subtle">
+                                    <?= ViewHelper::e((string) $state['label']) ?>
+                                </span>
+                            <?php endif; ?>
+                        </h1>
                         <p class="ct-page-subtitle text-muted small mb-0">Solo lectura. Fechas y montos con formato local.</p>
                     </div>
-                    <div class="ct-actions flex-column flex-sm-row gap-2 w-100 w-md-auto">
+                    <div class="ct-actions d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto align-items-stretch align-items-sm-center">
                         <a href="/admin/crud/<?= ViewHelper::e((string) ($resource ?? '')) ?>"
-                           class="btn btn-sm btn-outline-secondary order-2 order-sm-1">Volver al listado</a>
-                        <a href="/admin/crud/<?= ViewHelper::e((string) ($resource ?? '')) ?>/<?= (int) ($row[$primaryKey] ?? 0) ?>/editar"
-                           class="btn btn-sm btn-primary order-1 order-sm-2">
-                            <i class="bi bi-pencil me-1"></i>Editar
-                        </a>
+                           class="btn btn-sm btn-outline-secondary">Volver al listado</a>
+                        <?php
+                            $headerActions = array_values(array_filter(($actions ?? []), static function (array $a): bool {
+                                return (string) ($a['name'] ?? '') !== 'show';
+                            }));
+                        ?>
+                        <?php $rowActions = $headerActions; require __DIR__ . '/partials/actions_row.php'; ?>
                     </div>
                 </div>
                 <div class="card-body p-3 p-md-4">
@@ -60,15 +70,6 @@ use App\Kernel\Helpers\ViewHelper;
                             </dd>
                         <?php endforeach; ?>
                     </dl>
-                </div>
-                <div class="card-footer bg-transparent border-top p-3 p-md-4 d-flex flex-wrap gap-2">
-                    <button type="button"
-                            class="btn btn-outline-danger btn-sm js-crud-delete"
-                            data-bs-toggle="modal"
-                            data-bs-target="#crudDeleteModal"
-                            data-action="/admin/crud/<?= ViewHelper::e((string) ($resource ?? '')) ?>/<?= (int) ($row[$primaryKey] ?? 0) ?>/eliminar">
-                        <i class="bi bi-trash me-1"></i>Eliminar
-                    </button>
                 </div>
             </div>
         </div>
