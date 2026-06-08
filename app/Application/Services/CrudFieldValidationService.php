@@ -136,19 +136,19 @@ final class CrudFieldValidationService
 
         if ($field->type() === 'checkbox') {
             if ($normalized !== 0 && $normalized !== 1) {
-                $errors[] = 'Valor de casilla inválido.';
+                $errors[] = $this->msg($rules, 'checkbox', 'Valor de casilla inválido.');
 
                 return $errors;
             }
             if ($required && $normalized !== 1) {
-                $errors[] = 'Debe marcar esta opción.';
+                $errors[] = $this->msg($rules, 'required', 'Debe marcar esta opción.');
             }
 
             return $errors;
         }
 
         if ($required && ($normalized === null || $normalized === '')) {
-            $errors[] = 'Este campo es obligatorio.';
+            $errors[] = $this->msg($rules, 'required', 'Este campo es obligatorio.');
 
             return $errors;
         }
@@ -158,32 +158,32 @@ final class CrudFieldValidationService
         }
 
         if (isset($rules['minlength']) && is_string($normalized) && mb_strlen($normalized) < (int) $rules['minlength']) {
-            $errors[] = 'Longitud mínima no cumplida.';
+            $errors[] = $this->msg($rules, 'minlength', 'Longitud mínima no cumplida.');
         }
         if (isset($rules['maxlength']) && is_string($normalized) && mb_strlen($normalized) > (int) $rules['maxlength']) {
-            $errors[] = 'Longitud máxima excedida.';
+            $errors[] = $this->msg($rules, 'maxlength', 'Longitud máxima excedida.');
         }
 
         if ($effectiveType === 'email' || $field->type() === 'email') {
             if (!is_string($normalized) || !filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
-                $errors[] = 'Correo electrónico inválido.';
+                $errors[] = $this->msg($rules, 'email', 'Correo electrónico inválido.');
             }
         }
 
         if ($effectiveType === 'integer' || $effectiveType === 'int') {
             if (is_float($normalized)) {
-                $errors[] = 'Debe ser un número entero válido.';
+                $errors[] = $this->msg($rules, 'integer', 'Debe ser un número entero válido.');
             } else {
                 $asString = is_int($normalized) ? (string) $normalized : trim((string) $normalized);
                 if (!$this->isStrictIntegerString($asString)) {
-                    $errors[] = 'Debe ser un número entero válido.';
+                    $errors[] = $this->msg($rules, 'integer', 'Debe ser un número entero válido.');
                 } else {
                     $intVal = (int) $asString;
                     if (isset($rules['min']) && $intVal < (int) $rules['min']) {
-                        $errors[] = 'Valor menor al mínimo permitido.';
+                        $errors[] = $this->msg($rules, 'min', 'Valor menor al mínimo permitido.');
                     }
                     if (isset($rules['max']) && $intVal > (int) $rules['max']) {
-                        $errors[] = 'Valor mayor al máximo permitido.';
+                        $errors[] = $this->msg($rules, 'max', 'Valor mayor al máximo permitido.');
                     }
                 }
             }
@@ -191,19 +191,19 @@ final class CrudFieldValidationService
 
         if ($effectiveType === 'numeric' || $effectiveType === 'decimal' || $effectiveType === 'money') {
             if (!is_string($normalized) && !is_int($normalized) && !is_float($normalized)) {
-                $errors[] = 'Debe ser un valor numérico.';
+                $errors[] = $this->msg($rules, 'numeric', 'Debe ser un valor numérico.');
             } elseif (!$this->isStrictDecimal((string) $normalized)) {
-                $errors[] = 'Formato numérico inválido.';
+                $errors[] = $this->msg($rules, 'numeric', 'Formato numérico inválido.');
             } else {
                 $floatVal = (float) str_replace(',', '.', (string) $normalized);
                 if (!is_finite($floatVal)) {
-                    $errors[] = 'Valor numérico no permitido.';
+                    $errors[] = $this->msg($rules, 'numeric', 'Valor numérico no permitido.');
                 } else {
                     if (isset($rules['min']) && $floatVal < (float) $rules['min']) {
-                        $errors[] = 'Valor menor al mínimo permitido.';
+                        $errors[] = $this->msg($rules, 'min', 'Valor menor al mínimo permitido.');
                     }
                     if (isset($rules['max']) && $floatVal > (float) $rules['max']) {
-                        $errors[] = 'Valor mayor al máximo permitido.';
+                        $errors[] = $this->msg($rules, 'max', 'Valor mayor al máximo permitido.');
                     }
                 }
             }
@@ -211,44 +211,60 @@ final class CrudFieldValidationService
 
         if ($effectiveType === 'string' || $effectiveType === 'text') {
             if (!is_string($normalized) && !is_numeric($normalized)) {
-                $errors[] = 'Debe ser texto.';
+                $errors[] = $this->msg($rules, 'string', 'Debe ser texto.');
             }
         }
 
         if ($effectiveType === 'boolean' || $effectiveType === 'bool') {
             if (!is_int($normalized) || ($normalized !== 0 && $normalized !== 1)) {
-                $errors[] = 'Valor booleano inválido.';
+                $errors[] = $this->msg($rules, 'boolean', 'Valor booleano inválido.');
             }
         }
 
         if ($effectiveType === 'date') {
             if (!is_string($normalized) || !$this->isValidDateYmd($normalized)) {
-                $errors[] = 'Fecha inválida. Use el formato AAAA-MM-DD.';
+                $errors[] = $this->msg($rules, 'date', 'Fecha inválida. Use el formato AAAA-MM-DD.');
             }
         }
 
         if ($effectiveType === 'datetime') {
             if (!is_string($normalized) || !$this->isValidDateTime($normalized)) {
-                $errors[] = 'Fecha y hora inválidas.';
+                $errors[] = $this->msg($rules, 'datetime', 'Fecha y hora inválidas.');
             }
         }
 
         if (isset($rules['in']) && is_array($rules['in'])) {
             if (!in_array((string) $normalized, array_map('strval', $rules['in']), true)) {
-                $errors[] = 'Valor no permitido.';
+                $errors[] = $this->msg($rules, 'in', 'Valor no permitido.');
             }
         }
 
         if (isset($rules['regex']) && is_string($rules['regex'])) {
             $pattern = $rules['regex'];
             if (!$this->isSafeRegexPattern($pattern)) {
-                $errors[] = 'Regla de formato no disponible.';
+                $errors[] = $this->msg($rules, 'regex', 'Regla de formato no disponible.');
             } elseif (is_string($normalized) && preg_match($pattern, $normalized) !== 1) {
-                $errors[] = 'Formato inválido.';
+                $errors[] = $this->msg($rules, 'regex', 'Formato inválido.');
             }
         }
 
         return $errors;
+    }
+
+    /**
+     * Devuelve el mensaje custom de `validation.messages[$key]` si existe y es
+     * un string no vacío; en caso contrario el mensaje por defecto.
+     *
+     * @param array<string, mixed> $rules
+     */
+    private function msg(array $rules, string $key, string $default): string
+    {
+        $messages = $rules['messages'] ?? null;
+        if (is_array($messages) && isset($messages[$key]) && is_string($messages[$key]) && $messages[$key] !== '') {
+            return $messages[$key];
+        }
+
+        return $default;
     }
 
     /**
