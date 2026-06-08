@@ -86,3 +86,22 @@ test('CrudActionDefinition: builtin predicate', function (): void {
     $a = CrudActionDefinition::fromArray(['name' => 'edit', 'type' => 'builtin']);
     assert_true($a->isBuiltin());
 });
+
+test('CrudActionDefinition: parses guard key for transition actions', function (): void {
+    $a = \App\Domain\Entities\Crud\CrudActionDefinition::fromArray([
+        'name' => 'autorizar',
+        'type' => 'transition',
+        'to' => 'autorizado',
+        'guard' => 'evento_autorizacion',
+    ]);
+    assert_same('autorizado', $a->to());
+    assert_same('evento_autorizacion', $a->guard());
+    assert_true($a->isTransition());
+});
+
+test('CrudActionDefinition: guard is null when absent or empty', function (): void {
+    $a = \App\Domain\Entities\Crud\CrudActionDefinition::fromArray(['name' => 'edit', 'type' => 'builtin']);
+    assert_null($a->guard());
+    $b = \App\Domain\Entities\Crud\CrudActionDefinition::fromArray(['name' => 'x', 'type' => 'transition', 'to' => 't', 'guard' => '']);
+    assert_null($b->guard());
+});

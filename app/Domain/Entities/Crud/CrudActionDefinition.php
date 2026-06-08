@@ -29,6 +29,7 @@ final class CrudActionDefinition
         private readonly ?string $handler,
         private readonly ?string $permission,
         private readonly ?string $to,
+        private readonly ?string $guard,
         private readonly array $visibleWhen,
         private readonly array $enabledWhen
     ) {}
@@ -59,6 +60,7 @@ final class CrudActionDefinition
             handler: isset($config['handler']) && $config['handler'] !== '' ? (string) $config['handler'] : null,
             permission: isset($config['permission']) && $config['permission'] !== '' ? (string) $config['permission'] : null,
             to: isset($config['to']) && $config['to'] !== '' ? (string) $config['to'] : null,
+            guard: isset($config['guard']) && $config['guard'] !== '' ? (string) $config['guard'] : null,
             visibleWhen: is_array($config['visible_when'] ?? null) ? $config['visible_when'] : [],
             enabledWhen: is_array($config['enabled_when'] ?? null) ? $config['enabled_when'] : []
         );
@@ -73,6 +75,7 @@ final class CrudActionDefinition
     public function confirm(): ?string { return $this->confirm; }
     public function handler(): ?string { return $this->handler; }
     public function to(): ?string { return $this->to; }
+    public function guard(): ?string { return $this->guard; }
 
     public function isBuiltin(): bool { return $this->type === 'builtin'; }
     public function isHandler(): bool { return $this->type === 'handler'; }
