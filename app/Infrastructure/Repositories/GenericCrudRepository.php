@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Repositories;
 
+use App\Domain\Interfaces\CrudConstraintRepositoryInterface;
 use App\Kernel\BaseClasses\BaseRepository;
 
-final class GenericCrudRepository extends BaseRepository
+final class GenericCrudRepository extends BaseRepository implements CrudConstraintRepositoryInterface
 {
     private const IDENTIFIER_PATTERN = '/^[a-zA-Z_][a-zA-Z0-9_]*$/';
 
@@ -196,6 +197,37 @@ final class GenericCrudRepository extends BaseRepository
             . ' WHERE ' . $this->quoteIdentifier($primaryKey) . ' = ?';
 
         return $this->execute($sql, $params);
+    }
+
+    public function existsForUnique(string $table, string $column, mixed $value, string $primaryKey, ?int $exceptId): bool
+    {
+        $safeTable = $this->quoteIdentifier($table);
+        $safeCol   = $this->quoteIdentifier($column);
+        $safePk    = $this->quoteIdentifier($primaryKey);
+
+        $sql = "SELECT COUNT(*) AS total FROM {$safeTable} WHERE {$safeCol} = ? AND `deleted` = 0";
+        $params = [$value];
+        if ($exceptId !== null) {
+            $sql .= " AND {$safePk} <> ?";
+            $params[] = $exceptId;
+        }
+
+        $row = $this->queryOne($sql, $params);
+
+        return ((int) ($row['total'] ?? 0)) > 0;
+    }
+
+    public function existsForReference(string $table, string $column, mixed $value): bool
+    {
+        $safeTable = $this->quoteIdentifier($table);
+        $safeCol   = $this->quoteIdentifier($column);
+
+        $row = $this->queryOne(
+            "SELECT COUNT(*) AS total FROM {$safeTable} WHERE {$safeCol} = ? LIMIT 1",
+            [$value]
+        );
+
+        return ((int) ($row['total'] ?? 0)) > 0;
     }
 
     private function quoteIdentifier(string $identifier): string
