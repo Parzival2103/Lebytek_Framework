@@ -457,3 +457,29 @@ Bloque `states` opcional en `config/cruds/{resource}.json` que declara una máqu
 **Demo**: `config/cruds/demo_productos.json` declara el bloque `states` (activo↔inactivo) y las acciones `desactivar`/`activar`; `activar` usa el guard `demo_producto_state_guard` (`DemoProductoStateGuard`), que sólo permite activar si el producto venía de `inactivo`.
 
 Componentes: `CrudStateMachine` (VO puro: validez de transiciones + label/badge), `CrudTransitionGuardInterface` (escape hatch), `CrudTransitionService` (`authorize()` puro + `apply()` con persistencia/auditoría/eventos), más el ruteo `transition` en `CrudActionService::run()`. La lógica de negocio vive en guards externos, nunca en el core.
+
+## Fase 3 — Validaciones
+
+- **Mensajes personalizados:** cada campo acepta `validation.messages` con pares `regla → mensaje` (ej. `required`, `unique`, `maxlength`, `regex`). Sobrescriben el texto por defecto.
+- **`unique`:** `"unique": true` o `"unique": { "ignore_self": true }` (en update excluye la propia fila). Se evalúa contra filas no borradas (`deleted = 0`).
+- **`exists`:** `"exists": { "table": "dom_...", "column": "id" }` valida que el valor exista en la tabla destino (FK lógica). La tabla destino debe usar prefijo permitido (no `auth_/cfg_/core_/log_`) y existir.
+- **Validadores de formulario externos:** `form.validators: ["clave", ...]` ejecuta clases que implementan `CrudValidatorInterface` (acumulan errores cross-field vía `$ctx->addError()`). Se registran en `config/crud_handlers.php`.
+
+Todos los errores (campo + DB + formulario) se acumulan y se lanzan en una sola `ValidationException`.
+
+## Fase 4 — Relaciones y detalle con pestañas
+
+- **`belongsTo`:** bloque `relations.<nombre>` con `{ table, foreign_key, value, label, filter, order_by }`. Un campo `type: relation` con `relation: "<nombre>"` se renderiza como `select` poblado desde la tabla relacionada (filtro estructurado `{col: val}`).
+- **`hasMany`:** `{ table, foreign_key, columns, order_by, direction, limit }`. Consumido por pestañas de detalle read-only.
+- **`detail.tabs`:** tipos `fields` (columnas), `relation` (hasMany), `history` (bitácora del registro) y `component` (vista whitelisteada bajo `Views/`, sin `..`). Sin bloque `detail`, el detalle muestra una sola pestaña "Datos generales".
+
+## Demo: qué muestra cada recurso
+
+- **demo_categorias:** `unique` con mensaje custom, checkbox, tab de historial.
+- **demo_productos:** `unique` en código, `belongsTo` a categorías (`categoria_id`), `exists`, estados y transiciones, tabs general + historial.
+- **demo_clientes:** `unique` email, validador de formulario (`demo_cliente_contacto`), tabs.
+- **demo_pedidos:** estados + transiciones con guard (`demo_pedido_pagar_guard`), `belongsTo` cliente, `hasMany` items en tab, validador de total (`demo_pedido_total`), `unique`/`regex`/`exists`, summaries, bulk.
+
+## Instalación / despliegue
+
+`php scripts/install.php` aplica schema + migraciones + seeds de forma idempotente (incluye las tablas y datos demo). Seguro de re-ejecutar en cada despliegue.
