@@ -34,42 +34,50 @@ use App\Kernel\Helpers\ViewHelper;
                     </div>
                 </div>
                 <div class="card-body p-3 p-md-4">
-                    <dl class="row crud-dl mb-0">
-                        <?php foreach (($columns ?? []) as $column): ?>
-                            <?php
-                                $name = (string) ($column['name'] ?? '');
-                                $raw = $row[$name] ?? '';
-                                $format = (string) ($column['format'] ?? '');
-                                $display = (string) $raw;
-
-                                if ($format === 'date' && $raw !== '' && $raw !== null) {
-                                    $ts = strtotime((string) $raw);
-                                    $display = $ts ? date('d/m/Y', $ts) : $display;
-                                } elseif ($format === 'datetime' && $raw !== '' && $raw !== null) {
-                                    $ts = strtotime((string) $raw);
-                                    $display = $ts ? date('d/m/Y H:i', $ts) : $display;
-                                } elseif ($format === 'money' && $raw !== '' && $raw !== null) {
-                                    $display = '$' . number_format((float) $raw, 2, '.', ',');
-                                }
-
-                                $badge = null;
-                                if (!empty($column['badge']) && is_array($column['badge'])) {
-                                    $badgeMap = $column['badge'];
-                                    $badge = (string) ($badgeMap[(string) $raw] ?? '');
-                                }
-                            ?>
-                            <dt class="col-12 col-sm-4 col-lg-3"><?= ViewHelper::e((string) ($column['label'] ?? $name)) ?></dt>
-                            <dd class="col-12 col-sm-8 col-lg-9 mb-3">
-                                <?php if ($badge !== ''): ?>
-                                    <span class="badge rounded-pill bg-<?= ViewHelper::e($badge) ?>-subtle text-<?= ViewHelper::e($badge) ?> border border-<?= ViewHelper::e($badge) ?>-subtle">
-                                        <?= ViewHelper::e($display) ?>
-                                    </span>
-                                <?php else: ?>
-                                    <span class="d-block py-1 border-bottom border-light-subtle"><?= ViewHelper::e($display) ?></span>
-                                <?php endif; ?>
-                            </dd>
-                        <?php endforeach; ?>
-                    </dl>
+                    <?php $tabs = is_array($tabs ?? null) ? $tabs : []; ?>
+                    <?php if (count($tabs) <= 1): ?>
+                        <?php
+                            $only = $tabs[0] ?? ['type' => 'fields', 'columns' => ($columns ?? [])];
+                            $tabColumns = is_array($only['columns'] ?? null) ? $only['columns'] : ($columns ?? []);
+                            require __DIR__ . '/partials/tab_fields.php';
+                        ?>
+                    <?php else: ?>
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <?php foreach ($tabs as $i => $tab): ?>
+                                <?php $tabKey = (string) ($tab['key'] ?? ('tab' . $i)); ?>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link <?= $i === 0 ? 'active' : '' ?>"
+                                            id="tab-btn-<?= ViewHelper::e($tabKey) ?>"
+                                            data-bs-toggle="tab" data-bs-target="#tab-pane-<?= ViewHelper::e($tabKey) ?>"
+                                            type="button" role="tab">
+                                        <?= ViewHelper::e((string) ($tab['label'] ?? $tabKey)) ?>
+                                    </button>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <div class="tab-content">
+                            <?php foreach ($tabs as $i => $tab): ?>
+                                <?php $tabKey = (string) ($tab['key'] ?? ('tab' . $i)); $tabType = (string) ($tab['type'] ?? 'fields'); ?>
+                                <div class="tab-pane fade <?= $i === 0 ? 'show active' : '' ?>"
+                                     id="tab-pane-<?= ViewHelper::e($tabKey) ?>" role="tabpanel">
+                                    <?php if ($tabType === 'fields'): ?>
+                                        <?php $tabColumns = is_array($tab['columns'] ?? null) ? $tab['columns'] : []; require __DIR__ . '/partials/tab_fields.php'; ?>
+                                    <?php elseif ($tabType === 'relation'): ?>
+                                        <?php $relColumns = is_array($tab['columns'] ?? null) ? $tab['columns'] : []; $relRows = is_array($tab['rows'] ?? null) ? $tab['rows'] : []; require __DIR__ . '/partials/tab_relation.php'; ?>
+                                    <?php elseif ($tabType === 'history'): ?>
+                                        <?php $historyEntries = is_array($tab['entries'] ?? null) ? $tab['entries'] : []; require __DIR__ . '/partials/tab_history.php'; ?>
+                                    <?php elseif ($tabType === 'component'): ?>
+                                        <?php
+                                            $componentView = (string) ($tab['view'] ?? '');
+                                            if ($componentView !== '' && !str_contains($componentView, '..')) {
+                                                echo ViewHelper::partial($componentView, ['row' => $row ?? []]);
+                                            }
+                                        ?>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

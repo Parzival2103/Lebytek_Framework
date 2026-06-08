@@ -16,7 +16,8 @@ final class CrudResourceService
         private readonly CrudTableBuilder $tableBuilder,
         private readonly RbacService $rbacService,
         private readonly CrudActionResolver $actionResolver,
-        private readonly CrudActionService $actionService
+        private readonly CrudActionService $actionService,
+        private readonly CrudDetailBuilder $detailBuilder
     ) {}
 
     public function buildIndexData(string $resource, array $query): array
@@ -100,6 +101,8 @@ final class CrudResourceService
             ];
         }
 
+        $tabs = $this->detailBuilder->build($definition, $row);
+
         return [
             'resource' => $definition->key(),
             'title' => $definition->title(),
@@ -108,6 +111,7 @@ final class CrudResourceService
             'primaryKey' => $definition->primaryKey(),
             'actions' => $actions,
             'state' => $state,
+            'tabs' => $tabs,
         ];
     }
 

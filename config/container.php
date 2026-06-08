@@ -39,6 +39,7 @@ use App\Application\Services\CrudConfigLoader;
 use App\Application\Services\CrudConfigValidator;
 use App\Application\Services\CrudDataService;
 use App\Application\Services\CrudDbConstraintValidator;
+use App\Application\Services\CrudDetailBuilder;
 use App\Application\Services\CrudFieldValidationService;
 use App\Application\Services\CrudFormBuilder;
 use App\Application\Services\CrudHandlerRegistry;
@@ -114,6 +115,10 @@ return static function (Container $container): void {
     $container->singleton(CrudFormBuilder::class, fn(Container $c) => new CrudFormBuilder(
         $c->get(CrudRelationService::class)
     ));
+    $container->singleton(CrudDetailBuilder::class, fn(Container $c) => new CrudDetailBuilder(
+        $c->get(CrudRelationService::class),
+        $c->get(BitacoraRepositoryInterface::class)
+    ));
     $container->singleton(CrudTableBuilder::class, fn() => new CrudTableBuilder());
     $container->singleton(CrudActionResolver::class, fn() => new CrudActionResolver());
     $container->singleton(CrudTransitionService::class, fn(Container $c) => new CrudTransitionService(
@@ -138,7 +143,8 @@ return static function (Container $container): void {
         $c->get(CrudTableBuilder::class),
         $c->get(RbacService::class),
         $c->get(CrudActionResolver::class),
-        $c->get(CrudActionService::class)
+        $c->get(CrudActionService::class),
+        $c->get(CrudDetailBuilder::class)
     ));
 
     foreach ((require ROOT_PATH . '/config/dashboard.php')['providers'] as $fqcnProvider) {
