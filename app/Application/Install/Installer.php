@@ -6,6 +6,7 @@ namespace App\Application\Install;
 
 use App\Domain\Interfaces\MigrationRepositoryInterface;
 use App\Domain\Interfaces\ModuleStateRepositoryInterface;
+use App\Infrastructure\Install\InstallTrace;
 use App\Infrastructure\Install\SqlFileRunner;
 
 final class Installer
@@ -122,12 +123,16 @@ final class Installer
     public function aplicar(InstallPlan $plan): void
     {
         foreach ($plan->migracionesPendientes as $item) {
+            InstallTrace::log('migracion inicio | ' . $item['archivo']);
             $this->runner->ejecutar($item['ruta']);
             $this->migraciones->registrar($item['modulo'], $item['archivo'], $item['checksum']);
+            InstallTrace::log('migracion OK | ' . $item['archivo']);
         }
         foreach ($plan->seedsPendientes as $item) {
+            InstallTrace::log('seed inicio | ' . $item['archivo']);
             $this->runner->ejecutar($item['ruta']);
             $this->migraciones->registrar($item['modulo'], $item['archivo'], $item['checksum']);
+            InstallTrace::log('seed OK | ' . $item['archivo']);
         }
         foreach ($plan->modulos as $mod) {
             $this->modulos->registrar($mod['clave'], $mod['version'], true);

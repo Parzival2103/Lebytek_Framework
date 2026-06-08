@@ -6,7 +6,14 @@ define('ROOT_PATH', dirname(__DIR__, 2));
 define('APP_PATH', ROOT_PATH . '/app');
 define('STORAGE_PATH', ROOT_PATH . '/storage');
 
+@mkdir(STORAGE_PATH . '/logs', 0755, true);
+ini_set('log_errors', '1');
+ini_set('error_log', STORAGE_PATH . '/logs/install-wizard.log');
+
 require_once APP_PATH . '/Kernel/Autoloader.php';
+
+use App\Infrastructure\Install\InstallTrace;
+use App\Infrastructure\Install\SqlFileRunner;
 
 use App\Kernel\EnvLoader;
 use App\Kernel\Config\Config;
@@ -89,7 +96,10 @@ $container = new Container();
 $installer = $container->get(Installer::class);
 /** @var ModuleRegistry $registry */
 $registry  = $container->get(ModuleRegistry::class);
+/** @var SqlFileRunner $sqlRunner */
+$sqlRunner = $container->get(SqlFileRunner::class);
 
 $paso = (string) ($_GET['paso'] ?? 'requisitos');
+InstallTrace::log('wizard bootstrap | paso=' . $paso);
 
 require __DIR__ . '/steps.php';

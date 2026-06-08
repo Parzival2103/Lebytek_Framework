@@ -6,6 +6,7 @@ namespace App\Infrastructure\Install;
 
 use App\Kernel\Database\Connection;
 use RuntimeException;
+use Throwable;
 
 /**
  * Lee y ejecuta archivos .sql multi-statement (reutiliza el partido de
@@ -60,10 +61,28 @@ final class SqlFileRunner
         if ($contenido === false) {
             throw new RuntimeException("No se pudo leer {$ruta}");
         }
-        $pdo = Connection::getInstance();
-        foreach ($this->partir($contenido) as $statement) {
-            $this->ejecutarSentencia($pdo, $statement);
+        $pdo        = Connection::getInstance();
+        $sentencias = $this->partir($contenido);
+        $total      = count($sentencias);
+
+        InstallTrace::log('sql inicio | ruta=' . $ruta . ' | stmts=' . $total);
+
+        foreach ($sentencias as $indice => $statement) {
+            try {
+                $this->ejecutarSentencia($pdo, $statement);
+            } catch (Throwable $e) {
+                $preview = mb_substr(preg_replace('/\s+/', ' ', $statement) ?: '', 0, 120);
+                InstallTrace::log(
+                    'sql FATAL | ruta=' . $ruta
+                    . ' | stmt=' . ($indice + 1) . '/' . $total
+                    . ' | preview=' . $preview
+                    . ' | msg=' . $e->getMessage()
+                );
+                throw $e;
+            }
         }
+
+        InstallTrace::log('sql OK | ruta=' . $ruta);
     }
 
     /**

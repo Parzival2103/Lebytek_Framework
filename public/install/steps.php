@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Infrastructure\Install\InstallTrace;
+use App\Kernel\Config\Config;
+use App\Kernel\Database\Connection;
+
 /** Helper de escape para las vistas. */
 function e(string $v): string { return htmlspecialchars($v, ENT_QUOTES); }
 
@@ -51,39 +55,67 @@ switch ($paso) {
         break;
 
     case 'ejecutar':
-        $seleccion = $_SESSION['install_modulos'] ?? ['core'];
-        $admin     = $_SESSION['install_admin'] ?? null;
+        $seleccion  = $_SESSION['install_modulos'] ?? ['core'];
+        $admin      = $_SESSION['install_admin'] ?? null;
+        $pasoActual = 'inicio';
 
-        // Schema base primero.
-        (new App\Infrastructure\Install\SqlFileRunner())->ejecutar(ROOT_PATH . '/database/schema/schema.sql');
+        try {
+            InstallTrace::log('ejecutar inicio | modulos=' . implode(',', $seleccion));
 
-        $plan = $installer->plan($seleccion);
-        $installer->aplicar($plan);
+            $pasoActual = 'schema';
+            $sqlRunner->ejecutar(ROOT_PATH . '/database/schema/schema.sql');
+            InstallTrace::log('schema.sql OK');
 
-        // Escribir config/vertical.php con módulos activos.
-        instalar_escribir_vertical($seleccion);
+            $pasoActual = 'plan';
+            $plan = $installer->plan($seleccion);
+            InstallTrace::log(
+                'plan | mig_pend=' . count($plan->migracionesPendientes)
+                . ' seeds_pend=' . count($plan->seedsPendientes)
+            );
 
-        // Crear/actualizar admin.
-        if (is_array($admin)) {
-            instalar_crear_admin($admin['email'], $admin['password']);
+            $pasoActual = 'migraciones';
+            $installer->aplicar($plan);
+            InstallTrace::log('migraciones OK');
+
+            $pasoActual = 'vertical';
+            instalar_escribir_vertical($seleccion);
+            InstallTrace::log('vertical.php OK');
+
+            $pasoActual = 'admin';
+            if (is_array($admin)) {
+                instalar_crear_admin($admin['email'], $admin['password']);
+                InstallTrace::log('admin OK | email=' . $admin['email']);
+            }
+
+            $pasoActual = 'lock';
+            $resumen = json_encode([
+                'version'  => Config::get('app.version', '0.0.0'),
+                'fecha'    => date('c'),
+                'modulos'  => $seleccion,
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            file_put_contents(STORAGE_PATH . '/install.lock', (string) $resumen);
+            InstallTrace::log('install.lock escrito | DONE');
+
+            unset($_SESSION['install_modulos'], $_SESSION['install_admin']);
+
+            wizard_render('paso_resultado', [
+                'tituloPaso' => 'Listo',
+                'version'    => (string) Config::get('app.version', '0.0.0'),
+                'seleccion'  => $seleccion,
+            ]);
+        } catch (\Throwable $e) {
+            InstallTrace::log(
+                'FATAL | paso=' . $pasoActual
+                . ' | msg=' . $e->getMessage()
+                . ' | ' . $e->getFile() . ':' . $e->getLine()
+            );
+            wizard_render('paso_error', [
+                'tituloPaso'  => 'Error de instalación',
+                'pasoFallido' => $pasoActual,
+                'mensaje'     => $e->getMessage(),
+                'csrf'        => $csrf,
+            ]);
         }
-
-        // Lock file.
-        $resumen = json_encode([
-            'version'  => Config::get('app.version', '0.0.0'),
-            'fecha'    => date('c'),
-            'modulos'  => $seleccion,
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        file_put_contents(STORAGE_PATH . '/install.lock', (string) $resumen);
-
-        // Limpiar estado del asistente.
-        unset($_SESSION['install_modulos'], $_SESSION['install_admin']);
-
-        wizard_render('paso_resultado', [
-            'tituloPaso' => 'Listo',
-            'version'    => (string) Config::get('app.version', '0.0.0'),
-            'seleccion'  => $seleccion,
-        ]);
         break;
 
     default:
