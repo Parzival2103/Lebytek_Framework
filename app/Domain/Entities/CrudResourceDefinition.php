@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Domain\Entities;
 
 use App\Domain\Entities\Crud\CrudActionDefinition;
+use App\Domain\Entities\Crud\CrudRelationDefinition;
 use App\Domain\Entities\Crud\CrudStateMachine;
+use App\Domain\Entities\Crud\CrudTabDefinition;
 
 final class CrudResourceDefinition
 {
@@ -33,7 +35,9 @@ final class CrudResourceDefinition
         private readonly array $rowActions,
         private readonly array $bulkActions,
         private readonly ?CrudStateMachine $stateMachine,
-        private readonly array $formValidators
+        private readonly array $formValidators,
+        private readonly array $relations,
+        private readonly array $detailTabs
     ) {}
 
     public static function fromArray(array $config): self
@@ -102,6 +106,23 @@ final class CrudResourceDefinition
             }
         }
 
+        $relations = [];
+        foreach ((is_array($config['relations'] ?? null) ? $config['relations'] : []) as $relName => $relConfig) {
+            if (is_string($relName) && $relName !== '' && is_array($relConfig)) {
+                $relations[$relName] = CrudRelationDefinition::fromArray($relName, $relConfig);
+            }
+        }
+
+        $detailTabs = [];
+        $detailBlock = $config['detail'] ?? null;
+        if (is_array($detailBlock) && is_array($detailBlock['tabs'] ?? null)) {
+            foreach ($detailBlock['tabs'] as $tabConfig) {
+                if (is_array($tabConfig) && ($tabConfig['key'] ?? '') !== '') {
+                    $detailTabs[] = CrudTabDefinition::fromArray($tabConfig);
+                }
+            }
+        }
+
         return new self(
             key: (string) ($resource['key'] ?? ''),
             title: (string) ($resource['title'] ?? ''),
@@ -123,7 +144,9 @@ final class CrudResourceDefinition
             rowActions: $rowActions,
             bulkActions: $bulkActions,
             stateMachine: $stateMachine,
-            formValidators: $formValidators
+            formValidators: $formValidators,
+            relations: $relations,
+            detailTabs: $detailTabs
         );
     }
 
@@ -189,5 +212,32 @@ final class CrudResourceDefinition
     public function formValidators(): array
     {
         return $this->formValidators;
+    }
+
+    /** @return array<string, CrudRelationDefinition> */
+    public function relations(): array
+    {
+        return $this->relations;
+    }
+
+    public function hasRelations(): bool
+    {
+        return $this->relations !== [];
+    }
+
+    public function relation(string $name): ?CrudRelationDefinition
+    {
+        return $this->relations[$name] ?? null;
+    }
+
+    /** @return list<CrudTabDefinition> */
+    public function detailTabs(): array
+    {
+        return $this->detailTabs;
+    }
+
+    public function hasDetail(): bool
+    {
+        return $this->detailTabs !== [];
     }
 }
