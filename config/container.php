@@ -38,6 +38,7 @@ use App\Application\Services\CrudActionService;
 use App\Application\Services\CrudConfigLoader;
 use App\Application\Services\CrudConfigValidator;
 use App\Application\Services\CrudDataService;
+use App\Application\Services\CrudDbConstraintValidator;
 use App\Application\Services\CrudFieldValidationService;
 use App\Application\Services\CrudFormBuilder;
 use App\Application\Services\CrudHandlerRegistry;
@@ -95,11 +96,16 @@ return static function (Container $container): void {
         $c->get(CrudHandlerRegistry::class)
     ));
     $container->singleton(CrudFieldValidationService::class, fn() => new CrudFieldValidationService());
+    $container->singleton(CrudDbConstraintValidator::class, fn(Container $c) => new CrudDbConstraintValidator(
+        $c->get(GenericCrudRepository::class)
+    ));
     $container->singleton(CrudDataService::class, fn(Container $c) => new CrudDataService(
         $c->get(GenericCrudRepository::class),
         $c->get(BitacoraRepositoryInterface::class),
         $c->get(CrudHookRunner::class),
-        $c->get(CrudFieldValidationService::class)
+        $c->get(CrudFieldValidationService::class),
+        $c->get(CrudDbConstraintValidator::class),
+        $c->get(CrudHandlerRegistry::class)
     ));
     $container->singleton(CrudFormBuilder::class, fn() => new CrudFormBuilder());
     $container->singleton(CrudTableBuilder::class, fn() => new CrudTableBuilder());

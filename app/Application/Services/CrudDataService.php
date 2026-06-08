@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Application\Services;
 
+use App\Application\Crud\Context\CrudValidationContext;
 use App\Application\Crud\Context\CrudWriteContext;
 use App\Domain\Entities\CrudFieldDefinition;
 use App\Domain\Entities\CrudResourceDefinition;
 use App\Domain\Exceptions\ValidationException;
 use App\Domain\Interfaces\BitacoraRepositoryInterface;
+use App\Domain\Interfaces\CrudValidatorInterface;
 use App\Infrastructure\Repositories\GenericCrudRepository;
 use App\Kernel\Helpers\Paginator;
 use App\Kernel\Logging\AppLogger;
@@ -30,7 +32,9 @@ final class CrudDataService
         private readonly GenericCrudRepository $repository,
         private readonly BitacoraRepositoryInterface $bitacoraRepository,
         private readonly CrudHookRunner $hookRunner,
-        private readonly CrudFieldValidationService $fieldValidation
+        private readonly CrudFieldValidationService $fieldValidation,
+        private readonly ?CrudDbConstraintValidator $dbConstraintValidator = null,
+        private readonly ?CrudHandlerRegistry $handlerRegistry = null
     ) {}
 
     public function list(CrudResourceDefinition $definition, array $query): array
@@ -245,7 +249,7 @@ final class CrudDataService
 
     public function store(CrudResourceDefinition $definition, array $input, array $files, ?int $userId, string $ip): int
     {
-        $payload = $this->buildPayload($definition, $input, $files, true, null);
+        $payload = $this->buildPayload($definition, $input, $files, true, null, $userId, $ip);
 
         $systemColumns = [
             'created_at' => date('Y-m-d H:i:s'),
@@ -297,7 +301,7 @@ final class CrudDataService
     public function update(CrudResourceDefinition $definition, int $id, array $input, array $files, ?int $userId, string $ip): void
     {
         $existing = $this->repository->findById($definition->table(), $definition->primaryKey(), $id);
-        $payload = $this->buildPayload($definition, $input, $files, false, is_array($existing) ? $existing : null);
+        $payload = $this->buildPayload($definition, $input, $files, false, is_array($existing) ? $existing : null, $userId, $ip);
 
         $systemColumns = [
             'updated_at' => date('Y-m-d H:i:s'),
@@ -376,7 +380,7 @@ final class CrudDataService
         $this->hookRunner->run($definition, 'afterDelete', $ctx);
     }
 
-    private function buildPayload(CrudResourceDefinition $definition, array $input, array $files, bool $isCreate, ?array $existingRow): array
+    private function buildPayload(CrudResourceDefinition $definition, array $input, array $files, bool $isCreate, ?array $existingRow, ?int $userId = null, string $ip = ''): array
     {
         $payload = [];
         $errors = [];
@@ -423,6 +427,44 @@ final class CrudDataService
         foreach ($this->fieldValidation->validatePayload($definition->formFields(), $normalizedByField) as $fieldName => $fieldErrors) {
             foreach ($fieldErrors as $msg) {
                 $errors[$fieldName][] = $msg;
+            }
+        }
+
+        $exceptId = (!$isCreate && is_array($existingRow))
+            ? (((int) ($existingRow[$definition->primaryKey()] ?? 0)) ?: null)
+            : null;
+
+        if ($this->dbConstraintValidator !== null) {
+            foreach ($this->dbConstraintValidator->validate($definition, $normalizedByField, $exceptId) as $fieldName => $fieldErrors) {
+                foreach ($fieldErrors as $msg) {
+                    $errors[$fieldName][] = $msg;
+                }
+            }
+        }
+
+        if ($this->handlerRegistry !== null && $definition->formValidators() !== []) {
+            $record = (!$isCreate && is_array($existingRow)) ? $existingRow : null;
+            $ctx = new CrudValidationContext(
+                $definition->key(),
+                $definition->table(),
+                $definition->primaryKey(),
+                $userId,
+                $ip,
+                $input,
+                $normalizedByField,
+                $record,
+                !$isCreate
+            );
+            foreach ($definition->formValidators() as $validatorKey) {
+                $validator = $this->handlerRegistry->resolve($validatorKey, CrudValidatorInterface::class);
+                if ($validator instanceof CrudValidatorInterface) {
+                    $validator->validate($ctx);
+                }
+            }
+            foreach ($ctx->errors() as $fieldName => $fieldErrors) {
+                foreach ($fieldErrors as $msg) {
+                    $errors[$fieldName][] = $msg;
+                }
             }
         }
 
