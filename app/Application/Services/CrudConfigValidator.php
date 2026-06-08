@@ -135,6 +135,50 @@ final class CrudConfigValidator
             $errors[] = $stateError;
         }
 
+        foreach (self::validationConstraintShapeErrors($config) as $constraintError) {
+            $errors[] = $constraintError;
+        }
+
+        // exists: la tabla/columna destino debe existir realmente.
+        foreach (($config['form']['fields'] ?? []) as $index => $field) {
+            if (!is_array($field) || !is_array($field['validation']['exists'] ?? null)) {
+                continue;
+            }
+            $exTable = (string) ($field['validation']['exists']['table'] ?? '');
+            $exColumn = (string) ($field['validation']['exists']['column'] ?? 'id');
+            if ($exTable === '') {
+                continue; // ya reportado por validationConstraintShapeErrors
+            }
+            if (!$this->repository->tableExists($exTable)) {
+                $errors[] = "form.fields[{$index}].validation.exists: la tabla {$exTable} no existe.";
+                continue;
+            }
+            $exCols = array_fill_keys($this->repository->getTableColumns($exTable), true);
+            if (!isset($exCols[$exColumn])) {
+                $errors[] = "form.fields[{$index}].validation.exists: la columna {$exColumn} no existe en {$exTable}.";
+            }
+        }
+
+        // form.validators: cada clave debe estar registrada e implementar la interfaz.
+        foreach ((is_array($config['form']['validators'] ?? null) ? $config['form']['validators'] : []) as $vIndex => $validatorKey) {
+            if (!is_string($validatorKey) || $validatorKey === '') {
+                $errors[] = "form.validators[{$vIndex}] debe ser una clave string no vacía.";
+                continue;
+            }
+            if (!$this->handlerRegistry->hasKey($validatorKey)) {
+                $errors[] = "form.validators '{$validatorKey}' no está registrado en config/crud_handlers.php.";
+                continue;
+            }
+            $class = $this->handlerRegistry->classForKey($validatorKey);
+            if ($class === null || !class_exists($class)) {
+                $errors[] = "La clase del validador '{$validatorKey}' no existe o no es autoload-eable.";
+                continue;
+            }
+            if (!in_array(\App\Domain\Interfaces\CrudValidatorInterface::class, class_implements($class) ?: [], true)) {
+                $errors[] = "El validador '{$validatorKey}' ({$class}) debe implementar CrudValidatorInterface.";
+            }
+        }
+
         $statesColumn = is_array($config['states'] ?? null) ? (string) ($config['states']['column'] ?? '') : '';
         if ($statesColumn !== '' && $table !== '') {
             if (!isset($columnLookup[$statesColumn])) {
@@ -207,6 +251,55 @@ final class CrudConfigValidator
                 }
             }
         }
+        return $errors;
+    }
+
+    /**
+     * Valida la forma de los constraints `unique`/`exists` por campo. Pura, sin DB.
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    public static function validationConstraintShapeErrors(array $config): array
+    {
+        $errors = [];
+        foreach (($config['form']['fields'] ?? []) as $index => $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+            $rules = $field['validation'] ?? null;
+            if (!is_array($rules)) {
+                continue;
+            }
+
+            if (array_key_exists('unique', $rules)) {
+                $u = $rules['unique'];
+                $okShape = $u === true || (is_array($u) && (!array_key_exists('ignore_self', $u) || is_bool($u['ignore_self'])));
+                if (!$okShape) {
+                    $errors[] = "form.fields[{$index}].validation.unique debe ser true u objeto {ignore_self:true}.";
+                }
+            }
+
+            if (array_key_exists('exists', $rules)) {
+                $e = $rules['exists'];
+                if (!is_array($e)) {
+                    $errors[] = "form.fields[{$index}].validation.exists debe ser un objeto.";
+                    continue;
+                }
+                $table = (string) ($e['table'] ?? '');
+                if ($table === '') {
+                    $errors[] = "form.fields[{$index}].validation.exists.table es obligatorio.";
+                    continue;
+                }
+                foreach (self::BLOCKED_PREFIXES as $prefix) {
+                    if (str_starts_with($table, $prefix)) {
+                        $errors[] = "form.fields[{$index}].validation.exists.table ({$table}) usa un prefijo bloqueado.";
+                        break;
+                    }
+                }
+            }
+        }
+
         return $errors;
     }
 
