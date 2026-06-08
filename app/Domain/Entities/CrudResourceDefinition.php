@@ -32,7 +32,8 @@ final class CrudResourceDefinition
         private readonly bool $hasActionsBlock,
         private readonly array $rowActions,
         private readonly array $bulkActions,
-        private readonly ?CrudStateMachine $stateMachine
+        private readonly ?CrudStateMachine $stateMachine,
+        private readonly array $formValidators
     ) {}
 
     public static function fromArray(array $config): self
@@ -94,6 +95,13 @@ final class CrudResourceDefinition
             $stateMachine = CrudStateMachine::fromArray($config['states']);
         }
 
+        $formValidators = [];
+        foreach (($form['validators'] ?? []) as $validatorKey) {
+            if (is_string($validatorKey) && $validatorKey !== '') {
+                $formValidators[] = $validatorKey;
+            }
+        }
+
         return new self(
             key: (string) ($resource['key'] ?? ''),
             title: (string) ($resource['title'] ?? ''),
@@ -114,7 +122,8 @@ final class CrudResourceDefinition
             hasActionsBlock: $hasActionsBlock,
             rowActions: $rowActions,
             bulkActions: $bulkActions,
-            stateMachine: $stateMachine
+            stateMachine: $stateMachine,
+            formValidators: $formValidators
         );
     }
 
@@ -174,5 +183,11 @@ final class CrudResourceDefinition
     public function stateMachine(): ?CrudStateMachine
     {
         return $this->stateMachine;
+    }
+
+    /** @return list<string> */
+    public function formValidators(): array
+    {
+        return $this->formValidators;
     }
 }
