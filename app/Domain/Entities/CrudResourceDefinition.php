@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Entities;
 
 use App\Domain\Entities\Crud\CrudActionDefinition;
+use App\Domain\Entities\Crud\CrudStateMachine;
 
 final class CrudResourceDefinition
 {
@@ -30,7 +31,8 @@ final class CrudResourceDefinition
         private readonly bool $listTableCompact,
         private readonly bool $hasActionsBlock,
         private readonly array $rowActions,
-        private readonly array $bulkActions
+        private readonly array $bulkActions,
+        private readonly ?CrudStateMachine $stateMachine
     ) {}
 
     public static function fromArray(array $config): self
@@ -87,6 +89,11 @@ final class CrudResourceDefinition
             }
         }
 
+        $stateMachine = null;
+        if (array_key_exists('states', $config) && is_array($config['states'])) {
+            $stateMachine = CrudStateMachine::fromArray($config['states']);
+        }
+
         return new self(
             key: (string) ($resource['key'] ?? ''),
             title: (string) ($resource['title'] ?? ''),
@@ -106,7 +113,8 @@ final class CrudResourceDefinition
             listTableCompact: $listTableCompact,
             hasActionsBlock: $hasActionsBlock,
             rowActions: $rowActions,
-            bulkActions: $bulkActions
+            bulkActions: $bulkActions,
+            stateMachine: $stateMachine
         );
     }
 
@@ -156,5 +164,15 @@ final class CrudResourceDefinition
     public function bulkActions(): array
     {
         return $this->bulkActions;
+    }
+
+    public function hasStates(): bool
+    {
+        return $this->stateMachine !== null;
+    }
+
+    public function stateMachine(): ?CrudStateMachine
+    {
+        return $this->stateMachine;
     }
 }
