@@ -7,6 +7,7 @@ use App\Presentation\Controllers\Admin\RolesController;
 use App\Presentation\Controllers\Admin\PermisosController;
 use App\Presentation\Controllers\Admin\AjustesController;
 use App\Presentation\Controllers\Admin\CrudController;
+use App\Presentation\Controllers\Admin\SistemaEstadoController;
 use App\Presentation\Controllers\PwaController;
 use App\Presentation\Middlewares\AuthMiddleware;
 use App\Presentation\Middlewares\CsrfMiddleware;
@@ -41,6 +42,8 @@ $router->group([
     $rbacPermisos  = [new RbacMiddleware('administracion.ver')];
 
     $router->get('/dashboard', [DashboardController::class, 'index'], $rbacDashboard);
+
+    $router->get('/sistema/estado', [SistemaEstadoController::class, 'index'], [new RbacMiddleware('sistema.ver')]);
 
     $router->get('/ajustes',              [AjustesController::class, 'index'], $rbacAjustes);
     $router->post('/ajustes',              [AjustesController::class, 'guardar'],     array_merge($rbacAjustes, [CsrfMiddleware::class]));
