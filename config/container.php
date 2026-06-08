@@ -44,6 +44,7 @@ use App\Application\Services\CrudHandlerRegistry;
 use App\Application\Services\CrudHookRunner;
 use App\Application\Services\CrudResourceService;
 use App\Application\Services\CrudTableBuilder;
+use App\Application\Services\CrudTransitionService;
 
 return static function (Container $container): void {
 
@@ -103,13 +104,20 @@ return static function (Container $container): void {
     $container->singleton(CrudFormBuilder::class, fn() => new CrudFormBuilder());
     $container->singleton(CrudTableBuilder::class, fn() => new CrudTableBuilder());
     $container->singleton(CrudActionResolver::class, fn() => new CrudActionResolver());
+    $container->singleton(CrudTransitionService::class, fn(Container $c) => new CrudTransitionService(
+        $c->get(CrudHandlerRegistry::class),
+        $c->get(GenericCrudRepository::class),
+        $c->get(BitacoraRepositoryInterface::class),
+        $c->get(CrudHookRunner::class)
+    ));
     $container->singleton(CrudActionService::class, fn(Container $c) => new CrudActionService(
         $c->get(CrudHandlerRegistry::class),
         $c->get(CrudConfigLoader::class),
         $c->get(CrudDataService::class),
         $c->get(CrudActionResolver::class),
         $c->get(RbacService::class),
-        $c->get(BitacoraRepositoryInterface::class)
+        $c->get(BitacoraRepositoryInterface::class),
+        $c->get(CrudTransitionService::class)
     ));
     $container->singleton(CrudResourceService::class, fn(Container $c) => new CrudResourceService(
         $c->get(CrudConfigLoader::class),
