@@ -42,6 +42,7 @@ use App\Application\Services\CrudDbConstraintValidator;
 use App\Application\Services\CrudFieldValidationService;
 use App\Application\Services\CrudFormBuilder;
 use App\Application\Services\CrudHandlerRegistry;
+use App\Application\Services\CrudRelationService;
 use App\Application\Services\CrudHookRunner;
 use App\Application\Services\CrudResourceService;
 use App\Application\Services\CrudTableBuilder;
@@ -107,7 +108,12 @@ return static function (Container $container): void {
         $c->get(CrudDbConstraintValidator::class),
         $c->get(CrudHandlerRegistry::class)
     ));
-    $container->singleton(CrudFormBuilder::class, fn() => new CrudFormBuilder());
+    $container->singleton(CrudRelationService::class, fn(Container $c) => new CrudRelationService(
+        $c->get(GenericCrudRepository::class)
+    ));
+    $container->singleton(CrudFormBuilder::class, fn(Container $c) => new CrudFormBuilder(
+        $c->get(CrudRelationService::class)
+    ));
     $container->singleton(CrudTableBuilder::class, fn() => new CrudTableBuilder());
     $container->singleton(CrudActionResolver::class, fn() => new CrudActionResolver());
     $container->singleton(CrudTransitionService::class, fn(Container $c) => new CrudTransitionService(

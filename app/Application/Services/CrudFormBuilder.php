@@ -9,6 +9,8 @@ use App\Domain\Entities\CrudResourceDefinition;
 
 final class CrudFormBuilder
 {
+    public function __construct(private readonly ?CrudRelationService $relationService = null) {}
+
     public function build(
         CrudResourceDefinition $definition,
         array $values = [],
@@ -26,6 +28,18 @@ final class CrudFormBuilder
             $name = $field->name();
             $readonly = $field->readonly();
             $type = $field->type();
+            $options = $field->options();
+
+            // Campo type: relation -> se renderiza como select con opciones de la relación.
+            if ($type === 'relation') {
+                $type = 'select';
+                $relationName = $field->relation();
+                $relation = $relationName !== null ? $definition->relation($relationName) : null;
+                if ($relation !== null && $this->relationService !== null) {
+                    $options = $this->relationService->optionsFor($relation);
+                }
+            }
+
             $fields[] = [
                 'name' => $name,
                 'label' => $field->label(),
@@ -35,7 +49,7 @@ final class CrudFormBuilder
                 'readonlyPreservePost' => $readonly && in_array($type, ['select', 'checkbox'], true),
                 'hidden' => $field->hidden(),
                 'col' => $field->col(),
-                'options' => $field->options(),
+                'options' => $options,
                 'validation' => $field->validation(),
                 'help_text' => $field->helpText(),
                 'value' => $values[$name] ?? $field->defaultValue(),

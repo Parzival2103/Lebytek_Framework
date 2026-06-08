@@ -19,7 +19,8 @@ final class CrudFieldDefinition
         private readonly mixed $defaultValue = null,
         private readonly ?string $format = null,
         private readonly array $badge = [],
-        private readonly ?string $helpText = null
+        private readonly ?string $helpText = null,
+        private readonly ?string $relation = null
     ) {}
 
     public static function fromArray(array $data): self
@@ -39,7 +40,8 @@ final class CrudFieldDefinition
             defaultValue: $data['default'] ?? null,
             format: isset($data['format']) ? (string) $data['format'] : null,
             badge: is_array($data['badge'] ?? null) ? $data['badge'] : [],
-            helpText: is_string($help) && $help !== '' ? $help : null
+            helpText: is_string($help) && $help !== '' ? $help : null,
+            relation: isset($data['relation']) && $data['relation'] !== '' ? (string) $data['relation'] : null
         );
     }
 
@@ -56,4 +58,5 @@ final class CrudFieldDefinition
     public function format(): ?string { return $this->format; }
     public function badge(): array { return $this->badge; }
     public function helpText(): ?string { return $this->helpText; }
+    public function relation(): ?string { return $this->relation; }
 }
