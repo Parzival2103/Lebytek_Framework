@@ -88,15 +88,27 @@ FROM core_menu_items p
 WHERE p.slug = 'crud-demo';
 
 INSERT INTO `dom_demo_clientes` (`nombre`, `email`, `telefono`, `status`, `deleted`, `created_at`, `created_by`)
-VALUES
-('Cliente Demo Uno', 'cliente1.demo@example.com', '5550001001', 'activo', 0, NOW(), NULL),
-('Cliente Demo Dos', 'cliente2.demo@example.com', '5550001002', 'inactivo', 0, NOW(), NULL),
-('Cliente Demo Tres', 'cliente3.demo@example.com', '5550001003', 'activo', 0, NOW(), NULL);
+SELECT 'Cliente Demo Uno', 'cliente1.demo@example.com', '5550001001', 'activo', 0, NOW(), NULL
+WHERE NOT EXISTS (SELECT 1 FROM `dom_demo_clientes` WHERE `email` = 'cliente1.demo@example.com');
+
+INSERT INTO `dom_demo_clientes` (`nombre`, `email`, `telefono`, `status`, `deleted`, `created_at`, `created_by`)
+SELECT 'Cliente Demo Dos', 'cliente2.demo@example.com', '5550001002', 'inactivo', 0, NOW(), NULL
+WHERE NOT EXISTS (SELECT 1 FROM `dom_demo_clientes` WHERE `email` = 'cliente2.demo@example.com');
+
+INSERT INTO `dom_demo_clientes` (`nombre`, `email`, `telefono`, `status`, `deleted`, `created_at`, `created_by`)
+SELECT 'Cliente Demo Tres', 'cliente3.demo@example.com', '5550001003', 'activo', 0, NOW(), NULL
+WHERE NOT EXISTS (SELECT 1 FROM `dom_demo_clientes` WHERE `email` = 'cliente3.demo@example.com');
 
 INSERT INTO `dom_demo_productos` (`codigo`, `nombre`, `precio_venta`, `stock_actual`, `status`, `deleted`, `created_at`, `created_by`)
-VALUES
-('PRD-DEMO-001', 'Producto Demo A', 199.90, 35, 'activo', 0, NOW(), NULL),
-('PRD-DEMO-002', 'Producto Demo B', 89.50, 80, 'activo', 0, NOW(), NULL),
-('PRD-DEMO-003', 'Producto Demo C', 49.00, 0, 'inactivo', 0, NOW(), NULL);
+SELECT 'PRD-DEMO-001', 'Producto Demo A', 199.90, 35, 'activo', 0, NOW(), NULL
+WHERE NOT EXISTS (SELECT 1 FROM `dom_demo_productos` WHERE `codigo` = 'PRD-DEMO-001');
+
+INSERT INTO `dom_demo_productos` (`codigo`, `nombre`, `precio_venta`, `stock_actual`, `status`, `deleted`, `created_at`, `created_by`)
+SELECT 'PRD-DEMO-002', 'Producto Demo B', 89.50, 80, 'activo', 0, NOW(), NULL
+WHERE NOT EXISTS (SELECT 1 FROM `dom_demo_productos` WHERE `codigo` = 'PRD-DEMO-002');
+
+INSERT INTO `dom_demo_productos` (`codigo`, `nombre`, `precio_venta`, `stock_actual`, `status`, `deleted`, `created_at`, `created_by`)
+SELECT 'PRD-DEMO-003', 'Producto Demo C', 49.00, 0, 'inactivo', 0, NOW(), NULL
+WHERE NOT EXISTS (SELECT 1 FROM `dom_demo_productos` WHERE `codigo` = 'PRD-DEMO-003');
 
 SET FOREIGN_KEY_CHECKS = 1;

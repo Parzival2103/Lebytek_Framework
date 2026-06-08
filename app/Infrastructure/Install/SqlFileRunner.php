@@ -62,7 +62,20 @@ final class SqlFileRunner
         }
         $pdo = Connection::getInstance();
         foreach ($this->partir($contenido) as $statement) {
-            $pdo->exec($statement);
+            $this->ejecutarSentencia($pdo, $statement);
         }
+    }
+
+    /**
+     * Ejecuta una sentencia y consume cualquier result set (SELECT en migraciones).
+     */
+    private function ejecutarSentencia(\PDO $pdo, string $statement): void
+    {
+        $stmt = $pdo->prepare($statement);
+        $stmt->execute();
+        do {
+            $stmt->fetchAll();
+        } while ($stmt->nextRowset());
+        $stmt->closeCursor();
     }
 }

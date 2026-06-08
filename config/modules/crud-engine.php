@@ -14,7 +14,6 @@ return [
     'requiere'    => ['core'],
     'migraciones' => [
         '20260428132500_crud_engine_demo_resources.sql',
-        '20260428132600_drop_crud_engine_demo_resources.sql',
         '20260607120000_crud_engine_demo_showcase.sql',
     ],
     'seeds'     => [],

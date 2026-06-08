@@ -55,6 +55,10 @@ final class Connection
             PDO::ATTR_PERSISTENT         => false,
         ];
 
+        if (defined('PDO::MYSQL_ATTR_USE_BUFFERED_QUERY')) {
+            $options[PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = true;
+        }
+
         // PHP 8.5 movió la constante a Pdo\Mysql::ATTR_FOUND_ROWS
         if (defined('Pdo\Mysql::ATTR_FOUND_ROWS')) {
             $options[\Pdo\Mysql::ATTR_FOUND_ROWS] = true;

@@ -22,12 +22,11 @@ CREATE TABLE IF NOT EXISTS `dom_demo_categorias` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2) Productos: agregar categoria_id (belongsTo dom_demo_categorias) idempotente
-SET @col_exists := (SELECT COUNT(*) FROM information_schema.columns
-  WHERE table_schema = DATABASE() AND table_name = 'dom_demo_productos' AND column_name = 'categoria_id');
-SET @ddl := IF(@col_exists = 0,
-  'ALTER TABLE `dom_demo_productos` ADD COLUMN `categoria_id` BIGINT UNSIGNED NULL AFTER `nombre`, ADD KEY `idx_demo_productos_categoria` (`categoria_id`)',
-  'SELECT 1');
-PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+ALTER TABLE `dom_demo_productos`
+  ADD COLUMN IF NOT EXISTS `categoria_id` BIGINT UNSIGNED NULL AFTER `nombre`;
+
+CREATE INDEX IF NOT EXISTS `idx_demo_productos_categoria`
+  ON `dom_demo_productos` (`categoria_id`);
 
 -- 3) Pedidos (estados + belongsTo cliente + hasMany items)
 CREATE TABLE IF NOT EXISTS `dom_demo_pedidos` (

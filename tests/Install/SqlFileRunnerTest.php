@@ -18,3 +18,13 @@ test('SqlFileRunner::partir separa sentencias e ignora comentarios y vacías', f
     assert_same(2, count($stmts));
     assert_same('SELECT 1;', trim($stmts[0]));
 });
+
+test('SqlFileRunner::partir conserva COMMENT con punto y coma dentro de CREATE TABLE', function (): void {
+    $runner = new SqlFileRunner();
+    $sql = "CREATE TABLE t (\n"
+        . "  c VARCHAR(1) COMMENT 'a; b'\n"
+        . ");\n";
+    $stmts = $runner->partir($sql);
+    assert_same(1, count($stmts));
+    assert_true(str_contains($stmts[0], "COMMENT 'a; b'"));
+});

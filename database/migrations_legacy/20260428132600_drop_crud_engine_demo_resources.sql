@@ -1,5 +1,6 @@
 -- Limpieza completa de recursos demo del CRUD Engine
 -- Ejecutar al finalizar pruebas para no dejar ruido en entorno.
+-- NO forma parte del instalador; uso manual únicamente.
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 

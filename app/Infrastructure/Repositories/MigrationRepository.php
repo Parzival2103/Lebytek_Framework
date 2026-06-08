@@ -13,6 +13,9 @@ final class MigrationRepository extends BaseRepository implements MigrationRepos
 
     public function aplicadas(): array
     {
+        if (!$this->existeTabla('cfg_migraciones')) {
+            return [];
+        }
         $rows = $this->query("SELECT archivo, checksum FROM cfg_migraciones");
         $out  = [];
         foreach ($rows as $row) {

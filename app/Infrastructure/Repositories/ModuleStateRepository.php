@@ -13,6 +13,9 @@ final class ModuleStateRepository extends BaseRepository implements ModuleStateR
 
     public function instalados(): array
     {
+        if (!$this->tablaExiste('cfg_modulos')) {
+            return [];
+        }
         $rows = $this->query("SELECT clave, version, activo FROM cfg_modulos");
         $out  = [];
         foreach ($rows as $row) {
@@ -22,6 +25,16 @@ final class ModuleStateRepository extends BaseRepository implements ModuleStateR
             ];
         }
         return $out;
+    }
+
+    private function tablaExiste(string $nombre): bool
+    {
+        $row = $this->queryOne(
+            "SELECT COUNT(*) AS n FROM information_schema.tables
+             WHERE table_schema = DATABASE() AND table_name = ?",
+            [$nombre]
+        );
+        return $row !== null && (int) $row['n'] > 0;
     }
 
     public function registrar(string $clave, string $version, bool $activo): void

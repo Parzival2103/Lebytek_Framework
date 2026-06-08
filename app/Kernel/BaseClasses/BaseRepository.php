@@ -38,8 +38,8 @@ abstract class BaseRepository
     {
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        $result = $stmt->fetch();
-        return $result !== false ? $result : null;
+        $rows = $stmt->fetchAll();
+        return $rows[0] ?? null;
     }
 
     protected function execute(string $sql, array $params = []): int
