@@ -51,4 +51,73 @@ final class CrudTransitionService
             $guard->authorize($ctx);
         }
     }
+
+    /**
+     * Flujo completo de transición: valida (authorize) → evento beforeTransition
+     * → persiste la columna de estado (+ updated_at/by) → bitácora crud.transition
+     * → evento afterTransition. Valida ANTES de tocar la DB, así que las rutas de
+     * fallo no requieren repositorio.
+     *
+     * @param array<string, mixed> $record fila actual del registro (incluye PK + estado)
+     */
+    public function apply(
+        CrudResourceDefinition $definition,
+        CrudActionDefinition $action,
+        array $record,
+        ?int $userId,
+        string $ip
+    ): void {
+        $machine = $definition->stateMachine();
+        if ($machine === null) {
+            throw new ValidationException('El recurso no define una máquina de estados.');
+        }
+
+        $column = $machine->column();
+        $from = (string) ($record[$column] ?? '');
+        $to = (string) ($action->to() ?? '');
+        $id = (int) ($record[$definition->primaryKey()] ?? 0);
+
+        $ctx = new CrudTransitionContext(
+            $definition->key(),
+            $definition->table(),
+            $definition->primaryKey(),
+            $userId,
+            $ip,
+            $record,
+            $column,
+            $from,
+            $to,
+            []
+        );
+
+        // Lanza para bloquear (transición inválida / guard). Antes de cualquier DB.
+        $this->authorize($machine, $action->guard(), $ctx);
+
+        if ($this->repository === null || $this->bitacoraRepository === null) {
+            throw new \LogicException('CrudTransitionService no está cableado para persistir.');
+        }
+
+        if ($this->hookRunner !== null) {
+            $this->hookRunner->run($definition, 'beforeTransition', $ctx);
+        }
+
+        $this->repository->updateRecord($definition->table(), $definition->primaryKey(), $id, [
+            $column => $to,
+            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_by' => $userId,
+        ]);
+
+        $this->bitacoraRepository->registrar(
+            $userId,
+            'crud.transition',
+            $definition->table(),
+            $id,
+            json_encode(['from' => $from, 'to' => $to, 'action' => $action->name()], JSON_UNESCAPED_UNICODE) ?: '',
+            $ip
+        );
+
+        if ($this->hookRunner !== null) {
+            $this->hookRunner->run($definition, 'afterTransition', $ctx);
+        }
+    }
 }

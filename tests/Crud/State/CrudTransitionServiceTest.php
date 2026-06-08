@@ -5,7 +5,9 @@ declare(strict_types=1);
 use App\Application\Crud\Context\CrudTransitionContext;
 use App\Application\Services\CrudHandlerRegistry;
 use App\Application\Services\CrudTransitionService;
+use App\Domain\Entities\Crud\CrudActionDefinition;
 use App\Domain\Entities\Crud\CrudStateMachine;
+use App\Domain\Entities\CrudResourceDefinition;
 use App\Domain\Exceptions\ValidationException;
 
 require_once dirname(__DIR__, 1) . '/../fixtures/transition_guards.php';
@@ -64,5 +66,53 @@ test('CrudTransitionService::authorize errors when guard key is missing from the
     $svc = new CrudTransitionService(new CrudHandlerRegistry([]));
     assert_throws(ValidationException::class, function () use ($svc): void {
         $svc->authorize(transition_machine(), 'ausente', transition_ctx('pendiente', 'autorizado'));
+    });
+});
+
+function eventos_definition_with_states(): CrudResourceDefinition
+{
+    return CrudResourceDefinition::fromArray([
+        'resource' => [
+            'key' => 'eventos', 'title' => 'Eventos', 'table' => 'dom_eventos',
+            'primary_key' => 'id', 'permission_prefix' => 'eventos',
+        ],
+        'states' => [
+            'column' => 'status',
+            'values' => ['pendiente' => [], 'autorizado' => []],
+            'transitions' => ['pendiente' => ['autorizado'], 'autorizado' => []],
+        ],
+    ]);
+}
+
+test('CrudTransitionService::apply throws when the resource has no state machine', function (): void {
+    $svc = new CrudTransitionService(new CrudHandlerRegistry([]));
+    $def = CrudResourceDefinition::fromArray([
+        'resource' => [
+            'key' => 'x', 'title' => 'X', 'table' => 'dom_x',
+            'primary_key' => 'id', 'permission_prefix' => 'x',
+        ],
+    ]);
+    $action = CrudActionDefinition::fromArray(['name' => 'autorizar', 'type' => 'transition', 'to' => 'autorizado']);
+    assert_throws(ValidationException::class, function () use ($svc, $def, $action): void {
+        $svc->apply($def, $action, ['id' => 1, 'status' => 'pendiente'], 7, '127.0.0.1');
+    });
+});
+
+test('CrudTransitionService::apply blocks an invalid transition before persisting', function (): void {
+    // repository is null: if apply() tried to persist it would fatal; it must throw first.
+    $svc = new CrudTransitionService(new CrudHandlerRegistry([]));
+    $def = eventos_definition_with_states();
+    $action = CrudActionDefinition::fromArray(['name' => 'reabrir', 'type' => 'transition', 'to' => 'pendiente']);
+    assert_throws(ValidationException::class, function () use ($svc, $def, $action): void {
+        $svc->apply($def, $action, ['id' => 1, 'status' => 'autorizado'], 7, '127.0.0.1');
+    });
+});
+
+test('CrudTransitionService::apply runs the guard and blocks before persisting', function (): void {
+    $svc = new CrudTransitionService(new CrudHandlerRegistry(['g' => BlockingTransitionGuard::class]));
+    $def = eventos_definition_with_states();
+    $action = CrudActionDefinition::fromArray(['name' => 'autorizar', 'type' => 'transition', 'to' => 'autorizado', 'guard' => 'g']);
+    assert_throws(\RuntimeException::class, function () use ($svc, $def, $action): void {
+        $svc->apply($def, $action, ['id' => 1, 'status' => 'pendiente'], 7, '127.0.0.1');
     });
 });

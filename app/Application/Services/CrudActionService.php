@@ -31,7 +31,8 @@ final class CrudActionService
         private readonly ?CrudDataService $dataService = null,
         private readonly ?CrudActionResolver $resolver = null,
         private readonly ?RbacService $rbacService = null,
-        private readonly ?BitacoraRepositoryInterface $bitacoraRepository = null
+        private readonly ?BitacoraRepositoryInterface $bitacoraRepository = null,
+        private readonly ?CrudTransitionService $transitionService = null
     ) {}
 
     /**
@@ -77,6 +78,14 @@ final class CrudActionService
         // Re-chequeo server-side: nunca confiar en la UI.
         if (!$action->isVisibleFor($record) || !$action->isEnabledFor($record)) {
             throw new ValidationException('La acción no está disponible para este registro.');
+        }
+
+        if ($action->isTransition()) {
+            if ($this->transitionService === null) {
+                throw new \LogicException('CrudActionService no tiene CrudTransitionService cableado.');
+            }
+            $this->transitionService->apply($definition, $action, $record, $userId, $ip);
+            return;
         }
 
         $ctx = new CrudActionContext(
