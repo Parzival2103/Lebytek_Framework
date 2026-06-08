@@ -131,6 +131,20 @@ final class CrudConfigValidator
             $errors[] = $actionError;
         }
 
+        foreach (self::statesBlockErrors($config) as $stateError) {
+            $errors[] = $stateError;
+        }
+
+        $statesColumn = is_array($config['states'] ?? null) ? (string) ($config['states']['column'] ?? '') : '';
+        if ($statesColumn !== '' && $table !== '') {
+            if (!isset($columnLookup[$statesColumn])) {
+                $errors[] = "states.column ({$statesColumn}) no existe en {$table}.";
+            }
+            if (in_array($statesColumn, self::PROTECTED_COLUMNS, true)) {
+                $errors[] = 'states.column no puede ser una columna protegida.';
+            }
+        }
+
         if (!empty($errors)) {
             throw new ValidationException('La configuración CRUD contiene errores.', $errors);
         }
@@ -181,6 +195,9 @@ final class CrudConfigValidator
                 if ($type === 'link' && ($action['route'] ?? '') === '') {
                     $errors[] = "actions.{$group}[{$i}] (link) requiere 'route'.";
                 }
+                if ($type === 'transition' && ($action['to'] ?? '') === '') {
+                    $errors[] = "actions.{$group}[{$i}] (transition) requiere 'to'.";
+                }
                 if ($type === 'builtin' && !in_array($name, ['show', 'edit', 'delete'], true)) {
                     $errors[] = "actions.{$group}[{$i}] builtin debe ser show/edit/delete.";
                 }
@@ -190,6 +207,79 @@ final class CrudConfigValidator
                 }
             }
         }
+        return $errors;
+    }
+
+    /**
+     * Valida la forma del bloque `states` y su consistencia con las acciones de
+     * transición (Fase 2). Pura, sin DB. NO re-emite "states.column es
+     * obligatorio" — eso lo cubre newBlockShapeErrors().
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    public static function statesBlockErrors(array $config): array
+    {
+        if (!array_key_exists('states', $config)) {
+            return [];
+        }
+        $states = $config['states'];
+        if (!is_array($states)) {
+            return ['states debe ser un objeto.'];
+        }
+
+        $errors = [];
+
+        $values = $states['values'] ?? null;
+        $stateKeys = [];
+        if (!is_array($values) || $values === []) {
+            $errors[] = 'states.values debe ser un objeto con al menos un estado.';
+        } else {
+            foreach ($values as $state => $meta) {
+                $stateKeys[(string) $state] = true;
+                if (!is_array($meta)) {
+                    $errors[] = "states.values.{$state} debe ser un objeto.";
+                }
+            }
+        }
+
+        $transitions = $states['transitions'] ?? null;
+        if ($transitions !== null) {
+            if (!is_array($transitions)) {
+                $errors[] = 'states.transitions debe ser un objeto.';
+            } else {
+                foreach ($transitions as $from => $targets) {
+                    if (!isset($stateKeys[(string) $from])) {
+                        $errors[] = "states.transitions tiene un estado origen desconocido: '{$from}'.";
+                    }
+                    if (!is_array($targets)) {
+                        $errors[] = "states.transitions.{$from} debe ser un arreglo de estados.";
+                        continue;
+                    }
+                    foreach ($targets as $target) {
+                        if (!is_string($target) || !isset($stateKeys[$target])) {
+                            $shown = is_string($target) ? $target : gettype($target);
+                            $errors[] = "states.transitions.{$from} referencia un estado destino desconocido: '{$shown}'.";
+                        }
+                    }
+                }
+            }
+        }
+
+        // Acciones type=transition deben apuntar a un estado declarado en values.
+        $actions = $config['actions'] ?? null;
+        if (is_array($actions) && is_array($actions['row'] ?? null)) {
+            foreach ($actions['row'] as $i => $action) {
+                if (!is_array($action) || ($action['type'] ?? '') !== 'transition') {
+                    continue;
+                }
+                $to = (string) ($action['to'] ?? '');
+                if ($to !== '' && $stateKeys !== [] && !isset($stateKeys[$to])) {
+                    $errors[] = "actions.row[{$i}] (transition) apunta a un estado desconocido: '{$to}'.";
+                }
+            }
+        }
+
         return $errors;
     }
 
