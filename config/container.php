@@ -48,6 +48,16 @@ use App\Application\Services\CrudHookRunner;
 use App\Application\Services\CrudResourceService;
 use App\Application\Services\CrudTableBuilder;
 use App\Application\Services\CrudTransitionService;
+use App\Domain\Interfaces\MigrationRepositoryInterface;
+use App\Domain\Interfaces\ModuleStateRepositoryInterface;
+use App\Infrastructure\Repositories\MigrationRepository;
+use App\Infrastructure\Repositories\ModuleStateRepository;
+use App\Infrastructure\Install\SqlFileRunner;
+use App\Application\Install\ModuleRegistry;
+use App\Application\Install\DependencyResolver;
+use App\Application\Install\Installer;
+use App\Application\Install\DeploymentStatus;
+use App\Kernel\Config\Config;
 
 return static function (Container $container): void {
 
@@ -240,6 +250,38 @@ return static function (Container $container): void {
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
             $c->get(CrudResourceService::class)
+        );
+    });
+
+    // ── Motor de instalación / versionado ───────────────────────────────────
+    $container->singleton(MigrationRepositoryInterface::class, fn() => new MigrationRepository());
+    $container->singleton(ModuleStateRepositoryInterface::class, fn() => new ModuleStateRepository());
+    $container->singleton(SqlFileRunner::class, fn() => new SqlFileRunner());
+    $container->singleton(ModuleRegistry::class, fn() => new ModuleRegistry(ROOT_PATH . '/config/modules'));
+    $container->singleton(DependencyResolver::class, fn() => new DependencyResolver());
+
+    $container->singleton(Installer::class, fn(Container $c) => new Installer(
+        $c->get(ModuleRegistry::class),
+        $c->get(DependencyResolver::class),
+        $c->get(MigrationRepositoryInterface::class),
+        $c->get(ModuleStateRepositoryInterface::class),
+        $c->get(SqlFileRunner::class),
+        ROOT_PATH . '/database/migrations',
+        ROOT_PATH . '/database/seeds'
+    ));
+
+    $container->singleton(DeploymentStatus::class, fn(Container $c) => new DeploymentStatus(
+        $c->get(ModuleRegistry::class),
+        $c->get(Installer::class),
+        $c->get(ModuleStateRepositoryInterface::class),
+        (string) Config::get('app.version', '0.0.0')
+    ));
+
+    $container->bind(\App\Presentation\Controllers\Admin\SistemaEstadoController::class, function (Container $c) {
+        return new \App\Presentation\Controllers\Admin\SistemaEstadoController(
+            $c->get(ConfiguracionService::class),
+            $c->get(AdminNavigationMenuService::class),
+            $c->get(DeploymentStatus::class)
         );
     });
 };
