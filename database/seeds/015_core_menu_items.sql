@@ -21,7 +21,8 @@ SELECT
   1
 FROM (SELECT 10 AS orden, 'administracion_usuarios' AS slug, 'Usuarios' AS label, 'bi-people' AS icon, '/admin/administracion/usuarios' AS url, 'usuarios.gestionar' AS permiso_slug
       UNION ALL SELECT 20, 'administracion_roles', 'Roles y permisos', 'bi-key', '/admin/administracion/roles', 'roles.gestionar'
-      UNION ALL SELECT 30, 'administracion_ajustes', 'Ajustes', 'bi-gear', '/admin/ajustes', 'administracion.ver') AS `r`
+      UNION ALL SELECT 30, 'administracion_ajustes', 'Ajustes', 'bi-gear', '/admin/ajustes', 'administracion.ver'
+      UNION ALL SELECT 40, 'sistema_estado', 'Estado del sistema', 'bi-hdd-stack', '/admin/sistema/estado', 'sistema.ver') AS `r`
 JOIN `core_menu_items` AS `p` ON `p`.`slug` = 'administracion'
 WHERE NOT EXISTS (
   SELECT 1 FROM `core_menu_items` `x` WHERE `x`.`slug` = `r`.`slug`
