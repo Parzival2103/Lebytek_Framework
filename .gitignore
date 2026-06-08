@@ -1,1 +1,5 @@
 /vendor/
+.envbk
+public/error_log
+public/install/error_log
+storage/logs/*.log

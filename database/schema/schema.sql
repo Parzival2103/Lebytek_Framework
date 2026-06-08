@@ -234,4 +234,93 @@ CREATE TABLE IF NOT EXISTS `cfg_modulos` (
   PRIMARY KEY (`clave`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ============================================================
+-- DATOS INICIALES (idempotente — greenfield bootstrap)
+-- Fusiona seeds 010–035 + permisos clientes (ex migración core).
+-- ============================================================
+
+INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`) VALUES
+  ('Ver administración', 'administracion.ver', 'administracion'),
+  ('Gestionar usuarios', 'usuarios.gestionar', 'administracion'),
+  ('Gestionar roles', 'roles.gestionar', 'administracion'),
+  ('Ver bitácora', 'bitacora.ver', 'administracion'),
+  ('Ver dashboard', 'dashboard.ver', 'dashboard'),
+  ('Ver estado del sistema', 'sistema.ver', 'sistema');
+
+INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`, `descripcion`) VALUES
+  ('Ver clientes', 'clientes.ver', 'clientes', 'CRUD Engine: listar y ver clientes'),
+  ('Crear clientes', 'clientes.crear', 'clientes', 'CRUD Engine: crear clientes'),
+  ('Editar clientes', 'clientes.editar', 'clientes', 'CRUD Engine: editar clientes'),
+  ('Eliminar clientes', 'clientes.eliminar', 'clientes', 'CRUD Engine: borrado lógico clientes');
+
+INSERT IGNORE INTO `auth_roles` (`nombre`, `slug`, `descripcion`) VALUES
+  ('Administrador', 'administrador', 'Acceso total al sistema'),
+  ('Operador', 'operador', 'Acceso al dashboard (extender al añadir dominio)'),
+  ('Soporte', 'soporte', 'Rol de ejemplo mínimo hasta definir módulos');
+
+INSERT IGNORE INTO `auth_roles_permisos` (`rol_id`, `permiso_id`)
+SELECT `r`.`id`, `p`.`id`
+FROM `auth_roles` `r`
+CROSS JOIN `auth_permisos` `p`
+WHERE `r`.`slug` = 'administrador';
+
+INSERT IGNORE INTO `auth_roles_permisos` (`rol_id`, `permiso_id`)
+SELECT `r`.`id`, `p`.`id`
+FROM `auth_roles` `r`
+INNER JOIN `auth_permisos` `p` ON `p`.`slug` = 'dashboard.ver'
+WHERE `r`.`slug` IN ('operador', 'soporte');
+
+INSERT IGNORE INTO `core_menu_items`
+  (`parent_id`, `orden`, `slug`, `label`, `icon`, `url`, `match`, `permiso_slug`, `vertical_module`, `activo`)
+VALUES
+  (NULL, 10, 'dashboard', 'Dashboard', 'bi-speedometer2', '/admin/dashboard', '/admin/dashboard', 'dashboard.ver', NULL, 1),
+  (NULL, 20, 'administracion', 'Administración', 'bi-shield-lock', NULL, '/admin/administracion', 'administracion.ver', NULL, 1);
+
+INSERT IGNORE INTO `core_menu_items`
+  (`parent_id`, `orden`, `slug`, `label`, `icon`, `url`, `match`, `permiso_slug`, `vertical_module`, `activo`)
+SELECT
+  `p`.`id`,
+  `r`.`orden`,
+  `r`.`slug`,
+  `r`.`label`,
+  `r`.`icon`,
+  `r`.`url`,
+  NULL,
+  `r`.`permiso_slug`,
+  NULL,
+  1
+FROM (SELECT 10 AS orden, 'administracion_usuarios' AS slug, 'Usuarios' AS label, 'bi-people' AS icon, '/admin/administracion/usuarios' AS url, 'usuarios.gestionar' AS permiso_slug
+      UNION ALL SELECT 20, 'administracion_roles', 'Roles y permisos', 'bi-key', '/admin/administracion/roles', 'roles.gestionar'
+      UNION ALL SELECT 30, 'administracion_ajustes', 'Ajustes', 'bi-gear', '/admin/ajustes', 'administracion.ver'
+      UNION ALL SELECT 40, 'sistema_estado', 'Estado del sistema', 'bi-hdd-stack', '/admin/sistema/estado', 'sistema.ver') AS `r`
+JOIN `core_menu_items` AS `p` ON `p`.`slug` = 'administracion'
+WHERE NOT EXISTS (
+  SELECT 1 FROM `core_menu_items` `x` WHERE `x`.`slug` = `r`.`slug`
+);
+
+INSERT IGNORE INTO `auth_usuarios`
+  (`nombre`, `apellido`, `email`, `password`, `activo`)
+VALUES (
+  'Admin',
+  'Sistema',
+  'admin@sistema.local',
+  '$2y$12$KkB982JOpNRlhl.OCJFKAef/1elptraPngsoWY9l95OLDmLEze95K',
+  1
+);
+
+INSERT IGNORE INTO `auth_usuarios_roles` (`usuario_id`, `rol_id`)
+SELECT `u`.`id`, `r`.`id`
+FROM `auth_usuarios` `u`
+JOIN `auth_roles` `r` ON `r`.`slug` = 'administrador'
+WHERE `u`.`email` = 'admin@sistema.local';
+
+INSERT IGNORE INTO `cfg_configuraciones` (`clave`, `valor`, `tipo`, `descripcion`) VALUES
+  ('empresa_nombre', 'Mi Empresa', 'string', 'Nombre de la empresa'),
+  ('empresa_logo', '', 'string', 'URL del logo'),
+  ('menu_layout', 'side', 'string', 'Posición del menú: side, top, bottom'),
+  ('primary_color', '#0d6efd', 'string', 'Color principal del sistema'),
+  ('navbar_color', '#1a1d2e', 'string', 'Color de fondo del navbar/sidebar'),
+  ('body_color', '#f0f2f5', 'string', 'Color de fondo del área de contenido'),
+  ('dark_mode', '0', 'boolean', 'Modo oscuro activado');
+
 SET FOREIGN_KEY_CHECKS = 1;

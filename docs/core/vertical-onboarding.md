@@ -5,8 +5,9 @@ Guía para clonar el repo y levantar una instancia (taller, clínica, almacén, 
 ## 1. Base de datos
 
 - [ ] Crear base MySQL/MariaDB vacía (utf8mb4 / `utf8mb4_unicode_ci`).
-- [ ] **Instalación nueva:** importar [`database/schema/schema.sql`](../../database/schema/schema.sql) — núcleo `auth_*`, `cfg_*`, `log_*`, `core_menu_items`, stubs `core_*` / `int_*` / etc. **No** incluye tablas de negocio `dom_*`; esas se crean por módulo cuando las necesites.
-- [ ] **Actualizar una base que ya existía sin `core_menu_items`:** ejecutar la migración incremental [`database/migrations/20260427120000_core_menu_items.sql`](../../database/migrations/20260427120000_core_menu_items.sql) y luego poblar el menú (semilla o inserts manuales según [modulo-menu.md](../modules/modulo-menu.md)).
+- [ ] **Instalación nueva:** importar [`database/schema/schema.sql`](../../database/schema/schema.sql) — incluye DDL de plataforma y sección **`DATOS INICIALES`** (permisos, roles, menú admin, usuario `admin@sistema.local`, ajustes). **No** incluye tablas demo `dom_demo_*`; esas las aporta el módulo opcional `crud-engine` vía [`database/schema/modules/crud-engine.sql`](../../database/schema/modules/crud-engine.sql) (wizard o `php scripts/seed.php --crud-engine`).
+- [ ] **Alternativa automatizada:** wizard web en `public/install/` o `php scripts/install.php --modules=core,crud-engine` (schema → bootstrap modular → registro en `cfg_modulos`).
+- [ ] **Actualizar una base legacy muy antigua:** scripts incrementales archivados en [`database/migrations_legacy/incrementales-2026-06/`](../../database/migrations_legacy/incrementales-2026-06/); nuevas instalaciones no los necesitan.
 - [ ] **Bases muy antiguas con tablas de un dominio de ejemplo previo:** tras backup, revisar [`database/schema/drop_legacy_domain_tables.sql`](../../database/schema/drop_legacy_domain_tables.sql) y la nota en [core-schema-and-modules.md](./core-schema-and-modules.md). Scripts numerados `001`–`008` y similares están en [`database/migrations_legacy/`](../../database/migrations_legacy/) solo como **referencia histórica**; no forman parte del bootstrap de una instalación nueva.
 - [ ] Convención de prefijos: [table-prefix-convention.md](./table-prefix-convention.md).
 
@@ -23,11 +24,10 @@ Archivo: [`config/vertical.php`](../../config/vertical.php)
 - [ ] Opcional: en `labels.menu`, sobrescribir textos (`slug` → etiqueta visible) sin tocar [`core_menu_items`](../../database/schema/schema.sql) — ver [modulo-menu.md](../modules/modulo-menu.md).
 - [ ] Para nuevos ítems de menú, insertar en **`core_menu_items`** y ampliar `vertical.modules` si aplica el toggle por vertical.
 
-## 4. Semillas y permisos
+## 4. Bootstrap y permisos
 
-- [ ] Ejecutar semillas [`php scripts/seed.php`](../../scripts/seed.php), que recorre en orden los `.sql` de [`database/seeds/`](../../database/seeds/) (permisos, menú, roles, vínculos, usuario admin, configuración). Ver [`database/seeds/README.md`](../../database/seeds/README.md).
-- [ ] Sin filas en `core_menu_items` el menú administrativo sale vacío; los `INSERT IGNORE` del núcleo no duplican por `slug` único al re-ejecutar.
-- [ ] Al ampliar módulos: coherencia entre nuevos `.sql`, rutas y `permiso_slug` en menú donde corresponda.
+- [ ] Greenfield: `schema.sql` ya incluye permisos, menú, roles y usuario admin de prueba. Para desarrollo local: [`php scripts/seed.php`](../../scripts/seed.php) (re-ejecuta `schema.sql`; añadir `--crud-engine` para demo CRUD).
+- [ ] Los archivos numerados antiguos (`010`–`035`) están en [`database/seeds_legacy/baseline-2026-06/`](../../database/seeds_legacy/baseline-2026-06/) solo como referencia.
 
 ## 5. Marca y layout
 
@@ -36,8 +36,8 @@ Archivo: [`config/vertical.php`](../../config/vertical.php)
 
 ## 6. Dominio de negocio propio (`dom_*`)
 
-- [ ] Nuevas tablas y flujos de producto: migraciones SQL bajo `database/migrations/` (o ampliación de `schema.sql` en greenfield), entidades, repositorios y casos de uso según [.cursor/rules/arquitectura-base.mdc](../../.cursor/rules/arquitectura-base.mdc).
-- [ ] Rutas en `routes/web.php`, permisos/asignaciones en `database/seeds/`, entradas en **`core_menu_items`** y claves en `vertical.php` siguiendo [uso-de-modulo-dominio.md](../modules/uso-de-modulo-dominio.md).
+- [ ] Nuevas tablas y flujos de producto: ampliar `database/schema/schema.sql` en greenfield, o migraciones SQL incrementales bajo [`database/migrations/`](../../database/migrations/README.md) (post-baseline), más entidades, repositorios y casos de uso según [.cursor/rules/arquitectura-base.mdc](../../.cursor/rules/arquitectura-base.mdc).
+- [ ] Rutas en `routes/web.php`, permisos/menú vía SQL idempotente (`INSERT IGNORE` / `WHERE NOT EXISTS`) en migración o sección de bootstrap del módulo, entradas en **`core_menu_items`** y claves en `vertical.php` siguiendo [uso-de-modulo-dominio.md](../modules/uso-de-modulo-dominio.md).
 - [ ] No hay pipeline de dominio “incluido” en el repo base: cada vertical define sus propias `dom_*` y reglas.
 
 ## 7. Documentación de referencia

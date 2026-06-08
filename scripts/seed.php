@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| seed.php — Ejecuta semillas SQL en orden (database/seeds/*.sql)
+| seed.php — Bootstrap SQL (schema + módulos opcionales)
 |--------------------------------------------------------------------------
-| Uso: php scripts/seed.php
+| Uso:
+|   php scripts/seed.php
+|   php scripts/seed.php --crud-engine
 */
 
 define('ROOT_PATH', dirname(__DIR__));
@@ -15,6 +17,7 @@ define('STORAGE_PATH', ROOT_PATH . '/storage');
 
 require_once APP_PATH . '/Kernel/Autoloader.php';
 
+use App\Infrastructure\Install\SqlFileRunner;
 use App\Kernel\EnvLoader;
 use App\Kernel\Config\Config;
 use App\Kernel\Database\Connection;
@@ -31,70 +34,24 @@ Connection::configure([
     'charset'  => 'utf8mb4',
 ]);
 
-$pdo = Connection::getInstance();
+$runner = new SqlFileRunner();
+$incluirCrudEngine = in_array('--crud-engine', $argv ?? [], true);
 
-/**
- * @return list<string>
- */
-function splitSqlStatements(string $sql): array
-{
-    $lines = preg_split('/\R/', $sql) ?: [];
-    $buffer = '';
-    $out = [];
+$archivos = [
+    ROOT_PATH . '/database/schema/schema.sql',
+];
 
-    foreach ($lines as $line) {
-        $t = trim($line);
-        if ($t === '' || str_starts_with($t, '--')) {
-            continue;
-        }
-        $buffer .= $line . "\n";
-
-        if (preg_match('/;\s*$/', rtrim($line))) {
-            $stmt = trim($buffer);
-            if ($stmt !== '') {
-                $out[] = $stmt;
-            }
-            $buffer = '';
-        }
-    }
-
-    $tail = trim($buffer);
-    if ($tail !== '') {
-        $out[] = $tail;
-    }
-
-    return $out;
+if ($incluirCrudEngine) {
+    $archivos[] = ROOT_PATH . '/database/schema/modules/crud-engine.sql';
 }
 
-$pattern = ROOT_PATH . '/database/seeds/*.sql';
-$files = glob($pattern) ?: [];
+echo '=== Bootstrap SQL — ' . count($archivos) . " archivo(s) ===\n\n";
 
-if ($files === []) {
-    echo "No se encontraron archivos en database/seeds/\n";
-    exit(1);
-}
-
-sort($files, SORT_STRING);
-
-echo "=== Semillas SQL — " . count($files) . " archivo(s) ===\n\n";
-
-foreach ($files as $path) {
-    $name = basename($path);
+foreach ($archivos as $path) {
+    $name = str_replace(ROOT_PATH . '/', '', $path);
     echo "→ {$name}\n";
-
-    $sqlRaw = file_get_contents($path);
-    if ($sqlRaw === false) {
-        fwrite(STDERR, "No se pudo leer {$path}\n");
-        exit(1);
-    }
-
-    $statements = splitSqlStatements($sqlRaw);
-
-    foreach ($statements as $statement) {
-        $pdo->exec($statement);
-    }
-
+    $runner->ejecutar($path);
     echo "   ✓ OK\n";
 }
 
-echo "\n=== Semillas completadas ===\n";
+echo "\n=== Bootstrap completado ===\n";

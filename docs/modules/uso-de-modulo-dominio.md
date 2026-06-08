@@ -13,9 +13,9 @@ Guía para añadir un **nuevo módulo de dominio** sobre este framework (auth, R
 
 | Orden | Artefacto | Acción |
 |-------|-----------|--------|
-| 1 | Tablas y FKs | Añadir `CREATE TABLE` en `database/schema/schema.sql` o migración SQL incremental bajo `database/migrations/` (convención del proyecto para cambios después del bootstrap inicial). |
-| 2 | Permisos | SQL en `database/seeds/` (p. ej. nuevo `*_auth_permisos_mi_modulo.sql` o líneas `INSERT IGNORE` según orden) — slugs `mi_modulo.ver`, `mi_modulo.crear`, etc. Ver [`database/seeds/README.md`](../../database/seeds/README.md). |
-| 3 | Roles / roles↔permisos | SQL en `database/seeds/` para `INSERT IGNORE` en `auth_roles`, `auth_roles_permisos` según necesidad del módulo. |
+| 1 | Tablas y FKs | Greenfield: `CREATE TABLE` en `database/schema/schema.sql` o, para módulos opcionales con bootstrap propio, `database/schema/modules/<modulo>.sql` referenciado en `config/modules/*.php` (`bootstrap_sql`). Post-deploy: migración incremental en [`database/migrations/`](../../database/migrations/README.md). |
+| 2 | Permisos | SQL idempotente (`INSERT IGNORE`) en migración incremental, sección `DATOS INICIALES` de `schema.sql`, o bootstrap modular del manifiesto — slugs `mi_modulo.ver`, `mi_modulo.crear`, etc. |
+| 3 | Roles / roles↔permisos | Mismo criterio que permisos: bootstrap en schema/migración del módulo. |
 | 4 | Rutas admin | `routes/web.php` — grupo con `prefix` `/admin`, `middlewares` `AuthMiddleware` y donde aplique `RbacMiddleware('mi_modulo.ver')` o acción granular. Usar `CsrfMiddleware::class` en POST/PUT/DELETE. |
 | 5 | Ruta pública (opcional) | Misma sintaxis router; sin `AuthMiddleware` si es captación pública con token u otro criterio. |
 | 6 | Menú | Tabla **`core_menu_items`** + semilla o migración: `slug`, jerarquía `parent_id`, `orden`, `label`, iconos/rutas, `permiso_slug`, `vertical_module`. Detalle en [modulo-menu.md](./modulo-menu.md). |
@@ -51,7 +51,7 @@ Reutilizar siempre los mismos middleware que el resto del admin (`AuthMiddleware
 
 ## Plantilla de permisos y menú
 
-**Permisos (SQL)** — ejemplo añadir a un archivo en `database/seeds/` con prefijo posterior al núcleo (p. ej. `040_mi_modulo_permisos.sql`) o extender uno existente; usar `INSERT IGNORE` por `slug` único:
+**Permisos (SQL)** — ejemplo en migración incremental o bootstrap del módulo; usar `INSERT IGNORE` por `slug` único:
 
 ```sql
 INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`) VALUES
@@ -59,7 +59,7 @@ INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`) VALUES
   ('Crear en mi módulo', 'mi_modulo.crear', 'mi_modulo');
 ```
 
-Ejecutar `php scripts/seed.php` tras colocar el archivo (orden lexigráfico) o importar el `.sql` manualmente contra la base.
+Ejecutar la migración o `php scripts/install.php` / wizard según el flujo de despliegue, o importar el `.sql` manualmente contra la base.
 
 **Menú (BD)** — ejemplo SQL; equivalencia de columnas vs array anterior en [modulo-menu.md](./modulo-menu.md):
 

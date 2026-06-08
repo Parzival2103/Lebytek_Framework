@@ -63,6 +63,24 @@ $installer  = $container->get(Installer::class);
 /** @var ModuleRegistry $registry */
 $registry   = $container->get(ModuleRegistry::class);
 
+// Selección por defecto: todos los módulos declarados (core + opcionales).
+$seleccion = $modules ?? array_keys($registry->all());
+
+foreach ($seleccion as $claveModulo) {
+    $manifest = $registry->get($claveModulo);
+    if ($manifest?->bootstrapSql === null) {
+        continue;
+    }
+    $rutaBootstrap = ROOT_PATH . '/' . $manifest->bootstrapSql;
+    if (!is_file($rutaBootstrap)) {
+        fwrite(STDERR, "Bootstrap SQL no encontrado: {$manifest->bootstrapSql}\n");
+        exit(1);
+    }
+    echo "→ Bootstrap módulo [{$claveModulo}]\n";
+    (new SqlFileRunner())->ejecutar($rutaBootstrap);
+    echo "   ✓ {$manifest->bootstrapSql}\n\n";
+}
+
 if ($baseline) {
     echo "→ Baseline (adoptando deploy existente)\n";
     $installer->baseline();
@@ -70,9 +88,6 @@ if ($baseline) {
     echo "\n=== Listo ===\n";
     exit(0);
 }
-
-// Selección por defecto: todos los módulos declarados (core + opcionales).
-$seleccion = $modules ?? array_keys($registry->all());
 
 $plan = $installer->plan($seleccion);
 

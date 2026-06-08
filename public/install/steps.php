@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Infrastructure\Install\InstallTrace;
 use App\Kernel\Config\Config;
 use App\Kernel\Database\Connection;
+use RuntimeException;
 
 /** Helper de escape para las vistas. */
 function e(string $v): string { return htmlspecialchars($v, ENT_QUOTES); }
@@ -65,6 +66,21 @@ switch ($paso) {
             $pasoActual = 'schema';
             $sqlRunner->ejecutar(ROOT_PATH . '/database/schema/schema.sql');
             InstallTrace::log('schema.sql OK');
+
+            $pasoActual = 'bootstrap_modulos';
+            foreach ($seleccion as $claveModulo) {
+                $manifest = $registry->get($claveModulo);
+                if ($manifest?->bootstrapSql === null) {
+                    continue;
+                }
+                $rutaBootstrap = ROOT_PATH . '/' . $manifest->bootstrapSql;
+                if (!is_file($rutaBootstrap)) {
+                    throw new RuntimeException("Bootstrap SQL no encontrado: {$manifest->bootstrapSql}");
+                }
+                InstallTrace::log('bootstrap modulo | ' . $claveModulo);
+                $sqlRunner->ejecutar($rutaBootstrap);
+            }
+            InstallTrace::log('bootstrap modulos OK');
 
             $pasoActual = 'plan';
             $plan = $installer->plan($seleccion);

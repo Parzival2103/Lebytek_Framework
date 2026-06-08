@@ -30,6 +30,7 @@ final class ModuleManifest
         public readonly array $permisos,
         public readonly array $menu,
         public readonly array $providers,
+        public readonly ?string $bootstrapSql = null,
     ) {}
 
     public static function fromArray(array $raw): self
@@ -61,6 +62,9 @@ final class ModuleManifest
             permisos:    $strList($raw['permisos']     ?? []),
             menu:        $strList($raw['menu']         ?? []),
             providers:   $strList($raw['providers']    ?? []),
+            bootstrapSql: isset($raw['bootstrap_sql']) && is_string($raw['bootstrap_sql']) && $raw['bootstrap_sql'] !== ''
+                ? $raw['bootstrap_sql']
+                : null,
         );
     }
 }
