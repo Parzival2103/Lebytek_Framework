@@ -211,4 +211,27 @@ CREATE TABLE IF NOT EXISTS `sys_kv` (
   PRIMARY KEY (`clave`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ─────────────────────────────────────────────────────────────────────────
+-- Versionado de instalación (instalador / estado del sistema)
+-- ─────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS `cfg_migraciones` (
+  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `modulo`      VARCHAR(64)  NOT NULL,
+  `archivo`     VARCHAR(255) NOT NULL,
+  `checksum`    CHAR(64)     NOT NULL,
+  `aplicada_en` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_cfg_migraciones_archivo` (`archivo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `cfg_modulos` (
+  `clave`          VARCHAR(64) NOT NULL,
+  `version`        VARCHAR(20) NOT NULL,
+  `activo`         TINYINT(1)  NOT NULL DEFAULT 1,
+  `instalado_en`   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `actualizado_en` TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`clave`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
