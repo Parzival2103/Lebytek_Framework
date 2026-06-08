@@ -10,6 +10,17 @@
     "allow_core_table": false,
     "mode": "restricted"
   },
+  "states": {
+    "column": "status",
+    "values": {
+      "activo":   { "label": "Activo",   "badge": "success" },
+      "inactivo": { "label": "Inactivo", "badge": "secondary" }
+    },
+    "transitions": {
+      "activo":   ["inactivo"],
+      "inactivo": ["activo"]
+    }
+  },
   "list": {
     "group_by": "status",
     "aggregation": {
@@ -86,7 +97,15 @@
       { "name": "delete", "type": "builtin" },
       { "name": "toggle", "type": "handler", "handler": "demo_producto_toggle",
         "label": "Alternar estado", "icon": "bi-toggle-on", "method": "POST",
-        "permission": "editar", "confirm": "¿Cambiar el estado de este producto?" }
+        "permission": "editar", "confirm": "¿Cambiar el estado de este producto?" },
+      { "name": "desactivar", "type": "transition", "to": "inactivo",
+        "label": "Desactivar", "icon": "bi-pause-circle", "method": "POST",
+        "permission": "editar", "confirm": "¿Desactivar este producto?",
+        "visible_when": { "status": "activo" } },
+      { "name": "activar", "type": "transition", "to": "activo",
+        "label": "Activar", "icon": "bi-play-circle", "method": "POST",
+        "permission": "editar", "confirm": "¿Activar este producto?",
+        "visible_when": { "status": "inactivo" }, "guard": "demo_producto_state_guard" }
     ],
     "bulk": [
       { "name": "toggle", "type": "handler", "handler": "demo_producto_toggle",

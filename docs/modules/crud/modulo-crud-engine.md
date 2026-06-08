@@ -414,3 +414,46 @@ Bloque `actions` opcional en `config/cruds/{resource}.json`:
 - **Vistas agrupadas**: cuando el recurso usa `list.group_by`, la vista no renderiza acciones por fila ni la barra bulk (`selectable` queda en false). Para probar acciones de fila/bulk usa un recurso sin `group_by`.
 
 Componentes: `CrudActionDefinition` (VO), `CrudActionResolver` (puro, view-models + resolución), `CrudActionService` (orquestación: RBAC, carga, re-chequeo, dispatch, auditoría). La lógica de negocio vive en handlers externos (`app/Application/Crud/Handlers/`), nunca en el core.
+
+## Fase 2 — Estados / transiciones
+
+Bloque `states` opcional en `config/cruds/{resource}.json` que declara una máquina de estados sobre una columna del registro:
+
+```json
+"states": {
+  "column": "status",
+  "values": {
+    "activo":   { "label": "Activo",   "badge": "success" },
+    "inactivo": { "label": "Inactivo", "badge": "secondary" }
+  },
+  "transitions": {
+    "activo":   ["inactivo"],
+    "inactivo": ["activo"]
+  }
+}
+```
+
+- **`column`**: columna del registro que guarda el estado. Obligatoria, debe existir en la tabla y no puede ser una columna protegida (`id`, `created_*`, `updated_*`, `deleted*`).
+- **`values`**: mapa `estado → { label, badge }`. `label` por defecto es la clave; `badge` por defecto `secondary`. Define los estados conocidos.
+- **`transitions`**: mapa `origen → [destinos permitidos]`. Un estado terminal usa `[]`. Los orígenes y destinos deben existir en `values`.
+
+**Acciones de transición** (`type: transition` en `actions.row`):
+
+```json
+{ "name": "activar", "type": "transition", "to": "activo",
+  "label": "Activar", "icon": "bi-play-circle", "method": "POST",
+  "permission": "editar", "confirm": "¿Activar este producto?",
+  "visible_when": { "status": "inactivo" }, "guard": "demo_producto_state_guard" }
+```
+
+- **`to`**: estado destino (obligatorio en transiciones; debe existir en `states.values`).
+- **`guard`** (opcional): clave whitelisteada en `config/crud_handlers.php` que apunta a una clase `CrudTransitionGuardInterface`. Su `authorize(CrudTransitionContext)` lanza para bloquear la transición (escape hatch para reglas de negocio finas). **Nunca** se pone un FQCN en el JSON.
+- **`visible_when` / `permission`**: igual que en Fase 1; se evalúan al render y se **re-validan en el servidor** antes de aplicar.
+
+**Flujo y seguridad**: las transiciones reutilizan el endpoint Fase 1 `POST /admin/crud/{resource}/{id}/accion/{name}` (con CSRF y RBAC). `CrudActionService::run()` enruta `type: transition` a `CrudTransitionService`. Éste valida server-side la transición contra la `CrudStateMachine` (más el `guard` si existe) **antes** de tocar la DB; sólo entonces persiste la columna de estado (+ `updated_at`/`updated_by`), registra `crud.transition` en `log_bitacora` y dispara los eventos `beforeTransition`/`afterTransition` del hook handler del recurso. Una transición inválida o burlada (`visible_when` manipulado en la UI) se rechaza en el servidor.
+
+**Detalle (show)**: el header de la vista de detalle muestra el badge del estado actual (color/label desde `states.values`) y los botones de transición/handler resueltos (mismo partial `actions_row.php` de Fase 1). Los builtins editar/eliminar siguen funcionando igual (eliminar reusa el modal de confirmación).
+
+**Demo**: `config/cruds/demo_productos.json` declara el bloque `states` (activo↔inactivo) y las acciones `desactivar`/`activar`; `activar` usa el guard `demo_producto_state_guard` (`DemoProductoStateGuard`), que sólo permite activar si el producto venía de `inactivo`.
+
+Componentes: `CrudStateMachine` (VO puro: validez de transiciones + label/badge), `CrudTransitionGuardInterface` (escape hatch), `CrudTransitionService` (`authorize()` puro + `apply()` con persistencia/auditoría/eventos), más el ruteo `transition` en `CrudActionService::run()`. La lógica de negocio vive en guards externos, nunca en el core.

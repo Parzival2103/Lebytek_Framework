@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 return [
     'demo_producto_toggle' => \App\Application\Crud\Handlers\DemoProductoToggleStatusHandler::class,
+    'demo_producto_state_guard' => \App\Application\Crud\Handlers\DemoProductoStateGuard::class,
 
     // Ejemplo (descomenta y crea la clase al implementar lógica real):
     // 'clientes'        => \App\Application\Crud\Handlers\ClientesHandler::class,
