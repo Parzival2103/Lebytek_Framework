@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| install.php — Instalador idempotente de la aplicación
+| install.php — Instalador con tracking real (motor Installer)
 |--------------------------------------------------------------------------
-| Aplica, en orden:
-|   1) database/schema/schema.sql      (estructura base)
-|   2) database/migrations/*.sql        (cambios incrementales, orden por nombre)
-|   3) database/seeds/*.sql             (datos base + demo)
-|
-| Pensado para correr en cada despliegue. Las migraciones/seeds del proyecto
-| usan CREATE TABLE IF NOT EXISTS / INSERT IGNORE / guards information_schema,
-| por lo que re-ejecutarlo es seguro.
-|
-| Uso: php scripts/install.php
+| Uso:
+|   php scripts/install.php                       (instala/actualiza core + opcionales activos)
+|   php scripts/install.php --modules=core,crud-engine
+|   php scripts/install.php --dry-run             (muestra el plan, no ejecuta)
+|   php scripts/install.php --baseline            (adopta deploy legacy sin re-ejecutar)
 */
 
 define('ROOT_PATH', dirname(__DIR__));
@@ -27,6 +22,10 @@ require_once APP_PATH . '/Kernel/Autoloader.php';
 use App\Kernel\EnvLoader;
 use App\Kernel\Config\Config;
 use App\Kernel\Database\Connection;
+use App\Kernel\Container\Container;
+use App\Application\Install\Installer;
+use App\Application\Install\ModuleRegistry;
+use App\Infrastructure\Install\SqlFileRunner;
 
 EnvLoader::load(ROOT_PATH . '/.env');
 Config::init(ROOT_PATH . '/config');
@@ -40,43 +39,60 @@ Connection::configure([
     'charset'  => 'utf8mb4',
 ]);
 
-$pdo = Connection::getInstance();
-
-/**
- * Ejecuta un archivo SQL completo (multi-statement) vía PDO::exec.
- */
-function runSqlFile(\PDO $pdo, string $path): void
-{
-    $sql = file_get_contents($path);
-    if ($sql === false) {
-        throw new \RuntimeException("No se pudo leer {$path}");
+// Argumentos.
+$args     = array_slice($argv, 1);
+$dryRun   = in_array('--dry-run', $args, true);
+$baseline = in_array('--baseline', $args, true);
+$modules  = null;
+foreach ($args as $a) {
+    if (str_starts_with($a, '--modules=')) {
+        $modules = array_values(array_filter(array_map('trim', explode(',', substr($a, strlen('--modules='))))));
     }
-    $pdo->exec($sql);
 }
 
-echo "=== Instalación de la aplicación ===\n\n";
+// Schema base SIEMPRE primero (crea cfg_migraciones/cfg_modulos si faltan).
+echo "=== Instalación Lebytek ===\n\n→ Schema base\n";
+(new SqlFileRunner())->ejecutar(ROOT_PATH . '/database/schema/schema.sql');
+echo "   ✓ schema.sql\n\n";
 
-// 1) Schema base
-echo "→ Schema base\n";
-runSqlFile($pdo, ROOT_PATH . '/database/schema/schema.sql');
-echo "   ✓ schema.sql\n";
+// Contenedor / motor.
+$container = new Container();
+(require ROOT_PATH . '/config/container.php')($container);
+/** @var Installer $installer */
+$installer  = $container->get(Installer::class);
+/** @var ModuleRegistry $registry */
+$registry   = $container->get(ModuleRegistry::class);
 
-// 2) Migraciones (orden lexicográfico por nombre de archivo)
-$migrations = glob(ROOT_PATH . '/database/migrations/*.sql') ?: [];
-sort($migrations, SORT_STRING);
-echo "\n→ Migraciones (" . count($migrations) . ")\n";
-foreach ($migrations as $file) {
-    runSqlFile($pdo, $file);
-    echo '   ✓ ' . basename($file) . "\n";
+if ($baseline) {
+    echo "→ Baseline (adoptando deploy existente)\n";
+    $installer->baseline();
+    echo "   ✓ Migraciones presentes marcadas como aplicadas; módulos registrados.\n";
+    echo "\n=== Listo ===\n";
+    exit(0);
 }
 
-// 3) Seeds (orden lexicográfico)
-$seeds = glob(ROOT_PATH . '/database/seeds/*.sql') ?: [];
-sort($seeds, SORT_STRING);
-echo "\n→ Semillas (" . count($seeds) . ")\n";
-foreach ($seeds as $file) {
-    runSqlFile($pdo, $file);
-    echo '   ✓ ' . basename($file) . "\n";
+// Selección por defecto: todos los módulos declarados (core + opcionales).
+$seleccion = $modules ?? array_keys($registry->all());
+
+$plan = $installer->plan($seleccion);
+
+echo "→ Plan (" . ($plan->nueva ? 'instalación nueva' : 'actualización') . ")\n";
+echo "   Migraciones pendientes: " . count($plan->migracionesPendientes) . "\n";
+foreach ($plan->migracionesPendientes as $m) { echo "     - [{$m['modulo']}] {$m['archivo']}\n"; }
+echo "   Seeds pendientes: " . count($plan->seedsPendientes) . "\n";
+foreach ($plan->seedsPendientes as $s) { echo "     - [{$s['modulo']}] {$s['archivo']}\n"; }
+echo "   Módulos a registrar: " . implode(', ', array_map(fn($x) => $x['clave'] . '@' . $x['version'], $plan->modulos)) . "\n";
+if ($plan->checksumsModificados !== []) {
+    echo "   ⚠ Checksums modificados tras aplicar (NO se re-ejecutan):\n";
+    foreach ($plan->checksumsModificados as $c) { echo "     - [{$c['modulo']}] {$c['archivo']}\n"; }
 }
 
+if ($dryRun) {
+    echo "\n(dry-run: no se ejecutó nada)\n";
+    exit(0);
+}
+
+echo "\n→ Aplicando…\n";
+$installer->aplicar($plan);
+echo "   ✓ Aplicado y registrado en cfg_migraciones / cfg_modulos.\n";
 echo "\n=== Instalación completada ===\n";
