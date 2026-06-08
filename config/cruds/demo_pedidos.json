@@ -1,0 +1,111 @@
+{
+  "resource": {
+    "key": "demo_pedidos",
+    "title": "Demo Pedidos",
+    "table": "dom_demo_pedidos",
+    "primary_key": "id",
+    "permission_prefix": "demo_pedidos"
+  },
+  "security": { "allow_core_table": false, "mode": "restricted" },
+  "states": {
+    "column": "status",
+    "values": {
+      "pendiente": { "label": "Pendiente", "badge": "warning" },
+      "pagado":    { "label": "Pagado",    "badge": "success" },
+      "cancelado": { "label": "Cancelado", "badge": "danger" }
+    },
+    "transitions": {
+      "pendiente": ["pagado", "cancelado"],
+      "pagado":    [],
+      "cancelado": []
+    }
+  },
+  "list": {
+    "aggregation": { "enabled": true, "max_rows": 5000, "require_filter_above": 5000 },
+    "columns": [
+      { "name": "id", "label": "ID", "sortable": true },
+      { "name": "folio", "label": "Folio", "searchable": true, "sortable": true },
+      { "name": "total", "label": "Total", "format": "money", "sortable": true },
+      { "name": "status", "label": "Estado", "badge": { "pendiente": "warning", "pagado": "success", "cancelado": "danger" } },
+      { "name": "created_at", "label": "Creado", "format": "datetime", "sortable": true }
+    ],
+    "filters": [ { "field": "status", "label": "Estado" } ],
+    "summaries": [ { "column": "total", "type": "sum", "format": "money", "label": "Suma total" } ],
+    "actions": ["show", "edit", "delete"]
+  },
+  "actions": {
+    "row": [
+      { "name": "show", "type": "builtin" },
+      { "name": "edit", "type": "builtin" },
+      { "name": "delete", "type": "builtin" },
+      { "name": "pagar", "type": "transition", "to": "pagado",
+        "label": "Pagar", "icon": "bi-cash-coin", "method": "POST",
+        "permission": "pagar", "confirm": "¿Marcar este pedido como pagado?",
+        "visible_when": { "status": "pendiente" }, "guard": "demo_pedido_pagar_guard" },
+      { "name": "cancelar", "type": "transition", "to": "cancelado",
+        "label": "Cancelar", "icon": "bi-x-octagon", "method": "POST",
+        "permission": "cancelar", "confirm": "¿Cancelar este pedido?",
+        "visible_when": { "status": "pendiente" } }
+    ],
+    "bulk": [
+      { "name": "cancelar", "type": "handler", "handler": "demo_pedido_total",
+        "label": "Validar totales", "permission": "editar", "confirm": "¿Validar los pedidos seleccionados?" }
+    ]
+  },
+  "relations": {
+    "cliente": {
+      "type": "belongsTo", "table": "dom_demo_clientes",
+      "foreign_key": "cliente_id", "value": "id", "label": "nombre",
+      "filter": { "status": "activo" }, "order_by": "nombre"
+    },
+    "items": {
+      "type": "hasMany", "table": "dom_demo_pedido_items", "foreign_key": "pedido_id",
+      "columns": [
+        { "name": "descripcion", "label": "Descripción" },
+        { "name": "cantidad", "label": "Cantidad" },
+        { "name": "precio_unitario", "label": "P. Unitario", "format": "money" },
+        { "name": "subtotal", "label": "Subtotal", "format": "money" }
+      ],
+      "order_by": "id", "direction": "ASC", "limit": 50
+    }
+  },
+  "form": {
+    "fields": [
+      {
+        "name": "folio", "label": "Folio", "type": "text", "required": true, "col": "col-md-4",
+        "validation": {
+          "maxlength": 40,
+          "unique": { "ignore_self": true },
+          "regex": "/^[A-Z0-9-]+$/",
+          "messages": { "unique": "Ese folio ya existe", "regex": "Usa mayúsculas, dígitos y guiones" }
+        }
+      },
+      {
+        "name": "cliente_id", "label": "Cliente", "type": "relation", "relation": "cliente", "required": true,
+        "col": "col-md-4",
+        "validation": { "exists": { "table": "dom_demo_clientes", "column": "id" }, "messages": { "exists": "Selecciona un cliente válido" } }
+      },
+      {
+        "name": "total", "label": "Total", "type": "text", "required": true, "col": "col-md-4",
+        "validation": { "type": "decimal", "min": 0 },
+        "help_text": "Debe ser mayor a cero (validado por regla de negocio)."
+      },
+      {
+        "name": "status", "label": "Estado", "type": "select", "required": true, "col": "col-md-4",
+        "options": { "pendiente": "Pendiente", "pagado": "Pagado", "cancelado": "Cancelado" },
+        "default": "pendiente"
+      },
+      { "name": "notas", "label": "Notas", "type": "textarea", "required": false, "col": "col-12" }
+    ],
+    "validators": ["demo_pedido_total"]
+  },
+  "detail": {
+    "tabs": [
+      { "key": "general", "label": "Datos generales", "type": "fields", "columns": ["folio", "total", "status", "created_at"] },
+      { "key": "items", "label": "Items", "type": "relation", "relation": "items" },
+      { "key": "historial", "label": "Historial", "type": "history" }
+    ]
+  },
+  "uploads": { "enabled": false, "public_path": "uploads/cruds/demo_pedidos" },
+  "hooks": { "handler": null }
+}

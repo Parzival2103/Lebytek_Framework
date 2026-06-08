@@ -1,0 +1,40 @@
+{
+  "resource": {
+    "key": "demo_categorias",
+    "title": "Demo Categorías",
+    "table": "dom_demo_categorias",
+    "primary_key": "id",
+    "permission_prefix": "demo_categorias"
+  },
+  "security": { "allow_core_table": false, "mode": "restricted" },
+  "list": {
+    "columns": [
+      { "name": "id", "label": "ID", "sortable": true },
+      { "name": "nombre", "label": "Nombre", "searchable": true, "sortable": true },
+      { "name": "activa", "label": "Activa", "badge": { "1": "success", "0": "secondary" } },
+      { "name": "created_at", "label": "Creado", "format": "datetime", "sortable": true }
+    ],
+    "actions": ["show", "edit", "delete"]
+  },
+  "form": {
+    "fields": [
+      {
+        "name": "nombre", "label": "Nombre", "type": "text", "required": true, "col": "col-md-8",
+        "validation": {
+          "maxlength": 120,
+          "unique": { "ignore_self": true },
+          "messages": { "required": "El nombre es obligatorio", "unique": "Ya existe una categoría con ese nombre" }
+        }
+      },
+      { "name": "activa", "label": "Activa", "type": "checkbox", "col": "col-md-4", "default": 1 }
+    ]
+  },
+  "detail": {
+    "tabs": [
+      { "key": "general", "label": "Datos generales", "type": "fields", "columns": ["nombre", "activa", "created_at"] },
+      { "key": "historial", "label": "Historial", "type": "history" }
+    ]
+  },
+  "uploads": { "enabled": false, "public_path": "uploads/cruds/demo_categorias" },
+  "hooks": { "handler": null }
+}

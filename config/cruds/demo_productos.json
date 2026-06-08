@@ -21,6 +21,19 @@
       "inactivo": ["activo"]
     }
   },
+  "relations": {
+    "categoria": {
+      "type": "belongsTo", "table": "dom_demo_categorias",
+      "foreign_key": "categoria_id", "value": "id", "label": "nombre",
+      "filter": { "activa": 1 }, "order_by": "nombre"
+    }
+  },
+  "detail": {
+    "tabs": [
+      { "key": "general", "label": "Datos generales", "type": "fields", "columns": ["codigo", "nombre", "precio_venta", "stock_actual", "status"] },
+      { "key": "historial", "label": "Historial", "type": "history" }
+    ]
+  },
   "list": {
     "group_by": "status",
     "aggregation": {
@@ -119,7 +132,12 @@
         "label": "Código",
         "type": "text",
         "required": true,
-        "col": "col-md-4"
+        "col": "col-md-4",
+        "validation": {
+          "maxlength": 50,
+          "unique": { "ignore_self": true },
+          "messages": { "unique": "Ese código de producto ya existe" }
+        }
       },
       {
         "name": "nombre",
@@ -127,6 +145,15 @@
         "type": "text",
         "required": true,
         "col": "col-md-8"
+      },
+      {
+        "name": "categoria_id",
+        "label": "Categoría",
+        "type": "relation",
+        "relation": "categoria",
+        "required": false,
+        "col": "col-md-4",
+        "validation": { "exists": { "table": "dom_demo_categorias", "column": "id" }, "messages": { "exists": "Categoría inválida" } }
       },
       {
         "name": "precio_venta",
