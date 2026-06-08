@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Infrastructure\Repositories;
 
 use App\Domain\Interfaces\CrudConstraintRepositoryInterface;
+use App\Domain\Interfaces\CrudRelationRepositoryInterface;
 use App\Kernel\BaseClasses\BaseRepository;
 
-final class GenericCrudRepository extends BaseRepository implements CrudConstraintRepositoryInterface
+final class GenericCrudRepository extends BaseRepository implements CrudConstraintRepositoryInterface, CrudRelationRepositoryInterface
 {
     private const IDENTIFIER_PATTERN = '/^[a-zA-Z_][a-zA-Z0-9_]*$/';
 
@@ -228,6 +229,49 @@ final class GenericCrudRepository extends BaseRepository implements CrudConstrai
         );
 
         return ((int) ($row['total'] ?? 0)) > 0;
+    }
+
+    public function distinctOptions(string $table, string $valueColumn, string $labelColumn, array $filter, string $orderBy): array
+    {
+        $safeTable = $this->quoteIdentifier($table);
+        $safeValue = $this->quoteIdentifier($valueColumn);
+        $safeLabel = $this->quoteIdentifier($labelColumn);
+
+        $where = ['`deleted` = 0'];
+        $params = [];
+        foreach ($filter as $col => $val) {
+            $where[] = $this->quoteIdentifier((string) $col) . ' = ?';
+            $params[] = $val;
+        }
+
+        $orderCol = $orderBy !== '' ? $this->quoteIdentifier($orderBy) : $safeLabel;
+        $sql = "SELECT {$safeValue} AS opt_value, {$safeLabel} AS opt_label FROM {$safeTable}"
+            . ' WHERE ' . implode(' AND ', $where)
+            . " ORDER BY {$orderCol} ASC LIMIT 1000";
+
+        $rows = $this->query($sql, $params);
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[(string) ($row['opt_value'] ?? '')] = (string) ($row['opt_label'] ?? '');
+        }
+
+        return $out;
+    }
+
+    public function childrenBy(string $table, string $foreignKey, int $parentId, array $columns, string $orderBy, string $direction, int $limit): array
+    {
+        $safeTable = $this->quoteIdentifier($table);
+        $safeFk    = $this->quoteIdentifier($foreignKey);
+
+        $cols = $columns === [] ? '*' : implode(', ', array_map([$this, 'quoteIdentifier'], $columns));
+        $orderCol = $orderBy !== '' ? $this->quoteIdentifier($orderBy) : $safeFk;
+        $dir = strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
+        $limit = $limit > 0 && $limit <= 500 ? $limit : 50;
+
+        $sql = "SELECT {$cols} FROM {$safeTable} WHERE {$safeFk} = ? AND `deleted` = 0 ORDER BY {$orderCol} {$dir} LIMIT ?";
+
+        return $this->query($sql, [$parentId, $limit]);
     }
 
     private function quoteIdentifier(string $identifier): string
