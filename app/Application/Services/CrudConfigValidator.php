@@ -139,6 +139,13 @@ final class CrudConfigValidator
             $errors[] = $constraintError;
         }
 
+        foreach (self::relationsBlockErrors($config) as $relationError) {
+            $errors[] = $relationError;
+        }
+        foreach (self::detailBlockErrors($config) as $detailError) {
+            $errors[] = $detailError;
+        }
+
         // exists: la tabla/columna destino debe existir realmente.
         foreach (($config['form']['fields'] ?? []) as $index => $field) {
             if (!is_array($field) || !is_array($field['validation']['exists'] ?? null)) {
@@ -176,6 +183,28 @@ final class CrudConfigValidator
             }
             if (!in_array(\App\Domain\Interfaces\CrudValidatorInterface::class, class_implements($class) ?: [], true)) {
                 $errors[] = "El validador '{$validatorKey}' ({$class}) debe implementar CrudValidatorInterface.";
+            }
+        }
+
+        // relations: tabla/columnas destino deben existir en DB.
+        foreach ((is_array($config['relations'] ?? null) ? $config['relations'] : []) as $relName => $rel) {
+            if (!is_array($rel)) {
+                continue;
+            }
+            $relTable = (string) ($rel['table'] ?? '');
+            if ($relTable === '') {
+                continue; // ya reportado por relationsBlockErrors
+            }
+            if (!$this->repository->tableExists($relTable)) {
+                $errors[] = "relations.{$relName}: la tabla {$relTable} no existe.";
+                continue;
+            }
+            $relCols = array_fill_keys($this->repository->getTableColumns($relTable), true);
+            foreach (['value', 'label', 'foreign_key'] as $colKey) {
+                $colName = (string) ($rel[$colKey] ?? '');
+                if ($colName !== '' && !isset($relCols[$colName])) {
+                    $errors[] = "relations.{$relName}.{$colKey} ({$colName}) no existe en {$relTable}.";
+                }
             }
         }
 
@@ -296,6 +325,107 @@ final class CrudConfigValidator
                         $errors[] = "form.fields[{$index}].validation.exists.table ({$table}) usa un prefijo bloqueado.";
                         break;
                     }
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Valida la forma del bloque `relations`. Pura, sin DB.
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    public static function relationsBlockErrors(array $config): array
+    {
+        $relations = $config['relations'] ?? null;
+        if ($relations === null) {
+            return [];
+        }
+        if (!is_array($relations)) {
+            return ['relations debe ser un objeto.'];
+        }
+
+        $errors = [];
+        foreach ($relations as $name => $rel) {
+            if (!is_array($rel)) {
+                $errors[] = "relations.{$name} debe ser un objeto.";
+                continue;
+            }
+            $type = (string) ($rel['type'] ?? '');
+            if (!in_array($type, ['belongsTo', 'hasMany'], true)) {
+                $errors[] = "relations.{$name}.type debe ser 'belongsTo' o 'hasMany'.";
+            }
+            $table = (string) ($rel['table'] ?? '');
+            if ($table === '') {
+                $errors[] = "relations.{$name}.table es obligatorio.";
+            } else {
+                foreach (self::BLOCKED_PREFIXES as $prefix) {
+                    if (str_starts_with($table, $prefix)) {
+                        $errors[] = "relations.{$name}.table ({$table}) usa un prefijo bloqueado.";
+                        break;
+                    }
+                }
+            }
+            if (($rel['foreign_key'] ?? '') === '') {
+                $errors[] = "relations.{$name}.foreign_key es obligatorio.";
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Valida la forma del bloque `detail`. Pura, sin DB.
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    public static function detailBlockErrors(array $config): array
+    {
+        $detail = $config['detail'] ?? null;
+        if ($detail === null) {
+            return [];
+        }
+        if (!is_array($detail)) {
+            return ['detail debe ser un objeto.'];
+        }
+        $tabs = $detail['tabs'] ?? null;
+        if ($tabs === null) {
+            return [];
+        }
+        if (!is_array($tabs)) {
+            return ['detail.tabs debe ser un arreglo.'];
+        }
+
+        $relationNames = array_fill_keys(array_keys(is_array($config['relations'] ?? null) ? $config['relations'] : []), true);
+
+        $errors = [];
+        foreach ($tabs as $i => $tab) {
+            if (!is_array($tab)) {
+                $errors[] = "detail.tabs[{$i}] debe ser un objeto.";
+                continue;
+            }
+            if (($tab['key'] ?? '') === '') {
+                $errors[] = "detail.tabs[{$i}].key es obligatorio.";
+            }
+            $type = (string) ($tab['type'] ?? 'fields');
+            if (!in_array($type, ['fields', 'relation', 'component', 'history'], true)) {
+                $errors[] = "detail.tabs[{$i}].type inválido ('{$type}').";
+                continue;
+            }
+            if ($type === 'relation') {
+                $relName = (string) ($tab['relation'] ?? '');
+                if ($relName === '' || !isset($relationNames[$relName])) {
+                    $errors[] = "detail.tabs[{$i}] (relation) referencia una relación inexistente: '{$relName}'.";
+                }
+            }
+            if ($type === 'component') {
+                $view = (string) ($tab['view'] ?? '');
+                if ($view === '' || str_contains($view, '..') || str_starts_with($view, '/')) {
+                    $errors[] = "detail.tabs[{$i}] (component) tiene una vista con ruta inválida.";
                 }
             }
         }
