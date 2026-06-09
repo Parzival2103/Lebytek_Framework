@@ -46,10 +46,10 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
     </header>
 
     <section class="ct-table-card card border-0 shadow-sm ct-card">
-        <?= ViewHelper::partial('crud/partials/actions_bulk', [
-            'bulkActions' => $bulkActions ?? [],
-            'resource' => $resource ?? '',
-        ]) ?>
+        <?php
+            $bulkActions = $bulkActions ?? [];
+            require __DIR__ . '/partials/actions_bulk.php';
+        ?>
         <div class="card-header bg-transparent border-bottom p-3 p-md-4">
             <form class="row g-2 g-md-3 align-items-end" method="GET" action="/admin/crud/<?= ViewHelper::e((string) ($resource ?? '')) ?>">
                 <div class="col-12 col-md-4">
@@ -152,10 +152,7 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
                                 <?php endforeach; ?>
                                 <?php if (!$grouped): ?>
                                     <td class="text-end px-3">
-                                        <?= ViewHelper::partial('crud/partials/actions_row', [
-                                            'rowActions' => $row['_actions'] ?? [],
-                                            'resource' => $resource ?? '',
-                                        ]) ?>
+                                        <?php $rowActions = $row['_actions'] ?? []; require __DIR__ . '/partials/actions_row.php'; ?>
                                     </td>
                                 <?php endif; ?>
                             </tr>
@@ -178,6 +175,30 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
                             </tr>
                         </tfoot>
                     <?php endif; ?>
+                    <?php if (!$grouped && !empty($summaryRow['_formatted'])): ?>
+                        <tfoot class="table-group-divider">
+                            <tr class="table-light fw-semibold">
+                                <?php $sumCells = $summaryRow['_formatted']; $labelPlaced = false; ?>
+                                <?php if (!empty($selectable)): ?>
+                                    <td class="px-3">Totales</td>
+                                    <?php $labelPlaced = true; ?>
+                                <?php endif; ?>
+                                <?php foreach (($columns ?? []) as $column): ?>
+                                    <?php
+                                        $cname = (string) ($column['name'] ?? '');
+                                        $val = $sumCells[$cname] ?? '';
+                                    ?>
+                                    <?php if (!$labelPlaced && ($val === '' || $val === null)): ?>
+                                        <td class="px-3 text-muted">Totales</td>
+                                        <?php $labelPlaced = true; ?>
+                                    <?php else: ?>
+                                        <td class="px-3"><?= ViewHelper::e((string) $val) ?></td>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                                <td class="px-3"></td>
+                            </tr>
+                        </tfoot>
+                    <?php endif; ?>
                 </table>
             </div>
         </div>
@@ -195,40 +216,4 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
     </section>
 </div>
 
-<div class="modal fade" id="crudDeleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-0">Esta acción marca el registro como eliminado (borrado lógico). ¿Deseas continuar?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="crudDeleteForm" method="POST" action="#">
-                    <?= ViewHelper::csrfField() ?>
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var modal = document.getElementById('crudDeleteModal');
-        if (!modal) return;
-        modal.addEventListener('show.bs.modal', function (event) {
-            var btn = event.relatedTarget;
-            if (!btn || !btn.getAttribute) return;
-            var action = btn.getAttribute('data-action');
-            var form = document.getElementById('crudDeleteForm');
-            if (form && action) {
-                form.setAttribute('action', action);
-            }
-        });
-    });
-</script>
 <script src="<?= ViewHelper::asset('js/crud-engine.js') ?>"></script>
