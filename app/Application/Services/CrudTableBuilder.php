@@ -81,8 +81,33 @@ final class CrudTableBuilder
         }
 
         $formattedSummary = [];
-        if ($grouped && $summaryRow !== []) {
-            $formattedSummary = $this->formatRow($summaryRow, $columns);
+        if ($summaryRow !== []) {
+            if ($grouped) {
+                $formattedSummary = $this->formatRow($summaryRow, $columns);
+            } else {
+                $cells = [];
+                foreach (is_array($summaries) ? $summaries : [] as $summary) {
+                    $type = (string) ($summary['type'] ?? '');
+                    $col  = (string) ($summary['column'] ?? '');
+                    if ($col === '') {
+                        continue;
+                    }
+                    if ($type === 'sum') {
+                        $alias = 'crud_sum_' . $col;
+                    } elseif ($type === 'count') {
+                        $alias = 'crud_cnt_' . $col;
+                    } else {
+                        continue;
+                    }
+                    if (!array_key_exists($alias, $summaryRow)) {
+                        continue;
+                    }
+                    $cells[$col] = $this->formatScalar($summaryRow[$alias], (string) ($summary['format'] ?? ''));
+                }
+                if ($cells !== []) {
+                    $formattedSummary = ['_formatted' => $cells];
+                }
+            }
         }
 
         return [
@@ -148,5 +173,24 @@ final class CrudTableBuilder
         }
 
         return $row;
+    }
+
+    private function formatScalar(mixed $value, string $format): mixed
+    {
+        if ($format === 'date' && !empty($value)) {
+            $timestamp = strtotime((string) $value);
+            return $timestamp ? date('d/m/Y', $timestamp) : $value;
+        }
+
+        if ($format === 'datetime' && !empty($value)) {
+            $timestamp = strtotime((string) $value);
+            return $timestamp ? date('d/m/Y H:i', $timestamp) : $value;
+        }
+
+        if ($format === 'money' && $value !== null && $value !== '') {
+            return '$' . number_format((float) $value, 2, '.', ',');
+        }
+
+        return $value;
     }
 }
