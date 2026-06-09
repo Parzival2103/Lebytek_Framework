@@ -37,7 +37,9 @@ final class CrudResourceDefinition
         private readonly ?CrudStateMachine $stateMachine,
         private readonly array $formValidators,
         private readonly array $relations,
-        private readonly array $detailTabs
+        private readonly array $detailTabs,
+        private readonly ?array $listScope,
+        private readonly ?string $listScopeHandler
     ) {}
 
     public static function fromArray(array $config): self
@@ -123,6 +125,11 @@ final class CrudResourceDefinition
             }
         }
 
+        $listScope = is_array($list['scope'] ?? null) ? $list['scope'] : null;
+        $listScopeHandler = (isset($list['scope_handler']) && is_string($list['scope_handler']) && $list['scope_handler'] !== '')
+            ? $list['scope_handler']
+            : null;
+
         return new self(
             key: (string) ($resource['key'] ?? ''),
             title: (string) ($resource['title'] ?? ''),
@@ -146,7 +153,9 @@ final class CrudResourceDefinition
             stateMachine: $stateMachine,
             formValidators: $formValidators,
             relations: $relations,
-            detailTabs: $detailTabs
+            detailTabs: $detailTabs,
+            listScope: $listScope,
+            listScopeHandler: $listScopeHandler
         );
     }
 
@@ -240,4 +249,9 @@ final class CrudResourceDefinition
     {
         return $this->detailTabs !== [];
     }
+
+    /** @return array<string, mixed>|null */
+    public function listScope(): ?array { return $this->listScope; }
+
+    public function listScopeHandler(): ?string { return $this->listScopeHandler; }
 }
