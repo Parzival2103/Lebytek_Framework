@@ -2,6 +2,8 @@
 
 Guía para añadir un **nuevo módulo de dominio** sobre este framework (auth, RBAC, ajustes, shell admin). Cada módulo debe repetir la **misma estructura y puntos de cableado** para mantener cohesion entre equipos.
 
+> **Capacidad relacionada:** si tu recurso tiene columnas de fecha, puedes exponerlo como calendario (vistas mes/semana/día/tabla + widget de dashboard) sin escribir código, declarando `config/calendars/{key}.json`. Ver [modulo-calendario.md](./modulo-calendario.md).
+
 
 ## Convenciones fijas del framework
 
@@ -28,6 +30,7 @@ Guía para añadir un **nuevo módulo de dominio** sobre este framework (auth, R
 | 13 | Servicios | PDF, uploads, integraciones — `Application/Services` o `Infrastructure` según reglas del proyecto; registro explícito en el contenedor; servicios nombrados (`'fileUploader.mi_modulo'`). |
 | 14 | Activos | `public/assets/uploads/...` acorde a política documentada en el módulo. |
 | 15 | Documentación | Añadir filas en `docs/core/schema-code-map.md` para tabla ↔ repositorio ↔ controlador. |
+| 16 | Confirmaciones UI | Acciones destructivas/irreversibles: `data-confirm` en form/botón; `data-confirm-variant="danger"` si aplica. No modales locales ni `window.confirm`. El layout `base.php` ya incluye `#confirmModal`. Ver [ui_ux.md](../core/ui_ux.md). |
 
 ## Plantilla de rutas (`routes/web.php`)
 
