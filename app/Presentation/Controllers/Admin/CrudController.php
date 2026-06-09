@@ -29,7 +29,8 @@ final class CrudController extends AdminBaseController
     {
         try {
             $resource = (string) $request->param('resource');
-            $data = $this->crudResourceService->buildIndexData($resource, $request->all());
+            $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
+            $data = $this->crudResourceService->buildIndexData($resource, $request->all(), $userId > 0 ? $userId : null);
             $sys = $this->configuracionService->all();
             if (!($data['tableCompact'] ?? false) && LebytekUiConfig::globalTableCompact(is_array($sys) ? $sys : [])) {
                 $data['tableCompact'] = true;
@@ -82,7 +83,8 @@ final class CrudController extends AdminBaseController
         try {
             $resource = (string) $request->param('resource');
             $id = (int) $request->param('id');
-            $data = $this->crudResourceService->buildShowData($resource, $id);
+            $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
+            $data = $this->crudResourceService->buildShowData($resource, $id, $userId > 0 ? $userId : null);
             $data['titulo'] = 'Detalle de ' . $data['title'];
             return $this->view('admin/crud/show', $data);
         } catch (AccesoException) {
@@ -97,7 +99,8 @@ final class CrudController extends AdminBaseController
         try {
             $resource = (string) $request->param('resource');
             $id = (int) $request->param('id');
-            $data = $this->crudResourceService->buildEditData($resource, $id);
+            $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
+            $data = $this->crudResourceService->buildEditData($resource, $id, $userId > 0 ? $userId : null);
             $data['titulo'] = 'Editar ' . $data['title'];
             return $this->view('admin/crud/form', $data);
         } catch (AccesoException) {

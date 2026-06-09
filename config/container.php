@@ -159,7 +159,8 @@ return static function (Container $container): void {
         $c->get(RbacService::class),
         $c->get(CrudActionResolver::class),
         $c->get(CrudActionService::class),
-        $c->get(CrudDetailBuilder::class)
+        $c->get(CrudDetailBuilder::class),
+        $c->get(CrudScopeResolver::class)
     ));
 
     foreach ((require ROOT_PATH . '/config/dashboard.php')['providers'] as $fqcnProvider) {

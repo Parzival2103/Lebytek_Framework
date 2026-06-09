@@ -17,15 +17,33 @@ final class CrudResourceService
         private readonly RbacService $rbacService,
         private readonly CrudActionResolver $actionResolver,
         private readonly CrudActionService $actionService,
-        private readonly CrudDetailBuilder $detailBuilder
+        private readonly CrudDetailBuilder $detailBuilder,
+        private readonly CrudScopeResolver $scopeResolver
     ) {}
 
-    public function buildIndexData(string $resource, array $query): array
+    private function assertOwnership(\App\Domain\Entities\CrudResourceDefinition $definition, array $row, ?int $userId): void
+    {
+        $meta = $this->scopeResolver->ownerMeta($definition);
+        if ($meta === null) {
+            return;
+        }
+        if ($meta['bypass'] !== null && $this->rbacService->puede($meta['bypass'])) {
+            return;
+        }
+        $owner = $row[$meta['column']] ?? null;
+        if ($userId === null || (string) $owner !== (string) $userId) {
+            // Tratar como inexistente para no revelar registros ajenos (404 en show/edit).
+            throw new ValidationException('El registro solicitado no existe.');
+        }
+    }
+
+    public function buildIndexData(string $resource, array $query, ?int $userId = null): array
     {
         $definition = $this->configLoader->load($resource);
         $this->rbacService->verificar($definition->permissionFor('ver'));
 
-        $result = $this->dataService->list($definition, $query);
+        $can = fn(string $slug): bool => $this->rbacService->puede($slug);
+        $result = $this->dataService->list($definition, $query, $userId, $can);
         $permissions = $this->resolvePermissions($definition->permissionPrefix());
 
         $data = $this->tableBuilder->build(
@@ -42,7 +60,6 @@ final class CrudResourceService
             tableCompact: $definition->listTableCompact()
         );
 
-        $can = fn(string $slug): bool => $this->rbacService->puede($slug);
         if (is_array($data['rows'] ?? null)) {
             foreach ($data['rows'] as &$row) {
                 $row['_actions'] = $this->actionResolver->visibleRowActions($definition, $row, $can);
@@ -77,7 +94,7 @@ final class CrudResourceService
         return $this->dataService->store($definition, $input, $files, $userId, $ip);
     }
 
-    public function buildShowData(string $resource, int $id): array
+    public function buildShowData(string $resource, int $id, ?int $userId = null): array
     {
         $definition = $this->configLoader->load($resource);
         $this->rbacService->verificar($definition->permissionFor('ver'));
@@ -86,6 +103,7 @@ final class CrudResourceService
         if ($row === null || (int) ($row['deleted'] ?? 0) === 1) {
             throw new ValidationException('El registro solicitado no existe.');
         }
+        $this->assertOwnership($definition, $row, $userId);
 
         $can = fn(string $slug): bool => $this->rbacService->puede($slug);
         $actions = $this->actionResolver->visibleRowActions($definition, $row, $can);
@@ -115,7 +133,7 @@ final class CrudResourceService
         ];
     }
 
-    public function buildEditData(string $resource, int $id): array
+    public function buildEditData(string $resource, int $id, ?int $userId = null): array
     {
         $definition = $this->configLoader->load($resource);
         $this->rbacService->verificar($definition->permissionFor('editar'));
@@ -124,6 +142,7 @@ final class CrudResourceService
         if ($row === null || (int) ($row['deleted'] ?? 0) === 1) {
             throw new ValidationException('El registro solicitado no existe.');
         }
+        $this->assertOwnership($definition, $row, $userId);
 
         $oldValues = Session::oldInput('_crud_values');
         $values = is_array($oldValues) ? $oldValues : $row;
@@ -147,6 +166,8 @@ final class CrudResourceService
             throw new ValidationException('El registro solicitado no existe.');
         }
 
+        $this->assertOwnership($definition, $existing, $userId);
+
         $this->dataService->update($definition, $id, $input, $files, $userId, $ip);
     }
 
@@ -159,6 +180,8 @@ final class CrudResourceService
         if ($existing === null || (int) ($existing['deleted'] ?? 0) === 1) {
             throw new ValidationException('El registro solicitado no existe.');
         }
+
+        $this->assertOwnership($definition, $existing, $userId);
 
         $this->dataService->delete($definition, $id, $userId, $ip);
     }
