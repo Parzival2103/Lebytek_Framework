@@ -7,6 +7,7 @@ use App\Presentation\Controllers\Admin\RolesController;
 use App\Presentation\Controllers\Admin\PermisosController;
 use App\Presentation\Controllers\Admin\AjustesController;
 use App\Presentation\Controllers\Admin\CrudController;
+use App\Presentation\Controllers\Admin\CalendarioController;
 use App\Presentation\Controllers\Admin\SistemaEstadoController;
 use App\Presentation\Controllers\PwaController;
 use App\Presentation\Middlewares\AuthMiddleware;
@@ -84,4 +85,7 @@ $router->group([
     $router->post('/crud/{resource}/{id}/eliminar',   [CrudController::class, 'delete'], [CsrfMiddleware::class]);
     $router->post('/crud/{resource}/{id}/accion/{action}',   [CrudController::class, 'action'],     [CsrfMiddleware::class]);
     $router->post('/crud/{resource}/accion-masiva/{action}', [CrudController::class, 'bulkAction'], [CsrfMiddleware::class]);
+
+    $router->get('/calendario/{key}',         [CalendarioController::class, 'index']);
+    $router->get('/calendario/{key}/eventos', [CalendarioController::class, 'events']);
 });

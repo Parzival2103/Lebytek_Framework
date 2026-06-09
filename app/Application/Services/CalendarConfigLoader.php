@@ -54,14 +54,12 @@ final class CalendarConfigLoader
     }
 
     /**
-     * Columnas declaradas del recurso CRUD (sin tocar la base de datos): se derivan
-     * del JSON de configuración del recurso. Suficiente para validar el mapeo del
-     * calendario; la validación CRUD completa (contra el esquema real) ocurre en su
-     * propio flujo.
-     *
-     * @return list<string>
+     * Definición del recurso CRUD subyacente, construida directamente desde su JSON
+     * (sin tocar la base de datos). Suficiente para leer columnas declaradas, prefijo
+     * de permisos y máquina de estados; la validación CRUD completa contra el esquema
+     * real ocurre en su propio flujo.
      */
-    private function resourceColumns(string $resource): array
+    public function crudDefinition(string $resource): CrudResourceDefinition
     {
         $resource = trim($resource);
         $file = self::CRUD_DIR . '/' . $resource . '.json';
@@ -75,7 +73,17 @@ final class CalendarConfigLoader
             throw new ValidationException("El JSON del recurso CRUD {$resource}.json es inválido.");
         }
 
-        return CrudResourceDefinition::fromArray($crudConfig)->columnNames();
+        return CrudResourceDefinition::fromArray($crudConfig);
+    }
+
+    /**
+     * Columnas declaradas del recurso CRUD (sin tocar la base de datos).
+     *
+     * @return list<string>
+     */
+    private function resourceColumns(string $resource): array
+    {
+        return $this->crudDefinition($resource)->columnNames();
     }
 
     /** @return array<string,string> key => título */

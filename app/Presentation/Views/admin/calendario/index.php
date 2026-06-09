@@ -1,0 +1,121 @@
+<?php
+
+use App\Kernel\Helpers\ViewHelper;
+
+$views    = $views ?? ['default' => 'month', 'enabled' => ['month', 'table']];
+$enabled  = (array) ($views['enabled'] ?? ['month']);
+$default  = (string) ($views['default'] ?? 'month');
+$caps     = $capabilities ?? [];
+$legend   = $legend ?? [];
+$resource = (string) ($resource ?? '');
+$key      = (string) ($key ?? '');
+
+$viewLabels = [
+    'month' => 'Mes',
+    'week'  => 'Semana',
+    'day'   => 'Día',
+    'table' => 'Tabla',
+];
+$viewIcons = [
+    'month' => 'bi-calendar3',
+    'week'  => 'bi-calendar-week',
+    'day'   => 'bi-calendar-day',
+    'table' => 'bi-list-ul',
+];
+?>
+<link rel="stylesheet" href="<?= ViewHelper::asset('css/lebytek-ui.css') ?>">
+
+<div class="container-fluid px-3 px-lg-4 py-3 py-lg-4 lebytek-calendar-page ct-page">
+    <header class="ct-page-header card border-0 shadow-sm ct-card mb-4">
+        <div class="card-body p-3 p-md-4 d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-center gap-3">
+            <div class="flex-grow-1">
+                <h1 class="ct-page-title h4 mb-1 d-inline-flex align-items-center gap-2">
+                    <i class="bi <?= ViewHelper::e((string) ($icon ?? 'bi-calendar-event')) ?>" aria-hidden="true"></i>
+                    <span><?= ViewHelper::e((string) ($title ?? 'Calendario')) ?></span>
+                </h1>
+                <p class="ct-page-subtitle text-muted small mb-0">
+                    Vista de calendario sobre registros existentes. Cambia de vista o navega entre periodos.
+                </p>
+            </div>
+            <?php if (!empty($caps['canCreate'])): ?>
+                <div class="ct-actions justify-content-lg-end">
+                    <a href="<?= ViewHelper::e((string) ($crudBaseUrl ?? '')) ?>/crear"
+                       class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                        <span>Nuevo registro</span>
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
+    </header>
+
+    <section class="ct-table-card card border-0 shadow-sm ct-card">
+        <div class="card-header bg-transparent border-bottom p-3 p-md-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-center gap-3">
+                <div class="btn-toolbar gap-2" role="toolbar" aria-label="Navegación del calendario">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary" data-cal-nav="prev" aria-label="Periodo anterior">
+                            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" data-cal-nav="today">Hoy</button>
+                        <button type="button" class="btn btn-outline-secondary" data-cal-nav="next" aria-label="Periodo siguiente">
+                            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <h2 class="h6 mb-0 align-self-center ms-1" data-cal-period aria-live="polite">&nbsp;</h2>
+                </div>
+
+                <?php if (count($enabled) > 1): ?>
+                    <div class="btn-group" role="group" aria-label="Selector de vista">
+                        <?php foreach ($enabled as $view): ?>
+                            <?php $view = (string) $view; ?>
+                            <button type="button"
+                                    class="btn btn-outline-primary<?= $view === $default ? ' active' : '' ?>"
+                                    data-cal-view="<?= ViewHelper::e($view) ?>">
+                                <i class="bi <?= ViewHelper::e($viewIcons[$view] ?? 'bi-calendar3') ?> me-1" aria-hidden="true"></i>
+                                <?= ViewHelper::e($viewLabels[$view] ?? ucfirst($view)) ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($legend !== []): ?>
+                <div class="d-flex flex-wrap gap-3 mt-3 lebytek-calendar-legend">
+                    <?php foreach ($legend as $item): ?>
+                        <span class="d-inline-flex align-items-center gap-1 small text-muted">
+                            <span class="badge bg-<?= ViewHelper::e((string) ($item['tone'] ?? 'secondary')) ?>">&nbsp;</span>
+                            <?= ViewHelper::e((string) ($item['label'] ?? '')) ?>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <div class="card-body p-3 p-md-4">
+            <div id="lebytek-calendar"
+                 class="lebytek-calendar"
+                 data-feed="<?= ViewHelper::e((string) ($feedUrl ?? '')) ?>"
+                 data-resource="<?= ViewHelper::e($resource) ?>"
+                 data-crud-base="<?= ViewHelper::e((string) ($crudBaseUrl ?? '')) ?>"
+                 data-default-view="<?= ViewHelper::e($default) ?>"
+                 data-all-day="<?= !empty($allDay) ? '1' : '0' ?>"
+                 data-can-create="<?= !empty($caps['canCreate']) ? '1' : '0' ?>"
+                 data-can-edit="<?= !empty($caps['canEdit']) ? '1' : '0' ?>"
+                 data-can-delete="<?= !empty($caps['canDelete']) ? '1' : '0' ?>"
+                 data-open-detail="<?= !empty($caps['openDetail']) ? '1' : '0' ?>"
+                 data-csrf="<?= ViewHelper::e(ViewHelper::csrfToken()) ?>">
+                <div class="lebytek-calendar-loading text-center text-muted py-5">
+                    <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+                    Cargando eventos…
+                </div>
+            </div>
+            <div class="lebytek-calendar-empty text-center text-muted py-5 d-none" data-cal-empty>
+                <i class="bi bi-calendar-x fs-2 d-block mb-2" aria-hidden="true"></i>
+                No hay eventos en este periodo.
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="<?= ViewHelper::asset('js/calendar.js') ?>" defer></script>

@@ -163,6 +163,22 @@ return static function (Container $container): void {
         $c->get(CrudScopeResolver::class)
     ));
 
+    // ── Módulo Calendario ───────────────────────────────────────────────────
+    $container->singleton(\App\Application\Services\CalendarConfigValidator::class, fn() => new \App\Application\Services\CalendarConfigValidator());
+    $container->singleton(\App\Application\Services\CalendarConfigLoader::class, fn(Container $c) => new \App\Application\Services\CalendarConfigLoader(
+        $c->get(\App\Application\Services\CalendarConfigValidator::class)
+    ));
+    $container->singleton(\App\Application\Services\CalendarEventMapper::class, fn() => new \App\Application\Services\CalendarEventMapper());
+    $container->singleton(\App\Application\Services\CalendarViewModelBuilder::class, fn(Container $c) => new \App\Application\Services\CalendarViewModelBuilder(
+        $c->get(\App\Application\Services\CalendarConfigLoader::class),
+        $c->get(RbacService::class)
+    ));
+    $container->singleton(\App\Application\UseCases\Calendar\ListarEventosCalendarioUseCase::class, fn(Container $c) => new \App\Application\UseCases\Calendar\ListarEventosCalendarioUseCase(
+        $c->get(\App\Application\Services\CalendarConfigLoader::class),
+        $c->get(CrudResourceService::class),
+        $c->get(\App\Application\Services\CalendarEventMapper::class)
+    ));
+
     foreach ((require ROOT_PATH . '/config/dashboard.php')['providers'] as $fqcnProvider) {
         if (!$container->has($fqcnProvider)) {
             $fqcn = $fqcnProvider;
@@ -256,6 +272,15 @@ return static function (Container $container): void {
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
             $c->get(CrudResourceService::class)
+        );
+    });
+
+    $container->bind(\App\Presentation\Controllers\Admin\CalendarioController::class, function (Container $c) {
+        return new \App\Presentation\Controllers\Admin\CalendarioController(
+            $c->get(ConfiguracionService::class),
+            $c->get(AdminNavigationMenuService::class),
+            $c->get(\App\Application\Services\CalendarViewModelBuilder::class),
+            $c->get(\App\Application\UseCases\Calendar\ListarEventosCalendarioUseCase::class)
         );
     });
 
