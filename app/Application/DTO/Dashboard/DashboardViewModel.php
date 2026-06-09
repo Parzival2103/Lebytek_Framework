@@ -28,5 +28,6 @@ final class DashboardViewModel
         public readonly array $activityItems,
         public readonly array $quickAccessItems,
         public readonly array $sections,
+        public readonly array $widgets = [],
     ) {}
 }

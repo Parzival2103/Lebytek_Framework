@@ -28,6 +28,7 @@ final class BuildDashboardViewModelUseCase
         $statusBadge = '';
         $statusBadgeTone = 'success';
         $statusLinesMerged = [];
+        $widgets = [];
 
         /** @var list<DashboardContributionProviderInterface> $sorted */
         $sorted = [...$this->providers];
@@ -58,6 +59,10 @@ final class BuildDashboardViewModelUseCase
                     $statusLinesMerged[] = $ln;
                 }
             }
+
+            foreach ($c->widgets as $widget) {
+                $widgets[] = $widget;
+            }
         }
 
         return new DashboardViewModel(
@@ -75,6 +80,7 @@ final class BuildDashboardViewModelUseCase
                 'badgeTone'           => $statusBadgeTone !== '' ? $statusBadgeTone : 'success',
                 'statusLines'         => $statusLinesMerged,
             ],
+            widgets:             $widgets,
         );
     }
 }
