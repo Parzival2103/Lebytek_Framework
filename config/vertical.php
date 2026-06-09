@@ -14,6 +14,7 @@ return [
     'modules' => [
         'dashboard'      => true,
         'administracion' => true,
+        'calendario'     => true,
     ],
 
     'labels' => [
