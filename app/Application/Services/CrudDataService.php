@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Services;
 
+use App\Application\Crud\Context\CrudListContext;
 use App\Application\Crud\Context\CrudValidationContext;
 use App\Application\Crud\Context\CrudWriteContext;
 use App\Domain\Entities\CrudFieldDefinition;
@@ -34,10 +35,11 @@ final class CrudDataService
         private readonly CrudHookRunner $hookRunner,
         private readonly CrudFieldValidationService $fieldValidation,
         private readonly ?CrudDbConstraintValidator $dbConstraintValidator = null,
-        private readonly ?CrudHandlerRegistry $handlerRegistry = null
+        private readonly ?CrudHandlerRegistry $handlerRegistry = null,
+        private readonly ?CrudScopeResolver $scopeResolver = null
     ) {}
 
-    public function list(CrudResourceDefinition $definition, array $query): array
+    public function list(CrudResourceDefinition $definition, array $query, ?int $userId = null, ?callable $can = null): array
     {
         $columns = $definition->listColumns();
         $selectColumns = array_values(array_unique(array_map(
@@ -98,6 +100,29 @@ final class CrudDataService
 
             $where[] = '`' . $field . '` = ?';
             $params[] = $value;
+        }
+
+        if ($this->scopeResolver !== null) {
+            $canCheck = $can ?? static fn(string $slug): bool => false;
+            $scope = $this->scopeResolver->resolve($definition, $userId, $canCheck);
+            if ($scope !== null) {
+                $scopeCtx = new CrudListContext(
+                    $definition->key(),
+                    $definition->table(),
+                    $definition->primaryKey(),
+                    $userId,
+                    '',
+                    $query
+                );
+                $scope->apply($scopeCtx);
+                [$scopeWhere, $scopeParams] = CrudScopeResolver::conditionsToSql($scopeCtx->conditions());
+                foreach ($scopeWhere as $part) {
+                    $where[] = $part;
+                }
+                foreach ($scopeParams as $param) {
+                    $params[] = $param;
+                }
+            }
         }
 
         $candidateCount = $this->repository->countFiltered($definition->table(), $where, $params);
