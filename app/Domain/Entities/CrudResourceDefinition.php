@@ -165,6 +165,30 @@ final class CrudResourceDefinition
     public function primaryKey(): string { return $this->primaryKey; }
     public function permissionPrefix(): string { return $this->permissionPrefix; }
     public function listColumns(): array { return $this->listColumns; }
+
+    /**
+     * Nombres de columnas conocidas del recurso: primary key + columnas de listado
+     * + campos de formulario (deduplicado, preservando orden de aparición).
+     *
+     * @return list<string>
+     */
+    public function columnNames(): array
+    {
+        $names = [$this->primaryKey];
+        foreach ($this->listColumns as $col) {
+            if (is_array($col) && isset($col['name']) && is_string($col['name']) && $col['name'] !== '') {
+                $names[] = $col['name'];
+            }
+        }
+        foreach ($this->formFields as $field) {
+            $name = $field->name();
+            if ($name !== '') {
+                $names[] = $name;
+            }
+        }
+        return array_values(array_unique($names));
+    }
+
     public function listFilters(): array { return $this->listFilters; }
     public function listActions(): array { return $this->listActions; }
     public function listGroupBy(): string { return $this->listGroupBy; }
