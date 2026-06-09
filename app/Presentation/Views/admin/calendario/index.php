@@ -80,6 +80,28 @@ $viewIcons = [
                 <?php endif; ?>
             </div>
 
+            <?php if (!empty($filters)): ?>
+                <div class="row g-2 g-md-3 align-items-end mt-1 lebytek-calendar-filters">
+                    <?php foreach ($filters as $filter): ?>
+                        <?php $field = (string) ($filter['field'] ?? ''); ?>
+                        <?php if ($field === '') { continue; } ?>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small text-muted mb-1" for="cal-filter-<?= ViewHelper::e($field) ?>">
+                                <?= ViewHelper::e((string) ($filter['label'] ?? ucfirst($field))) ?>
+                            </label>
+                            <select id="cal-filter-<?= ViewHelper::e($field) ?>"
+                                    class="form-select form-select-sm"
+                                    data-cal-filter="<?= ViewHelper::e($field) ?>">
+                                <option value="">Todos</option>
+                                <?php foreach ((array) ($filter['options'] ?? []) as $value => $label): ?>
+                                    <option value="<?= ViewHelper::e((string) $value) ?>"><?= ViewHelper::e((string) $label) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
             <?php if ($legend !== []): ?>
                 <div class="d-flex flex-wrap gap-3 mt-3 lebytek-calendar-legend">
                     <?php foreach ($legend as $item): ?>

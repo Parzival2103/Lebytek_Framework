@@ -52,8 +52,8 @@ final class CalendarioController extends AdminBaseController
                 : DateRange::forMonth((int) date('Y'), (int) date('n'));
 
             $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
-            // Filtros del feed: se incorporan en la Fase 2 (Task 2.2).
-            $events = $this->listarEventos->execute($key, $range, $userId > 0 ? $userId : null);
+            $filters = $this->extractFilters($key, $q);
+            $events = $this->listarEventos->execute($key, $range, $userId > 0 ? $userId : null, $filters);
 
             return Response::json(['eventos' => $events]);
         } catch (AccesoException) {
@@ -61,5 +61,29 @@ final class CalendarioController extends AdminBaseController
         } catch (ValidationException $e) {
             return Response::json(['error' => $e->getMessage()], 422);
         }
+    }
+
+    /**
+     * Filtros declarados por el calendario, leídos del query con prefijo `f_`.
+     * Reutiliza el view-model (que también verifica el permiso de lectura).
+     *
+     * @param array<string,mixed> $query
+     * @return array<string,mixed>
+     */
+    private function extractFilters(string $key, array $query): array
+    {
+        $data = $this->viewModelBuilder->build($key);
+        $filters = [];
+        foreach ((array) ($data['filters'] ?? []) as $filter) {
+            $field = (string) ($filter['field'] ?? '');
+            if ($field === '') {
+                continue;
+            }
+            $value = $query['f_' . $field] ?? null;
+            if ($value !== null && $value !== '') {
+                $filters[$field] = $value;
+            }
+        }
+        return $filters;
     }
 }

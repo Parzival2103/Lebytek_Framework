@@ -38,6 +38,7 @@
         this.feed = el.getAttribute('data-feed') || '';
         this.crudBase = el.getAttribute('data-crud-base') || '';
         this.openDetail = el.getAttribute('data-open-detail') === '1';
+        this.allDay = el.getAttribute('data-all-day') === '1';
         this.view = el.getAttribute('data-default-view') || 'month';
         this.anchor = new Date();
         this.events = [];
@@ -59,6 +60,22 @@
                 btn.classList.add('active');
             });
         });
+        document.querySelectorAll('[data-cal-filter]').forEach(function (sel) {
+            sel.addEventListener('change', function () { self.refresh(); });
+        });
+    };
+
+    // Construye "&f_campo=valor" para cada filtro activo de la toolbar.
+    Calendar.prototype.filterQuery = function () {
+        var q = '';
+        document.querySelectorAll('[data-cal-filter]').forEach(function (sel) {
+            var field = sel.getAttribute('data-cal-filter');
+            var value = sel.value;
+            if (field && value !== '' && value != null) {
+                q += '&f_' + encodeURIComponent(field) + '=' + encodeURIComponent(value);
+            }
+        });
+        return q;
     };
 
     Calendar.prototype.setView = function (view) {
@@ -121,7 +138,8 @@
         this.updatePeriod();
         var r = this.range();
         var url = this.feed + (this.feed.indexOf('?') >= 0 ? '&' : '?') +
-            'desde=' + encodeURIComponent(ymd(r.from)) + '&hasta=' + encodeURIComponent(ymd(r.to));
+            'desde=' + encodeURIComponent(ymd(r.from)) + '&hasta=' + encodeURIComponent(ymd(r.to)) +
+            this.filterQuery();
 
         this.el.innerHTML = '<div class="lebytek-calendar-loading text-center text-muted py-5">' +
             '<div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>Cargando eventos…</div>';
@@ -144,10 +162,66 @@
         if (this.emptyEl) { this.emptyEl.classList.toggle('d-none', this.events.length > 0); }
         if (this.view === 'table') {
             this.renderTable();
+        } else if (this.view === 'week') {
+            this.renderWeek();
+        } else if (this.view === 'day') {
+            this.renderDay();
         } else {
-            // Fase 1: week/day reutilizan la rejilla mensual hasta la Fase 2.
             this.renderMonth();
         }
+    };
+
+    // Hora "HH:MM" del inicio del evento (vacío si es de día completo).
+    Calendar.prototype.timeLabel = function (ev) {
+        if (ev.allDay || this.allDay) { return ''; }
+        var d = parseLocal(ev.start);
+        if (!d) { return ''; }
+        return pad(d.getHours()) + ':' + pad(d.getMinutes());
+    };
+
+    Calendar.prototype.dayColumn = function (date, events) {
+        var self = this;
+        var isToday = sameDay(date, new Date());
+        var html = '<div class="lebytek-calendar-col' + (isToday ? ' is-today' : '') + '">';
+        html += '<div class="lebytek-calendar-col-head">' +
+            WEEKDAYS[isoDow(date)] + ' ' + date.getDate() + '</div>';
+        html += '<div class="lebytek-calendar-col-body">';
+        if (events.length === 0) {
+            html += '<div class="lebytek-calendar-col-empty">—</div>';
+        } else {
+            events.sort(function (a, b) { return String(a.start).localeCompare(String(b.start)); });
+            events.forEach(function (ev) {
+                var t = self.timeLabel(ev);
+                html += '<button type="button" class="lebytek-calendar-pill bg-' + escapeHtml(ev.color || 'primary') +
+                    '" data-event-id="' + escapeHtml(ev.id) + '" title="' + escapeHtml(ev.title) + '">' +
+                    (t ? '<span class="lebytek-calendar-pill-time">' + t + '</span> ' : '') +
+                    escapeHtml(ev.title) + '</button>';
+            });
+        }
+        html += '</div></div>';
+        return html;
+    };
+
+    Calendar.prototype.renderWeek = function () {
+        var byDay = this.eventsByDay();
+        var monday = addDays(this.anchor, -isoDow(this.anchor));
+        var html = '<div class="lebytek-calendar-week">';
+        for (var i = 0; i < 7; i++) {
+            var d = addDays(monday, i);
+            html += this.dayColumn(d, (byDay[ymd(d)] || []).slice());
+        }
+        html += '</div>';
+        this.el.innerHTML = html;
+        this.wireEventClicks();
+    };
+
+    Calendar.prototype.renderDay = function () {
+        var byDay = this.eventsByDay();
+        var html = '<div class="lebytek-calendar-week lebytek-calendar-week--single">';
+        html += this.dayColumn(new Date(this.anchor), (byDay[ymd(this.anchor)] || []).slice());
+        html += '</div>';
+        this.el.innerHTML = html;
+        this.wireEventClicks();
     };
 
     Calendar.prototype.eventsByDay = function () {
