@@ -104,18 +104,54 @@ final class CrudResourceService implements CalendarEventSourceInterface
         );
     }
 
-    public function buildCreateData(string $resource): array
+    /**
+     * @param array<string,mixed> $prefill valores iniciales (p. ej. desde el calendario),
+     *                                      acotados a columnas de formulario declaradas.
+     */
+    public function buildCreateData(string $resource, array $prefill = []): array
     {
         $definition = $this->configLoader->load($resource);
         $this->rbacService->verificar($definition->permissionFor('crear'));
 
+        // El input previo (errores de validación) tiene prioridad sobre el prefill.
+        $values = array_merge(
+            $this->filterPrefill($definition, $prefill),
+            Session::oldInput('_crud_values', [])
+        );
+
         return $this->formBuilder->build(
             definition: $definition,
-            values: Session::oldInput('_crud_values', []),
+            values: $values,
             errors: Session::getFlash('errors', []),
             action: '/admin/crud/' . $definition->key(),
             isEdit: false
         );
+    }
+
+    /**
+     * Acota un array de prefill a los nombres de campos de formulario declarados,
+     * evitando inyectar claves arbitrarias en el formulario.
+     *
+     * @param array<string,mixed> $prefill
+     * @return array<string,mixed>
+     */
+    private function filterPrefill(\App\Domain\Entities\CrudResourceDefinition $definition, array $prefill): array
+    {
+        if ($prefill === []) {
+            return [];
+        }
+        $allowed = [];
+        foreach ($definition->formFields() as $field) {
+            $allowed[$field->name()] = true;
+        }
+        $out = [];
+        foreach ($prefill as $key => $value) {
+            $key = (string) $key;
+            if (isset($allowed[$key]) && (is_scalar($value) || $value === null)) {
+                $out[$key] = $value;
+            }
+        }
+        return $out;
     }
 
     public function store(string $resource, array $input, array $files, ?int $userId, string $ip): int

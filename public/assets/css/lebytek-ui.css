@@ -446,3 +446,23 @@ body.ct-density-compact .ct-form-card .card-body {
 @media (max-width: 767.98px) {
   .lebytek-calendar-week { grid-template-columns: repeat(1, 1fr); }
 }
+
+/* Calendario — popover de evento y slots creables */
+.lebytek-calendar-day.is-creatable,
+.lebytek-calendar-col.is-creatable { cursor: pointer; }
+.lebytek-calendar-day.is-creatable:hover { background-color: var(--bs-primary-bg-subtle, #cfe2ff); }
+
+.lebytek-calendar-popover {
+  position: absolute;
+  z-index: 1080;
+  min-width: 14rem;
+  max-width: 20rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: var(--ct-radius, 0.625rem);
+  background-color: var(--bs-body-bg, #fff);
+}
+
+.lebytek-calendar-popover-head { font-weight: 600; margin-bottom: 0.25rem; }
+.lebytek-calendar-popover-time { margin-bottom: 0.6rem; }
+.lebytek-calendar-popover-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; }

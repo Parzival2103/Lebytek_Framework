@@ -119,6 +119,7 @@ $viewIcons = [
                  class="lebytek-calendar"
                  data-feed="<?= ViewHelper::e((string) ($feedUrl ?? '')) ?>"
                  data-resource="<?= ViewHelper::e($resource) ?>"
+                 data-start-field="<?= ViewHelper::e((string) ($startField ?? '')) ?>"
                  data-crud-base="<?= ViewHelper::e((string) ($crudBaseUrl ?? '')) ?>"
                  data-default-view="<?= ViewHelper::e($default) ?>"
                  data-all-day="<?= !empty($allDay) ? '1' : '0' ?>"

@@ -37,7 +37,12 @@
         this.el = el;
         this.feed = el.getAttribute('data-feed') || '';
         this.crudBase = el.getAttribute('data-crud-base') || '';
+        this.startField = el.getAttribute('data-start-field') || '';
         this.openDetail = el.getAttribute('data-open-detail') === '1';
+        this.canCreate = el.getAttribute('data-can-create') === '1';
+        this.canEdit = el.getAttribute('data-can-edit') === '1';
+        this.canDelete = el.getAttribute('data-can-delete') === '1';
+        this.csrf = el.getAttribute('data-csrf') || '';
         this.allDay = el.getAttribute('data-all-day') === '1';
         this.view = el.getAttribute('data-default-view') || 'month';
         this.anchor = new Date();
@@ -182,7 +187,7 @@
     Calendar.prototype.dayColumn = function (date, events) {
         var self = this;
         var isToday = sameDay(date, new Date());
-        var html = '<div class="lebytek-calendar-col' + (isToday ? ' is-today' : '') + '">';
+        var html = '<div class="lebytek-calendar-col' + (isToday ? ' is-today' : '') + '" data-cal-slot="' + ymd(date) + '">';
         html += '<div class="lebytek-calendar-col-head">' +
             WEEKDAYS[isoDow(date)] + ' ' + date.getDate() + '</div>';
         html += '<div class="lebytek-calendar-col-body">';
@@ -252,7 +257,8 @@
             var inMonth = cursor.getMonth() === month;
             var isToday = sameDay(cursor, today);
             var dayEvents = byDay[ymd(cursor)] || [];
-            html += '<div class="lebytek-calendar-day' + (inMonth ? '' : ' is-muted') + (isToday ? ' is-today' : '') + '" role="gridcell">';
+            html += '<div class="lebytek-calendar-day' + (inMonth ? '' : ' is-muted') + (isToday ? ' is-today' : '') +
+                '" role="gridcell" data-cal-slot="' + ymd(cursor) + '">';
             html += '<div class="lebytek-calendar-daynum">' + cursor.getDate() + '</div>';
             html += '<div class="lebytek-calendar-events">';
 
@@ -296,18 +302,93 @@
         this.wireEventClicks();
     };
 
-    // Fase 1: click navega al detalle CRUD (fallback de lectura). El popover con
-    // acciones de edición se añade en la Fase 3.
+    // Click en un evento abre el popover con acciones según capacidades RBAC.
     Calendar.prototype.wireEventClicks = function () {
         var self = this;
-        var nodes = this.el.querySelectorAll('[data-event-id]');
-        nodes.forEach(function (node) {
-            node.addEventListener('click', function () {
-                var id = node.getAttribute('data-event-id');
-                var ev = self.findEvent(id);
-                if (ev && ev.url) { window.location.href = ev.url; }
+        this.el.querySelectorAll('[data-event-id]').forEach(function (node) {
+            node.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var ev = self.findEvent(node.getAttribute('data-event-id'));
+                if (ev) { self.openPopover(ev, node); }
             });
         });
+        // Crear desde slot vacío (día/columna sin evento).
+        if (this.canCreate) {
+            this.el.querySelectorAll('[data-cal-slot]').forEach(function (slot) {
+                slot.classList.add('is-creatable');
+                slot.addEventListener('click', function (e) {
+                    if (e.target.closest('[data-event-id]')) { return; }
+                    self.createOnSlot(slot.getAttribute('data-cal-slot'));
+                });
+            });
+        }
+    };
+
+    Calendar.prototype.createOnSlot = function (date) {
+        if (!this.canCreate || !this.crudBase || !date) { return; }
+        var param = this.startField || 'fecha';
+        window.location.href = this.crudBase + '/crear?' +
+            encodeURIComponent(param) + '=' + encodeURIComponent(date);
+    };
+
+    Calendar.prototype.closePopover = function () {
+        if (this.popover) {
+            this.popover.remove();
+            this.popover = null;
+        }
+        if (this.popoverOutside) {
+            document.removeEventListener('click', this.popoverOutside, true);
+            this.popoverOutside = null;
+        }
+    };
+
+    Calendar.prototype.openPopover = function (ev, node) {
+        var self = this;
+        this.closePopover();
+
+        var pop = document.createElement('div');
+        pop.className = 'lebytek-calendar-popover card shadow';
+        var html = '<div class="lebytek-calendar-popover-head"><span class="badge bg-' +
+            escapeHtml(ev.color || 'primary') + ' me-1">&nbsp;</span>' + escapeHtml(ev.title) + '</div>';
+        html += '<div class="lebytek-calendar-popover-time text-muted small">' +
+            escapeHtml(ev.start) + (ev.end ? ' — ' + escapeHtml(ev.end) : '') + '</div>';
+        html += '<div class="lebytek-calendar-popover-actions">';
+        if (this.openDetail && ev.url) {
+            html += '<a class="btn btn-sm btn-outline-info" href="' + escapeHtml(ev.url) + '">' +
+                '<i class="bi bi-eye"></i> Ver</a>';
+        }
+        if (this.canEdit && this.crudBase) {
+            html += '<a class="btn btn-sm btn-outline-primary" href="' + escapeHtml(this.crudBase) +
+                '/' + encodeURIComponent(ev.id) + '/editar"><i class="bi bi-pencil"></i> Editar</a>';
+        }
+        if (this.canDelete && this.crudBase) {
+            html += '<form method="POST" class="d-inline" action="' + escapeHtml(this.crudBase) +
+                '/' + encodeURIComponent(ev.id) + '/eliminar"' +
+                ' data-confirm="¿Eliminar este registro? Esta acción no se puede deshacer."' +
+                ' data-confirm-title="Eliminar" data-confirm-variant="danger" data-confirm-ok="Eliminar">' +
+                '<input type="hidden" name="_csrf_token" value="' + escapeHtml(this.csrf) + '">' +
+                '<button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Eliminar</button></form>';
+        }
+        html += '</div>';
+        pop.innerHTML = html;
+        document.body.appendChild(pop);
+
+        var rect = node.getBoundingClientRect();
+        var top = window.scrollY + rect.bottom + 6;
+        var left = window.scrollX + rect.left;
+        var maxLeft = window.scrollX + document.documentElement.clientWidth - pop.offsetWidth - 12;
+        if (left > maxLeft) { left = Math.max(window.scrollX + 8, maxLeft); }
+        pop.style.top = top + 'px';
+        pop.style.left = left + 'px';
+
+        this.popover = pop;
+        this.popoverOutside = function (e) {
+            if (!pop.contains(e.target)) { self.closePopover(); }
+        };
+        // Diferir para no capturar el click que abrió el popover.
+        setTimeout(function () {
+            document.addEventListener('click', self.popoverOutside, true);
+        }, 0);
     };
 
     Calendar.prototype.findEvent = function (id) {

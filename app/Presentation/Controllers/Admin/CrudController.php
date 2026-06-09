@@ -49,7 +49,7 @@ final class CrudController extends AdminBaseController
     {
         try {
             $resource = (string) $request->param('resource');
-            $data = $this->crudResourceService->buildCreateData($resource);
+            $data = $this->crudResourceService->buildCreateData($resource, $request->all());
             $data['titulo'] = 'Crear ' . $data['title'];
             return $this->view('admin/crud/form', $data);
         } catch (AccesoException) {
