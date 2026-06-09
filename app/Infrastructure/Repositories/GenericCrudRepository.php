@@ -73,6 +73,35 @@ final class GenericCrudRepository extends BaseRepository implements CrudConstrai
         ];
     }
 
+    /**
+     * Filas dentro de un rango de fechas sobre $dateColumn, con condiciones WHERE
+     * adicionales (p. ej. scope/filtros). Mantiene el estilo de los demás select*.
+     *
+     * @param list<string>        $whereSqlParts condiciones ya seguras (con placeholders ?)
+     * @param list<mixed>         $params        valores para los placeholders de $whereSqlParts
+     * @return list<array<string,mixed>>
+     */
+    public function selectInDateRange(
+        string $table,
+        string $dateColumn,
+        string $from,
+        string $to,
+        array $whereSqlParts = [],
+        array $params = [],
+        int $limit = 2000
+    ): array {
+        $safeTable = $this->quoteIdentifier($table);
+        $safeDate  = $this->quoteIdentifier($dateColumn);
+
+        $where   = $whereSqlParts;
+        $where[] = $safeDate . ' BETWEEN ? AND ?';
+        $whereSql = ' WHERE ' . implode(' AND ', $where);
+
+        $sql = "SELECT * FROM {$safeTable}{$whereSql} ORDER BY {$safeDate} ASC LIMIT ?";
+
+        return $this->query($sql, array_merge($params, [$from, $to, max(1, $limit)]));
+    }
+
     public function countFiltered(string $table, array $whereSqlParts, array $params): int
     {
         $safeTable = $this->quoteIdentifier($table);

@@ -102,28 +102,7 @@ final class CrudDataService
             $params[] = $value;
         }
 
-        if ($this->scopeResolver !== null) {
-            $canCheck = $can ?? static fn(string $slug): bool => false;
-            $scope = $this->scopeResolver->resolve($definition, $userId, $canCheck);
-            if ($scope !== null) {
-                $scopeCtx = new CrudListContext(
-                    $definition->key(),
-                    $definition->table(),
-                    $definition->primaryKey(),
-                    $userId,
-                    '',
-                    $query
-                );
-                $scope->apply($scopeCtx);
-                [$scopeWhere, $scopeParams] = CrudScopeResolver::conditionsToSql($scopeCtx->conditions());
-                foreach ($scopeWhere as $part) {
-                    $where[] = $part;
-                }
-                foreach ($scopeParams as $param) {
-                    $params[] = $param;
-                }
-            }
-        }
+        $this->applyScopeConditions($definition, $query, $userId, $can, $where, $params);
 
         $candidateCount = $this->repository->countFiltered($definition->table(), $where, $params);
         $aggConfig = $definition->listAggregation();
@@ -246,6 +225,91 @@ final class CrudDataService
             'aggregationSkipped' => $aggregationSkipped,
             'aggregationSkipMessage' => $aggregationSkipMessage,
         ];
+    }
+
+    /**
+     * Aplica las condiciones de scope (row-level) al WHERE/params dados, reutilizando
+     * exactamente el mismo mecanismo que el listado CRUD (CrudScopeResolver).
+     *
+     * @param array<string,mixed> $query
+     * @param list<string>        $where
+     * @param list<mixed>         $params
+     */
+    private function applyScopeConditions(
+        CrudResourceDefinition $definition,
+        array $query,
+        ?int $userId,
+        ?callable $can,
+        array &$where,
+        array &$params
+    ): void {
+        if ($this->scopeResolver === null) {
+            return;
+        }
+
+        $canCheck = $can ?? static fn(string $slug): bool => false;
+        $scope = $this->scopeResolver->resolve($definition, $userId, $canCheck);
+        if ($scope === null) {
+            return;
+        }
+
+        $scopeCtx = new CrudListContext(
+            $definition->key(),
+            $definition->table(),
+            $definition->primaryKey(),
+            $userId,
+            '',
+            $query
+        );
+        $scope->apply($scopeCtx);
+        [$scopeWhere, $scopeParams] = CrudScopeResolver::conditionsToSql($scopeCtx->conditions());
+        foreach ($scopeWhere as $part) {
+            $where[] = $part;
+        }
+        foreach ($scopeParams as $param) {
+            $params[] = $param;
+        }
+    }
+
+    /**
+     * Filas dentro de un rango de fechas, respetando el mismo scope que el listado.
+     * Filtros: igualdad simple sobre columnas declaradas del recurso (validadas).
+     *
+     * @param array<string,mixed> $filters columna => valor (igualdad)
+     * @return list<array<string,mixed>>
+     */
+    public function eventsInRange(
+        CrudResourceDefinition $definition,
+        string $dateColumn,
+        string $from,
+        string $to,
+        ?int $userId = null,
+        ?callable $can = null,
+        array $filters = []
+    ): array {
+        $where = ['deleted = 0'];
+        $params = [];
+
+        $allowed = array_fill_keys($definition->columnNames(), true);
+        foreach ($filters as $field => $value) {
+            $field = (string) $field;
+            if ($field === '' || $value === null || $value === '' || !isset($allowed[$field])) {
+                continue;
+            }
+            $where[] = '`' . $field . '` = ?';
+            $params[] = $value;
+        }
+
+        $this->applyScopeConditions($definition, [], $userId, $can, $where, $params);
+
+        return $this->repository->selectInDateRange(
+            $definition->table(),
+            $dateColumn,
+            $from,
+            $to,
+            $where,
+            $params
+        );
     }
 
     private function hasActiveListFilters(CrudResourceDefinition $definition, array $query, string $searchTerm): bool

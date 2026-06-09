@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Application\Services;
 
+use App\Domain\Calendar\DateRange;
 use App\Domain\Exceptions\ValidationException;
+use App\Domain\Interfaces\CalendarEventSourceInterface;
 use App\Kernel\Security\Session;
 
-final class CrudResourceService
+final class CrudResourceService implements CalendarEventSourceInterface
 {
     public function __construct(
         private readonly CrudConfigLoader $configLoader,
@@ -70,6 +72,36 @@ final class CrudResourceService
         $data['selectable'] = !empty($data['bulkActions']) && empty($data['grouped']);
 
         return $data;
+    }
+
+    /**
+     * Feed de eventos para el módulo Calendario: aplica permiso `ver` y scope del
+     * recurso, igual que el listado, y devuelve las filas crudas en el rango dado.
+     *
+     * @param array<string,mixed> $filters
+     * @return list<array<string,mixed>>
+     */
+    public function eventosCalendario(
+        string $resource,
+        string $dateColumn,
+        DateRange $range,
+        ?int $userId,
+        array $filters = []
+    ): array {
+        $definition = $this->configLoader->load($resource);
+        $this->rbacService->verificar($definition->permissionFor('ver'));
+
+        $can = fn(string $slug): bool => $this->rbacService->puede($slug);
+
+        return $this->dataService->eventsInRange(
+            $definition,
+            $dateColumn,
+            $range->from()->format('Y-m-d H:i:s'),
+            $range->to()->format('Y-m-d H:i:s'),
+            $userId,
+            $can,
+            $filters
+        );
     }
 
     public function buildCreateData(string $resource): array
