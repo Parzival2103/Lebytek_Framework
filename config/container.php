@@ -178,6 +178,11 @@ return static function (Container $container): void {
         $c->get(CrudResourceService::class),
         $c->get(\App\Application\Services\CalendarEventMapper::class)
     ));
+    // Pre-vinculado (con su dependencia) para que el loop de proveedores no lo
+    // construya sin argumentos.
+    $container->singleton(\App\Infrastructure\Dashboard\CalendarDashboardProvider::class, fn(Container $c) => new \App\Infrastructure\Dashboard\CalendarDashboardProvider(
+        $c->get(\App\Application\Services\CalendarConfigLoader::class)
+    ));
 
     foreach ((require ROOT_PATH . '/config/dashboard.php')['providers'] as $fqcnProvider) {
         if (!$container->has($fqcnProvider)) {

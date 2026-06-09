@@ -466,3 +466,43 @@ body.ct-density-compact .ct-form-card .card-body {
 .lebytek-calendar-popover-head { font-weight: 600; margin-bottom: 0.25rem; }
 .lebytek-calendar-popover-time { margin-bottom: 0.6rem; }
 .lebytek-calendar-popover-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+/* Calendario — widget mini (dashboard) */
+.lebytek-calendar-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.lebytek-calendar-mini-weekday {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--bs-secondary-color, #6c757d);
+  padding-bottom: 0.15rem;
+}
+
+.lebytek-calendar-mini-day {
+  position: relative;
+  text-align: center;
+  font-size: 0.72rem;
+  padding: 0.2rem 0;
+  border-radius: var(--ct-radius-sm, 0.375rem);
+  color: var(--bs-body-color, #212529);
+}
+
+.lebytek-calendar-mini-day.is-muted { color: var(--bs-secondary-color, #adb5bd); }
+.lebytek-calendar-mini-day.is-today { background-color: var(--ct-primary, #0d6efd); color: #fff; }
+
+.lebytek-calendar-mini-day.has-events::after {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--ct-primary, #0d6efd);
+}
+.lebytek-calendar-mini-day.is-today.has-events::after { background-color: #fff; }
