@@ -405,7 +405,7 @@ Bloque `actions` opcional en `config/cruds/{resource}.json`:
 }
 ```
 
-- **Tipos** (Fase 1): `builtin` (show/edit/delete, usa las rutas existentes; `delete` conserva el modal de confirmación), `handler` (ejecuta una clase `CrudActionHandlerInterface` whitelisteada), `link` (solo navegación, no se ejecuta en servidor). `transition` llega en Fase 2.
+- **Tipos** (Fase 1): `builtin` (show/edit/delete, usa las rutas existentes; `delete` confirma vía modal global `#confirmModal` con defaults de plataforma), `handler` (ejecuta una clase `CrudActionHandlerInterface` whitelisteada), `link` (solo navegación, no se ejecuta en servidor). `transition` llega en Fase 2.
 - **`visible_when` / `enabled_when`**: mapa de igualdad simple (escalar o lista) evaluado en el render **y re-validado en el servidor** antes de ejecutar.
 - **`permission`**: slug completo (`modulo.accion`) o sufijo expandido contra `permission_prefix`. Las acciones builtin sin `permission` explícito conservan el gating estándar (`show`→`.ver`, `edit`→`.editar`, `delete`→`.eliminar`).
 - **Endpoints**: `POST /admin/crud/{resource}/{id}/accion/{action}` y `POST /admin/crud/{resource}/accion-masiva/{action}` (ambos con CSRF). Las acciones masivas son best-effort por ítem con resumen en flash y tope de 500 ids.
@@ -452,7 +452,7 @@ Bloque `states` opcional en `config/cruds/{resource}.json` que declara una máqu
 
 **Flujo y seguridad**: las transiciones reutilizan el endpoint Fase 1 `POST /admin/crud/{resource}/{id}/accion/{name}` (con CSRF y RBAC). `CrudActionService::run()` enruta `type: transition` a `CrudTransitionService`. Éste valida server-side la transición contra la `CrudStateMachine` (más el `guard` si existe) **antes** de tocar la DB; sólo entonces persiste la columna de estado (+ `updated_at`/`updated_by`), registra `crud.transition` en `log_bitacora` y dispara los eventos `beforeTransition`/`afterTransition` del hook handler del recurso. Una transición inválida o burlada (`visible_when` manipulado en la UI) se rechaza en el servidor.
 
-**Detalle (show)**: el header de la vista de detalle muestra el badge del estado actual (color/label desde `states.values`) y los botones de transición/handler resueltos (mismo partial `actions_row.php` de Fase 1). Los builtins editar/eliminar siguen funcionando igual (eliminar reusa el modal de confirmación).
+**Detalle (show)**: el header de la vista de detalle muestra el badge del estado actual (color/label desde `states.values`) y los botones de transición/handler resueltos (mismo partial `actions_row.php` de Fase 1). Los builtins editar/eliminar usan el mismo partial; eliminar POST con confirmación vía `#confirmModal` (textos default en `UiConfirmConstants`; override parcial con `confirm` en JSON si se declara en la acción).
 
 **Demo**: `config/cruds/demo_productos.json` declara el bloque `states` (activo↔inactivo) y las acciones `desactivar`/`activar`; `activar` usa el guard `demo_producto_state_guard` (`DemoProductoStateGuard`), que sólo permite activar si el producto venía de `inactivo`.
 
@@ -483,3 +483,39 @@ Todos los errores (campo + DB + formulario) se acumulan y se lanzan en una sola 
 ## Instalación / despliegue
 
 `php scripts/install.php` aplica schema + migraciones + seeds de forma idempotente (incluye las tablas y datos demo). Seguro de re-ejecutar en cada despliegue.
+
+## Aislamiento por usuario — `list.scope`
+
+Restringe el listado (y bloquea show/edit/update/delete) a las filas del usuario actual.
+
+**Built-in (sin clase PHP):**
+
+```json
+"list": {
+  "scope": {
+    "type": "owner",
+    "column": "created_by",
+    "bypass_permission": "{prefix}.ver_todos"
+  }
+}
+```
+
+- `type` debe ser `"owner"` (único built-in).
+- `column` es la columna de autor (normalmente `created_by`, que el motor ya rellena al crear).
+- `bypass_permission` (opcional): quien tenga ese permiso ve/edita todo. `{prefix}` se expande al `permission_prefix` del recurso.
+- Acceso por URL directa a un registro ajeno → **404** (no se revela su existencia).
+- `userId` nulo en panel autenticado → política de no-fuga: el listado queda vacío y el bloqueo deniega.
+
+**Custom (escape hatch):**
+
+```json
+"list": { "scope_handler": "clientes_owner" }
+```
+
+donde `clientes_owner` se registra en `config/crud_handlers.php` apuntando a una clase que implementa `CrudListScopeInterface`.
+
+`scope` y `scope_handler` son **mutuamente excluyentes**. Un recurso sin ninguno se comporta como hoy (sin scope).
+
+## Pie de totales en listado plano
+
+Si el recurso declara `list.summaries` y **no** usa `group_by`, el listado muestra un `<tfoot>` con los totales alineados bajo cada columna. Si la agregación se omite por volumen (`aggregationSkipped`), el pie no se muestra.
