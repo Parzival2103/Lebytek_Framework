@@ -29,46 +29,57 @@ final class DefaultPlatformDashboardProvider implements DashboardContributionPro
             ];
         }
 
-        $kpis = [
-            [
+        $kpis = [];
+        if ($context->tienePermiso('usuarios.gestionar')) {
+            $kpis[] = [
                 'label'       => 'Usuarios',
                 'value'       => '—',
                 'icon'        => 'bi-people-fill',
                 'color'       => 'primary',
                 'url'         => '/admin/administracion/usuarios',
                 'description' => 'Gestión de cuentas',
-            ],
-            [
+            ];
+        }
+        if ($context->tienePermiso('roles.gestionar')) {
+            $kpis[] = [
                 'label'       => 'Roles',
                 'value'       => '—',
                 'icon'        => 'bi-shield-lock',
                 'color'       => 'secondary',
                 'url'         => '/admin/administracion/roles',
                 'description' => 'RBAC',
-            ],
-            [
+            ];
+        }
+        if ($context->tienePermiso('administracion.ver')) {
+            $kpis[] = [
                 'label'       => 'Ajustes',
                 'value'       => '—',
                 'icon'        => 'bi-sliders',
                 'color'       => 'info',
                 'url'         => '/admin/ajustes',
                 'description' => 'Layout y tema',
-            ],
-            [
-                'label'       => 'Extensión',
-                'value'       => '',
-                'icon'        => 'bi-journal-text',
-                'color'       => 'success',
-                'url'         => '#',
-                'description' => 'Registrar proveedores en config/dashboard.php',
-            ],
+            ];
+        }
+        // KPI informativo (sin permiso): siempre presente para una contribución válida.
+        $kpis[] = [
+            'label'       => 'Extensión',
+            'value'       => '',
+            'icon'        => 'bi-journal-text',
+            'color'       => 'success',
+            'url'         => '#',
+            'description' => 'Registrar proveedores en config/dashboard.php',
         ];
 
-        $quick = [
-            ['url' => '/admin/administracion/usuarios', 'icon' => 'bi-people',  'label' => 'Usuarios'],
-            ['url' => '/admin/administracion/roles',    'icon' => 'bi-key',     'label' => 'Roles'],
-            ['url' => '/admin/ajustes',                 'icon' => 'bi-gear',    'label' => 'Ajustes'],
-        ];
+        $quick = [];
+        if ($context->tienePermiso('usuarios.gestionar')) {
+            $quick[] = ['url' => '/admin/administracion/usuarios', 'icon' => 'bi-people', 'label' => 'Usuarios'];
+        }
+        if ($context->tienePermiso('roles.gestionar')) {
+            $quick[] = ['url' => '/admin/administracion/roles', 'icon' => 'bi-key', 'label' => 'Roles'];
+        }
+        if ($context->tienePermiso('administracion.ver')) {
+            $quick[] = ['url' => '/admin/ajustes', 'icon' => 'bi-gear', 'label' => 'Ajustes'];
+        }
 
         return new DashboardContribution(
             kpis: $kpis,
