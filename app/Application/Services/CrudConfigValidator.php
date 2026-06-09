@@ -123,6 +123,32 @@ final class CrudConfigValidator
         $this->validateListAggregations($config, $columnLookup, $errors);
         $this->validateListAggregationConfig($config, $errors);
 
+        foreach (self::scopeShapeErrors($config) as $scopeError) {
+            $errors[] = $scopeError;
+        }
+
+        $listScope = is_array($config['list']['scope'] ?? null) ? $config['list']['scope'] : null;
+        if ($listScope !== null) {
+            $scopeColumn = (string) ($listScope['column'] ?? '');
+            if ($scopeColumn !== '' && $table !== '' && !isset($columnLookup[$scopeColumn])) {
+                $errors[] = "list.scope.column ({$scopeColumn}) no existe en {$table}.";
+            }
+        }
+
+        $scopeHandler = $config['list']['scope_handler'] ?? null;
+        if (is_string($scopeHandler) && $scopeHandler !== '') {
+            if (!$this->handlerRegistry->hasKey($scopeHandler)) {
+                $errors[] = "list.scope_handler '{$scopeHandler}' no está registrado en config/crud_handlers.php.";
+            } else {
+                $class = $this->handlerRegistry->classForKey($scopeHandler);
+                if ($class === null || !class_exists($class)) {
+                    $errors[] = "La clase del scope '{$scopeHandler}' no existe o no es autoload-eable.";
+                } elseif (!in_array(\App\Domain\Interfaces\CrudListScopeInterface::class, class_implements($class) ?: [], true)) {
+                    $errors[] = "El scope '{$scopeHandler}' ({$class}) debe implementar CrudListScopeInterface.";
+                }
+            }
+        }
+
         foreach (self::newBlockShapeErrors($config) as $shapeError) {
             $errors[] = $shapeError;
         }
@@ -186,26 +212,29 @@ final class CrudConfigValidator
             }
         }
 
-        // relations: tabla/columnas destino deben existir en DB.
+        // relations: tabla/columnas destino deben existir en DB. Se resuelve el
+        // esquema (tabla => columnas) y se delega la verificación de columnas a un
+        // método puro (semántica belongsTo/hasMany), sin más acceso a DB.
+        $relationSchema = [];
+        if ($table !== '') {
+            $relationSchema[$table] = $existingColumns;
+        }
         foreach ((is_array($config['relations'] ?? null) ? $config['relations'] : []) as $relName => $rel) {
             if (!is_array($rel)) {
                 continue;
             }
             $relTable = (string) ($rel['table'] ?? '');
-            if ($relTable === '') {
-                continue; // ya reportado por relationsBlockErrors
+            if ($relTable === '' || array_key_exists($relTable, $relationSchema)) {
+                continue; // forma inválida ya reportada, o esquema ya resuelto
             }
             if (!$this->repository->tableExists($relTable)) {
                 $errors[] = "relations.{$relName}: la tabla {$relTable} no existe.";
                 continue;
             }
-            $relCols = array_fill_keys($this->repository->getTableColumns($relTable), true);
-            foreach (['value', 'label', 'foreign_key'] as $colKey) {
-                $colName = (string) ($rel[$colKey] ?? '');
-                if ($colName !== '' && !isset($relCols[$colName])) {
-                    $errors[] = "relations.{$relName}.{$colKey} ({$colName}) no existe en {$relTable}.";
-                }
-            }
+            $relationSchema[$relTable] = $this->repository->getTableColumns($relTable);
+        }
+        foreach (self::relationsSchemaErrors($config, $relationSchema) as $relColError) {
+            $errors[] = $relColError;
         }
 
         $statesColumn = is_array($config['states'] ?? null) ? (string) ($config['states']['column'] ?? '') : '';
@@ -378,6 +407,68 @@ final class CrudConfigValidator
     }
 
     /**
+     * Verifica que las columnas referenciadas por `relations` existan en la
+     * tabla correcta, dado un esquema ya resuelto. Pura, sin DB.
+     *
+     * Semántica:
+     * - belongsTo: `value`/`label` viven en la tabla relacionada; `foreign_key`
+     *   vive en la tabla local del recurso (no en la relacionada).
+     * - hasMany: `foreign_key` vive en la tabla hija (la relacionada).
+     *
+     * Las tablas ausentes en $schema se omiten (su inexistencia la reportan
+     * otras validaciones con acceso a DB).
+     *
+     * @param array<string, mixed> $config
+     * @param array<string, list<string>> $schema nombre_tabla => columnas existentes
+     * @return list<string>
+     */
+    public static function relationsSchemaErrors(array $config, array $schema): array
+    {
+        $relations = is_array($config['relations'] ?? null) ? $config['relations'] : [];
+        if ($relations === []) {
+            return [];
+        }
+
+        $resource   = is_array($config['resource'] ?? null) ? $config['resource'] : [];
+        $localTable = (string) ($resource['table'] ?? '');
+        $localCols  = array_fill_keys($schema[$localTable] ?? [], true);
+
+        $errors = [];
+        foreach ($relations as $relName => $rel) {
+            if (!is_array($rel)) {
+                continue;
+            }
+            $relTable = (string) ($rel['table'] ?? '');
+            if ($relTable === '' || !array_key_exists($relTable, $schema)) {
+                continue; // forma inválida / tabla inexistente ya reportada
+            }
+            $relCols = array_fill_keys($schema[$relTable], true);
+            $type    = (string) ($rel['type'] ?? 'belongsTo');
+            $fk      = (string) ($rel['foreign_key'] ?? '');
+
+            if ($type === 'hasMany') {
+                if ($fk !== '' && !isset($relCols[$fk])) {
+                    $errors[] = "relations.{$relName}.foreign_key ({$fk}) no existe en {$relTable}.";
+                }
+                continue;
+            }
+
+            // belongsTo
+            foreach (['value', 'label'] as $colKey) {
+                $colName = (string) ($rel[$colKey] ?? '');
+                if ($colName !== '' && !isset($relCols[$colName])) {
+                    $errors[] = "relations.{$relName}.{$colKey} ({$colName}) no existe en {$relTable}.";
+                }
+            }
+            if ($fk !== '' && $localTable !== '' && !isset($localCols[$fk])) {
+                $errors[] = "relations.{$relName}.foreign_key ({$fk}) no existe en {$localTable}.";
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
      * Valida la forma del bloque `detail`. Pura, sin DB.
      *
      * @param array<string, mixed> $config
@@ -501,6 +592,51 @@ final class CrudConfigValidator
                     $errors[] = "actions.row[{$i}] (transition) apunta a un estado desconocido: '{$to}'.";
                 }
             }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Valida la forma del bloque list.scope / list.scope_handler. Pura, sin DB.
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    public static function scopeShapeErrors(array $config): array
+    {
+        $list = $config['list'] ?? null;
+        if (!is_array($list)) {
+            return [];
+        }
+
+        $hasScope = array_key_exists('scope', $list);
+        $hasHandler = array_key_exists('scope_handler', $list);
+        $errors = [];
+
+        if ($hasScope && $hasHandler) {
+            $errors[] = 'list.scope y list.scope_handler son mutuamente excluyentes.';
+        }
+
+        if ($hasScope) {
+            $scope = $list['scope'];
+            if (!is_array($scope)) {
+                $errors[] = 'list.scope debe ser un objeto.';
+            } else {
+                if ((string) ($scope['type'] ?? '') !== 'owner') {
+                    $errors[] = "list.scope.type debe ser 'owner'.";
+                }
+                if ((string) ($scope['column'] ?? '') === '') {
+                    $errors[] = 'list.scope.column es obligatorio.';
+                }
+                if (array_key_exists('bypass_permission', $scope) && !is_string($scope['bypass_permission'])) {
+                    $errors[] = 'list.scope.bypass_permission debe ser string.';
+                }
+            }
+        }
+
+        if ($hasHandler && (!is_string($list['scope_handler']) || $list['scope_handler'] === '')) {
+            $errors[] = 'list.scope_handler debe ser una clave string no vacía.';
         }
 
         return $errors;
