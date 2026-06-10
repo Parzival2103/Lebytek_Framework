@@ -65,13 +65,17 @@ final class CrudTableBuilder
             }
         } else {
             foreach ($definition->listColumns() as $column) {
-                $columns[] = [
+                $built = [
                     'name' => (string) ($column['name'] ?? ''),
                     'label' => (string) ($column['label'] ?? ($column['name'] ?? '')),
                     'sortable' => (bool) ($column['sortable'] ?? false),
                     'format' => (string) ($column['format'] ?? ''),
                     'badge' => is_array($column['badge'] ?? null) ? $column['badge'] : [],
                 ];
+                if (array_key_exists('priority', $column) && is_numeric($column['priority'])) {
+                    $built['priority'] = (int) $column['priority'];
+                }
+                $columns[] = $built;
             }
         }
 
@@ -189,6 +193,10 @@ final class CrudTableBuilder
 
         if ($format === 'money' && $value !== null && $value !== '') {
             return '$' . number_format((float) $value, 2, '.', ',');
+        }
+
+        if ($format === 'number' && $value !== null && $value !== '') {
+            return number_format((float) $value, 0, '.', ',');
         }
 
         return $value;
