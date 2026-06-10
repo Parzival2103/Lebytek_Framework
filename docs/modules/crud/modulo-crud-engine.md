@@ -185,6 +185,32 @@ Debe soportar:
 - **`list.aggregation`** (opcional): límites de coste — `enabled`, `max_rows` (1–500000, por defecto 5000 cuando el recurso construye valores por defecto), `require_filter_above` (omite agregación si el conteo candidato supera el umbral y no hay búsqueda ni filtros de listado activos). Si se omite agregación, el listado continúa en modo tabla paginado (mensaje en UI y registro operativo).
 - **`list.table_compact`** o **`list.table_sm`:** tabla compacta en UI
 
+### Columnas responsive: `list.columns[].priority`
+
+Campo **opcional** (entero) por columna. Controla qué columnas permanecen visibles cuando la tabla colapsa en móvil (DataTables Responsive, solo en `crud/index.php`).
+
+- **Convención DataTables:** menor número = mayor prioridad (más probable que siga visible). Las columnas sin `priority` colapsan primero, por orden de aparición.
+- **Defaults aplicados por el motor** cuando no se declara `priority`:
+  - Columna de checkbox de selección → siempre visible (`data-priority="1"`).
+  - Columna de **Acciones** → siempre visible (`data-priority="1"`).
+  - 1ª columna de datos → prioridad alta por defecto (`data-priority="2"`).
+- Las columnas ocultas se muestran como detalle al hacer click en la fila.
+
+Ejemplo (`config/cruds/demo_productos.json`):
+
+```json
+"columns": [
+  { "name": "id",     "label": "ID",     "sortable": true, "priority": 1 },
+  { "name": "codigo", "label": "Código", "sortable": true, "priority": 2 },
+  { "name": "nombre", "label": "Nombre", "sortable": true, "priority": 2 },
+  { "name": "precio_venta", "label": "Precio", "format": "money", "sortable": true },
+  { "name": "stock_actual", "label": "Stock", "sortable": true },
+  { "name": "status", "label": "Estado", "priority": 3 }
+]
+```
+
+> El flujo server-side (búsqueda, orden, filtros, paginación, totales) no cambia: DataTables se inicializa en modo solo-responsive (`paging/searching/info/ordering/lengthChange: false`).
+
 ---
 
 ## 11. BORRADO LÓGICO

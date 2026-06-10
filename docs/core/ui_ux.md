@@ -423,6 +423,28 @@ Los botones deben tener jerarquía clara.
 - en móvil, botones pueden apilarse
 - no usar colores arbitrarios fuera del sistema
 
+### Confirmaciones (modal global)
+
+Todas las confirmaciones del panel admin usan el modal Bootstrap `#confirmModal`, montado una vez en [`layouts/base.php`](../../app/Presentation/Views/layouts/base.php) vía [`partials/confirm_modal.php`](../../app/Presentation/Views/partials/confirm_modal.php). El comportamiento lo orquesta `ConfirmForms` en [`public/assets/js/app.js`](../../public/assets/js/app.js).
+
+**Contrato HTML** (atributos en `<form>` o `<button type="submit">`):
+
+| Atributo | Obligatorio | Default |
+|---|---|---|
+| `data-confirm` | sí | — (cuerpo del modal) |
+| `data-confirm-title` | no | `Confirmar acción` |
+| `data-confirm-variant` | no | `primary` (`danger` para eliminar) |
+| `data-confirm-ok` | no | `Confirmar` |
+| `data-confirm-cancel` | no | `Cancelar` |
+
+**Reglas:**
+
+- No incrustar modales de confirmación en vistas de módulo.
+- No usar `window.confirm` ni `#crudDeleteModal` (legado eliminado).
+- Acciones destructivas: `data-confirm-variant="danger"`.
+- Defaults de delete CRUD: [`UiConfirmConstants`](../../app/Kernel/Constants/UiConfirmConstants.php).
+- JS custom: `window.App.ConfirmModal.show({ title, body, variant, ok, cancel })`.
+
 ### Configuración
 
 ```text
@@ -482,6 +504,22 @@ Aplicar a:
 - animaciones largas
 - efectos 3D
 - animaciones que retrasen operación
+
+## Navegación responsive (breakpoint único: 992px / `lg`)
+
+Las tres navegaciones cambian de modo móvil↔escritorio en **992px** (`lg` de Bootstrap). "Responsive" significa lo mismo en todo el panel.
+
+| Layout | < 992px (móvil) | ≥ 992px (escritorio) |
+|---|---|---|
+| `side` | Sidebar como drawer (botón en `topbar`), overlay + Escape | Sidebar fijo, colapsable a iconos |
+| `top` | `nav_top` se vuelve drawer lateral (hamburguesa `#topNavToggle`); las acciones (tema/estilos/usuario) quedan siempre en la barra | Barra horizontal con dropdowns (sin cambios) |
+| `bottom` | Barra inferior fija (`nav_bottom`) con panel "Más" y submenús | Fallback a barra superior `nav_top`; la bottombar se oculta |
+
+Detalles de implementación:
+- El drawer de `nav_top` reutiliza el overlay `.sidebar-overlay` y el módulo `NavDrawer` (`public/assets/js/app.js`).
+- `#topNavMenu` contiene **solo** los links de menú (sin la clase `collapse`, para animar el drawer con `translateX`); las acciones viven en `.topnav-actions`, fuera del drawer.
+- En el layout `bottom`, `base.php` renderiza `nav_top` envuelto en `d-none d-lg-block` y `nav_bottom` con `d-lg-none`.
+- El `padding-bottom` del contenido en layout `bottom` se retira en `@media (min-width: 992px)`.
 - loaders exagerados
 - librerías externas
 
