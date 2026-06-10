@@ -224,3 +224,39 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
 </div>
 
 <script src="<?= ViewHelper::asset('js/crud-engine.js') ?>"></script>
+
+<?php if (!empty($rows) && !$grouped): ?>
+<!-- DataTables Responsive — solo en listados CRUD (no global). Modo solo-responsive:
+     el servidor ya resuelve búsqueda/orden/filtros/paginación/totales. -->
+<link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.1.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.min.js"></script>
+<script>
+(function () {
+  function initCrudResponsive() {
+    if (typeof jQuery === 'undefined' || !jQuery.fn || !jQuery.fn.DataTable) return;
+    var sel = '#crudTable';
+    if (!jQuery(sel).length || jQuery.fn.DataTable.isDataTable(sel)) return;
+    jQuery(sel).DataTable({
+      responsive: { details: { type: 'inline' } },
+      paging: false,
+      searching: false,
+      info: false,
+      ordering: false,
+      lengthChange: false,
+      autoWidth: false,
+      columnDefs: [{ orderable: false, targets: '_all' }]
+    });
+  }
+  if (document.readyState !== 'loading') {
+    initCrudResponsive();
+  } else {
+    document.addEventListener('DOMContentLoaded', initCrudResponsive);
+  }
+})();
+</script>
+<?php endif; ?>
