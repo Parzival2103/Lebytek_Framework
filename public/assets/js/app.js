@@ -433,26 +433,141 @@ const AlertManager = (() => {
 })();
 
 /* ============================================================
-   MÓDULO: Confirmaciones de formulario (delete-form)
+   MÓDULO: Modal de confirmación global (#confirmModal)
+   ============================================================ */
+const ConfirmModal = (() => {
+  const DEFAULTS = {
+    title: 'Confirmar acción',
+    body: '¿Confirmar esta acción?',
+    ok: 'Confirmar',
+    cancel: 'Cancelar',
+    variant: 'primary',
+  };
+
+  let pending = null;
+  let modalInstance = null;
+
+  function getModal() {
+    const el = document.getElementById('confirmModal');
+    if (!el || typeof bootstrap === 'undefined') return null;
+    modalInstance = modalInstance || bootstrap.Modal.getOrCreateInstance(el);
+    return { el, instance: modalInstance };
+  }
+
+  function applyOptions(opts) {
+    const titleEl = document.getElementById('confirmModalTitle');
+    const bodyEl = document.getElementById('confirmModalBody');
+    const okBtn = document.getElementById('confirmModalOk');
+    const cancelBtn = document.getElementById('confirmModalCancel');
+    if (!titleEl || !bodyEl || !okBtn || !cancelBtn) return;
+
+    titleEl.textContent = opts.title;
+    bodyEl.textContent = opts.body;
+    okBtn.textContent = opts.ok;
+    cancelBtn.textContent = opts.cancel;
+    okBtn.className = 'btn ' + (opts.variant === 'danger' ? 'btn-danger' : 'btn-primary');
+  }
+
+  function show(options = {}) {
+    const opts = Object.assign({}, DEFAULTS, options);
+    const modal = getModal();
+    if (!modal) return Promise.resolve(window.confirm(opts.body));
+
+    if (pending) pending.resolve(false);
+
+    applyOptions(opts);
+    return new Promise((resolve) => {
+      pending = { resolve };
+      modal.instance.show();
+    });
+  }
+
+  function init() {
+    const modal = getModal();
+    if (!modal) return;
+
+    const okBtn = document.getElementById('confirmModalOk');
+    const el = modal.el;
+
+    okBtn?.addEventListener('click', () => {
+      pending?.resolve(true);
+      pending = null;
+      modal.instance.hide();
+    });
+
+    el.addEventListener('hidden.bs.modal', () => {
+      if (pending) {
+        pending.resolve(false);
+        pending = null;
+      }
+    });
+  }
+
+  return { show, init };
+})();
+
+/* ============================================================
+   MÓDULO: Confirmaciones de formulario (data-confirm)
    ============================================================ */
 const ConfirmForms = (() => {
+  function resolveConfirmElement(form) {
+    if (!(form instanceof HTMLFormElement)) return null;
+    return form.querySelector('[data-confirm]')
+      || (form.hasAttribute('data-confirm') ? form : null);
+  }
+
+  function readConfirmOptions(el) {
+    if (!el || !el.dataset.confirm) return null;
+    return {
+      body: el.dataset.confirm,
+      title: el.dataset.confirmTitle || 'Confirmar acción',
+      variant: el.dataset.confirmVariant || 'primary',
+      ok: el.dataset.confirmOk || 'Confirmar',
+      cancel: el.dataset.confirmCancel || 'Cancelar',
+    };
+  }
+
   function init() {
     document.addEventListener('submit', function (e) {
       const form = e.target;
-      const btn  = form.querySelector('[data-confirm]');
-      if (!btn) return;
-      const message = btn.dataset.confirm || '¿Confirmar esta acción?';
-      if (!confirm(message)) e.preventDefault();
+      if (!(form instanceof HTMLFormElement)) return;
+      if (form.dataset.confirmBypass === '1') {
+        delete form.dataset.confirmBypass;
+        return;
+      }
+
+      const el = resolveConfirmElement(form);
+      const opts = readConfirmOptions(el);
+      if (!opts) return;
+
+      e.preventDefault();
+      ConfirmModal.show(opts).then((ok) => {
+        if (!ok) return;
+        form.dataset.confirmBypass = '1';
+        if (typeof form.requestSubmit === 'function') {
+          form.requestSubmit();
+        } else {
+          form.submit();
+        }
+      });
     });
 
     document.addEventListener('click', function (e) {
-      const btn = e.target.closest('[data-confirm]:not([type="submit"])');
-      if (!btn) return;
-      const message = btn.dataset.confirm || '¿Confirmar esta acción?';
-      if (!confirm(message)) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      const el = e.target.closest('[data-confirm]:not([type="submit"])');
+      if (!el || el.tagName === 'FORM') return;
+
+      const opts = readConfirmOptions(el);
+      if (!opts) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      ConfirmModal.show(opts).then((ok) => {
+        if (!ok) return;
+        if (el.tagName === 'A' && el.href) {
+          window.location.assign(el.href);
+        }
+      });
     });
   }
 
@@ -750,6 +865,58 @@ const AjustesAccordion = (() => {
 })();
 
 /* ============================================================
+   MÓDULO: NavDrawer — drawer de nav_top en móvil (<992px)
+   Reutiliza el overlay `.sidebar-overlay` (mismo estilo que el sidebar).
+   ============================================================ */
+const NavDrawer = (() => {
+  function init() {
+    const toggle = document.getElementById('topNavToggle');
+    const drawer = document.getElementById('topNavMenu');
+    if (!toggle || !drawer) return;
+
+    // Reutiliza el overlay del sidebar si ya existe; si no, lo crea.
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'sidebar-overlay';
+      document.body.appendChild(overlay);
+    }
+
+    function open() {
+      drawer.classList.add('open');
+      overlay.classList.add('active');
+      toggle.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function close() {
+      drawer.classList.remove('open');
+      overlay.classList.remove('active');
+      toggle.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+
+    toggle.addEventListener('click', () => {
+      drawer.classList.contains('open') ? close() : open();
+    });
+
+    overlay.addEventListener('click', close);
+
+    // Cerrar al navegar desde un link del drawer
+    drawer.querySelectorAll('a.nav-link:not(.dropdown-toggle), a.dropdown-item').forEach(a => {
+      a.addEventListener('click', close);
+    });
+
+    // Cerrar con Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer.classList.contains('open')) close();
+    });
+  }
+
+  return { init };
+})();
+
+/* ============================================================
    INICIALIZACIÓN GLOBAL
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
@@ -759,7 +926,9 @@ document.addEventListener('DOMContentLoaded', () => {
   ColorPicker.init();
   AjustesAccordion.init();
   BottomNav.init();
+  NavDrawer.init();
   AlertManager.init();
+  ConfirmModal.init();
   ConfirmForms.init();
   PasswordToggle.init();
   TableSearch.init();
@@ -795,5 +964,7 @@ window.App = {
   ColorPicker,
   AjustesAccordion,
   BottomNav,
+  NavDrawer,
   CsrfFetch,
+  ConfirmModal,
 };
