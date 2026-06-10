@@ -71,6 +71,10 @@ $pwaManifestHref = ($pwaBasePath === '' ? '' : $pwaBasePath) . '/manifest.webman
     </div>
 
 <?php elseif (($menuLayout ?? '') === AppConstants::MENU_LAYOUT_BOTTOM): ?>
+    <!-- Escritorio (≥992px): barra superior como fallback de navegación -->
+    <div class="d-none d-lg-block">
+        <?= ViewHelper::partial('nav_top', compact('usuario', 'empresaNombre', 'empresaLogo', 'menuFiltrado', 'currentUri')) ?>
+    </div>
     <div class="layout-bottom-wrapper">
         <main class="main-content container-fluid">
             <?= ViewHelper::partial('flash_alerts', compact('flashAll')) ?>
@@ -79,6 +83,7 @@ $pwaManifestHref = ($pwaBasePath === '' ? '' : $pwaBasePath) . '/manifest.webman
         </main>
         <?= ViewHelper::partial('footer') ?>
     </div>
+    <!-- Móvil (<992px): barra inferior fija -->
     <?= ViewHelper::partial('nav_bottom', compact('usuario', 'empresaNombre', 'menuFiltrado', 'currentUri')) ?>
 
 <?php else: /* side (default) */ ?>
@@ -97,6 +102,7 @@ $pwaManifestHref = ($pwaBasePath === '' ? '' : $pwaBasePath) . '/manifest.webman
 <?php endif; ?>
 
 <?= ViewHelper::partial('style_panel', compact('usuario')) ?>
+<?= ViewHelper::partial('confirm_modal') ?>
 
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
