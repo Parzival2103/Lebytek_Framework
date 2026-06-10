@@ -242,7 +242,9 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
     var sel = '#crudTable';
     if (!jQuery(sel).length || jQuery.fn.DataTable.isDataTable(sel)) return;
     jQuery(sel).DataTable({
-      responsive: { details: { type: 'inline' } },
+      // target: 'tr' → toda la fila expande/colapsa el detalle (no solo el icono).
+      // El icono dtr-control queda oculto por CSS (crud-engine.css).
+      responsive: { details: { type: 'inline', target: 'tr' } },
       paging: false,
       searching: false,
       info: false,
@@ -250,6 +252,13 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
       lengthChange: false,
       autoWidth: false,
       columnDefs: [{ orderable: false, targets: '_all' }]
+    });
+
+    // Los controles interactivos de la fila (checkbox de selección, botones/enlaces
+    // de acción) no deben disparar el toggle del detalle: cortamos la propagación
+    // antes de que el click burbujee al handler de fila de Responsive.
+    jQuery(sel).on('click', 'input, a, button, label, select', function (e) {
+      e.stopPropagation();
     });
   }
   if (document.readyState !== 'loading') {
