@@ -102,19 +102,26 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
 
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="<?= ViewHelper::e($tableClass) ?>">
+                <table id="crudTable" class="<?= ViewHelper::e($tableClass) ?>">
                     <thead class="table-light">
                         <tr>
                             <?php if (!empty($selectable)): ?>
-                                <th class="px-3" style="width:2.5rem">
+                                <th class="px-3" style="width:2.5rem" data-priority="1">
                                     <input type="checkbox" class="form-check-input" data-crud-select-all aria-label="Seleccionar todo">
                                 </th>
                             <?php endif; ?>
-                            <?php foreach (($columns ?? []) as $column): ?>
-                                <th class="px-3 text-nowrap"><?= ViewHelper::e((string) ($column['label'] ?? '')) ?></th>
+                            <?php foreach (($columns ?? []) as $idx => $column): ?>
+                                <?php
+                                    // priority explícito de config; si no, la 1ª columna de datos
+                                    // queda alta (2) por defecto y el resto colapsa por ancho.
+                                    $thPriority = isset($column['priority'])
+                                        ? (int) $column['priority']
+                                        : ($idx === 0 ? 2 : null);
+                                ?>
+                                <th class="px-3 text-nowrap"<?= $thPriority !== null ? ' data-priority="' . $thPriority . '"' : '' ?>><?= ViewHelper::e((string) ($column['label'] ?? '')) ?></th>
                             <?php endforeach; ?>
                             <?php if (!$grouped): ?>
-                                <th class="text-end px-3 text-nowrap ct-col-actions">Acciones</th>
+                                <th class="text-end px-3 text-nowrap ct-col-actions" data-priority="1">Acciones</th>
                             <?php endif; ?>
                         </tr>
                     </thead>
