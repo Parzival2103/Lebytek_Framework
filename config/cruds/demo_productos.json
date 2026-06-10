@@ -35,7 +35,7 @@
     ]
   },
   "list": {
-    "group_by": "status",
+    "group_by": "",
     "aggregation": {
       "enabled": true,
       "max_rows": 5000,
@@ -46,19 +46,22 @@
       {
         "name": "id",
         "label": "ID",
-        "sortable": true
+        "sortable": true,
+        "priority": 1
       },
       {
         "name": "codigo",
         "label": "Código",
         "searchable": true,
-        "sortable": true
+        "sortable": true,
+        "priority": 2
       },
       {
         "name": "nombre",
         "label": "Nombre",
         "searchable": true,
-        "sortable": true
+        "sortable": true,
+        "priority": 2
       },
       {
         "name": "precio_venta",
@@ -77,7 +80,8 @@
         "badge": {
           "activo": "success",
           "inactivo": "secondary"
-        }
+        },
+        "priority": 3
       }
     ],
     "filters": [
