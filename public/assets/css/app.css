@@ -493,6 +493,53 @@ body {
   background: var(--bs-body-bg);
 }
 
+/* ── nav_top: barra horizontal en escritorio (≥992px) ──────────
+   `.navbar-expand-lg .navbar-collapse` ya despliega el menú inline,
+   y `.navbar-expand-lg .navbar-toggler` oculta la hamburguesa. */
+.topnav .topnav-actions { flex-shrink: 0; }
+
+/* ── nav_top: drawer lateral en móvil (<992px) ─────────────────
+   Reutiliza el overlay `.sidebar-overlay` (creado por NavDrawer en JS). */
+@media (max-width: 991.98px) {
+  .topnav .topnav-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    max-width: 85vw;
+    background: var(--app-navbar-bg, var(--sidebar-bg, #1a1d2e));
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.25);
+    transform: translateX(-100%);
+    transition: transform var(--transition-med);
+    will-change: transform;
+    z-index: 1041;
+    overflow-y: auto;
+    padding: 1rem 0.75rem;
+    align-items: stretch;
+  }
+
+  .topnav .topnav-drawer.open {
+    transform: translateX(0);
+  }
+
+  /* En el drawer los links se apilan verticalmente */
+  .topnav .topnav-drawer .navbar-nav {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  /* Dropdowns de menú dentro del drawer: en flujo, no flotantes */
+  .topnav .topnav-drawer .dropdown-menu {
+    position: static !important;
+    transform: none !important;
+    border: none;
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: none;
+    padding-left: 0.5rem;
+  }
+}
+
 /* ============================================================
    LAYOUT BOTTOM NAV (móvil)
    ============================================================ */
