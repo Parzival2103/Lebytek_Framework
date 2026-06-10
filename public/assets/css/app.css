@@ -718,8 +718,8 @@ body {
   box-sizing: border-box;
 }
 
-/* En pantallas md+ la bottom nav se oculta → quitar el padding extra */
-@media (min-width: 768px) {
+/* En pantallas lg+ la bottom nav se oculta → quitar el padding extra */
+@media (min-width: 992px) {
   .layout-bottom-wrapper {
     padding-bottom: 0;
   }

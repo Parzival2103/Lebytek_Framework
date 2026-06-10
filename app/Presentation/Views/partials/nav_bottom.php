@@ -17,7 +17,7 @@ $submenuJson = static function (array $item): string {
 <div id="bottomnavMoreOverlay" class="bottomnav-more-overlay"></div>
 
 <!-- Panel de submenú dinámico (se rellena con JS) -->
-<div id="bottomnavSubPanel" class="bottomnav-sub-panel d-md-none" role="dialog" aria-label="Submenú" hidden>
+<div id="bottomnavSubPanel" class="bottomnav-sub-panel d-lg-none" role="dialog" aria-label="Submenú" hidden>
     <div class="bottomnav-sub-header">
         <span id="bottomnavSubTitle" class="fw-semibold"></span>
         <a id="bottomnavSubViewAll" href="#" class="bottomnav-sub-viewall">Ver todos</a>
@@ -27,7 +27,7 @@ $submenuJson = static function (array $item): string {
 
 <!-- Panel expandible "más" con el resto de ítems -->
 <?php if (!empty($moreItems)): ?>
-<div id="bottomnavMorePanel" class="bottomnav-more-panel d-md-none" role="dialog" aria-label="Más navegación">
+<div id="bottomnavMorePanel" class="bottomnav-more-panel d-lg-none" role="dialog" aria-label="Más navegación">
     <?php foreach ($moreItems as $item): ?>
         <?php $isActive = str_starts_with($uri, $item['match'] ?? $item['url'] ?? ''); ?>
         <?php if (!empty($item['submenu'])): ?>
@@ -52,7 +52,7 @@ $submenuJson = static function (array $item): string {
 <?php endif; ?>
 
 <!-- Barra de navegación inferior -->
-<nav class="bottomnav ct-bottombar d-flex d-md-none fixed-bottom">
+<nav class="bottomnav ct-bottombar d-flex d-lg-none fixed-bottom">
     <?php foreach ($primaryItems as $item): ?>
         <?php $isActive = str_starts_with($uri, $item['match'] ?? $item['url'] ?? ''); ?>
         <?php if (!empty($item['submenu'])): ?>
