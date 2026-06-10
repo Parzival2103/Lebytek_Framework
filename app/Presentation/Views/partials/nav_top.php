@@ -15,10 +15,17 @@ $menuItems = $menuFiltrado ?? [];
             <?php endif; ?>
             <span class="fw-bold"><?= ViewHelper::e($empresaNombre) ?></span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavMenu">
+
+        <!-- Hamburguesa: abre el drawer en móvil (<992px). Wired por NavDrawer en app.js -->
+        <button class="navbar-toggler topnav-toggle" type="button"
+                id="topNavToggle" aria-controls="topNavMenu"
+                aria-expanded="false" aria-label="Abrir menú">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="topNavMenu">
+
+        <!-- Menú de links: inline en escritorio, drawer lateral en móvil.
+             OJO: sin clase `collapse` para poder animar el drawer (translateX). -->
+        <div class="navbar-collapse topnav-drawer" id="topNavMenu">
             <ul class="navbar-nav me-auto gap-1">
                 <?php foreach ($menuItems as $item): ?>
                     <?php if (!empty($item['submenu'])): ?>
@@ -50,33 +57,35 @@ $menuItems = $menuFiltrado ?? [];
                     <?php endif; ?>
                 <?php endforeach; ?>
             </ul>
-            <div class="d-flex align-items-center gap-2 ms-auto">
-                <button class="btn btn-ghost topbar-btn" id="themeToggle" title="Tema">
-                    <i class="bi bi-moon-stars"></i>
+        </div>
+
+        <!-- Acciones: SIEMPRE visibles en la barra superior (fuera del drawer) -->
+        <div class="topnav-actions d-flex align-items-center gap-2">
+            <button class="btn btn-ghost topbar-btn" id="themeToggle" title="Tema">
+                <i class="bi bi-moon-stars"></i>
+            </button>
+            <button class="btn btn-ghost topbar-btn" id="stylePanelBtn" title="Personalizar interfaz">
+                <i class="bi bi-palette"></i>
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-ghost topbar-btn d-flex align-items-center gap-2"
+                        data-bs-toggle="dropdown">
+                    <div class="topbar-avatar"><?= strtoupper(substr($usuario['nombre'] ?? 'U', 0, 1)) ?></div>
+                    <i class="bi bi-chevron-down small"></i>
                 </button>
-                <button class="btn btn-ghost topbar-btn" id="stylePanelBtn" title="Personalizar interfaz">
-                    <i class="bi bi-palette"></i>
-                </button>
-                <div class="dropdown">
-                    <button class="btn btn-ghost topbar-btn d-flex align-items-center gap-2"
-                            data-bs-toggle="dropdown">
-                        <div class="topbar-avatar"><?= strtoupper(substr($usuario['nombre'] ?? 'U', 0, 1)) ?></div>
-                        <i class="bi bi-chevron-down small"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                        <li><h6 class="dropdown-header"><?= ViewHelper::e($usuario['nombreCompleto'] ?? '') ?></h6></li>
-                        <li><a class="dropdown-item" href="/admin/ajustes"><i class="bi bi-gear me-2"></i>Ajustes</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form method="POST" action="/logout" class="m-0" onsubmit="return confirm('¿Cerrar sesión?');">
-                                <?= ViewHelper::csrfField() ?>
-                                <button type="submit" class="dropdown-item text-danger d-flex align-items-center w-100 border-0 bg-transparent text-start py-2 px-3">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li><h6 class="dropdown-header"><?= ViewHelper::e($usuario['nombreCompleto'] ?? '') ?></h6></li>
+                    <li><a class="dropdown-item" href="/admin/ajustes"><i class="bi bi-gear me-2"></i>Ajustes</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form method="POST" action="/logout" class="m-0" onsubmit="return confirm('¿Cerrar sesión?');">
+                            <?= ViewHelper::csrfField() ?>
+                            <button type="submit" class="dropdown-item text-danger d-flex align-items-center w-100 border-0 bg-transparent text-start py-2 px-3">
+                                <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+                            </button>
+                        </form>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
