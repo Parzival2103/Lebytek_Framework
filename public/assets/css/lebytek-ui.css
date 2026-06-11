@@ -393,8 +393,37 @@ body.ct-density-compact .ct-form-card .card-body {
 .lebytek-calendar-row:hover { background-color: var(--bs-tertiary-bg, #f8f9fa); }
 
 @media (max-width: 575.98px) {
-  .lebytek-calendar-day { min-height: 4.5rem; }
-  .lebytek-calendar-pill { font-size: 0.65rem; }
+  /* Encabezados de día más compactos para 7 columnas en pantallas angostas */
+  .lebytek-calendar-weekday {
+    padding: 0.35rem 0.1rem;
+    font-size: 0.6rem;
+    letter-spacing: 0;
+  }
+
+  .lebytek-calendar-day {
+    min-height: 4.5rem;
+    padding: 0.2rem;
+    gap: 0.15rem;
+  }
+
+  .lebytek-calendar-daynum { font-size: 0.7rem; }
+
+  /* Vista MES: los pills se vuelven barras de color sin título.
+     El click sigue abriendo el popover con la info completa. */
+  .lebytek-calendar-events .lebytek-calendar-pill {
+    height: 0.4rem;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .lebytek-calendar-more {
+    font-size: 0.6rem;
+    padding-left: 0.1rem;
+    white-space: nowrap;
+  }
 }
 
 /* Calendario — vistas semana / día */
