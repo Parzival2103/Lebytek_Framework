@@ -92,6 +92,36 @@ final class ViewHelper
         return Csrf::token();
     }
 
+    /**
+     * Genera atributos data-confirm-* para el modal de confirmación global (#confirmModal).
+     * Claves: body (requerida), title, ok, cancel, variant, cancelVariant, icon, emphasis.
+     * Variantes válidas: primary|secondary|success|danger|warning|info|dark.
+     * Iconos válidos: warning|danger|success|info|question.
+     */
+    public static function confirmAttrs(array $opts): string
+    {
+        $map = [
+            'body'          => 'data-confirm',
+            'title'         => 'data-confirm-title',
+            'ok'            => 'data-confirm-ok',
+            'cancel'        => 'data-confirm-cancel',
+            'variant'       => 'data-confirm-variant',
+            'cancelVariant' => 'data-confirm-cancel-variant',
+            'icon'          => 'data-confirm-icon',
+            'emphasis'      => 'data-confirm-emphasis',
+        ];
+
+        $attrs = [];
+        foreach ($map as $key => $attr) {
+            $value = (string) ($opts[$key] ?? '');
+            if ($value !== '') {
+                $attrs[] = $attr . '="' . self::e($value) . '"';
+            }
+        }
+
+        return implode(' ', $attrs);
+    }
+
     public static function old(string $key, mixed $default = ''): string
     {
         return self::e(Session::oldInput($key, $default));
