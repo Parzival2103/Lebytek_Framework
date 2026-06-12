@@ -262,6 +262,7 @@ return static function (Container $container): void {
     $container->bind(\App\Presentation\Controllers\Admin\UsuariosController::class, function (Container $c) {
         $usuarioRepo = $c->get(UsuarioRepositoryInterface::class);
         $rolRepo     = $c->get(RolRepositoryInterface::class);
+        $archivoRepo = $c->get(ArchivoRepositoryInterface::class);
         $validator   = new CrearUsuarioValidator();
         return new \App\Presentation\Controllers\Admin\UsuariosController(
             $c->get(ConfiguracionService::class),
@@ -271,7 +272,28 @@ return static function (Container $container): void {
             new ActualizarUsuarioUseCase($usuarioRepo, $rolRepo, $validator),
             new EliminarUsuarioUseCase($usuarioRepo),
             $usuarioRepo,
-            $rolRepo
+            $rolRepo,
+            new \App\Application\UseCases\Avatares\SubirAvatarUseCase($c->get(FileUploadService::class), $usuarioRepo),
+            new \App\Application\UseCases\Avatares\FijarAvatarActualUseCase($archivoRepo, $usuarioRepo),
+            new \App\Application\UseCases\Avatares\EliminarAvatarUseCase($archivoRepo, $usuarioRepo),
+            new \App\Application\UseCases\Avatares\ListarAvataresUseCase($archivoRepo),
+            new \App\Domain\Policies\AvatarPolicy(),
+            $c->get(RbacService::class)
+        );
+    });
+
+    $container->bind(\App\Presentation\Controllers\Admin\PerfilController::class, function (Container $c) {
+        $usuarioRepo = $c->get(UsuarioRepositoryInterface::class);
+        $archivoRepo = $c->get(ArchivoRepositoryInterface::class);
+        return new \App\Presentation\Controllers\Admin\PerfilController(
+            $c->get(ConfiguracionService::class),
+            $c->get(AdminNavigationMenuService::class),
+            $usuarioRepo,
+            new \App\Application\UseCases\Perfil\ActualizarPerfilUseCase($usuarioRepo, new CrearUsuarioValidator()),
+            new \App\Application\UseCases\Avatares\SubirAvatarUseCase($c->get(FileUploadService::class), $usuarioRepo),
+            new \App\Application\UseCases\Avatares\FijarAvatarActualUseCase($archivoRepo, $usuarioRepo),
+            new \App\Application\UseCases\Avatares\EliminarAvatarUseCase($archivoRepo, $usuarioRepo),
+            new \App\Application\UseCases\Avatares\ListarAvataresUseCase($archivoRepo)
         );
     });
 

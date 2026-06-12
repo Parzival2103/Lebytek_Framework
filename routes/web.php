@@ -6,6 +6,7 @@ use App\Presentation\Controllers\Admin\UsuariosController;
 use App\Presentation\Controllers\Admin\RolesController;
 use App\Presentation\Controllers\Admin\PermisosController;
 use App\Presentation\Controllers\Admin\AjustesController;
+use App\Presentation\Controllers\Admin\PerfilController;
 use App\Presentation\Controllers\Admin\CrudController;
 use App\Presentation\Controllers\Admin\CalendarioController;
 use App\Presentation\Controllers\Admin\SistemaEstadoController;
@@ -46,6 +47,14 @@ $router->group([
 
     $router->get('/sistema/estado', [SistemaEstadoController::class, 'index'], [new RbacMiddleware('sistema.ver')]);
 
+    // Perfil propio: cualquier autenticado (sin RBAC extra); actor = sesión.
+    $router->get('/perfil',                       [PerfilController::class, 'index']);
+    $router->put('/perfil',                       [PerfilController::class, 'actualizar'],     [CsrfMiddleware::class]);
+    $router->post('/perfil/avatar',               [PerfilController::class, 'subirAvatar'],    [CsrfMiddleware::class]);
+    $router->post('/perfil/avatar/{id}/actual',   [PerfilController::class, 'fijarAvatar'],    [CsrfMiddleware::class]);
+    $router->delete('/perfil/avatar/{id}',        [PerfilController::class, 'eliminarAvatar'], [CsrfMiddleware::class]);
+    $router->get('/perfil/avatares',              [PerfilController::class, 'listarAvatares']);
+
     $router->get('/ajustes',              [AjustesController::class, 'index'], $rbacAjustes);
     $router->post('/ajustes',              [AjustesController::class, 'guardar'],     array_merge($rbacAjustes, [CsrfMiddleware::class]));
     $router->post('/ajustes/toggle-tema', [AjustesController::class, 'toggleTema'], array_merge($rbacAjustes, [CsrfMiddleware::class]));
@@ -60,6 +69,11 @@ $router->group([
         $router->get('/usuarios/{id}/editar',    [UsuariosController::class, 'editar'], $rbacUsuarios);
         $router->put('/usuarios/{id}',           [UsuariosController::class, 'actualizar'], array_merge($rbacUsuarios, [CsrfMiddleware::class]));
         $router->delete('/usuarios/{id}',        [UsuariosController::class, 'eliminar'],   array_merge($rbacUsuarios, [CsrfMiddleware::class]));
+
+        $router->post('/usuarios/{id}/avatar',                [UsuariosController::class, 'subirAvatar'],    array_merge($rbacUsuarios, [CsrfMiddleware::class]));
+        $router->post('/usuarios/{id}/avatar/{aid}/actual',   [UsuariosController::class, 'fijarAvatar'],    array_merge($rbacUsuarios, [CsrfMiddleware::class]));
+        $router->delete('/usuarios/{id}/avatar/{aid}',        [UsuariosController::class, 'eliminarAvatar'], array_merge($rbacUsuarios, [CsrfMiddleware::class]));
+        $router->get('/usuarios/{id}/avatares',               [UsuariosController::class, 'listarAvatares'], $rbacUsuarios);
 
         $router->get('/roles',                [RolesController::class, 'index'], $rbacRoles);
         $router->get('/roles/crear',          [RolesController::class, 'crear'], $rbacRoles);

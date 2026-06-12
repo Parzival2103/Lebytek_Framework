@@ -17,8 +17,15 @@ use App\Application\DTO\Usuarios\ActualizarUsuarioDTO;
 use App\Domain\Exceptions\ValidationException;
 use App\Domain\Interfaces\UsuarioRepositoryInterface;
 use App\Domain\Interfaces\RolRepositoryInterface;
+use App\Domain\Policies\AvatarPolicy;
 use App\Application\Services\AdminNavigationMenuService;
 use App\Application\Services\ConfiguracionService;
+use App\Application\Services\RbacService;
+use App\Application\UseCases\Avatares\EliminarAvatarUseCase;
+use App\Application\UseCases\Avatares\FijarAvatarActualUseCase;
+use App\Application\UseCases\Avatares\ListarAvataresUseCase;
+use App\Application\UseCases\Avatares\SubirAvatarUseCase;
+use App\Presentation\Presenters\AvatarPresenter;
 
 final class UsuariosController extends AdminBaseController
 {
@@ -32,7 +39,13 @@ final class UsuariosController extends AdminBaseController
         private readonly ActualizarUsuarioUseCase $actualizarUseCase,
         private readonly EliminarUsuarioUseCase   $eliminarUseCase,
         private readonly UsuarioRepositoryInterface $usuarioRepo,
-        private readonly RolRepositoryInterface     $rolRepo
+        private readonly RolRepositoryInterface     $rolRepo,
+        private readonly SubirAvatarUseCase $subirAvatarUseCase,
+        private readonly FijarAvatarActualUseCase $fijarAvatarUseCase,
+        private readonly EliminarAvatarUseCase $eliminarAvatarUseCase,
+        private readonly ListarAvataresUseCase $listarAvataresUseCase,
+        private readonly AvatarPolicy $avatarPolicy,
+        private readonly RbacService $rbacService
     ) {
         parent::__construct($configuracionService, $adminNavigationMenuService);
     }
@@ -154,5 +167,95 @@ final class UsuariosController extends AdminBaseController
         } catch (ValidationException $e) {
             return $this->redirectWithFlash(self::USUARIOS_BASE, 'error', $e->getMessage());
         }
+    }
+
+    // ── Endpoints JSON de avatar (objetivo = {id} de la ruta) ────────────────
+
+    public function subirAvatar(Request $request): Response
+    {
+        $usuarioId = (int) $request->param('id');
+        if (($guard = $this->autorizarAvatar($usuarioId)) !== null) {
+            return $guard;
+        }
+
+        try {
+            $this->verifyCsrf($request);
+
+            $file = $request->file('avatar');
+            if (!is_array($file)) {
+                return $this->json(AvatarPresenter::error('No se recibió ningún archivo.'), 422);
+            }
+
+            $this->subirAvatarUseCase->execute($usuarioId, $file, $this->actorId());
+
+            return $this->json(AvatarPresenter::payload($this->listarAvataresUseCase->execute($usuarioId)));
+        } catch (ValidationException $e) {
+            return $this->json(AvatarPresenter::error($e->getMessage()), 422);
+        }
+    }
+
+    public function fijarAvatar(Request $request): Response
+    {
+        $usuarioId = (int) $request->param('id');
+        if (($guard = $this->autorizarAvatar($usuarioId)) !== null) {
+            return $guard;
+        }
+
+        try {
+            $this->verifyCsrf($request);
+            $this->fijarAvatarUseCase->execute($usuarioId, (int) $request->param('aid'), $this->actorId());
+
+            return $this->json(AvatarPresenter::payload($this->listarAvataresUseCase->execute($usuarioId)));
+        } catch (ValidationException $e) {
+            return $this->json(AvatarPresenter::error($e->getMessage()), 422);
+        }
+    }
+
+    public function eliminarAvatar(Request $request): Response
+    {
+        $usuarioId = (int) $request->param('id');
+        if (($guard = $this->autorizarAvatar($usuarioId)) !== null) {
+            return $guard;
+        }
+
+        try {
+            $this->verifyCsrf($request);
+            $this->eliminarAvatarUseCase->execute($usuarioId, (int) $request->param('aid'), $this->actorId());
+
+            return $this->json(AvatarPresenter::payload($this->listarAvataresUseCase->execute($usuarioId)));
+        } catch (ValidationException $e) {
+            return $this->json(AvatarPresenter::error($e->getMessage()), 422);
+        }
+    }
+
+    public function listarAvatares(Request $request): Response
+    {
+        $usuarioId = (int) $request->param('id');
+        if (($guard = $this->autorizarAvatar($usuarioId)) !== null) {
+            return $guard;
+        }
+
+        return $this->json(AvatarPresenter::payload($this->listarAvataresUseCase->execute($usuarioId)));
+    }
+
+    private function actorId(): int
+    {
+        return (int) ($this->currentUser()['id'] ?? 0);
+    }
+
+    /** Aplica AvatarPolicy; devuelve la respuesta de rechazo o null si procede. */
+    private function autorizarAvatar(int $usuarioId): ?Response
+    {
+        if ($this->usuarioRepo->findById($usuarioId) === null) {
+            return $this->json(AvatarPresenter::error('El usuario no existe.'), 404);
+        }
+
+        $permitido = $this->avatarPolicy->puedeGestionar(
+            actorId: $this->actorId(),
+            usuarioObjetivoId: $usuarioId,
+            puedeGestionarUsuarios: $this->rbacService->puede('usuarios.gestionar')
+        );
+
+        return $permitido ? null : $this->json(AvatarPresenter::error('No autorizado.'), 403);
     }
 }
