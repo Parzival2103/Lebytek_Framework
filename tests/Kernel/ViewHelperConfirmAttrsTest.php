@@ -35,6 +35,8 @@ test('confirmAttrs omite claves vacías y escapa HTML', function (): void {
     assert_true(!str_contains($attrs, 'data-confirm-title'));
     assert_true(!str_contains($attrs, '<b>'));
     assert_true(str_contains($attrs, '&lt;b&gt;'));
+    assert_true(!str_contains($attrs, '"<b>'));
+    assert_true(str_contains($attrs, '&quot;'));
 });
 
 test('confirmAttrs con body vacío devuelve cadena vacía', function (): void {

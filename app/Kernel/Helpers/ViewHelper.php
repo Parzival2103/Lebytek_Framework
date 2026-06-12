@@ -94,7 +94,7 @@ final class ViewHelper
 
     /**
      * Genera atributos data-confirm-* para el modal de confirmación global (#confirmModal).
-     * Claves: body (requerida), title, ok, cancel, variant, cancelVariant, icon, emphasis.
+     * Claves: body, title, ok, cancel, variant, cancelVariant, icon, emphasis (todas opcionales; se omiten si están vacías).
      * Variantes válidas: primary|secondary|success|danger|warning|info|dark.
      * Iconos válidos: warning|danger|success|info|question.
      */
