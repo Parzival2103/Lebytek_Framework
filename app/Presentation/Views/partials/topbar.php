@@ -53,6 +53,8 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                 <li><h6 class="dropdown-header"><?= ViewHelper::e($usuario['nombreCompleto'] ?? '') ?></h6></li>
+                <li><a class="dropdown-item" href="/admin/perfil">
+                    <i class="bi bi-person me-2"></i>Mi perfil</a></li>
                 <li><a class="dropdown-item" href="/admin/ajustes">
                     <i class="bi bi-gear me-2"></i>Ajustes</a></li>
                 <li><hr class="dropdown-divider"></li>
