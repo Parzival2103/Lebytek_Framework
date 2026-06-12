@@ -46,6 +46,10 @@ use App\Application\Services\CrudHandlerRegistry;
 use App\Application\Services\CrudRelationService;
 use App\Application\Services\CrudScopeResolver;
 use App\Application\Services\UploadValidator;
+use App\Application\Services\FileUploadService;
+use App\Application\Services\ImageProcessor;
+use App\Domain\Interfaces\ArchivoRepositoryInterface;
+use App\Infrastructure\Repositories\ArchivoRepository;
 use App\Application\Services\CrudHookRunner;
 use App\Application\Services\CrudResourceService;
 use App\Application\Services\CrudTableBuilder;
@@ -115,6 +119,12 @@ return static function (Container $container): void {
     ));
     $container->singleton(CrudScopeResolver::class, fn(Container $c) => new CrudScopeResolver(
         $c->get(CrudHandlerRegistry::class)
+    ));
+    $container->singleton(ArchivoRepositoryInterface::class, fn() => new ArchivoRepository());
+    $container->singleton(ImageProcessor::class, fn() => new ImageProcessor());
+    $container->singleton(FileUploadService::class, fn(Container $c) => new FileUploadService(
+        $c->get(ImageProcessor::class),
+        $c->get(ArchivoRepositoryInterface::class)
     ));
     $container->singleton(CrudDataService::class, fn(Container $c) => new CrudDataService(
         $c->get(GenericCrudRepository::class),

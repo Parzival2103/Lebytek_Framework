@@ -1,6 +1,7 @@
 /vendor/
 .env
 .envbk
+public/uploads/
 public/error_log
 public/install/error_log
 storage/logs/*.log
