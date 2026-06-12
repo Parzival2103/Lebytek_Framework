@@ -531,7 +531,9 @@ const ConfirmModal = (() => {
     const modal = getModal();
     if (!modal) return Promise.resolve(window.confirm(opts.body));
 
-    if (pending) pending.resolve(false);
+    const prev = pending;
+    pending = null;
+    prev?.resolve(false);
 
     applyOptions(opts);
     return new Promise((resolve) => {
