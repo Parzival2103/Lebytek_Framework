@@ -11,7 +11,9 @@ return [
     'version'       => '1.0.0',
     'obligatorio'   => false,
     'requiere'      => ['core'],
-    'migraciones'   => [],
+    'migraciones'   => [
+        '20260609120000_crud_demo_permisos_modulo_por_recurso.sql',
+    ],
     'seeds'         => [],
     'bootstrap_sql' => 'database/schema/modules/crud-engine.sql',
     'cruds'         => ['demo_clientes', 'demo_productos', 'demo_categorias', 'demo_pedidos'],

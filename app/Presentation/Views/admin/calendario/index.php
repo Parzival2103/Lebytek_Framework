@@ -7,8 +7,10 @@ $enabled  = (array) ($views['enabled'] ?? ['month']);
 $default  = (string) ($views['default'] ?? 'month');
 $caps     = $capabilities ?? [];
 $legend   = $legend ?? [];
-$resource = (string) ($resource ?? '');
-$key      = (string) ($key ?? '');
+$resource    = (string) ($resource ?? '');
+$key         = (string) ($key ?? '');
+$calendarUrl = (string) ($calendarUrl ?? ('/admin/calendario/' . $key));
+$createUrl   = ((string) ($crudBaseUrl ?? '')) . '/crear?return_to=' . rawurlencode($calendarUrl);
 
 $viewLabels = [
     'month' => 'Mes',
@@ -27,20 +29,17 @@ $viewIcons = [
 
 <div class="container-fluid px-3 px-lg-4 py-3 py-lg-4 lebytek-calendar-page ct-page">
     <header class="ct-page-header card border-0 shadow-sm ct-card mb-4">
-        <div class="card-body p-3 p-md-4 d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-center gap-3">
-            <div class="flex-grow-1">
-                <h1 class="ct-page-title h4 mb-1 d-inline-flex align-items-center gap-2">
+        <div class="card-body p-3 p-md-4 d-flex flex-row flex-nowrap justify-content-between align-items-center gap-2 gap-md-3">
+            <div class="flex-grow-1 min-w-0">
+                <h1 class="ct-page-title h4 mb-0 d-inline-flex align-items-center gap-2">
                     <i class="bi <?= ViewHelper::e((string) ($icon ?? 'bi-calendar-event')) ?>" aria-hidden="true"></i>
-                    <span><?= ViewHelper::e((string) ($title ?? 'Calendario')) ?></span>
+                    <span class="text-truncate"><?= ViewHelper::e((string) ($title ?? 'Calendario')) ?></span>
                 </h1>
-                <p class="ct-page-subtitle text-muted small mb-0">
-                    Vista de calendario sobre registros existentes. Cambia de vista o navega entre periodos.
-                </p>
             </div>
             <?php if (!empty($caps['canCreate'])): ?>
-                <div class="ct-actions justify-content-lg-end">
-                    <a href="<?= ViewHelper::e((string) ($crudBaseUrl ?? '')) ?>/crear"
-                       class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2">
+                <div class="ct-actions ct-actions--end flex-shrink-0">
+                    <a href="<?= ViewHelper::e($createUrl) ?>"
+                       class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 text-nowrap">
                         <i class="bi bi-plus-lg" aria-hidden="true"></i>
                         <span>Nuevo registro</span>
                     </a>
@@ -121,6 +120,7 @@ $viewIcons = [
                  data-resource="<?= ViewHelper::e($resource) ?>"
                  data-start-field="<?= ViewHelper::e((string) ($startField ?? '')) ?>"
                  data-crud-base="<?= ViewHelper::e((string) ($crudBaseUrl ?? '')) ?>"
+                 data-calendar-url="<?= ViewHelper::e($calendarUrl) ?>"
                  data-default-view="<?= ViewHelper::e($default) ?>"
                  data-all-day="<?= !empty($allDay) ? '1' : '0' ?>"
                  data-can-create="<?= !empty($caps['canCreate']) ? '1' : '0' ?>"

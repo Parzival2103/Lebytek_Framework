@@ -54,6 +54,29 @@ test('CrudTableBuilder: pie plano coloca cada summary en su columna y deja el re
     assert_true(!array_key_exists('nombre', $cells), 'columnas sin summary no aparecen');
 });
 
+test('CrudTableBuilder: summary con format number usa separador de miles sin signo monetario', function (): void {
+    $builder = new CrudTableBuilder();
+    $def = CrudResourceDefinition::fromArray([
+        'resource' => ['key' => 'demo', 'table' => 'dom_demo', 'primary_key' => 'id', 'permission_prefix' => 'demo'],
+        'list' => [
+            'group_by' => '',
+            'columns' => [
+                ['name' => 'id', 'label' => 'ID'],
+                ['name' => 'stock_actual', 'label' => 'Stock'],
+            ],
+            'summaries' => [
+                ['column' => 'stock_actual', 'type' => 'sum', 'format' => 'number', 'label' => 'Suma stock'],
+            ],
+        ],
+    ]);
+    $vm = $builder->build(
+        definition: $def, rows: [], paginator: tb_paginator(), total: 0,
+        permissions: [], query: [], groupBy: '',
+        summaryRow: ['crud_sum_stock_actual' => 12345]
+    );
+    assert_same('12,345', $vm['summaryRow']['_formatted']['stock_actual'] ?? null, 'number formatea con miles sin $');
+});
+
 test('CrudTableBuilder: plano sin summaries devuelve pie vacío', function (): void {
     $builder = new CrudTableBuilder();
     $def = CrudResourceDefinition::fromArray([

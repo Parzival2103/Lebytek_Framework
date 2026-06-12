@@ -1,4 +1,5 @@
 /vendor/
+.env
 .envbk
 public/error_log
 public/install/error_log

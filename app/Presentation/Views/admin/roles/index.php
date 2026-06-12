@@ -1,11 +1,17 @@
 <?php use App\Kernel\Helpers\ViewHelper; ?>
 
 <div class="ct-page">
-<div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3 mb-4">
-    <a href="/admin/administracion/roles/crear" class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i>
-        <span>Nuevo rol</span>
-    </a>
+<div class="ct-page-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+    <div>
+        <h1 class="ct-page-title">Roles</h1>
+        <p class="ct-page-subtitle">Define los roles y sus permisos asociados.</p>
+    </div>
+    <div class="ct-actions">
+        <a href="/admin/administracion/roles/crear" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            <span>Nuevo rol</span>
+        </a>
+    </div>
 </div>
 
 <div class="ct-table-card card border-0 shadow-sm ct-card">
@@ -14,14 +20,14 @@
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 js-dt-responsive">
                 <thead class="table-light">
                     <tr>
-                        <th class="px-4">Nombre</th>
+                        <th class="px-3" data-priority="2">Nombre</th>
                         <th>Slug</th>
                         <th>Descripción</th>
                         <th>Estado</th>
-                        <th class="text-end px-4">Acciones</th>
+                        <th class="text-end px-4" data-priority="1">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,3 +83,5 @@
     </div>
 </div>
 </div>
+
+<?= ViewHelper::partial('datatables_responsive') ?>

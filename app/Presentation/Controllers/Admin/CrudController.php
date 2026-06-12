@@ -67,7 +67,12 @@ final class CrudController extends AdminBaseController
 
             $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
             $this->crudResourceService->store($resource, $request->all(), $_FILES, $userId > 0 ? $userId : null, $request->ip());
-            return $this->redirectWithFlash('/admin/crud/' . $resource, 'success', 'Registro creado correctamente.');
+            $returnTo = (string) $request->input('return_to', '');
+            $redirectTo = $this->crudResourceService->resolveListReturnUrl(
+                $resource,
+                $returnTo !== '' ? $returnTo : null
+            );
+            return $this->redirectWithFlash($redirectTo, 'success', 'Registro creado correctamente.');
         } catch (AccesoException) {
             return Response::forbidden();
         } catch (ValidationException $e) {
@@ -100,7 +105,13 @@ final class CrudController extends AdminBaseController
             $resource = (string) $request->param('resource');
             $id = (int) $request->param('id');
             $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
-            $data = $this->crudResourceService->buildEditData($resource, $id, $userId > 0 ? $userId : null);
+            $returnTo = (string) $request->input('return_to', '');
+            $data = $this->crudResourceService->buildEditData(
+                $resource,
+                $id,
+                $userId > 0 ? $userId : null,
+                $returnTo !== '' ? $returnTo : null
+            );
             $data['titulo'] = 'Editar ' . $data['title'];
             return $this->view('admin/crud/form', $data);
         } catch (AccesoException) {
@@ -118,7 +129,12 @@ final class CrudController extends AdminBaseController
             $this->verifyCsrf($request);
             $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
             $this->crudResourceService->update($resource, $id, $request->all(), $_FILES, $userId > 0 ? $userId : null, $request->ip());
-            return $this->redirectWithFlash('/admin/crud/' . $resource, 'success', 'Registro actualizado correctamente.');
+            $returnTo = (string) $request->input('return_to', '');
+            return $this->redirectWithFlash(
+                $this->crudResourceService->resolveListReturnUrl($resource, $returnTo !== '' ? $returnTo : null),
+                'success',
+                'Registro actualizado correctamente.'
+            );
         } catch (AccesoException) {
             return Response::forbidden();
         } catch (ValidationException $e) {
@@ -137,11 +153,21 @@ final class CrudController extends AdminBaseController
             $this->verifyCsrf($request);
             $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
             $this->crudResourceService->delete($resource, $id, $userId > 0 ? $userId : null, $request->ip());
-            return $this->redirectWithFlash('/admin/crud/' . $resource, 'success', 'Registro eliminado correctamente.');
+            $returnTo = (string) $request->input('return_to', '');
+            return $this->redirectWithFlash(
+                $this->crudResourceService->resolveListReturnUrl($resource, $returnTo !== '' ? $returnTo : null),
+                'success',
+                'Registro eliminado correctamente.'
+            );
         } catch (AccesoException) {
             return Response::forbidden();
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/admin/crud/' . $resource, 'error', $e->getMessage());
+            $returnTo = (string) $request->input('return_to', '');
+            return $this->redirectWithFlash(
+                $this->crudResourceService->resolveListReturnUrl($resource, $returnTo !== '' ? $returnTo : null),
+                'error',
+                $e->getMessage()
+            );
         }
     }
 
@@ -154,11 +180,21 @@ final class CrudController extends AdminBaseController
             $this->verifyCsrf($request);
             $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
             $this->crudResourceService->runAction($resource, $id, $action, $request->all(), $userId > 0 ? $userId : null, $request->ip());
-            return $this->redirectWithFlash('/admin/crud/' . $resource, 'success', 'Acción ejecutada correctamente.');
+            $returnTo = (string) $request->input('return_to', '');
+            return $this->redirectWithFlash(
+                $this->crudResourceService->resolveListReturnUrl($resource, $returnTo !== '' ? $returnTo : null),
+                'success',
+                'Acción ejecutada correctamente.'
+            );
         } catch (AccesoException) {
             return Response::forbidden();
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/admin/crud/' . $resource, 'error', $e->getMessage());
+            $returnTo = (string) $request->input('return_to', '');
+            return $this->redirectWithFlash(
+                $this->crudResourceService->resolveListReturnUrl($resource, $returnTo !== '' ? $returnTo : null),
+                'error',
+                $e->getMessage()
+            );
         }
     }
 
@@ -171,17 +207,24 @@ final class CrudController extends AdminBaseController
             $userId = (int) (($this->currentUser()['id'] ?? 0) ?: 0);
             $idsRaw = $request->all()['ids'] ?? [];
             $ids = is_array($idsRaw) ? array_map('intval', $idsRaw) : [];
+            $returnTo = (string) $request->input('return_to', '');
+            $listUrl = $this->crudResourceService->resolveListReturnUrl($resource, $returnTo !== '' ? $returnTo : null);
             if ($ids === []) {
-                return $this->redirectWithFlash('/admin/crud/' . $resource, 'error', 'No se seleccionaron registros.');
+                return $this->redirectWithFlash($listUrl, 'error', 'No se seleccionaron registros.');
             }
             $summary = $this->crudResourceService->runBulkAction($resource, $action, $ids, $request->all(), $userId > 0 ? $userId : null, $request->ip());
             $type = $summary['fail'] > 0 ? 'warning' : 'success';
             $msg = "Acción masiva: {$summary['ok']} correctos, {$summary['fail']} con error.";
-            return $this->redirectWithFlash('/admin/crud/' . $resource, $type, $msg);
+            return $this->redirectWithFlash($listUrl, $type, $msg);
         } catch (AccesoException) {
             return Response::forbidden();
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/admin/crud/' . $resource, 'error', $e->getMessage());
+            $returnTo = (string) $request->input('return_to', '');
+            return $this->redirectWithFlash(
+                $this->crudResourceService->resolveListReturnUrl($resource, $returnTo !== '' ? $returnTo : null),
+                'error',
+                $e->getMessage()
+            );
         }
     }
 }

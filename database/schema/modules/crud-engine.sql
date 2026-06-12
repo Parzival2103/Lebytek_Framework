@@ -103,24 +103,24 @@ CREATE TABLE IF NOT EXISTS `dom_demo_pedido_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`, `descripcion`) VALUES
-('Ver demo clientes', 'demo_clientes.ver', 'crud_demo', 'Permite listar y ver detalle en CRUD demo de clientes'),
-('Crear demo clientes', 'demo_clientes.crear', 'crud_demo', 'Permite crear en CRUD demo de clientes'),
-('Editar demo clientes', 'demo_clientes.editar', 'crud_demo', 'Permite editar en CRUD demo de clientes'),
-('Eliminar demo clientes', 'demo_clientes.eliminar', 'crud_demo', 'Permite eliminar lógico en CRUD demo de clientes'),
-('Ver demo productos', 'demo_productos.ver', 'crud_demo', 'Permite listar y ver detalle en CRUD demo de productos'),
-('Crear demo productos', 'demo_productos.crear', 'crud_demo', 'Permite crear en CRUD demo de productos'),
-('Editar demo productos', 'demo_productos.editar', 'crud_demo', 'Permite editar en CRUD demo de productos'),
-('Eliminar demo productos', 'demo_productos.eliminar', 'crud_demo', 'Permite eliminar lógico en CRUD demo de productos'),
-('Ver demo categorias', 'demo_categorias.ver', 'crud_demo', 'Listar/ver categorías demo'),
-('Crear demo categorias', 'demo_categorias.crear', 'crud_demo', 'Crear categorías demo'),
-('Editar demo categorias', 'demo_categorias.editar', 'crud_demo', 'Editar categorías demo'),
-('Eliminar demo categorias', 'demo_categorias.eliminar', 'crud_demo', 'Eliminar (lógico) categorías demo'),
-('Ver demo pedidos', 'demo_pedidos.ver', 'crud_demo', 'Listar/ver pedidos demo'),
-('Crear demo pedidos', 'demo_pedidos.crear', 'crud_demo', 'Crear pedidos demo'),
-('Editar demo pedidos', 'demo_pedidos.editar', 'crud_demo', 'Editar pedidos demo'),
-('Eliminar demo pedidos', 'demo_pedidos.eliminar', 'crud_demo', 'Eliminar (lógico) pedidos demo'),
-('Pagar demo pedidos', 'demo_pedidos.pagar', 'crud_demo', 'Transición pagar pedido demo'),
-('Cancelar demo pedidos', 'demo_pedidos.cancelar', 'crud_demo', 'Transición cancelar pedido demo');
+('Ver demo clientes', 'demo_clientes.ver', 'demo_clientes', 'Permite listar y ver detalle en CRUD demo de clientes'),
+('Crear demo clientes', 'demo_clientes.crear', 'demo_clientes', 'Permite crear en CRUD demo de clientes'),
+('Editar demo clientes', 'demo_clientes.editar', 'demo_clientes', 'Permite editar en CRUD demo de clientes'),
+('Eliminar demo clientes', 'demo_clientes.eliminar', 'demo_clientes', 'Permite eliminar lógico en CRUD demo de clientes'),
+('Ver demo productos', 'demo_productos.ver', 'demo_productos', 'Permite listar y ver detalle en CRUD demo de productos'),
+('Crear demo productos', 'demo_productos.crear', 'demo_productos', 'Permite crear en CRUD demo de productos'),
+('Editar demo productos', 'demo_productos.editar', 'demo_productos', 'Permite editar en CRUD demo de productos'),
+('Eliminar demo productos', 'demo_productos.eliminar', 'demo_productos', 'Permite eliminar lógico en CRUD demo de productos'),
+('Ver demo categorias', 'demo_categorias.ver', 'demo_categorias', 'Listar/ver categorías demo'),
+('Crear demo categorias', 'demo_categorias.crear', 'demo_categorias', 'Crear categorías demo'),
+('Editar demo categorias', 'demo_categorias.editar', 'demo_categorias', 'Editar categorías demo'),
+('Eliminar demo categorias', 'demo_categorias.eliminar', 'demo_categorias', 'Eliminar (lógico) categorías demo'),
+('Ver demo pedidos', 'demo_pedidos.ver', 'demo_pedidos', 'Listar/ver pedidos demo'),
+('Crear demo pedidos', 'demo_pedidos.crear', 'demo_pedidos', 'Crear pedidos demo'),
+('Editar demo pedidos', 'demo_pedidos.editar', 'demo_pedidos', 'Editar pedidos demo'),
+('Eliminar demo pedidos', 'demo_pedidos.eliminar', 'demo_pedidos', 'Eliminar (lógico) pedidos demo'),
+('Pagar demo pedidos', 'demo_pedidos.pagar', 'demo_pedidos', 'Transición pagar pedido demo'),
+('Cancelar demo pedidos', 'demo_pedidos.cancelar', 'demo_pedidos', 'Transición cancelar pedido demo');
 
 INSERT IGNORE INTO `auth_roles_permisos` (`rol_id`, `permiso_id`)
 SELECT `r`.`id`, `p`.`id`

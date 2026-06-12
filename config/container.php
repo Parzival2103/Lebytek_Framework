@@ -45,6 +45,7 @@ use App\Application\Services\CrudFormBuilder;
 use App\Application\Services\CrudHandlerRegistry;
 use App\Application\Services\CrudRelationService;
 use App\Application\Services\CrudScopeResolver;
+use App\Application\Services\UploadValidator;
 use App\Application\Services\CrudHookRunner;
 use App\Application\Services\CrudResourceService;
 use App\Application\Services\CrudTableBuilder;
@@ -122,7 +123,8 @@ return static function (Container $container): void {
         $c->get(CrudFieldValidationService::class),
         $c->get(CrudDbConstraintValidator::class),
         $c->get(CrudHandlerRegistry::class),
-        $c->get(CrudScopeResolver::class)
+        $c->get(CrudScopeResolver::class),
+        new UploadValidator(((int) \App\Kernel\Config\Config::get('security.max_upload_mb', 10)) * 1024 * 1024)
     ));
     $container->singleton(CrudRelationService::class, fn(Container $c) => new CrudRelationService(
         $c->get(GenericCrudRepository::class)
@@ -149,7 +151,11 @@ return static function (Container $container): void {
         $c->get(CrudActionResolver::class),
         $c->get(RbacService::class),
         $c->get(BitacoraRepositoryInterface::class),
-        $c->get(CrudTransitionService::class)
+        $c->get(CrudTransitionService::class),
+        $c->get(CrudScopeResolver::class)
+    ));
+    $container->singleton(\App\Application\Services\CrudReturnUrlResolver::class, fn(Container $c) => new \App\Application\Services\CrudReturnUrlResolver(
+        $c->get(\App\Application\Services\CalendarConfigLoader::class)
     ));
     $container->singleton(CrudResourceService::class, fn(Container $c) => new CrudResourceService(
         $c->get(CrudConfigLoader::class),
@@ -160,7 +166,8 @@ return static function (Container $container): void {
         $c->get(CrudActionResolver::class),
         $c->get(CrudActionService::class),
         $c->get(CrudDetailBuilder::class),
-        $c->get(CrudScopeResolver::class)
+        $c->get(CrudScopeResolver::class),
+        $c->get(\App\Application\Services\CrudReturnUrlResolver::class)
     ));
 
     // ── Módulo Calendario ───────────────────────────────────────────────────

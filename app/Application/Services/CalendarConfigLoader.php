@@ -86,6 +86,29 @@ final class CalendarConfigLoader
         return $this->crudDefinition($resource)->columnNames();
     }
 
+    /**
+     * Clave del calendario vinculado a un recurso CRUD, si existe.
+     */
+    public function findKeyForResource(string $resource): ?string
+    {
+        $resource = trim($resource);
+        if ($resource === '') {
+            return null;
+        }
+
+        foreach ($this->listCalendars() as $key => $_title) {
+            try {
+                if ($this->load($key)->resource() === $resource) {
+                    return $key;
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        return null;
+    }
+
     /** @return array<string,string> key => título */
     public function listCalendars(): array
     {

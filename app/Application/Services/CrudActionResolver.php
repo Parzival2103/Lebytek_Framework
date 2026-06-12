@@ -7,6 +7,7 @@ namespace App\Application\Services;
 use App\Domain\Entities\CrudResourceDefinition;
 use App\Domain\Entities\Crud\CrudActionDefinition;
 use App\Domain\Exceptions\ValidationException;
+use App\Kernel\Constants\UiConfirmConstants;
 
 /**
  * Lógica pura de resolución de acciones: produce view-models para render y
@@ -77,6 +78,13 @@ final class CrudActionResolver
             $vm['href'] = str_replace('{id}', (string) $id, (string) $action->route());
         } else { // handler / transition
             $vm['endpoint'] = '/admin/crud/' . $definition->key() . '/' . $id . '/accion/' . $action->name();
+        }
+
+        if ($action->isBuiltin() && $action->name() === 'delete' && ($vm['confirm'] === null || $vm['confirm'] === '')) {
+            $vm['confirm'] = UiConfirmConstants::DELETE_BODY;
+            $vm['confirm_title'] = UiConfirmConstants::DELETE_TITLE;
+            $vm['confirm_variant'] = 'danger';
+            $vm['confirm_ok'] = UiConfirmConstants::DELETE_OK;
         }
 
         return $vm;

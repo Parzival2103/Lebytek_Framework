@@ -9,15 +9,19 @@ use App\Kernel\Helpers\ViewHelper;
     <div class="row justify-content-center">
         <div class="col-12 col-xl-10">
             <div class="ct-form-card card border-0 shadow-sm ct-card">
-                <div class="card-header bg-transparent border-bottom p-3 p-md-4 d-flex flex-column flex-md-row justify-content-md-between align-items-md-start gap-3">
-                    <div>
-                        <h1 class="ct-page-title h4 mb-1">
+                <div class="card-header bg-transparent border-bottom p-3 p-md-4 d-flex flex-row flex-nowrap justify-content-between align-items-center gap-2 gap-md-3">
+                    <div class="flex-grow-1 min-w-0">
+                        <h1 class="ct-page-title h4 mb-1 text-truncate">
                             <?= !empty($isEdit) ? 'Editar' : 'Crear' ?> <?= ViewHelper::e((string) ($title ?? 'registro')) ?>
                         </h1>
                         <p class="ct-page-subtitle text-muted small mb-0">Los campos obligatorios llevan asterisco. Los errores se muestran bajo cada campo.</p>
                     </div>
-                    <a href="/admin/crud/<?= ViewHelper::e((string) ($resource ?? '')) ?>"
-                       class="btn btn-sm btn-outline-secondary align-self-stretch align-self-md-center">Volver al listado</a>
+                    <?php
+                        $returnUrl = (string) ($returnUrl ?? ('/admin/crud/' . ($resource ?? '')));
+                        $returnIsCalendar = str_starts_with($returnUrl, '/admin/calendario/');
+                    ?>
+                    <a href="<?= ViewHelper::e($returnUrl) ?>"
+                       class="btn btn-sm btn-outline-secondary flex-shrink-0 text-nowrap"><?= $returnIsCalendar ? 'Volver al calendario' : 'Volver al listado' ?></a>
                 </div>
                 <div class="card-body p-3 p-md-4">
                     <form method="<?= ViewHelper::e($method ?? 'POST') ?>"
@@ -25,6 +29,9 @@ use App\Kernel\Helpers\ViewHelper;
                           enctype="multipart/form-data"
                           class="crud-form">
                         <?= ViewHelper::csrfField() ?>
+                        <?php if (!empty($returnUrl)): ?>
+                            <input type="hidden" name="return_to" value="<?= ViewHelper::e($returnUrl) ?>">
+                        <?php endif; ?>
 
                         <div class="row g-3">
                             <?php foreach (($fields ?? []) as $field): ?>

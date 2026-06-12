@@ -6,6 +6,7 @@ namespace App\Presentation\Middlewares;
 
 use App\Kernel\Http\Request;
 use App\Kernel\Http\Response;
+use App\Kernel\Http\SafeRedirect;
 use App\Kernel\Security\Csrf;
 use App\Kernel\Security\Session;
 
@@ -36,7 +37,7 @@ final class CsrfMiddleware
 
         if (!Csrf::verify((string) $token)) {
             Session::flash('error', 'La sesión expiró o el token es inválido. Intenta de nuevo.');
-            return Response::redirect($request->header('Referer', '/'));
+            return Response::redirect(SafeRedirect::toInternal($request->header('Referer', '/')));
         }
 
         return $next($request);

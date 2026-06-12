@@ -140,9 +140,9 @@ $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_
                 <?= ViewHelper::partial('admin/ajustes_accordion_item', [
                     'collapseId'    => 'ajustesCollapseLebytekUi',
                     'headingId'     => 'ajustesHeadingLebytekUi',
-                    'title'         => 'Interfaz (LEBYTEK UI)',
+                    'title'         => 'Interfaz',
                     'iconClass'     => 'bi-sliders',
-                    'subtitleHtml'  => 'Afecta densidad, sombras y tablas del panel. Se guarda en <code class="small">cfg_configuraciones</code>.',
+                    'subtitleHtml'  => '',
                     'bodyHtml'      => $bodyLebytek,
                 ]) ?>
 
@@ -228,7 +228,7 @@ $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_
                     'headingId'      => 'ajustesHeadingColores',
                     'title'          => 'Colores del sistema',
                     'iconClass'      => 'bi-palette',
-                    'titleExtraHtml' => ' <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1 fw-normal small">Vista previa en tiempo real</span>',
+                    'titleExtraHtml' => '',
                     'bodyHtml'       => $bodyColores,
                 ]) ?>
 
@@ -239,7 +239,7 @@ $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_
                     'collapseId' => 'ajustesCollapseDashboard',
                     'headingId'  => 'ajustesHeadingDashboard',
                     'title'      => 'Dashboard',
-                    'subtitle'   => 'Reservado para futuras opciones del tablero',
+                    'subtitle'   => '',
                     'iconClass'  => 'bi-speedometer2',
                     'bodyHtml'   => $bodyDashboard,
                 ]) ?>
@@ -251,7 +251,7 @@ $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_
                     'collapseId' => 'ajustesCollapseLogin',
                     'headingId'  => 'ajustesHeadingLogin',
                     'title'      => 'Login',
-                    'subtitle'   => 'Reservado para futuras opciones de acceso',
+                    'subtitle'   => '',
                     'iconClass'  => 'bi-box-arrow-in-right',
                     'bodyHtml'   => $bodyLogin,
                 ]) ?>
@@ -272,11 +272,10 @@ $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_
     <!-- Panel lateral informativo -->
     <div class="col-12 col-xl-4">
         <!-- Preview del navbar -->
-        <div class="card border-0 shadow-sm mb-4 overflow-hidden">
-            <div class="card-header bg-transparent border-bottom px-4 py-3">
-                <h6 class="fw-semibold mb-0">
-                    <i class="bi bi-eye me-2 text-primary"></i>Vista previa del navbar
-                </h6>
+        <div class="card ct-card mb-4 overflow-hidden">
+            <div class="ct-card-header d-flex align-items-center gap-2">
+                <i class="bi bi-eye text-primary" aria-hidden="true"></i>
+                <span class="ct-card-title">Vista previa del navbar</span>
             </div>
             <div class="card-body p-0">
                 <div id="navbarPreviewBox" class="ct-navbar-preview-box p-3 d-flex align-items-center gap-3 rounded-bottom">
@@ -293,10 +292,10 @@ $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_
         </div>
 
         <!-- Info -->
-        <div class="card border-0 shadow-sm bg-body-tertiary">
-            <div class="card-body p-4">
+        <div class="card ct-card bg-body-tertiary">
+            <div class="card-body p-3 p-md-4">
                 <h6 class="fw-semibold mb-3">
-                    <i class="bi bi-info-circle me-2 text-primary"></i>Acerca de los ajustes
+                    <i class="bi bi-info-circle me-2 text-primary" aria-hidden="true"></i>Acerca de los ajustes
                 </h6>
                 <p class="small text-muted mb-3">
                     Los colores se pueden previsualizar en tiempo real. Al guardar se aplican de forma permanente para todos los usuarios.

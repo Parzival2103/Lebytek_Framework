@@ -33,7 +33,7 @@ final class PermisoModuloFormatRule
         if (preg_match(self::PATTERN, $m) !== 1) {
             throw new ValidationException(
                 'El módulo solo puede contener letras minúsculas, números y guión bajo.',
-                [$fieldKey => 'Ejemplo: administracion, crud_demo, clientes.']
+                [$fieldKey => 'Ejemplo: administracion, demo_clientes, clientes.']
             );
         }
 

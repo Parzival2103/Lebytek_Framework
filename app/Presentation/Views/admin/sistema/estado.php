@@ -16,8 +16,8 @@
   <div class="card shadow-sm mb-4">
     <div class="card-header bg-white fw-semibold">Módulos</div>
     <div class="table-responsive">
-      <table class="table table-sm mb-0 align-middle">
-        <thead><tr><th>Clave</th><th>Declarada</th><th>Instalada</th><th>Estado</th></tr></thead>
+      <table class="table table-sm mb-0 align-middle js-dt-responsive">
+        <thead><tr><th data-priority="2">Clave</th><th>Declarada</th><th>Instalada</th><th data-priority="1">Estado</th></tr></thead>
         <tbody>
         <?php foreach ($estado['modulos'] as $clave => $m): ?>
           <tr>
@@ -86,4 +86,6 @@
       <?php endforeach; ?>
     </ul>
   </div>
+
+  <?= \App\Kernel\Helpers\ViewHelper::partial('datatables_responsive') ?>
 </div>

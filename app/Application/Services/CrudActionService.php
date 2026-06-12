@@ -6,6 +6,7 @@ namespace App\Application\Services;
 
 use App\Application\Crud\Context\CrudActionContext;
 use App\Domain\Entities\Crud\CrudActionDefinition;
+use App\Domain\Entities\CrudResourceDefinition;
 use App\Domain\Exceptions\ValidationException;
 use App\Domain\Interfaces\BitacoraRepositoryInterface;
 use App\Domain\Interfaces\CrudActionHandlerInterface;
@@ -32,8 +33,30 @@ final class CrudActionService
         private readonly ?CrudActionResolver $resolver = null,
         private readonly ?RbacService $rbacService = null,
         private readonly ?BitacoraRepositoryInterface $bitacoraRepository = null,
-        private readonly ?CrudTransitionService $transitionService = null
+        private readonly ?CrudTransitionService $transitionService = null,
+        private readonly ?CrudScopeResolver $scopeResolver = null
     ) {}
+
+    /**
+     * Bloqueo server-side de propiedad para acciones, idéntico en lógica a
+     * CrudResourceService::assertOwnership (ambos delegan en
+     * CrudScopeResolver::assertOwnedBy). Si el recurso no declara owner scope o
+     * faltan dependencias, retorna sin efecto (comportamiento sin cambios).
+     *
+     * @param array<string, mixed> $record
+     */
+    private function assertActionOwnership(CrudResourceDefinition $definition, array $record, ?int $userId): void
+    {
+        if ($this->scopeResolver === null || $this->rbacService === null) {
+            return;
+        }
+        $this->scopeResolver->assertOwnedBy(
+            $definition,
+            $record,
+            $userId,
+            fn(string $slug): bool => $this->rbacService->puede($slug)
+        );
+    }
 
     /**
      * Despacha una acción ya resuelta sobre un contexto ya construido.
@@ -74,6 +97,8 @@ final class CrudActionService
         if (!is_array($record) || (int) ($record['deleted'] ?? 0) === 1) {
             throw new ValidationException('El registro solicitado no existe.');
         }
+
+        $this->assertActionOwnership($definition, $record, $userId);
 
         // Re-chequeo server-side: nunca confiar en la UI.
         if (!$action->isVisibleFor($record) || !$action->isEnabledFor($record)) {
@@ -144,6 +169,7 @@ final class CrudActionService
                 if (!is_array($record) || (int) ($record['deleted'] ?? 0) === 1) {
                     throw new ValidationException("Registro {$id} no existe.");
                 }
+                $this->assertActionOwnership($definition, $record, $userId);
                 $ctx = new CrudActionContext(
                     $definition->key(),
                     $definition->table(),

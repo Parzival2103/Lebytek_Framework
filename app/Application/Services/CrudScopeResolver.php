@@ -6,6 +6,7 @@ namespace App\Application\Services;
 
 use App\Application\Crud\Scopes\OwnerListScope;
 use App\Domain\Entities\CrudResourceDefinition;
+use App\Domain\Exceptions\ValidationException;
 use App\Domain\Interfaces\CrudListScopeInterface;
 
 /**
@@ -37,6 +38,32 @@ final class CrudScopeResolver
 
         $hasBypass = $meta['bypass'] !== null && $can($meta['bypass']);
         return new OwnerListScope($meta['column'], $hasBypass, $userId);
+    }
+
+    /**
+     * Bloqueo server-side de propiedad: única fuente de verdad para show/edit/
+     * update/delete (CrudResourceService) y para las acciones de fila/masivas
+     * (CrudActionService). Si el recurso no declara owner scope, no hace nada
+     * (comportamiento sin cambios). Si lo declara, deja pasar al dueño o a quien
+     * tenga el permiso de bypass; cualquier otro caso se trata como inexistente
+     * para no revelar registros ajenos.
+     *
+     * @param array<string, mixed> $record
+     * @param callable(string): bool $can
+     */
+    public function assertOwnedBy(CrudResourceDefinition $definition, array $record, ?int $userId, callable $can): void
+    {
+        $meta = $this->ownerMeta($definition);
+        if ($meta === null) {
+            return;
+        }
+        if ($meta['bypass'] !== null && $can($meta['bypass'])) {
+            return;
+        }
+        $owner = $record[$meta['column']] ?? null;
+        if ($userId === null || (string) $owner !== (string) $userId) {
+            throw new ValidationException('El registro solicitado no existe.');
+        }
     }
 
     /**

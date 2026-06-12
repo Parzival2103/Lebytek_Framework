@@ -20,23 +20,25 @@ final class CrudResourceService implements CalendarEventSourceInterface
         private readonly CrudActionResolver $actionResolver,
         private readonly CrudActionService $actionService,
         private readonly CrudDetailBuilder $detailBuilder,
-        private readonly CrudScopeResolver $scopeResolver
+        private readonly CrudScopeResolver $scopeResolver,
+        private readonly CrudReturnUrlResolver $returnUrlResolver,
     ) {}
+
+    public function resolveListReturnUrl(string $resource, ?string $candidate = null): string
+    {
+        return $this->returnUrlResolver->resolve($resource, $candidate);
+    }
 
     private function assertOwnership(\App\Domain\Entities\CrudResourceDefinition $definition, array $row, ?int $userId): void
     {
-        $meta = $this->scopeResolver->ownerMeta($definition);
-        if ($meta === null) {
-            return;
-        }
-        if ($meta['bypass'] !== null && $this->rbacService->puede($meta['bypass'])) {
-            return;
-        }
-        $owner = $row[$meta['column']] ?? null;
-        if ($userId === null || (string) $owner !== (string) $userId) {
-            // Tratar como inexistente para no revelar registros ajenos (404 en show/edit).
-            throw new ValidationException('El registro solicitado no existe.');
-        }
+        // Fuente única de verdad del bloqueo de propiedad (ver CrudScopeResolver::assertOwnedBy).
+        // Tratar como inexistente para no revelar registros ajenos (404 en show/edit).
+        $this->scopeResolver->assertOwnedBy(
+            $definition,
+            $row,
+            $userId,
+            fn(string $slug): bool => $this->rbacService->puede($slug)
+        );
     }
 
     public function buildIndexData(string $resource, array $query, ?int $userId = null): array
@@ -113,19 +115,30 @@ final class CrudResourceService implements CalendarEventSourceInterface
         $definition = $this->configLoader->load($resource);
         $this->rbacService->verificar($definition->permissionFor('crear'));
 
+        $returnCandidate = $this->extractReturnCandidate($prefill);
+        unset($prefill['return_to']);
+
         // El input previo (errores de validación) tiene prioridad sobre el prefill.
+        $oldValues = Session::oldInput('_crud_values', []);
         $values = array_merge(
             $this->filterPrefill($definition, $prefill),
-            Session::oldInput('_crud_values', [])
+            is_array($oldValues) ? $oldValues : []
         );
+        if ($returnCandidate === null) {
+            $returnCandidate = $this->extractReturnCandidate(is_array($oldValues) ? $oldValues : []);
+        }
+        unset($values['return_to']);
 
-        return $this->formBuilder->build(
+        $data = $this->formBuilder->build(
             definition: $definition,
             values: $values,
             errors: Session::getFlash('errors', []),
             action: '/admin/crud/' . $definition->key(),
             isEdit: false
         );
+        $data['returnUrl'] = $this->returnUrlResolver->resolve($resource, $returnCandidate);
+
+        return $data;
     }
 
     /**
@@ -201,7 +214,7 @@ final class CrudResourceService implements CalendarEventSourceInterface
         ];
     }
 
-    public function buildEditData(string $resource, int $id, ?int $userId = null): array
+    public function buildEditData(string $resource, int $id, ?int $userId = null, ?string $returnTo = null): array
     {
         $definition = $this->configLoader->load($resource);
         $this->rbacService->verificar($definition->permissionFor('editar'));
@@ -214,14 +227,35 @@ final class CrudResourceService implements CalendarEventSourceInterface
 
         $oldValues = Session::oldInput('_crud_values');
         $values = is_array($oldValues) ? $oldValues : $row;
+        $returnCandidate = $returnTo !== null && $returnTo !== ''
+            ? $returnTo
+            : $this->extractReturnCandidate(is_array($oldValues) ? $oldValues : []);
+        unset($values['return_to']);
 
-        return $this->formBuilder->build(
+        $data = $this->formBuilder->build(
             definition: $definition,
             values: $values,
             errors: Session::getFlash('errors', []),
             action: '/admin/crud/' . $definition->key() . '/' . $id,
             isEdit: true
         );
+        $data['returnUrl'] = $this->returnUrlResolver->resolve($resource, $returnCandidate);
+
+        return $data;
+    }
+
+    /**
+     * @param array<string,mixed> $input
+     */
+    private function extractReturnCandidate(array $input): ?string
+    {
+        if (!isset($input['return_to'])) {
+            return null;
+        }
+
+        $value = trim((string) $input['return_to']);
+
+        return $value !== '' ? $value : null;
     }
 
     public function update(string $resource, int $id, array $input, array $files, ?int $userId, string $ip): void

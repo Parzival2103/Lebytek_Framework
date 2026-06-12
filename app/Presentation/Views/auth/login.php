@@ -47,7 +47,7 @@ $lebytekBody   = trim('ct-login-page ' . (string) ($lebytekBodyClasses ?? ''));
 
 <div class="login-wrapper d-flex align-items-center justify-content-center min-vh-100 px-3">
     <div class="login-card ct-login-card card shadow-lg border-0 w-100">
-        <div class="login-brand d-none d-md-flex flex-column align-items-center justify-content-center p-5">
+        <div class="login-brand d-md-flex flex-column align-items-center justify-content-center p-4 p-md-5">
             <?php if ($empresaLogo !== ''): ?>
                 <img src="<?= ViewHelper::e($empresaLogo) ?>" alt="<?= ViewHelper::e($empresaNombre) ?>" class="mb-4 ct-login-brand-logo">
             <?php else: ?>

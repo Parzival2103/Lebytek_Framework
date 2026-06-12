@@ -37,6 +37,7 @@ final class CalendarViewModelBuilder
             'startField'   => $def->mappingStart(),
             'icon'         => $def->icon(),
             'feedUrl'      => '/admin/calendario/' . $def->key() . '/eventos',
+            'calendarUrl'  => '/admin/calendario/' . $def->key(),
             'crudBaseUrl'  => '/admin/crud/' . $def->resource(),
             'views'        => [
                 'default' => $def->viewsDefault(),

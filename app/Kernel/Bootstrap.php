@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 use App\Kernel\EnvLoader;
 use App\Kernel\Config\Config;
+use App\Kernel\Config\DebugMode;
 use App\Kernel\Database\Connection;
 use App\Kernel\Http\Router;
 use App\Kernel\Http\Request;
@@ -46,7 +47,7 @@ Config::init(ROOT_PATH . '/config');
 // ── 4. Zona horaria y reporte de errores ──────────────────────────────────────
 date_default_timezone_set(Config::get('app.timezone', 'America/Mexico_City'));
 
-$isDebug = (bool) Config::get('app.debug', false);
+$isDebug = DebugMode::resolve((string) Config::get('app.env', 'production'), (bool) Config::get('app.debug', false));
 
 if ($isDebug) {
     error_reporting(E_ALL);

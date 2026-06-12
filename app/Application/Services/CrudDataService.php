@@ -13,6 +13,7 @@ use App\Domain\Exceptions\ValidationException;
 use App\Domain\Interfaces\BitacoraRepositoryInterface;
 use App\Domain\Interfaces\CrudValidatorInterface;
 use App\Infrastructure\Repositories\GenericCrudRepository;
+use App\Kernel\Config\Config;
 use App\Kernel\Helpers\Paginator;
 use App\Kernel\Logging\AppLogger;
 
@@ -36,7 +37,8 @@ final class CrudDataService
         private readonly CrudFieldValidationService $fieldValidation,
         private readonly ?CrudDbConstraintValidator $dbConstraintValidator = null,
         private readonly ?CrudHandlerRegistry $handlerRegistry = null,
-        private readonly ?CrudScopeResolver $scopeResolver = null
+        private readonly ?CrudScopeResolver $scopeResolver = null,
+        private readonly ?UploadValidator $uploadValidator = null
     ) {}
 
     public function list(CrudResourceDefinition $definition, array $query, ?int $userId = null, ?callable $can = null): array
@@ -628,20 +630,30 @@ final class CrudDataService
         if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             return null;
         }
-        if ((int) ($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-            throw new ValidationException('Error al subir archivo para ' . $field->label() . '.');
-        }
 
         $original = (string) ($file['name'] ?? '');
         $tmpName = (string) ($file['tmp_name'] ?? '');
-        $extension = strtolower(pathinfo($original, PATHINFO_EXTENSION));
-        $allowed = $field->validation()['allowed_extensions'] ?? null;
-        if (is_array($allowed) && $allowed !== []) {
-            $allowedLower = array_map(static fn($x): string => strtolower((string) $x), $allowed);
-            if ($extension === '' || !in_array($extension, $allowedLower, true)) {
-                throw new ValidationException('Extensión de archivo no permitida para ' . $field->label() . '.');
+
+        $detectedMime = null;
+        if ($tmpName !== '' && is_readable($tmpName) && function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo !== false) {
+                $detectedMime = finfo_file($finfo, $tmpName) ?: null;
+                finfo_close($finfo);
             }
         }
+
+        $allowed = $field->validation()['allowed_extensions'] ?? null;
+        $validator = $this->uploadValidator ?? new UploadValidator(
+            ((int) Config::get('security.max_upload_mb', 10)) * 1024 * 1024
+        );
+        $extension = $validator->assertValid(
+            $file,
+            $field->label(),
+            is_array($allowed) ? $allowed : null,
+            $detectedMime
+        );
+
         $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($original, PATHINFO_FILENAME));
         if ($safeName === '') {
             $safeName = 'upload';

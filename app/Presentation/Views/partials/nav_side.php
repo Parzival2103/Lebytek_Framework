@@ -86,11 +86,11 @@ $menuItems = $menuFiltrado ?? [];
             </div>
             <div class="sidebar-user-info nav-label overflow-hidden">
                 <div class="fw-medium text-truncate small"><?= ViewHelper::e($usuario['nombreCompleto'] ?? $usuario['nombre'] ?? '') ?></div>
-                <div class="text-muted" style="font-size:0.7rem"><?= ViewHelper::e($usuario['email'] ?? '') ?></div>
+                <div class="ct-sidebar-user-email"><?= ViewHelper::e($usuario['email'] ?? '') ?></div>
             </div>
             <form method="POST" action="/logout" class="ms-auto nav-label m-0" onsubmit="return confirm('¿Cerrar sesión?');">
                 <?= ViewHelper::csrfField() ?>
-                <button type="submit" class="btn btn-link p-0 text-muted"
+                <button type="submit" class="btn btn-link p-0"
                         title="Cerrar sesión">
                     <i class="bi bi-box-arrow-right"></i>
                 </button>

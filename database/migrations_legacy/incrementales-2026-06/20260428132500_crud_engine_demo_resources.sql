@@ -46,14 +46,14 @@ CREATE TABLE IF NOT EXISTS `dom_demo_productos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`, `descripcion`) VALUES
-('Ver demo clientes', 'demo_clientes.ver', 'crud_demo', 'Permite listar y ver detalle en CRUD demo de clientes'),
-('Crear demo clientes', 'demo_clientes.crear', 'crud_demo', 'Permite crear en CRUD demo de clientes'),
-('Editar demo clientes', 'demo_clientes.editar', 'crud_demo', 'Permite editar en CRUD demo de clientes'),
-('Eliminar demo clientes', 'demo_clientes.eliminar', 'crud_demo', 'Permite eliminar lógico en CRUD demo de clientes'),
-('Ver demo productos', 'demo_productos.ver', 'crud_demo', 'Permite listar y ver detalle en CRUD demo de productos'),
-('Crear demo productos', 'demo_productos.crear', 'crud_demo', 'Permite crear en CRUD demo de productos'),
-('Editar demo productos', 'demo_productos.editar', 'crud_demo', 'Permite editar en CRUD demo de productos'),
-('Eliminar demo productos', 'demo_productos.eliminar', 'crud_demo', 'Permite eliminar lógico en CRUD demo de productos');
+('Ver demo clientes', 'demo_clientes.ver', 'demo_clientes', 'Permite listar y ver detalle en CRUD demo de clientes'),
+('Crear demo clientes', 'demo_clientes.crear', 'demo_clientes', 'Permite crear en CRUD demo de clientes'),
+('Editar demo clientes', 'demo_clientes.editar', 'demo_clientes', 'Permite editar en CRUD demo de clientes'),
+('Eliminar demo clientes', 'demo_clientes.eliminar', 'demo_clientes', 'Permite eliminar lógico en CRUD demo de clientes'),
+('Ver demo productos', 'demo_productos.ver', 'demo_productos', 'Permite listar y ver detalle en CRUD demo de productos'),
+('Crear demo productos', 'demo_productos.crear', 'demo_productos', 'Permite crear en CRUD demo de productos'),
+('Editar demo productos', 'demo_productos.editar', 'demo_productos', 'Permite editar en CRUD demo de productos'),
+('Eliminar demo productos', 'demo_productos.eliminar', 'demo_productos', 'Permite eliminar lógico en CRUD demo de productos');
 
 INSERT IGNORE INTO `auth_roles_permisos` (`rol_id`, `permiso_id`)
 SELECT `r`.`id`, `p`.`id`

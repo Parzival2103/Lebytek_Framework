@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Application\Services\CrudActionResolver;
 use App\Domain\Entities\CrudResourceDefinition;
 use App\Domain\Exceptions\ValidationException;
+use App\Kernel\Constants\UiConfirmConstants;
 
 function resolver_def(): CrudResourceDefinition
 {
@@ -101,6 +102,28 @@ test('CrudActionResolver: resolveExecutable returns the row action or throws', f
     assert_throws(ValidationException::class, function () use ($resolver): void {
         $resolver->resolveExecutable(resolver_def(), 'fantasma');
     });
+});
+
+test('CrudActionResolver: delete builtin sin confirm en JSON recibe mensaje de plataforma', function (): void {
+    $resolver = new CrudActionResolver();
+    $def = CrudResourceDefinition::fromArray([
+        'resource' => ['key' => 'productos', 'table' => 'dom_productos', 'primary_key' => 'id', 'permission_prefix' => 'productos'],
+        'list' => ['actions' => ['show', 'edit', 'delete']],
+    ]);
+    $allow = static fn(string $slug): bool => true;
+    $vm = $resolver->visibleRowActions($def, ['id' => 5], $allow);
+    $delete = null;
+    foreach ($vm as $action) {
+        if ($action['name'] === 'delete') {
+            $delete = $action;
+            break;
+        }
+    }
+    assert_true($delete !== null);
+    assert_same(UiConfirmConstants::DELETE_BODY, $delete['confirm']);
+    assert_same(UiConfirmConstants::DELETE_TITLE, $delete['confirm_title']);
+    assert_same('danger', $delete['confirm_variant']);
+    assert_same(UiConfirmConstants::DELETE_OK, $delete['confirm_ok']);
 });
 
 test('CrudActionResolver: resolveBulkExecutable returns the bulk action or throws', function (): void {

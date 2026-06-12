@@ -55,7 +55,8 @@
         "label": "Estado"
       }
     ],
-    "actions": ["show", "edit", "delete"]
+    "actions": ["show", "edit", "delete"],
+    "scope": {"type": "owner", "column": "created_by"}
   },
   "form": {
     "fields": [

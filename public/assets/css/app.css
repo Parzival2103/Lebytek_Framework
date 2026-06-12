@@ -501,6 +501,28 @@ body {
 /* ── nav_top: drawer lateral en móvil (<992px) ─────────────────
    Reutiliza el overlay `.sidebar-overlay` (creado por NavDrawer en JS). */
 @media (max-width: 991.98px) {
+  /* La barra no debe envolver: si lo hace, las acciones (tema/paleta/avatar)
+     caen a una segunda fila pegadas a la izquierda y el menú del avatar se
+     desborda fuera del viewport. Las mantenemos inline a la derecha. */
+  .topnav .container-fluid {
+    flex-wrap: nowrap;
+  }
+  .topnav .topnav-actions {
+    order: 2;
+    margin-left: auto;
+  }
+  .topnav .topnav-toggle {
+    order: 3;
+    margin-left: 0.25rem;
+  }
+
+  /* En móvil ocultamos tema y paleta para no apretar avatar + hamburguesa
+     contra la esquina (siguen disponibles dentro de Ajustes). */
+  .topnav .topnav-actions #themeToggle,
+  .topnav .topnav-actions #stylePanelBtn {
+    display: none;
+  }
+
   .topnav .topnav-drawer {
     position: fixed;
     top: 0;
@@ -537,6 +559,22 @@ body {
     background: rgba(255, 255, 255, 0.04);
     box-shadow: none;
     padding-left: 0.5rem;
+  }
+
+  /* Los sub-ítems heredarían el color oscuro de Bootstrap sobre el fondo
+     oscuro del drawer (quedan ilegibles). Forzamos texto claro como el
+     resto del menú lateral. */
+  .topnav .topnav-drawer .dropdown-item {
+    color: var(--app-navbar-text, rgba(255, 255, 255, 0.78));
+  }
+  .topnav .topnav-drawer .dropdown-item:hover,
+  .topnav .topnav-drawer .dropdown-item:focus {
+    background: var(--sidebar-hover-bg);
+    color: var(--app-navbar-text, #fff);
+  }
+  .topnav .topnav-drawer .dropdown-item.active {
+    background: var(--sidebar-active-bg);
+    color: #fff;
   }
 }
 
@@ -751,6 +789,9 @@ body {
   .sidebar {
     position: fixed;
     left: 0; top: 0; bottom: 0;
+    /* 100dvh descuenta la barra del navegador móvil; con 100vh el footer
+       (usuario + cerrar sesión) queda oculto debajo de esa barra. */
+    height: 100dvh;
     transform: translateX(-100%);
     transition: transform var(--transition-med);
     will-change: transform;
@@ -758,9 +799,21 @@ body {
     width: var(--sidebar-width) !important;
   }
 
+  /* El footer se sobrepone sobre la barra de navegación del navegador
+     respetando el área segura (notch / indicador de inicio en iOS). */
+  .sidebar .sidebar-footer {
+    padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
   .sidebar.mobile-open {
     transform: translateX(0);
     box-shadow: 4px 0 32px rgba(0,0,0,0.25);
+  }
+
+  /* El colapso de menú es solo de escritorio; en móvil no hace nada,
+     así que ocultamos el botón. */
+  .sidebar #sidebarToggle {
+    display: none !important;
   }
 
   /* En mobile, labels siempre visibles (no aplica el colapso de desktop) */
@@ -1133,4 +1186,52 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============================================================
+   DataTables Responsive — child-row para tablas CORE
+   (usuarios, roles, permisos, estado). Mismo estilizado que el
+   CRUD Engine (crud-engine.css) pero global, ya que estas tablas
+   no viven bajo .crud-engine. Aplica a cualquier tabla inicializada
+   con la clase `.js-dt-responsive`. Respeta data-bs-theme.
+   ============================================================ */
+
+/* Icono de control oculto: el disparador es toda la fila (target 'tr'). */
+table.js-dt-responsive.dataTable > tbody > tr > td.dtr-control:before,
+table.js-dt-responsive.dataTable > tbody > tr.dtr-expanded > td.dtr-control:before {
+  display: none !important;
+}
+table.js-dt-responsive.dataTable > tbody > tr > td.dtr-control {
+  padding-left: 0.75rem;
+}
+
+/* La fila completa es clicable cuando la tabla está colapsada (móvil). */
+table.js-dt-responsive.dataTable.collapsed > tbody > tr {
+  cursor: pointer;
+}
+
+/* Lista de detalle del child-row. */
+table.js-dt-responsive.dataTable > tbody > tr.child ul.dtr-details {
+  width: 100%;
+}
+table.js-dt-responsive.dataTable > tbody > tr.child ul.dtr-details > li {
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+  padding: 0.4rem 0;
+}
+table.js-dt-responsive.dataTable > tbody > tr.child ul.dtr-details > li:last-child {
+  border-bottom: none;
+}
+table.js-dt-responsive.dataTable > tbody > tr.child span.dtr-title {
+  color: var(--bs-secondary-color);
+  min-width: 35%;
+  font-weight: 600;
+}
+
+/* Dark mode: fondo del child-row alineado al cuerpo. */
+[data-bs-theme="dark"] table.js-dt-responsive.dataTable > tbody > tr.child,
+[data-bs-theme="dark"] table.js-dt-responsive.dataTable > tbody > tr.child td {
+  background: var(--bs-body-bg, #212529);
+}
+[data-bs-theme="dark"] table.js-dt-responsive.dataTable > tbody > tr.child ul.dtr-details > li {
+  border-bottom-color: var(--bs-border-color-translucent, rgba(255, 255, 255, 0.12));
 }

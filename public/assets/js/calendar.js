@@ -37,6 +37,7 @@
         this.el = el;
         this.feed = el.getAttribute('data-feed') || '';
         this.crudBase = el.getAttribute('data-crud-base') || '';
+        this.calendarUrl = el.getAttribute('data-calendar-url') || '';
         this.startField = el.getAttribute('data-start-field') || '';
         this.openDetail = el.getAttribute('data-open-detail') === '1';
         this.canCreate = el.getAttribute('data-can-create') === '1';
@@ -324,11 +325,16 @@
         }
     };
 
+    Calendar.prototype.returnQuery = function () {
+        if (!this.calendarUrl) { return ''; }
+        return '&return_to=' + encodeURIComponent(this.calendarUrl);
+    };
+
     Calendar.prototype.createOnSlot = function (date) {
         if (!this.canCreate || !this.crudBase || !date) { return; }
         var param = this.startField || 'fecha';
         window.location.href = this.crudBase + '/crear?' +
-            encodeURIComponent(param) + '=' + encodeURIComponent(date);
+            encodeURIComponent(param) + '=' + encodeURIComponent(date) + this.returnQuery();
     };
 
     Calendar.prototype.closePopover = function () {
@@ -359,7 +365,9 @@
         }
         if (this.canEdit && this.crudBase) {
             html += '<a class="btn btn-sm btn-outline-primary" href="' + escapeHtml(this.crudBase) +
-                '/' + encodeURIComponent(ev.id) + '/editar"><i class="bi bi-pencil"></i> Editar</a>';
+                '/' + encodeURIComponent(ev.id) + '/editar' +
+                (this.calendarUrl ? ('?return_to=' + encodeURIComponent(this.calendarUrl)) : '') +
+                '"><i class="bi bi-pencil"></i> Editar</a>';
         }
         if (this.canDelete && this.crudBase) {
             html += '<form method="POST" class="d-inline" action="' + escapeHtml(this.crudBase) +
@@ -367,6 +375,7 @@
                 ' data-confirm="¿Eliminar este registro? Esta acción no se puede deshacer."' +
                 ' data-confirm-title="Eliminar" data-confirm-variant="danger" data-confirm-ok="Eliminar">' +
                 '<input type="hidden" name="_csrf_token" value="' + escapeHtml(this.csrf) + '">' +
+                (this.calendarUrl ? ('<input type="hidden" name="return_to" value="' + escapeHtml(this.calendarUrl) + '">') : '') +
                 '<button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Eliminar</button></form>';
         }
         html += '</div>';

@@ -6,6 +6,7 @@ namespace App\Kernel\BaseClasses;
 
 use App\Kernel\Http\Request;
 use App\Kernel\Http\Response;
+use App\Kernel\Http\SafeRedirect;
 use App\Kernel\Helpers\ViewHelper;
 use App\Kernel\Security\Session;
 use App\Kernel\Security\Csrf;
@@ -30,7 +31,7 @@ abstract class BaseController
 
     protected function back(Request $request): Response
     {
-        $referer = $request->header('Referer', '/');
+        $referer = SafeRedirect::toInternal($request->header('Referer', '/'));
         return Response::redirect($referer);
     }
 

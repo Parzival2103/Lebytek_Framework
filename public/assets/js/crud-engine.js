@@ -2,16 +2,6 @@
     'use strict';
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Generic confirm for single + bulk POST action forms.
-        document.querySelectorAll('form.js-crud-action, form.js-crud-bulk-form').forEach(function (form) {
-            form.addEventListener('submit', function (e) {
-                var msg = form.getAttribute('data-confirm');
-                if (msg && !window.confirm(msg)) {
-                    e.preventDefault();
-                }
-            });
-        });
-
         var bar = document.querySelector('[data-crud-bulk-bar]');
         if (!bar) { return; }
 

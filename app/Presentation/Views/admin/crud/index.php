@@ -242,9 +242,11 @@ $tableClass = 'table table-hover table-striped align-middle mb-0' . ($tableCompa
     var sel = '#crudTable';
     if (!jQuery(sel).length || jQuery.fn.DataTable.isDataTable(sel)) return;
     jQuery(sel).DataTable({
-      // target: 'tr' → toda la fila expande/colapsa el detalle (no solo el icono).
-      // El icono dtr-control queda oculto por CSS (crud-engine.css).
-      responsive: { details: { type: 'inline', target: 'tr' } },
+      // type: 'column' + target: 'tr' → TODA la fila expande/colapsa el detalle.
+      // OJO: con type 'inline' la extensión fuerza target a la 1ª celda (ignora 'tr');
+      // en modo 'column' sin columna de control designada, el target 'tr' se respeta
+      // y no se dibuja ningún icono.
+      responsive: { details: { type: 'column', target: 'tr' } },
       paging: false,
       searching: false,
       info: false,

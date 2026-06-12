@@ -27,7 +27,6 @@
         <button class="btn btn-ghost topbar-btn topbar-notif-btn position-relative"
                 title="Notificaciones">
             <i class="bi bi-bell"></i>
-            <span class="topbar-badge badge rounded-pill bg-danger">0</span>
         </button>
 
         <!-- Tema -->
