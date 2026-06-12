@@ -456,6 +456,20 @@ const ConfirmModal = (() => {
     ok: 'Confirmar',
     cancel: 'Cancelar',
     variant: 'primary',
+    cancelVariant: '',
+    icon: '',
+    emphasis: '',
+  };
+
+  // Whitelist: evita inyección de clases arbitrarias vía data-attributes.
+  const VARIANTS = ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'];
+
+  const ICONS = {
+    warning:  'bi-exclamation-triangle-fill text-warning',
+    danger:   'bi-exclamation-octagon-fill text-danger',
+    success:  'bi-check-circle-fill text-success',
+    info:     'bi-info-circle-fill text-info',
+    question: 'bi-question-circle-fill text-primary',
   };
 
   let pending = null;
@@ -468,18 +482,48 @@ const ConfirmModal = (() => {
     return { el, instance: modalInstance };
   }
 
+  // Construye el body con nodos DOM (nunca innerHTML) y subraya
+  // la primera ocurrencia de `emphasis` dentro de `body`.
+  function renderBody(bodyEl, body, emphasis) {
+    bodyEl.textContent = '';
+    const idx = emphasis ? body.indexOf(emphasis) : -1;
+    if (idx === -1) {
+      bodyEl.textContent = body;
+      return;
+    }
+    bodyEl.append(document.createTextNode(body.slice(0, idx)));
+    const u = document.createElement('u');
+    u.className = 'ct-confirm-emphasis';
+    u.textContent = emphasis;
+    bodyEl.append(u);
+    bodyEl.append(document.createTextNode(body.slice(idx + emphasis.length)));
+  }
+
   function applyOptions(opts) {
     const titleEl = document.getElementById('confirmModalTitle');
     const bodyEl = document.getElementById('confirmModalBody');
     const okBtn = document.getElementById('confirmModalOk');
     const cancelBtn = document.getElementById('confirmModalCancel');
+    const iconEl = document.getElementById('confirmModalIcon');
     if (!titleEl || !bodyEl || !okBtn || !cancelBtn) return;
 
     titleEl.textContent = opts.title;
-    bodyEl.textContent = opts.body;
+    renderBody(bodyEl, opts.body, opts.emphasis);
     okBtn.textContent = opts.ok;
     cancelBtn.textContent = opts.cancel;
-    okBtn.className = 'btn ' + (opts.variant === 'danger' ? 'btn-danger' : 'btn-primary');
+
+    const variant = VARIANTS.includes(opts.variant) ? opts.variant : 'primary';
+    okBtn.className = 'btn btn-' + variant;
+    cancelBtn.className = VARIANTS.includes(opts.cancelVariant)
+      ? 'btn btn-' + opts.cancelVariant
+      : 'btn btn-outline-secondary';
+
+    if (iconEl) {
+      const iconClass = ICONS[opts.icon] || '';
+      iconEl.className = iconClass
+        ? 'ct-confirm-icon bi ' + iconClass
+        : 'ct-confirm-icon d-none';
+    }
   }
 
   function show(options = {}) {
@@ -520,6 +564,9 @@ const ConfirmModal = (() => {
   return { show, init };
 })();
 
+// API pública para otros módulos: window.Lebytek.confirm(opts) => Promise<boolean>
+window.Lebytek = Object.assign(window.Lebytek || {}, { confirm: ConfirmModal.show });
+
 /* ============================================================
    MÓDULO: Confirmaciones de formulario (data-confirm)
    ============================================================ */
@@ -538,6 +585,9 @@ const ConfirmForms = (() => {
       variant: el.dataset.confirmVariant || 'primary',
       ok: el.dataset.confirmOk || 'Confirmar',
       cancel: el.dataset.confirmCancel || 'Cancelar',
+      cancelVariant: el.dataset.confirmCancelVariant || '',
+      icon: el.dataset.confirmIcon || '',
+      emphasis: el.dataset.confirmEmphasis || '',
     };
   }
 
