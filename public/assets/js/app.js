@@ -411,6 +411,20 @@ const ColorPicker = (() => {
       applyColor('navbar_color',  '#1a1d2e');
       applyColor('body_color',    '#f0f2f5');
     });
+
+    const mostrarNombreCb = document.getElementById('empresa_mostrar_nombre');
+    const previewTitle = document.getElementById('navbarPreviewTitle');
+    const empresaNombreInput = document.getElementById('empresa_nombre');
+
+    mostrarNombreCb?.addEventListener('change', () => {
+      previewTitle?.classList.toggle('d-none', !mostrarNombreCb.checked);
+    });
+
+    empresaNombreInput?.addEventListener('input', () => {
+      if (previewTitle) {
+        previewTitle.textContent = empresaNombreInput.value.trim() || 'Framework Lebytek';
+      }
+    });
   }
 
   return { init, applyColor, buildPresets };

@@ -1,7 +1,9 @@
 <?php
 use App\Kernel\Helpers\ViewHelper;
+use App\Kernel\Constants\AppConstants;
 
 $uri = $currentUri ?? '/';
+$mostrarEmpresaNombre = AppConstants::empresaMostrarNombre($mostrarEmpresaNombre ?? null);
 
 $isActive = static function (?string $path) use ($uri): string {
     if ($path === null || $path === '') return '';
@@ -23,7 +25,9 @@ $menuItems = $menuFiltrado ?? [];
             <div class="sidebar-icon-brand me-2">
                 <i class="bi bi-grid-3x3-gap-fill"></i>
             </div>
+            <?php if ($mostrarEmpresaNombre): ?>
             <span class="sidebar-brand-text fw-bold text-truncate"><?= ViewHelper::e($empresaNombre) ?></span>
+            <?php endif; ?>
         <?php endif; ?>
         <button class="btn btn-link <?= !empty($empresaLogo) ? 'ms-auto' : '' ?> sidebar-toggle p-0" id="sidebarToggle" aria-label="Colapsar menú">
             <i class="bi bi-chevron-left"></i>

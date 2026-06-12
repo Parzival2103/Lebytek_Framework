@@ -1,8 +1,10 @@
 <?php
 use App\Kernel\Helpers\ViewHelper;
+use App\Kernel\Constants\AppConstants;
 
 $uri = $currentUri ?? (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $menuItems = $menuFiltrado ?? [];
+$mostrarEmpresaNombre = AppConstants::empresaMostrarNombre($mostrarEmpresaNombre ?? null);
 ?>
 
 <nav class="navbar navbar-expand-lg topnav ct-topbar shadow-sm">
@@ -13,7 +15,9 @@ $menuItems = $menuFiltrado ?? [];
             <?php else: ?>
                 <i class="bi bi-grid-3x3-gap-fill"></i>
             <?php endif; ?>
+            <?php if ($mostrarEmpresaNombre): ?>
             <span class="fw-bold"><?= ViewHelper::e($empresaNombre) ?></span>
+            <?php endif; ?>
         </a>
 
         <!-- Hamburguesa: abre el drawer en móvil (<992px). Wired por NavDrawer en app.js -->
