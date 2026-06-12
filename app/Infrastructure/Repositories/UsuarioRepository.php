@@ -78,6 +78,14 @@ final class UsuarioRepository extends BaseRepository implements UsuarioRepositor
         );
     }
 
+    public function actualizarAvatar(int $usuarioId, ?string $ruta): void
+    {
+        $this->execute(
+            "UPDATE auth_usuarios SET avatar = ?, updated_at = NOW() WHERE id = ?",
+            [$ruta, $usuarioId]
+        );
+    }
+
     public function delete(int $id): void
     {
         parent::softDelete($id);

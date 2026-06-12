@@ -29,6 +29,9 @@ interface UsuarioRepositoryInterface
 
     public function update(Usuario $usuario): void;
 
+    /** Actualiza solo la columna avatar (cache denormalizado del avatar actual). */
+    public function actualizarAvatar(int $usuarioId, ?string $ruta): void;
+
     public function delete(int $id): void;
 
     public function emailExists(Email $email, ?int $excludeId = null): bool;
