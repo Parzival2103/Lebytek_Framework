@@ -45,7 +45,6 @@ use App\Application\Services\CrudFormBuilder;
 use App\Application\Services\CrudHandlerRegistry;
 use App\Application\Services\CrudRelationService;
 use App\Application\Services\CrudScopeResolver;
-use App\Application\Services\UploadValidator;
 use App\Application\Services\FileUploadService;
 use App\Application\Services\ImageProcessor;
 use App\Domain\Interfaces\ArchivoRepositoryInterface;
@@ -134,7 +133,7 @@ return static function (Container $container): void {
         $c->get(CrudDbConstraintValidator::class),
         $c->get(CrudHandlerRegistry::class),
         $c->get(CrudScopeResolver::class),
-        new UploadValidator(((int) \App\Kernel\Config\Config::get('security.max_upload_mb', 10)) * 1024 * 1024)
+        $c->get(FileUploadService::class)
     ));
     $container->singleton(CrudRelationService::class, fn(Container $c) => new CrudRelationService(
         $c->get(GenericCrudRepository::class)

@@ -38,7 +38,7 @@ final class CrudDataService
         private readonly ?CrudDbConstraintValidator $dbConstraintValidator = null,
         private readonly ?CrudHandlerRegistry $handlerRegistry = null,
         private readonly ?CrudScopeResolver $scopeResolver = null,
-        private readonly ?UploadValidator $uploadValidator = null
+        private readonly ?FileUploadService $fileUploadService = null
     ) {}
 
     public function list(CrudResourceDefinition $definition, array $query, ?int $userId = null, ?callable $can = null): array
@@ -606,7 +606,8 @@ final class CrudDataService
             }
 
             try {
-                $path = $this->handleUpload($definition, $field, $files);
+                $rowId = $existingRow !== null ? (int) ($existingRow[$definition->primaryKey()] ?? 0) : null;
+                $path = $this->handleUpload($definition, $field, $files, $rowId !== 0 ? $rowId : null, $userId);
                 if ($path !== null) {
                     $payload[$name] = $path;
                 }
@@ -620,7 +621,7 @@ final class CrudDataService
         return $payload;
     }
 
-    private function handleUpload(CrudResourceDefinition $definition, CrudFieldDefinition $field, array $files): ?string
+    private function handleUpload(CrudResourceDefinition $definition, CrudFieldDefinition $field, array $files, ?int $rowId = null, ?int $userId = null): ?string
     {
         if (!$definition->uploadsEnabled()) {
             return null;
@@ -631,50 +632,26 @@ final class CrudDataService
             return null;
         }
 
-        $original = (string) ($file['name'] ?? '');
-        $tmpName = (string) ($file['tmp_name'] ?? '');
-
-        $detectedMime = null;
-        if ($tmpName !== '' && is_readable($tmpName) && function_exists('finfo_open')) {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            if ($finfo !== false) {
-                $detectedMime = finfo_file($finfo, $tmpName) ?: null;
-                finfo_close($finfo);
-            }
-        }
-
         $allowed = $field->validation()['allowed_extensions'] ?? null;
-        $validator = $this->uploadValidator ?? new UploadValidator(
-            ((int) Config::get('security.max_upload_mb', 10)) * 1024 * 1024
-        );
-        $extension = $validator->assertValid(
-            $file,
-            $field->label(),
-            is_array($allowed) ? $allowed : null,
-            $detectedMime
+
+        $service = $this->fileUploadService ?? new FileUploadService(
+            new ImageProcessor(),
+            new \App\Infrastructure\Repositories\ArchivoRepository()
         );
 
-        $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($original, PATHINFO_FILENAME));
-        if ($safeName === '') {
-            $safeName = 'upload';
-        }
-        $filename = $safeName . '_' . date('YmdHis') . '_' . bin2hex(random_bytes(4));
-        if ($extension !== '') {
-            $filename .= '.' . $extension;
-        }
+        $archivo = $service->handle($file, new \App\Application\DTO\Files\FileUploadConfig(
+            entidadTipo: 'crud:' . $definition->key(),
+            directorio: $definition->uploadsPath(),
+            maxBytes: ((int) Config::get('security.max_upload_mb', 10)) * 1024 * 1024,
+            entidadId: $rowId,
+            coleccion: $field->name(),
+            disco: 'public',
+            allowedExtensions: is_array($allowed) ? $allowed : null,
+            imagen: null,
+            esActual: false,
+            creadoPor: $userId
+        ), $field->label());
 
-        $publicRelative = trim($definition->uploadsPath(), '/');
-        $publicAbsolute = PUBLIC_PATH . '/' . $publicRelative;
-
-        if (!is_dir($publicAbsolute) && !mkdir($publicAbsolute, 0775, true) && !is_dir($publicAbsolute)) {
-            throw new ValidationException('No fue posible crear el directorio de uploads.');
-        }
-
-        $destination = $publicAbsolute . '/' . $filename;
-        if (!move_uploaded_file($tmpName, $destination)) {
-            throw new ValidationException('No fue posible guardar el archivo subido.');
-        }
-
-        return '/' . $publicRelative . '/' . $filename;
+        return $archivo->ruta();
     }
 }
