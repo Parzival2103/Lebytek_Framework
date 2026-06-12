@@ -99,9 +99,9 @@ final class ArchivoRepository extends BaseRepository implements ArchivoRepositor
         }
     }
 
-    public function softDelete(int $archivoId): void
+    public function softDelete(int $archivoId): int
     {
-        $this->execute(
+        return $this->execute(
             "UPDATE {$this->table} SET deleted_at = NOW(), es_actual = 0 WHERE id = ?",
             [$archivoId]
         );

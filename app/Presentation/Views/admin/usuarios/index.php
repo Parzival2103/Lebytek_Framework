@@ -56,9 +56,11 @@
                     <tr data-id="<?= (int) $u['id'] ?>">
                         <td class="px-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="table-avatar flex-shrink-0">
-                                    <?= strtoupper(substr($u['nombre'], 0, 1)) ?>
-                                </div>
+                                <?= ViewHelper::partial('avatar_thumb', [
+                                    'thumbClase'  => 'table-avatar flex-shrink-0',
+                                    'thumbRuta'   => $u['avatar'] ?? null,
+                                    'thumbNombre' => $u['nombre'],
+                                ]) ?>
                                 <div>
                                     <div class="fw-medium"><?= ViewHelper::e($u['nombreCompleto']) ?></div>
                                 </div>

@@ -34,6 +34,6 @@ interface ArchivoRepositoryInterface
     /** Transaccional: pone es_actual=0 a toda la colección y =1 al elegido. */
     public function marcarActual(int $archivoId, string $tipo, int $entidadId, string $coleccion): void;
 
-    /** Soft delete: setea deleted_at=NOW() y es_actual=0. */
-    public function softDelete(int $archivoId): void;
+    /** Soft delete: setea deleted_at=NOW() y es_actual=0. Devuelve filas afectadas. */
+    public function softDelete(int $archivoId): int;
 }

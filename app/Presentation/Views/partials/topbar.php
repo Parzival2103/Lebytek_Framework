@@ -43,9 +43,11 @@
         <div class="dropdown">
             <button class="btn btn-ghost topbar-btn d-flex align-items-center gap-2"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                <div class="topbar-avatar">
-                    <?= strtoupper(substr($usuario['nombre'] ?? 'U', 0, 1)) ?>
-                </div>
+                <?= ViewHelper::partial('avatar_thumb', [
+                    'thumbClase'  => 'topbar-avatar',
+                    'thumbRuta'   => $usuario['avatar'] ?? null,
+                    'thumbNombre' => $usuario['nombre'] ?? 'U',
+                ]) ?>
                 <span class="d-none d-md-inline small fw-medium">
                     <?= ViewHelper::e($usuario['nombre'] ?? '') ?>
                 </span>

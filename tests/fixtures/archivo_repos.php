@@ -109,13 +109,15 @@ if (!class_exists('FakeArchivoRepository')) {
             }
         }
 
-        public function softDelete(int $archivoId): void
+        public function softDelete(int $archivoId): int
         {
             $archivo = $this->archivos[$archivoId] ?? null;
             if ($archivo === null) {
-                return;
+                return 0;
             }
             $this->archivos[$archivoId] = $archivo->marcarBorrado();
+
+            return 1;
         }
     }
 }

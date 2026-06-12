@@ -81,9 +81,11 @@ $menuItems = $menuFiltrado ?? [];
     <!-- Perfil en pie del sidebar -->
     <div class="sidebar-footer px-3 py-3 border-top">
         <div class="d-flex align-items-center gap-2">
-            <div class="sidebar-avatar">
-                <?= strtoupper(substr($usuario['nombre'] ?? 'U', 0, 1)) ?>
-            </div>
+            <?= ViewHelper::partial('avatar_thumb', [
+                'thumbClase'  => 'sidebar-avatar',
+                'thumbRuta'   => $usuario['avatar'] ?? null,
+                'thumbNombre' => $usuario['nombre'] ?? 'U',
+            ]) ?>
             <div class="sidebar-user-info nav-label overflow-hidden">
                 <div class="fw-medium text-truncate small"><?= ViewHelper::e($usuario['nombreCompleto'] ?? $usuario['nombre'] ?? '') ?></div>
                 <div class="ct-sidebar-user-email"><?= ViewHelper::e($usuario['email'] ?? '') ?></div>

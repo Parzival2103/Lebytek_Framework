@@ -339,6 +339,18 @@ body {
   justify-content: center;
   flex-shrink: 0;
   letter-spacing: 0;
+  overflow: hidden;
+}
+
+/* Miniatura de avatar dentro del círculo (partial avatar_thumb) */
+.sidebar-avatar img,
+.topbar-avatar img,
+.table-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 
 .table-product-thumb {
