@@ -427,23 +427,57 @@ Los botones deben tener jerarquía clara.
 
 Todas las confirmaciones del panel admin usan el modal Bootstrap `#confirmModal`, montado una vez en [`layouts/base.php`](../../app/Presentation/Views/layouts/base.php) vía [`partials/confirm_modal.php`](../../app/Presentation/Views/partials/confirm_modal.php). El comportamiento lo orquesta `ConfirmForms` en [`public/assets/js/app.js`](../../public/assets/js/app.js).
 
-**Contrato HTML** (atributos en `<form>` o `<button type="submit">`):
+#### Opciones configurables
 
-| Atributo | Obligatorio | Default |
-|---|---|---|
-| `data-confirm` | sí | — (cuerpo del modal) |
-| `data-confirm-title` | no | `Confirmar acción` |
-| `data-confirm-variant` | no | `primary` (`danger` para eliminar) |
-| `data-confirm-ok` | no | `Confirmar` |
-| `data-confirm-cancel` | no | `Cancelar` |
+Cualquier módulo puede usar el confirm global por dos vías:
+
+**1. Declarativa (atributos `data-confirm-*`)** — sobre un `<form>` o elemento clickeable. Desde PHP usar `ViewHelper::confirmAttrs()`:
+
+```php
+<form method="POST" action="/logout" <?= ViewHelper::confirmAttrs([
+    'body'    => '¿Deseas cerrar la sesión actual?',
+    'title'   => 'Cerrar sesión',
+    'ok'      => 'Cerrar sesión',
+    'variant' => 'danger',
+    'icon'    => 'warning',
+]) ?>>
+```
+
+**2. Programática (JS)** — `window.Lebytek.confirm(opts)` devuelve `Promise<boolean>`:
+
+```js
+const ok = await window.Lebytek.confirm({
+  title: 'Publicar cambios',
+  body: 'Los cambios serán visibles de inmediato',
+  emphasis: 'de inmediato',   // fragmento del body que se subraya
+  icon: 'info',               // warning | danger | success | info | question
+  variant: 'success',         // color del botón OK (paleta Bootstrap, whitelist)
+  cancelVariant: 'dark',      // opcional: color sólido del botón cancelar
+  ok: 'Publicar',
+  cancel: 'Todavía no',
+});
+```
+
+| Opción | Data-attribute | Default | Notas |
+|---|---|---|---|
+| `body` | `data-confirm` | `¿Confirmar esta acción?` | Activa la intercepción; texto plano |
+| `title` | `data-confirm-title` | `Confirmar acción` | |
+| `ok` | `data-confirm-ok` | `Confirmar` | Texto del botón confirmar |
+| `cancel` | `data-confirm-cancel` | `Cancelar` | Texto del botón cancelar |
+| `variant` | `data-confirm-variant` | `primary` | `primary\|secondary\|success\|danger\|warning\|info\|dark` |
+| `cancelVariant` | `data-confirm-cancel-variant` | outline-secondary | Misma whitelist |
+| `icon` | `data-confirm-icon` | sin icono | `warning\|danger\|success\|info\|question` |
+| `emphasis` | `data-confirm-emphasis` | sin énfasis | Primera ocurrencia dentro de `body`; se subraya |
+
+Las variantes e iconos fuera de la whitelist caen al default (previene inyección de clases). El body y el énfasis se renderizan como texto (sin HTML). Los `confirm()` nativos del navegador están prohibidos en vistas (test de contrato `tests/Presentation/ConfirmModalContractTest.php`).
 
 **Reglas:**
 
 - No incrustar modales de confirmación en vistas de módulo.
 - No usar `window.confirm` ni `#crudDeleteModal` (legado eliminado).
 - Acciones destructivas: `data-confirm-variant="danger"`.
-- Defaults de delete CRUD: [`UiConfirmConstants`](../../app/Kernel/Constants/UiConfirmConstants.php).
-- JS custom: `window.App.ConfirmModal.show({ title, body, variant, ok, cancel })`.
+- Defaults de delete CRUD y logout: [`UiConfirmConstants`](../../app/Kernel/Constants/UiConfirmConstants.php).
+- JS custom: `window.Lebytek.confirm({ title, body, variant, ok, cancel, icon, emphasis, cancelVariant })`.
 
 ### Configuración
 
