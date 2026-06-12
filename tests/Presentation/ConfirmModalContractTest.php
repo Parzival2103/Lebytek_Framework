@@ -31,3 +31,14 @@ test('Layout base incluye partial confirm_modal', function (): void {
     $content = (string) file_get_contents($layoutPath);
     assert_true(str_contains($content, "partial('confirm_modal')"));
 });
+
+test('Partial confirm_modal incluye slot de icono y elementos requeridos', function (): void {
+    $path = APP_PATH . '/Presentation/Views/partials/confirm_modal.php';
+    $content = (string) file_get_contents($path);
+
+    assert_true(str_contains($content, 'id="confirmModalIcon"'), 'Falta slot de icono');
+    assert_true(str_contains($content, 'id="confirmModalTitle"'));
+    assert_true(str_contains($content, 'id="confirmModalBody"'));
+    assert_true(str_contains($content, 'id="confirmModalOk"'));
+    assert_true(str_contains($content, 'id="confirmModalCancel"'));
+});

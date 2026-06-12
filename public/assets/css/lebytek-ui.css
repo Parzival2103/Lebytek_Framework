@@ -309,6 +309,18 @@ body.ct-density-compact .ct-form-card .card-body {
   line-height: 1.5;
 }
 
+.ct-confirm-modal .ct-confirm-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-right: 0.5rem;
+}
+
+.ct-confirm-modal .ct-confirm-emphasis {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  font-weight: 600;
+}
+
 /* ==========================================================================
    Módulo Calendario
    ========================================================================== */
