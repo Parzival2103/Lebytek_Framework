@@ -2,6 +2,14 @@
 
 <div class="row justify-content-center">
     <div class="col-12 col-xl-8">
+        <?php /* Sección propia, fuera del <form> principal (sin formularios anidados). */ ?>
+        <div class="mb-4">
+            <?= ViewHelper::partial('avatar_manager', [
+                'avatarBaseUrl'   => '/admin/administracion/usuarios/' . (int) $usuario['id'] . '/avatar',
+                'avatarHistorial' => $historial ?? [],
+            ]) ?>
+        </div>
+
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <form method="POST" action="/admin/administracion/usuarios/<?= (int) $usuario['id'] ?>" id="usuarioForm">
@@ -80,3 +88,5 @@
         </div>
     </div>
 </div>
+
+<script src="<?= ViewHelper::asset('js/avatar-manager.js') ?>" defer></script>

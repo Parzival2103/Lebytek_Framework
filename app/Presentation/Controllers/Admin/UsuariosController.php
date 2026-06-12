@@ -119,6 +119,10 @@ final class UsuariosController extends AdminBaseController
             'usuario'         => $usuario->toArray(),
             'roles'           => array_map(fn($rol) => $rol->toArray(), $roles),
             'rolIdsAsignados' => $rolIdsAsignados,
+            'historial'       => array_map(
+                fn($archivo) => $archivo->toArray(),
+                $this->listarAvataresUseCase->execute($id)
+            ),
         ]);
     }
 
