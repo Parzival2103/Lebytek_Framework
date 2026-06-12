@@ -32,6 +32,9 @@ interface UsuarioRepositoryInterface
     /** Actualiza solo la columna avatar (cache denormalizado del avatar actual). */
     public function actualizarAvatar(int $usuarioId, ?string $ruta): void;
 
+    /** Activa la cuenta y registra el momento de verificación del correo. */
+    public function marcarEmailVerificado(int $usuarioId): void;
+
     public function delete(int $id): void;
 
     public function emailExists(Email $email, ?int $excludeId = null): bool;

@@ -12,7 +12,9 @@ return [
     'version'     => '1.0.0',
     'obligatorio' => true,
     'requiere'    => [],
-    'migraciones' => [],
+    'migraciones' => [
+        '20260612120000_auth_registro_recuperacion.sql',
+    ],
     'seeds'       => [],
     'cruds'       => [],
     'permisos'    => [

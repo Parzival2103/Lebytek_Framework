@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `auth_usuarios` (
   `avatar`        VARCHAR(500)     DEFAULT NULL,
   `activo`        TINYINT(1)       NOT NULL DEFAULT 1,
   `ultimo_acceso` DATETIME         DEFAULT NULL,
+  `email_verificado_en` DATETIME   DEFAULT NULL,
   `created_at`    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`    DATETIME         DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -82,6 +83,23 @@ CREATE TABLE IF NOT EXISTS `auth_usuarios_roles` (
     FOREIGN KEY (`usuario_id`) REFERENCES `auth_usuarios`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_usuarios_roles_rol`
     FOREIGN KEY (`rol_id`)     REFERENCES `auth_roles`(`id`)    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `auth_tokens` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `usuario_id` INT UNSIGNED    NOT NULL,
+  `tipo`       VARCHAR(30)     NOT NULL,
+  `token_hash` CHAR(64)        NOT NULL,
+  `expira_en`  DATETIME        NOT NULL,
+  `usado_en`   DATETIME        DEFAULT NULL,
+  `created_at` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_tokens_usuario_tipo` (`usuario_id`, `tipo`),
+  INDEX `idx_tokens_hash` (`token_hash`),
+  CONSTRAINT `fk_tokens_usuario`
+      FOREIGN KEY (`usuario_id`) REFERENCES `auth_usuarios`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -284,7 +302,8 @@ INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`, `descripcion`) V
 INSERT IGNORE INTO `auth_roles` (`nombre`, `slug`, `descripcion`) VALUES
   ('Administrador', 'administrador', 'Acceso total al sistema'),
   ('Operador', 'operador', 'Acceso al dashboard (extender al añadir dominio)'),
-  ('Soporte', 'soporte', 'Rol de ejemplo mínimo hasta definir módulos');
+  ('Soporte', 'soporte', 'Rol de ejemplo mínimo hasta definir módulos'),
+  ('Usuario', 'usuario', 'Usuario registrado desde el formulario público');
 
 INSERT IGNORE INTO `auth_roles_permisos` (`rol_id`, `permiso_id`)
 SELECT `r`.`id`, `p`.`id`
@@ -296,7 +315,7 @@ INSERT IGNORE INTO `auth_roles_permisos` (`rol_id`, `permiso_id`)
 SELECT `r`.`id`, `p`.`id`
 FROM `auth_roles` `r`
 INNER JOIN `auth_permisos` `p` ON `p`.`slug` = 'dashboard.ver'
-WHERE `r`.`slug` IN ('operador', 'soporte');
+WHERE `r`.`slug` IN ('operador', 'soporte', 'usuario');
 
 INSERT IGNORE INTO `core_menu_items`
   (`parent_id`, `orden`, `slug`, `label`, `icon`, `url`, `match`, `permiso_slug`, `vertical_module`, `activo`)

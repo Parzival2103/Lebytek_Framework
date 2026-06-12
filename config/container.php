@@ -22,8 +22,20 @@ use App\Application\UseCases\Roles\CrearRolUseCase;
 use App\Application\UseCases\Roles\ListarRolesUseCase;
 use App\Application\UseCases\Roles\ActualizarRolUseCase;
 use App\Application\UseCases\Roles\EliminarRolUseCase;
+use App\Application\Services\AuthTokenService;
+use App\Application\Services\CorreoAuthService;
 use App\Application\UseCases\Auth\LoginUseCase;
 use App\Application\UseCases\Auth\LogoutUseCase;
+use App\Application\UseCases\Auth\RegistrarUsuarioUseCase;
+use App\Application\UseCases\Auth\ReenviarVerificacionUseCase;
+use App\Application\UseCases\Auth\VerificarCorreoUseCase;
+use App\Application\UseCases\Auth\SolicitarRecuperacionUseCase;
+use App\Application\UseCases\Auth\RestablecerPasswordUseCase;
+use App\Domain\Interfaces\AuthTokenRepositoryInterface;
+use App\Domain\Interfaces\MailerInterface;
+use App\Infrastructure\Repositories\AuthTokenRepository;
+use App\Infrastructure\Mail\LogMailer;
+use App\Infrastructure\Mail\PhpMailerMailer;
 use App\Application\UseCases\Dashboard\BuildDashboardViewModelUseCase;
 use App\Domain\Interfaces\DashboardContributionProviderInterface;
 use App\Domain\Interfaces\MenuCatalogRepositoryInterface;
@@ -93,6 +105,25 @@ return static function (Container $container): void {
             $c->get(RolRepositoryInterface::class)
         )
     );
+
+    $container->singleton(AuthTokenRepositoryInterface::class, fn() => new AuthTokenRepository());
+
+    $container->singleton(MailerInterface::class, static function (): MailerInterface {
+        $mailConfig = (array) Config::get('mail', []);
+        return ($mailConfig['driver'] ?? 'log') === 'smtp'
+            ? new PhpMailerMailer($mailConfig)
+            : new LogMailer();
+    });
+
+    $container->singleton(AuthTokenService::class, fn(Container $c) => new AuthTokenService(
+        $c->get(AuthTokenRepositoryInterface::class),
+        (int) Config::get('auth.tokens.max_por_hora', 3)
+    ));
+
+    $container->singleton(CorreoAuthService::class, fn(Container $c) => new CorreoAuthService(
+        $c->get(MailerInterface::class),
+        (string) Config::get('app.url', 'http://localhost')
+    ));
 
     $container->singleton(RbacService::class, fn() => new RbacService());
     $container->singleton(BitacoraRepositoryInterface::class, fn() => new BitacoraRepository());
@@ -256,6 +287,47 @@ return static function (Container $container): void {
             new LoginUseCase($authService, new LoginValidator()),
             new LogoutUseCase($authService),
             $c->get(ConfiguracionService::class)
+        );
+    });
+
+    $container->bind(\App\Presentation\Controllers\RegistroController::class, function (Container $c) {
+        $usuarioRepo = $c->get(UsuarioRepositoryInterface::class);
+        $habilitado  = (bool) Config::get('auth.registro.habilitado', false);
+        $ttlVerif    = (int) Config::get('auth.tokens.verificacion_ttl_min', 1440);
+        return new \App\Presentation\Controllers\RegistroController(
+            $c->get(ConfiguracionService::class),
+            new RegistrarUsuarioUseCase(
+                usuarioRepo:        $usuarioRepo,
+                rolRepo:            $c->get(RolRepositoryInterface::class),
+                validator:          new CrearUsuarioValidator(),
+                tokens:             $c->get(AuthTokenService::class),
+                correo:             $c->get(CorreoAuthService::class),
+                habilitado:         $habilitado,
+                rolDefault:         (string) Config::get('auth.registro.rol_default', 'usuario'),
+                verificacionTtlMin: $ttlVerif
+            ),
+            new VerificarCorreoUseCase($c->get(AuthTokenRepositoryInterface::class), $usuarioRepo),
+            new ReenviarVerificacionUseCase(
+                usuarioRepo:        $usuarioRepo,
+                tokens:             $c->get(AuthTokenService::class),
+                correo:             $c->get(CorreoAuthService::class),
+                verificacionTtlMin: $ttlVerif
+            ),
+            $habilitado
+        );
+    });
+
+    $container->bind(\App\Presentation\Controllers\RecuperacionController::class, function (Container $c) {
+        $usuarioRepo = $c->get(UsuarioRepositoryInterface::class);
+        return new \App\Presentation\Controllers\RecuperacionController(
+            $c->get(ConfiguracionService::class),
+            new SolicitarRecuperacionUseCase(
+                usuarioRepo:        $usuarioRepo,
+                tokens:             $c->get(AuthTokenService::class),
+                correo:             $c->get(CorreoAuthService::class),
+                recuperacionTtlMin: (int) Config::get('auth.tokens.recuperacion_ttl_min', 60)
+            ),
+            new RestablecerPasswordUseCase($usuarioRepo, $c->get(AuthTokenRepositoryInterface::class))
         );
     });
 

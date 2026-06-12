@@ -1,6 +1,8 @@
 <?php
 
 use App\Presentation\Controllers\AuthController;
+use App\Presentation\Controllers\RegistroController;
+use App\Presentation\Controllers\RecuperacionController;
 use App\Presentation\Controllers\Admin\DashboardController;
 use App\Presentation\Controllers\Admin\UsuariosController;
 use App\Presentation\Controllers\Admin\RolesController;
@@ -27,6 +29,17 @@ $router->get('/login',  [AuthController::class, 'showLogin']);
 $router->get('/',       [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login'], [CsrfMiddleware::class]);
 $router->post('/logout', [AuthController::class, 'logout'], [AuthMiddleware::class]);
+
+// Registro público y recuperación de contraseña (404 en /registro si registro.habilitado=false)
+$router->get('/registro',           [RegistroController::class, 'mostrar']);
+$router->post('/registro',          [RegistroController::class, 'registrar'], [CsrfMiddleware::class]);
+$router->get('/registro/verificar', [RegistroController::class, 'verificar']);
+$router->post('/registro/reenviar', [RegistroController::class, 'reenviar'], [CsrfMiddleware::class]);
+
+$router->get('/recuperar',    [RecuperacionController::class, 'mostrar']);
+$router->post('/recuperar',   [RecuperacionController::class, 'solicitar'], [CsrfMiddleware::class]);
+$router->get('/restablecer',  [RecuperacionController::class, 'mostrarRestablecer']);
+$router->post('/restablecer', [RecuperacionController::class, 'restablecer'], [CsrfMiddleware::class]);
 
 $router->group([
     'prefix'      => '/admin',

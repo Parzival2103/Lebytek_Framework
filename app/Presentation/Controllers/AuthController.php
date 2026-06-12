@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Presentation\Controllers;
 
 use App\Kernel\BaseClasses\BaseController;
+use App\Kernel\Config\Config;
 use App\Kernel\Http\Request;
 use App\Kernel\Http\Response;
 use App\Kernel\Security\Session;
@@ -37,7 +38,9 @@ final class AuthController extends BaseController
             $theme = LebytekUiConfig::resolve([]);
         }
 
-        return $this->view('auth/login', $theme, '');
+        return $this->view('auth/login', $theme + [
+            'registroHabilitado' => (bool) Config::get('auth.registro.habilitado', false),
+        ], '');
     }
 
     public function login(Request $request): Response

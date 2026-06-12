@@ -16,6 +16,8 @@ if (!class_exists('FakeUsuarioRepository')) {
         public array $avatarUpdates = [];
         /** @var list<string> emails ya tomados por otros usuarios */
         public array $emailsExistentes = [];
+        /** @var list<int> usuarios verificados vía marcarEmailVerificado */
+        public array $verificados = [];
         public ?Usuario $ultimoUpdate = null;
 
         public function findById(int $id): ?Usuario
@@ -61,6 +63,14 @@ if (!class_exists('FakeUsuarioRepository')) {
         public function actualizarAvatar(int $usuarioId, ?string $ruta): void
         {
             $this->avatarUpdates[] = [$usuarioId, $ruta];
+        }
+
+        public function marcarEmailVerificado(int $usuarioId): void
+        {
+            $this->verificados[] = $usuarioId;
+            if (isset($this->usuarios[$usuarioId])) {
+                $this->usuarios[$usuarioId] = $this->usuarios[$usuarioId]->activar();
+            }
         }
 
         public function delete(int $id): void

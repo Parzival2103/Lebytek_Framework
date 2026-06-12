@@ -86,6 +86,14 @@ final class UsuarioRepository extends BaseRepository implements UsuarioRepositor
         );
     }
 
+    public function marcarEmailVerificado(int $usuarioId): void
+    {
+        $this->execute(
+            "UPDATE auth_usuarios SET activo = 1, email_verificado_en = NOW(), updated_at = NOW() WHERE id = ?",
+            [$usuarioId]
+        );
+    }
+
     public function delete(int $id): void
     {
         parent::softDelete($id);
@@ -118,6 +126,9 @@ final class UsuarioRepository extends BaseRepository implements UsuarioRepositor
             avatar:       $row['avatar'] ?? null,
             ultimoAcceso: $row['ultimo_acceso']
                 ? new \DateTimeImmutable($row['ultimo_acceso'])
+                : null,
+            emailVerificadoEn: !empty($row['email_verificado_en'])
+                ? new \DateTimeImmutable($row['email_verificado_en'])
                 : null,
             creadoEn: new \DateTimeImmutable($row['created_at']),
             id:       (int) $row['id']

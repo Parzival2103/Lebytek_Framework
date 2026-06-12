@@ -39,7 +39,7 @@
                             <i class="bi bi-check-lg me-2"></i>Guardar cambios
                         </button>
                         <?php if (!empty($usuario['email'])): ?>
-                            <a href="/auth/recuperar" class="btn btn-outline-secondary">
+                            <a href="/recuperar" class="btn btn-outline-secondary">
                                 <i class="bi bi-key me-2"></i>Cambiar contraseña
                             </a>
                         <?php endif; ?>

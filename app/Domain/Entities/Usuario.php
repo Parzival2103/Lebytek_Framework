@@ -25,6 +25,7 @@ final class Usuario
     private bool   $activo;
     private ?string $avatar;
     private ?\DateTimeImmutable $ultimoAcceso;
+    private ?\DateTimeImmutable $emailVerificadoEn;
     private \DateTimeImmutable $creadoEn;
 
     public function __construct(
@@ -36,6 +37,7 @@ final class Usuario
         ?string $avatar          = null,
         ?\DateTimeImmutable $ultimoAcceso = null,
         ?\DateTimeImmutable $creadoEn     = null,
+        ?\DateTimeImmutable $emailVerificadoEn = null,
         ?int    $id              = null
     ) {
         self::assertNombreValido($nombre);
@@ -49,6 +51,7 @@ final class Usuario
         $this->activo       = $activo;
         $this->avatar       = $avatar;
         $this->ultimoAcceso = $ultimoAcceso;
+        $this->emailVerificadoEn = $emailVerificadoEn;
         $this->creadoEn     = $creadoEn ?? new \DateTimeImmutable();
     }
 
@@ -108,6 +111,7 @@ final class Usuario
     public function activo(): bool                     { return $this->activo;       }
     public function avatar(): ?string                  { return $this->avatar;       }
     public function ultimoAcceso(): ?\DateTimeImmutable { return $this->ultimoAcceso; }
+    public function emailVerificadoEn(): ?\DateTimeImmutable { return $this->emailVerificadoEn; }
     public function creadoEn(): \DateTimeImmutable     { return $this->creadoEn;    }
 
     public function toArray(): array
@@ -121,6 +125,7 @@ final class Usuario
             'activo'        => $this->activo,
             'avatar'        => $this->avatar,
             'ultimo_acceso' => $this->ultimoAcceso?->format('Y-m-d H:i:s'),
+            'email_verificado_en' => $this->emailVerificadoEn?->format('Y-m-d H:i:s'),
             'created_at'    => $this->creadoEn->format('Y-m-d H:i:s'),
         ];
     }
