@@ -37,6 +37,10 @@ test('Partial confirm_modal incluye slot de icono y elementos requeridos', funct
     $content = (string) file_get_contents($path);
 
     assert_true(str_contains($content, 'id="confirmModalIcon"'), 'Falta slot de icono');
+    assert_true(
+        str_contains($content, 'class="ct-confirm-icon d-none"'),
+        'El slot de icono debe iniciar oculto (d-none)'
+    );
     assert_true(str_contains($content, 'id="confirmModalTitle"'));
     assert_true(str_contains($content, 'id="confirmModalBody"'));
     assert_true(str_contains($content, 'id="confirmModalOk"'));
