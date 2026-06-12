@@ -1,4 +1,7 @@
-<?php use App\Kernel\Helpers\ViewHelper; ?>
+<?php
+use App\Kernel\Helpers\ViewHelper;
+use App\Kernel\Constants\UiConfirmConstants;
+?>
 
 <header class="topbar ct-topbar d-flex align-items-center px-3 gap-2">
 
@@ -61,7 +64,14 @@
                     <i class="bi bi-gear me-2"></i>Ajustes</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                    <form method="POST" action="/logout" class="m-0" onsubmit="return confirm('¿Cerrar sesión?');">
+                    <?php $logoutConfirmAttrs = ViewHelper::confirmAttrs([
+                        'body'    => UiConfirmConstants::LOGOUT_BODY,
+                        'title'   => UiConfirmConstants::LOGOUT_TITLE,
+                        'ok'      => UiConfirmConstants::LOGOUT_OK,
+                        'variant' => 'danger',
+                        'icon'    => UiConfirmConstants::LOGOUT_ICON,
+                    ]); ?>
+                    <form method="POST" action="/logout" class="m-0" <?= $logoutConfirmAttrs ?>>
                         <?= ViewHelper::csrfField() ?>
                         <button type="submit" class="dropdown-item text-danger d-flex align-items-center w-100 border-0 bg-transparent text-start py-2 px-3">
                             <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión

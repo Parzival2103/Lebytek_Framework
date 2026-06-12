@@ -1,5 +1,6 @@
 <?php
 use App\Kernel\Helpers\ViewHelper;
+use App\Kernel\Constants\UiConfirmConstants;
 
 $uri       = $currentUri ?? '/';
 $menuItems = $menuFiltrado ?? [];
@@ -83,7 +84,14 @@ $submenuJson = static function (array $item): string {
     </button>
     <?php endif; ?>
 
-    <form method="POST" action="/logout" class="bottomnav-logout-form flex-grow-1 m-0 min-w-0 d-flex" onsubmit="return confirm('¿Cerrar sesión?');">
+    <?php $logoutConfirmAttrs = ViewHelper::confirmAttrs([
+        'body'    => UiConfirmConstants::LOGOUT_BODY,
+        'title'   => UiConfirmConstants::LOGOUT_TITLE,
+        'ok'      => UiConfirmConstants::LOGOUT_OK,
+        'variant' => 'danger',
+        'icon'    => UiConfirmConstants::LOGOUT_ICON,
+    ]); ?>
+    <form method="POST" action="/logout" class="bottomnav-logout-form flex-grow-1 m-0 min-w-0 d-flex" <?= $logoutConfirmAttrs ?>>
         <?= ViewHelper::csrfField() ?>
         <button type="submit" class="bottomnav-item bottomnav-sub-btn flex-grow-1 w-100 text-danger"
                 title="Cerrar sesión">

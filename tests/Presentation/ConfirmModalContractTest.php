@@ -23,6 +23,10 @@ test('Presentation views: no crudDeleteModal ni window.confirm en markup', funct
             !str_contains($content, 'window.confirm'),
             'Native confirm reference in: ' . $relative
         );
+        assert_true(
+            !str_contains($content, 'return confirm('),
+            'Native confirm() inline in: ' . $relative
+        );
     }
 });
 

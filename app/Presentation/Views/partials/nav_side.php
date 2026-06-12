@@ -1,6 +1,7 @@
 <?php
 use App\Kernel\Helpers\ViewHelper;
 use App\Kernel\Constants\AppConstants;
+use App\Kernel\Constants\UiConfirmConstants;
 
 $uri = $currentUri ?? '/';
 $mostrarEmpresaNombre = AppConstants::empresaMostrarNombre($mostrarEmpresaNombre ?? null);
@@ -94,7 +95,14 @@ $menuItems = $menuFiltrado ?? [];
                 <div class="fw-medium text-truncate small"><?= ViewHelper::e($usuario['nombreCompleto'] ?? $usuario['nombre'] ?? '') ?></div>
                 <div class="ct-sidebar-user-email"><?= ViewHelper::e($usuario['email'] ?? '') ?></div>
             </div>
-            <form method="POST" action="/logout" class="ms-auto nav-label m-0" onsubmit="return confirm('¿Cerrar sesión?');">
+            <?php $logoutConfirmAttrs = ViewHelper::confirmAttrs([
+                'body'    => UiConfirmConstants::LOGOUT_BODY,
+                'title'   => UiConfirmConstants::LOGOUT_TITLE,
+                'ok'      => UiConfirmConstants::LOGOUT_OK,
+                'variant' => 'danger',
+                'icon'    => UiConfirmConstants::LOGOUT_ICON,
+            ]); ?>
+            <form method="POST" action="/logout" class="ms-auto nav-label m-0" <?= $logoutConfirmAttrs ?>>
                 <?= ViewHelper::csrfField() ?>
                 <button type="submit" class="btn btn-link p-0"
                         title="Cerrar sesión">
