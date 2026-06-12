@@ -13,4 +13,9 @@ final class UiConfirmConstants
     public const DELETE_TITLE = 'Confirmar eliminación';
     public const DELETE_BODY = 'Esta acción marca el registro como eliminado (borrado lógico). ¿Deseas continuar?';
     public const DELETE_OK = 'Eliminar';
+
+    public const LOGOUT_TITLE = 'Cerrar sesión';
+    public const LOGOUT_BODY = '¿Deseas cerrar la sesión actual?';
+    public const LOGOUT_OK = 'Cerrar sesión';
+    public const LOGOUT_ICON = 'warning';
 }
