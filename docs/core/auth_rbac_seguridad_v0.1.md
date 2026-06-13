@@ -120,6 +120,9 @@ Los slugs del menú deben existir en `auth_permisos` salvo decisión explícita 
 - Credenciales correctas / incorrectas; usuario inexistente; usuario inactivo.
 - Contraseña con comillas o caracteres especiales (debe fallar sin error SQL).
 - Cadenas tipo `admin' OR '1'='1` en email (debe fallar login normal).
+- Tras 5 intentos fallidos (mismo IP o mismo email en 15 min, configurable vía `LOGIN_MAX_INTENTOS` / `LOGIN_VENTANA_MIN`), el siguiente intento responde `Credenciales incorrectas.` sin autenticar (mensaje idéntico a password incorrecto).
+- Login exitoso resetea contadores de esa IP y email (`auth_login_intentos`).
+- Verificar en `storage/logs/app-*.log` que bloqueos generan entrada `WARNING` con IP (sin email en claro).
 
 ### Roles
 
