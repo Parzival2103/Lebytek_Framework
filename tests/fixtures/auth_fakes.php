@@ -142,3 +142,95 @@ if (!class_exists('FakeMailer')) {
         }
     }
 }
+
+if (!class_exists('FakeConfiguracionRepository')) {
+    class FakeConfiguracionRepository implements \App\Domain\Interfaces\ConfiguracionRepositoryInterface
+    {
+        /** @param array<string, mixed> $datos */
+        public function __construct(private array $datos = [])
+        {
+        }
+
+        public function all(): array
+        {
+            return $this->datos;
+        }
+
+        public function get(string $clave, mixed $default = null): mixed
+        {
+            return $this->datos[$clave] ?? $default;
+        }
+
+        public function set(string $clave, mixed $valor): void
+        {
+            $this->datos[$clave] = $valor;
+        }
+
+        public function setMultiple(array $datos): void
+        {
+            foreach ($datos as $clave => $valor) {
+                $this->datos[$clave] = $valor;
+            }
+        }
+    }
+}
+
+if (!class_exists('FakeLoginIntentoRepository')) {
+    /** Repositorio de intentos de login en memoria; replica el contrato PDO. */
+    class FakeLoginIntentoRepository implements \App\Domain\Interfaces\LoginIntentoRepositoryInterface
+    {
+        /** @var list<array{dimension:string,clave:string,created_at:string}> */
+        public array $filas = [];
+
+        public function contarFallosRecientes(string $dimension, string $clave, int $ventanaMin): int
+        {
+            $desde = date('Y-m-d H:i:s', time() - $ventanaMin * 60);
+            $n = 0;
+            foreach ($this->filas as $fila) {
+                if ($fila['dimension'] === $dimension
+                    && $fila['clave'] === $clave
+                    && $fila['created_at'] >= $desde) {
+                    $n++;
+                }
+            }
+            return $n;
+        }
+
+        public function registrarFallo(string $ip, string $emailNormalizado): void
+        {
+            $ahora = date('Y-m-d H:i:s');
+            $this->filas[] = ['dimension' => 'ip',    'clave' => $ip,                 'created_at' => $ahora];
+            $this->filas[] = ['dimension' => 'email', 'clave' => $emailNormalizado,   'created_at' => $ahora];
+        }
+
+        public function limpiarPara(string $ip, string $emailNormalizado): void
+        {
+            $this->filas = array_values(array_filter(
+                $this->filas,
+                fn(array $fila): bool => !(
+                    ($fila['dimension'] === 'ip'    && $fila['clave'] === $ip)
+                    || ($fila['dimension'] === 'email' && $fila['clave'] === $emailNormalizado)
+                )
+            ));
+        }
+
+        public function purgarAntiguos(int $ventanaMin): void
+        {
+            $limite = date('Y-m-d H:i:s', time() - $ventanaMin * 2 * 60);
+            $this->filas = array_values(array_filter(
+                $this->filas,
+                fn(array $fila): bool => $fila['created_at'] >= $limite
+            ));
+        }
+    }
+}
+
+function fake_correo_auth_service(?FakeMailer $mailer = null, array $config = []): \App\Application\Services\CorreoAuthService
+{
+    $mailer ??= new FakeMailer();
+    $configService = new \App\Application\Services\ConfiguracionService(
+        new FakeConfiguracionRepository($config)
+    );
+
+    return new \App\Application\Services\CorreoAuthService($mailer, $configService, 'https://app.test');
+}
