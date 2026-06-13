@@ -102,6 +102,15 @@ CREATE TABLE IF NOT EXISTS `auth_tokens` (
       FOREIGN KEY (`usuario_id`) REFERENCES `auth_usuarios`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `auth_login_intentos` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `dimension`  VARCHAR(10)     NOT NULL,
+  `clave`      VARCHAR(255)    NOT NULL,
+  `created_at` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_login_intentos_busqueda` (`dimension`, `clave`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ============================================================
 -- NÚCLEO: Configuración del sistema
 -- ============================================================
@@ -362,8 +371,9 @@ JOIN `auth_roles` `r` ON `r`.`slug` = 'administrador'
 WHERE `u`.`email` = 'admin@sistema.local';
 
 INSERT IGNORE INTO `cfg_configuraciones` (`clave`, `valor`, `tipo`, `descripcion`) VALUES
-  ('empresa_nombre', 'Mi Empresa', 'string', 'Nombre de la empresa'),
+  ('empresa_nombre', 'Framework Lebytek', 'string', 'Nombre de la empresa'),
   ('empresa_logo', '', 'string', 'URL del logo'),
+  ('empresa_mostrar_nombre', '1', 'boolean', 'Mostrar nombre junto al logo en login y barras de navegación'),
   ('menu_layout', 'side', 'string', 'Posición del menú: side, top, bottom'),
   ('primary_color', '#0d6efd', 'string', 'Color principal del sistema'),
   ('navbar_color', '#1a1d2e', 'string', 'Color de fondo del navbar/sidebar'),
