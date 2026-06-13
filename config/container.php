@@ -24,6 +24,7 @@ use App\Application\UseCases\Roles\ActualizarRolUseCase;
 use App\Application\UseCases\Roles\EliminarRolUseCase;
 use App\Application\Services\AuthTokenService;
 use App\Application\Services\CorreoAuthService;
+use App\Application\Services\LoginRateLimitService;
 use App\Application\UseCases\Auth\LoginUseCase;
 use App\Application\UseCases\Auth\LogoutUseCase;
 use App\Application\UseCases\Auth\RegistrarUsuarioUseCase;
@@ -32,8 +33,10 @@ use App\Application\UseCases\Auth\VerificarCorreoUseCase;
 use App\Application\UseCases\Auth\SolicitarRecuperacionUseCase;
 use App\Application\UseCases\Auth\RestablecerPasswordUseCase;
 use App\Domain\Interfaces\AuthTokenRepositoryInterface;
+use App\Domain\Interfaces\LoginIntentoRepositoryInterface;
 use App\Domain\Interfaces\MailerInterface;
 use App\Infrastructure\Repositories\AuthTokenRepository;
+use App\Infrastructure\Repositories\LoginIntentoRepository;
 use App\Infrastructure\Mail\LogMailer;
 use App\Infrastructure\Mail\PhpMailerMailer;
 use App\Application\UseCases\Dashboard\BuildDashboardViewModelUseCase;
@@ -120,8 +123,17 @@ return static function (Container $container): void {
         (int) Config::get('auth.tokens.max_por_hora', 3)
     ));
 
+    $container->singleton(LoginIntentoRepositoryInterface::class, fn() => new LoginIntentoRepository());
+
+    $container->singleton(LoginRateLimitService::class, fn(Container $c) => new LoginRateLimitService(
+        $c->get(LoginIntentoRepositoryInterface::class),
+        (int) Config::get('auth.login.max_intentos', 5),
+        (int) Config::get('auth.login.ventana_min', 15)
+    ));
+
     $container->singleton(CorreoAuthService::class, fn(Container $c) => new CorreoAuthService(
         $c->get(MailerInterface::class),
+        $c->get(ConfiguracionService::class),
         (string) Config::get('app.url', 'http://localhost')
     ));
 
@@ -284,7 +296,11 @@ return static function (Container $container): void {
     $container->bind(\App\Presentation\Controllers\AuthController::class, function (Container $c) {
         $authService = $c->get(AuthService::class);
         return new \App\Presentation\Controllers\AuthController(
-            new LoginUseCase($authService, new LoginValidator()),
+            new LoginUseCase(
+                $authService,
+                new LoginValidator(),
+                $c->get(LoginRateLimitService::class)
+            ),
             new LogoutUseCase($authService),
             $c->get(ConfiguracionService::class)
         );
