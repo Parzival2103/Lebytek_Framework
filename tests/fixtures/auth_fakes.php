@@ -175,6 +175,26 @@ if (!class_exists('FakeConfiguracionRepository')) {
     }
 }
 
+if (!class_exists('FakePermisoRepository')) {
+    /** Permisos en memoria; slugs vacíos para tests de login. */
+    class FakePermisoRepository implements \App\Domain\Interfaces\PermisoRepositoryInterface
+    {
+        public function findById(int $id): ?\App\Domain\Entities\Permiso { return null; }
+        public function findBySlug(string $slug): ?\App\Domain\Entities\Permiso { return null; }
+        public function findAll(): array { return []; }
+        public function findAllActivosOrdenadosPorModuloSlug(): array { return []; }
+        public function buscarPorRolId(int $rolId): array { return []; }
+        public function slugsPorUsuarioId(int $usuarioId): array { return []; }
+        public function filterExistingPermisoIds(array $permisoIds, bool $soloActivos = false): array { return []; }
+        public function listarTodosLosSlugs(): array { return []; }
+        public function mapSlugActivo(): array { return []; }
+        public function sincronizarPermisosDeRol(int $rolId, array $permisoIds): void {}
+        public function save(\App\Domain\Entities\Permiso $permiso): int { return 0; }
+        public function update(\App\Domain\Entities\Permiso $permiso): void {}
+        public function delete(int $id): void {}
+    }
+}
+
 if (!class_exists('FakeLoginIntentoRepository')) {
     /** Repositorio de intentos de login en memoria; replica el contrato PDO. */
     class FakeLoginIntentoRepository implements \App\Domain\Interfaces\LoginIntentoRepositoryInterface

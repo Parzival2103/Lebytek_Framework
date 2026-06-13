@@ -38,9 +38,9 @@ final class AuthController extends BaseController
             $theme = LebytekUiConfig::resolve([]);
         }
 
-        return $this->view('auth/login', $theme + [
+        return $this->view('auth/login', array_merge($theme, [
             'registroHabilitado' => (bool) Config::get('auth.registro.habilitado', false),
-        ], '');
+        ]), '');
     }
 
     public function login(Request $request): Response
@@ -57,7 +57,8 @@ final class AuthController extends BaseController
             $dto = new LoginDTO(
                 email:    trim((string) ($datosLogin['email']    ?? '')),
                 password: (string) ($datosLogin['password'] ?? ''),
-                recordar: !empty($datosLogin['recordar'])
+                recordar: !empty($datosLogin['recordar']),
+                clientIp: $request->ip()
             );
 
             $this->loginUseCase->execute($dto);

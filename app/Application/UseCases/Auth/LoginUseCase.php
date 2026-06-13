@@ -6,9 +6,9 @@ namespace App\Application\UseCases\Auth;
 
 use App\Application\DTO\Auth\LoginDTO;
 use App\Application\Services\AuthService;
+use App\Application\Services\LoginRateLimitService;
 use App\Application\Validators\Auth\LoginValidator;
 use App\Domain\Exceptions\AuthException;
-use App\Domain\Exceptions\ValidationException;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,8 +19,9 @@ use App\Domain\Exceptions\ValidationException;
 final class LoginUseCase
 {
     public function __construct(
-        private readonly AuthService    $authService,
-        private readonly LoginValidator $validator
+        private readonly AuthService           $authService,
+        private readonly LoginValidator        $validator,
+        private readonly LoginRateLimitService $rateLimit
     ) {}
 
     public function execute(LoginDTO $dto): void
@@ -30,7 +31,19 @@ final class LoginUseCase
             'password' => $dto->password,
         ]);
 
-        $usuario = $this->authService->autenticar($dto->email, $dto->password);
+        $emailNormalizado = strtolower(trim($dto->email));
+        $ip               = $dto->clientIp;
+
+        $this->rateLimit->asegurarPermitido($ip, $emailNormalizado);
+
+        try {
+            $usuario = $this->authService->autenticar($dto->email, $dto->password);
+        } catch (AuthException $e) {
+            $this->rateLimit->registrarFallo($ip, $emailNormalizado);
+            throw $e;
+        }
+
+        $this->rateLimit->limpiarTrasExito($ip, $emailNormalizado);
         $this->authService->iniciarSesion($usuario);
     }
 }

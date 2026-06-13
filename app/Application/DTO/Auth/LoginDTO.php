@@ -15,6 +15,7 @@ final class LoginDTO
     public function __construct(
         public readonly string $email,
         public readonly string $password,
-        public readonly bool   $recordar = false
+        public readonly bool   $recordar = false,
+        public readonly string $clientIp = '0.0.0.0'
     ) {}
 }
