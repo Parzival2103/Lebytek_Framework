@@ -7,8 +7,9 @@
 1. **Arquitectura y estructura:** [`core/arquitectura.md`](core/arquitectura.md) y [`core/estructura_proyecto.md`](core/estructura_proyecto.md).
 2. **Nombres y API:** [`core/convenciones_nombres.md`](core/convenciones_nombres.md), [`core/reglas_api.md`](core/reglas_api.md).
 3. **IA / consistencia de cambios:** [`core/reglas_ia.md`](core/reglas_ia.md) (legible por humanos); reglas ejecutables en el IDE: [`.cursor/rules`](../.cursor/rules).
-4. **Nueva instancia o vertical:** [`core/vertical-onboarding.md`](core/vertical-onboarding.md).
-5. **Nuevo módulo de negocio (`dom_*`):** [`modules/uso-de-modulo-dominio.md`](modules/uso-de-modulo-dominio.md).
+4. **Desplegar / actualizar una instancia:** [`core/despliegue-y-versionado.md`](core/despliegue-y-versionado.md) — mapa de qué tocar por tipo de despliegue.
+5. **Nueva instancia o vertical:** [`core/vertical-onboarding.md`](core/vertical-onboarding.md).
+6. **Nuevo módulo de negocio (`dom_*`):** [`modules/uso-de-modulo-dominio.md`](modules/uso-de-modulo-dominio.md).
 
 ## `docs/core/`
 
@@ -20,6 +21,7 @@
 | [`reglas_ia.md`](core/reglas_ia.md) | Reglas para desarrollo asistido por IA |
 | [`reglas_api.md`](core/reglas_api.md) | Convenciones de API |
 | [`diccionario_dominio.md`](core/diccionario_dominio.md) | Lenguaje del negocio |
+| [`despliegue-y-versionado.md`](core/despliegue-y-versionado.md) | **Guía operativa**: 4 tiers, inventario de superficies, playbooks por tipo de despliegue, versionado |
 | [`despliegue_hosting.md`](core/despliegue_hosting.md) | Exposición vía `public/` |
 | [`table-prefix-convention.md`](core/table-prefix-convention.md) | Prefijos de tablas |
 | [`core-schema-and-modules.md`](core/core-schema-and-modules.md) | Plataforma vs dominio |
