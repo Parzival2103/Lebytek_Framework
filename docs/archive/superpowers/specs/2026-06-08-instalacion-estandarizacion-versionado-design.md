@@ -1,5 +1,7 @@
 # Instalación, estandarización y versionado — Design
 
+> ⚠️ **Narrativa operativa superada.** El **modelo de datos (`cfg_migraciones`/`cfg_modulos`) y el motor descritos aquí siguen vigentes**, pero la guía operativa de despliegue la reemplaza [`docs/core/despliegue-y-versionado.md`](../../../core/despliegue-y-versionado.md). No usar este spec como guía de despliegue.
+
 > Fase siguiente del framework Lebytek. Convierte cada despliegue en algo **autodescriptivo, versionado y reproducible** mediante manifiestos de módulo, tracking de migraciones y un instalador guiado (wizard web + CLI), más una página admin de estado.
 
 - **Fecha:** 2026-06-08

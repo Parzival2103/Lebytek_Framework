@@ -7,6 +7,7 @@
 - **Naturaleza:** Descriptivo + reglas de gobierno. Sin cambios de código/config en este spec.
 - **Posicionamiento:** Documento paraguas / puerta de entrada única de despliegue. Complementa (no absorbe) los docs existentes y delega en ellos los temas profundos.
 - **Audiencia:** Desarrollador que despliega (principal); cliente técnico en hosting compartido (secundaria).
+- **Versión publicada (viva):** [`../../core/despliegue-y-versionado.md`](../../core/despliegue-y-versionado.md). Este spec es el registro de diseño; la guía que se mantiene vive en `docs/core/`.
 
 ---
 
