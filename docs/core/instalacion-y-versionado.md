@@ -1,5 +1,7 @@
 # Instalación y versionado
 
+> **Guía operativa de despliegue:** para el mapa de qué tocar por tipo de despliegue (greenfield, update, branding, etc.), ver [`despliegue-y-versionado.md`](despliegue-y-versionado.md). Este documento describe el **motor** por dentro.
+
 Cada despliegue es autodescriptivo y versionado mediante:
 
 - **Manifiestos de módulo** (`config/modules/*.php`): declaran versión, dependencias, y los archivos `.sql`/cruds que el módulo posee.

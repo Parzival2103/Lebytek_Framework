@@ -1,5 +1,7 @@
 # Seguridad de secretos y checklist de despliegue (VPS)
 
+> **Guía operativa de despliegue:** este documento es la fuente autoritativa de secretos y rotación; el contexto de despliegue completo está en [`despliegue-y-versionado.md`](despliegue-y-versionado.md).
+
 **Regla:** En el repositorio solo vive `.env.example`. `.env` jamás se versiona.
 El VPS hace auto-pull de `main`; cualquier secreto commiteado se considera comprometido.
 

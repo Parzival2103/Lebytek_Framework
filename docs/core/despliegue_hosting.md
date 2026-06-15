@@ -1,6 +1,8 @@
 # Despliegue en hosting compartido (Apache)
 
 > **Instalación y versionado:** el flujo de instalación (wizard web, CLI con tracking, página de estado y manifiestos de módulo) está documentado en [`instalacion-y-versionado.md`](instalacion-y-versionado.md).
+>
+> **Guía operativa de despliegue:** el playbook completo por tipo de despliegue está en [`despliegue-y-versionado.md`](despliegue-y-versionado.md); aquí solo el detalle de Apache / document root.
 
 La aplicación debe exponerse **solo** desde la carpeta [`public/`](../../public): ahí está el front controller (`index.php`) y los assets (`assets/`).
 

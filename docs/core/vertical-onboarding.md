@@ -1,5 +1,7 @@
 # Checklist: nuevo proyecto desde esta base
 
+> **Guía operativa de despliegue:** para el modelo de capas (core / módulo opcional / instancia / vertical) y los playbooks por tipo de despliegue, ver [`despliegue-y-versionado.md`](despliegue-y-versionado.md).
+
 Guía para clonar el repo y levantar una instancia (taller, clínica, almacén, etc.) con **despliegue y base de datos propios**. El repositorio distribuye **solo el framework de plataforma** (auth, RBAC, menú admin, ajustes, shell); las tablas **`dom_*`** se añaden cuando desarrollas el producto concreto ([uso-de-modulo-dominio.md](../modules/uso-de-modulo-dominio.md)).
 
 ## 1. Base de datos
