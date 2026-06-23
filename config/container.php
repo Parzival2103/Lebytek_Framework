@@ -586,6 +586,8 @@ return static function (Container $container): void {
             fn(Container $c) => new \App\Presentation\Controllers\Publico\LeadController(
                 $c->get(\App\Application\Marketing\CapturarLeadUseCase::class)));
 
-        // Task 14 añade aquí: PortalClienteController.
+        $container->bind(\App\Presentation\Controllers\Publico\PortalClienteController::class,
+            fn(Container $c) => new \App\Presentation\Controllers\Publico\PortalClienteController(
+                $c->get(ConfiguracionService::class)));
     }
 };

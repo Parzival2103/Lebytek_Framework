@@ -6,6 +6,7 @@
 
 use App\Presentation\Controllers\Publico\LandingController;
 use App\Presentation\Controllers\Publico\LeadController;
+use App\Presentation\Controllers\Publico\PortalClienteController;
 use App\Presentation\Middlewares\CsrfMiddleware;
 
 // Raíz pública: con el módulo activo, "/" sirve la landing (no el login).
@@ -14,4 +15,5 @@ $router->get('/', [LandingController::class, 'index']);
 // Captación de leads (POST público con CSRF).
 $router->post('/lead', [LeadController::class, 'capturar'], [CsrfMiddleware::class]);
 
-// (Task 14 añade aquí el portal cliente magic-link.)
+// Portal cliente genérico (magic-link).
+$router->get('/portal', [PortalClienteController::class, 'entrar']);
