@@ -527,6 +527,21 @@ return static function (Container $container): void {
         );
     });
 
+    // Registry de secciones de Ajustes — siempre resoluble; los providers se cargan
+    // solo si su módulo está activo (toggle inline). AjustesController lo consume.
+    $container->singleton(\App\Application\Services\SettingsSectionRegistry::class, function () {
+        $providers = [];
+        if ((bool) Config::get('vertical.modules.marketing', false)) {
+            $providers = [
+                new \App\Infrastructure\Marketing\Settings\MarketingCorreoSettingsProvider(),
+                new \App\Infrastructure\Marketing\Settings\MarketingPaquetesSettingsProvider(),
+                new \App\Infrastructure\Marketing\Settings\MarketingTrackingSettingsProvider(),
+                new \App\Infrastructure\Marketing\Settings\MarketingContenidoSettingsProvider(),
+            ];
+        }
+        return new \App\Application\Services\SettingsSectionRegistry($providers);
+    });
+
     // ── Módulo Marketing (bindings condicionales al toggle; ver config/modules/marketing.php) ──
     if ((bool) Config::get('vertical.modules.marketing', false)) {
         $container->bind(\App\Presentation\Controllers\Publico\LandingController::class, function (Container $c) {
