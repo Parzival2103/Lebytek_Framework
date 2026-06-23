@@ -15,6 +15,9 @@ return [
         'dashboard'      => true,
         'administracion' => true,
         'calendario'     => true,
+        'pdf_kit'        => true,
+        'reportes'       => true,
+        'marketing'      => false,
     ],
 
     'labels' => [
