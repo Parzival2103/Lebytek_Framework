@@ -11,6 +11,8 @@ use App\Presentation\Controllers\Admin\AjustesController;
 use App\Presentation\Controllers\Admin\PerfilController;
 use App\Presentation\Controllers\Admin\CrudController;
 use App\Presentation\Controllers\Admin\CalendarioController;
+use App\Presentation\Controllers\Admin\PdfKitDemoController;
+use App\Presentation\Controllers\Admin\ReportesController;
 use App\Presentation\Controllers\Admin\SistemaEstadoController;
 use App\Presentation\Controllers\PwaController;
 use App\Presentation\Middlewares\AuthMiddleware;
@@ -25,8 +27,15 @@ use App\Presentation\Middlewares\RbacMiddleware;
 
 $router->get('/manifest.webmanifest', [PwaController::class, 'manifest']);
 
+$marketingActivo = (bool) \App\Kernel\Config\Config::get('vertical.modules.marketing', false);
+if ($marketingActivo) {
+    require ROOT_PATH . '/routes/marketing.php';
+}
+
 $router->get('/login',  [AuthController::class, 'showLogin']);
-$router->get('/',       [AuthController::class, 'showLogin']);
+if (!$marketingActivo) {
+    $router->get('/', [AuthController::class, 'showLogin']);
+}
 $router->post('/login', [AuthController::class, 'login'], [CsrfMiddleware::class]);
 $router->post('/logout', [AuthController::class, 'logout'], [AuthMiddleware::class]);
 
@@ -115,4 +124,18 @@ $router->group([
 
     $router->get('/calendario/{key}',         [CalendarioController::class, 'index']);
     $router->get('/calendario/{key}/eventos', [CalendarioController::class, 'events']);
+
+    $rbacPdfKit = [new RbacMiddleware('pdf_kit.ver')];
+    $router->get('/pdf-kit/demo',                    [PdfKitDemoController::class, 'index'], $rbacPdfKit);
+    $router->get('/pdf-kit/demo/descargar-reporte',  [PdfKitDemoController::class, 'descargarReporte'], $rbacPdfKit);
+    $router->get('/pdf-kit/demo/descargar-completo', [PdfKitDemoController::class, 'descargarCompleto'], $rbacPdfKit);
+
+    $router->get('/reportes',                 [ReportesController::class, 'index'],     [new RbacMiddleware('reportes.ver')]);
+    $router->get('/reportes/crear',           [ReportesController::class, 'crear'],     [new RbacMiddleware('reportes.crear')]);
+    $router->get('/reportes/documento',       [ReportesController::class, 'documento'], [new RbacMiddleware('reportes.generar')]);
+    $router->post('/reportes',                [ReportesController::class, 'guardar'],   [new RbacMiddleware('reportes.crear'), CsrfMiddleware::class]);
+    $router->get('/reportes/{id}/editar',     [ReportesController::class, 'editar'],    [new RbacMiddleware('reportes.editar')]);
+    $router->post('/reportes/{id}',           [ReportesController::class, 'actualizar'],[new RbacMiddleware('reportes.editar'), CsrfMiddleware::class]);
+    $router->post('/reportes/{id}/eliminar',  [ReportesController::class, 'eliminar'],  [new RbacMiddleware('reportes.eliminar'), CsrfMiddleware::class]);
+    $router->post('/reportes/{id}/generar',   [ReportesController::class, 'generar'],   [new RbacMiddleware('reportes.generar'), CsrfMiddleware::class]);
 });

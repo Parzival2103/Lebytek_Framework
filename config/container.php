@@ -128,7 +128,8 @@ return static function (Container $container): void {
     $container->singleton(LoginRateLimitService::class, fn(Container $c) => new LoginRateLimitService(
         $c->get(LoginIntentoRepositoryInterface::class),
         (int) Config::get('auth.login.max_intentos', 5),
-        (int) Config::get('auth.login.ventana_min', 15)
+        (int) Config::get('auth.login.ventana_min', 15),
+        (bool) Config::get('auth.login.habilitado', true)
     ));
 
     $container->singleton(CorreoAuthService::class, fn(Container $c) => new CorreoAuthService(
@@ -242,6 +243,64 @@ return static function (Container $container): void {
     $container->singleton(\App\Infrastructure\Dashboard\CalendarDashboardProvider::class, fn(Container $c) => new \App\Infrastructure\Dashboard\CalendarDashboardProvider(
         $c->get(\App\Application\Services\CalendarConfigLoader::class)
     ));
+
+    // ── Módulo Kit de PDF ───────────────────────────────────────────────────
+    $container->singleton(\App\Application\Pdf\PdfComponentRenderer::class, fn() => new \App\Application\Pdf\PdfComponentRenderer());
+
+    $container->singleton(\App\Domain\Pdf\PdfEngineInterface::class, fn() => new \App\Infrastructure\Pdf\DompdfRenderer(
+        (string) (require ROOT_PATH . '/config/pdf.php')['font']
+    ));
+
+    $container->singleton(\App\Application\Pdf\PdfTemplateRegistry::class, fn() => new \App\Application\Pdf\PdfTemplateRegistry(
+        require ROOT_PATH . '/config/pdf_templates.php'
+    ));
+
+    $container->singleton(\App\Infrastructure\Pdf\PdfStorage::class, fn() => new \App\Infrastructure\Pdf\PdfStorage());
+
+    $container->singleton(\App\Application\Pdf\PdfRenderingService::class, fn(Container $c) => new \App\Application\Pdf\PdfRenderingService(
+        $c->get(\App\Application\Pdf\PdfComponentRenderer::class),
+        $c->get(\App\Domain\Pdf\PdfEngineInterface::class),
+        $c->get(\App\Application\Pdf\PdfTemplateRegistry::class),
+        require ROOT_PATH . '/config/pdf.php'
+    ));
+
+    $container->singleton(\App\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase::class, fn(Container $c) => new \App\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase(
+        $c->get(\App\Application\Pdf\PdfComponentRenderer::class)
+    ));
+
+    // ── Módulo Reportes ─────────────────────────────────────────────────────
+    $container->singleton(\App\Application\Reporte\ReporteConfigValidator::class, fn() => new \App\Application\Reporte\ReporteConfigValidator());
+    $container->singleton(\App\Application\Reporte\ReporteConfigLoader::class, fn(Container $c) => new \App\Application\Reporte\ReporteConfigLoader(
+        $c->get(\App\Application\Reporte\ReporteConfigValidator::class)
+    ));
+    $container->singleton(\App\Application\Reporte\PeriodoResolver::class, fn() => new \App\Application\Reporte\PeriodoResolver());
+    $container->singleton(\App\Application\Reporte\ReporteAggregator::class, fn() => new \App\Application\Reporte\ReporteAggregator());
+    $container->singleton(\App\Application\Reporte\CrudReporteDataSource::class, fn(Container $c) => new \App\Application\Reporte\CrudReporteDataSource(
+        $c->get(CrudDataService::class),
+        $c->get(CrudRelationService::class)
+    ));
+    $container->singleton(\App\Domain\Reporte\ReporteDataSourceInterface::class, fn(Container $c) => $c->get(\App\Application\Reporte\CrudReporteDataSource::class));
+    $container->singleton(\App\Domain\Reporte\ReporteRecordSourceInterface::class, fn(Container $c) => $c->get(\App\Application\Reporte\CrudReporteDataSource::class));
+    $container->singleton(\App\Application\Reporte\BuildReporteDataUseCase::class, fn(Container $c) => new \App\Application\Reporte\BuildReporteDataUseCase(
+        $c->get(\App\Application\Reporte\ReporteConfigLoader::class),
+        $c->get(\App\Domain\Reporte\ReporteDataSourceInterface::class),
+        $c->get(\App\Application\Reporte\PeriodoResolver::class),
+        $c->get(\App\Application\Reporte\ReporteAggregator::class)
+    ));
+    $container->singleton(\App\Application\Reporte\GenerarReporteUseCase::class, fn(Container $c) => new \App\Application\Reporte\GenerarReporteUseCase(
+        $c->get(\App\Application\Reporte\BuildReporteDataUseCase::class),
+        $c->get(\App\Application\Pdf\PdfRenderingService::class)
+    ));
+    $container->singleton(\App\Application\Reporte\GenerarDocumentoUseCase::class, fn(Container $c) => new \App\Application\Reporte\GenerarDocumentoUseCase(
+        $c->get(\App\Application\Reporte\ReporteConfigLoader::class),
+        $c->get(\App\Domain\Reporte\ReporteRecordSourceInterface::class),
+        $c->get(\App\Application\Pdf\PdfTemplateRegistry::class),
+        $c->get(\App\Application\Pdf\PdfRenderingService::class)
+    ));
+    $container->singleton(\App\Application\Reporte\GuardarReporteUseCase::class, fn(Container $c) => new \App\Application\Reporte\GuardarReporteUseCase(
+        $c->get(\App\Application\Reporte\ReporteConfigLoader::class)
+    ));
+    $container->singleton(\App\Domain\Interfaces\ReporteRepositoryInterface::class, fn() => new \App\Infrastructure\Repositories\PdoReporteRepository());
 
     foreach ((require ROOT_PATH . '/config/dashboard.php')['providers'] as $fqcnProvider) {
         if (!$container->has($fqcnProvider)) {
@@ -415,6 +474,27 @@ return static function (Container $container): void {
         );
     });
 
+    $container->bind(\App\Presentation\Controllers\Admin\PdfKitDemoController::class, function (Container $c) {
+        return new \App\Presentation\Controllers\Admin\PdfKitDemoController(
+            $c->get(ConfiguracionService::class),
+            $c->get(AdminNavigationMenuService::class),
+            $c->get(\App\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase::class),
+            $c->get(\App\Application\Pdf\PdfRenderingService::class)
+        );
+    });
+
+    $container->bind(\App\Presentation\Controllers\Admin\ReportesController::class, function (Container $c) {
+        return new \App\Presentation\Controllers\Admin\ReportesController(
+            $c->get(ConfiguracionService::class),
+            $c->get(AdminNavigationMenuService::class),
+            $c->get(\App\Application\Reporte\ReporteConfigLoader::class),
+            $c->get(\App\Domain\Interfaces\ReporteRepositoryInterface::class),
+            $c->get(\App\Application\Reporte\GuardarReporteUseCase::class),
+            $c->get(\App\Application\Reporte\GenerarReporteUseCase::class),
+            $c->get(\App\Application\Reporte\GenerarDocumentoUseCase::class)
+        );
+    });
+
     // ── Motor de instalación / versionado ───────────────────────────────────
     $container->singleton(MigrationRepositoryInterface::class, fn() => new MigrationRepository());
     $container->singleton(ModuleStateRepositoryInterface::class, fn() => new ModuleStateRepository());
@@ -446,4 +526,15 @@ return static function (Container $container): void {
             $c->get(DeploymentStatus::class)
         );
     });
+
+    // ── Módulo Marketing (bindings condicionales al toggle; ver config/modules/marketing.php) ──
+    if ((bool) Config::get('vertical.modules.marketing', false)) {
+        $container->bind(\App\Presentation\Controllers\Publico\LandingController::class, function (Container $c) {
+            return new \App\Presentation\Controllers\Publico\LandingController(
+                $c->get(ConfiguracionService::class)
+            );
+        });
+        // Tasks 12-14 añaden aquí: MarketingContentRepositoryInterface, providers, use cases,
+        // LeadController, PortalClienteController.
+    }
 };
