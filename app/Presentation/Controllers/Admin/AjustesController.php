@@ -10,21 +10,25 @@ use App\Kernel\Http\Response;
 use App\Kernel\Security\Session;
 use App\Application\Services\AdminNavigationMenuService;
 use App\Application\Services\ConfiguracionService;
+use App\Application\Services\SettingsSectionRegistry;
 
 final class AjustesController extends AdminBaseController
 {
     public function __construct(
         ConfiguracionService $configuracionService,
-        AdminNavigationMenuService $adminNavigationMenuService
+        AdminNavigationMenuService $adminNavigationMenuService,
+        private readonly SettingsSectionRegistry $settingsSections
     ) {
         parent::__construct($configuracionService, $adminNavigationMenuService);
     }
 
     public function index(Request $request): Response
     {
+        $permisos = Session::get('auth_permisos', []);
         return $this->view('admin/ajustes/index', [
-            'titulo'        => 'Ajustes del sistema',
-            'configuracion' => $this->configuracionService->all(),
+            'titulo'           => 'Ajustes del sistema',
+            'configuracion'    => $this->configuracionService->all(),
+            'settingsSections' => $this->settingsSections->visibles($permisos),
         ]);
     }
 
@@ -47,8 +51,21 @@ final class AjustesController extends AdminBaseController
         }
 
         $datos['dark_mode'] = $request->has('dark_mode') ? '1' : '0';
+        $datos['empresa_mostrar_nombre'] = $request->has('empresa_mostrar_nombre') ? '1' : '0';
 
         $datos = array_merge($datos, $this->validatedLebytekUiSettings($request));
+
+        // Campos declarados por providers de secciones (módulos activos), filtrados por RBAC.
+        $permisos = Session::get('auth_permisos', []);
+        foreach ($this->settingsSections->fieldNames($permisos) as $campo) {
+            // Los toggles llegan ausentes cuando están desmarcados.
+            $datos[$campo] = $request->has($campo) ? (string) $request->input($campo, '1') : '0';
+            // Para campos de texto, conservar el valor textual si vino con contenido.
+            $valor = $request->input($campo, null);
+            if ($valor !== null && $valor !== '' && $valor !== '1') {
+                $datos[$campo] = (string) $valor;
+            }
+        }
 
         $this->configuracionService->setMultiple($datos);
         AdminBaseController::resetSystemConfigCache();

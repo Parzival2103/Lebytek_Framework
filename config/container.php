@@ -342,7 +342,8 @@ return static function (Container $container): void {
     $container->bind(\App\Presentation\Controllers\Admin\AjustesController::class, function (Container $c) {
         return new \App\Presentation\Controllers\Admin\AjustesController(
             $c->get(ConfiguracionService::class),
-            $c->get(AdminNavigationMenuService::class)
+            $c->get(AdminNavigationMenuService::class),
+            $c->get(\App\Application\Services\SettingsSectionRegistry::class)
         );
     });
 

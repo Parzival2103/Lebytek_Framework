@@ -10,6 +10,7 @@ $uiTableDensity = $c['ui_table_density'] ?? 'normal';
 $uiEnableAnimations = !isset($c['ui_enable_animations']) || $c['ui_enable_animations'] !== '0';
 $themeBorderRadius = $c['theme_border_radius'] ?? 'md';
 $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_level'] : '1';
+$empresaMostrarNombre = \App\Kernel\Constants\AppConstants::empresaMostrarNombre($c['empresa_mostrar_nombre'] ?? null);
 
 ?>
 <div class="ct-page">
@@ -29,6 +30,14 @@ $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_
                                    class="form-control"
                                    value="<?= ViewHelper::e($configuracion['empresa_nombre'] ?? '') ?>"
                                    placeholder="Mi Empresa S.A. de C.V.">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="empresa_mostrar_nombre" id="empresa_mostrar_nombre"
+                                       value="1" <?= $empresaMostrarNombre ? 'checked' : '' ?>>
+                                <label class="form-check-label small" for="empresa_mostrar_nombre">
+                                    Mostrar nombre junto al logo en login y navegación
+                                </label>
+                                <div class="form-text">Desactívalo si el logotipo ya incluye el nombre de la empresa.</div>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label for="empresa_logo" class="form-label fw-medium small">URL del logotipo</label>
@@ -256,6 +265,13 @@ $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_
                     'bodyHtml'   => $bodyLogin,
                 ]) ?>
 
+                <?php foreach (($settingsSections ?? []) as $section): ?>
+                    <?= ViewHelper::partial('admin/ajustes/_provider_section', [
+                        'section'       => $section,
+                        'configuracion' => $configuracion,
+                    ]) ?>
+                <?php endforeach; ?>
+
             </div>
 
             <div class="d-flex flex-wrap gap-2 mt-2">
@@ -282,7 +298,7 @@ $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_
                     <div class="ct-navbar-preview-icon">
                         <i class="bi bi-grid-3x3-gap-fill text-white" aria-hidden="true"></i>
                     </div>
-                    <span class="ct-navbar-preview-title">Sistema</span>
+                    <span class="ct-navbar-preview-title<?= $empresaMostrarNombre ? '' : ' d-none' ?>" id="navbarPreviewTitle"><?= ViewHelper::e($configuracion['empresa_nombre'] ?? \App\Kernel\Constants\AppConstants::EMPRESA_NOMBRE_DEFAULT) ?></span>
                     <div class="ms-auto d-flex gap-2">
                         <div class="ct-navbar-preview-dot ct-navbar-preview-dot--muted" aria-hidden="true"></div>
                         <div class="ct-navbar-preview-dot ct-navbar-preview-dot--accent" aria-hidden="true"></div>
