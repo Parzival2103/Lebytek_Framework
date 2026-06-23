@@ -20,7 +20,7 @@ $hero     = $bloques['hero'] ?? ['titulo' => '', 'subtitulo' => '', 'cta_texto' 
 </section>
 
 <?php if (!empty($paquetes)): ?>
-<section class="py-5" id="paquetes">
+<section class="py-5 ct-paquetes" id="paquetes">
     <div class="container">
         <h2 class="h3 text-center mb-4">Paquetes</h2>
         <div class="row g-4 justify-content-center">
@@ -41,3 +41,30 @@ $hero     = $bloques['hero'] ?? ['titulo' => '', 'subtitulo' => '', 'cta_texto' 
     </div>
 </section>
 <?php endif; ?>
+
+<section class="py-5 bg-white" id="demo">
+    <div class="container" style="max-width:560px;">
+        <h2 class="h4 text-center mb-3">Solicita una demo</h2>
+        <?php foreach (($flashAll ?? \App\Kernel\Security\Session::flashAll()) as $tipo => $msg): ?>
+            <?php if (in_array($tipo, ['success','error'], true)): ?>
+                <div class="alert alert-<?= $tipo === 'success' ? 'success' : 'danger' ?>"><?= ViewHelper::e(is_array($msg) ? implode(' ', $msg) : (string) $msg) ?></div>
+            <?php endif; ?>
+        <?php endforeach; ?>
+        <form method="POST" action="/lead">
+            <?= ViewHelper::csrfField() ?>
+            <div class="mb-3">
+                <input type="text" name="nombre" class="form-control" placeholder="Nombre" required>
+            </div>
+            <div class="mb-3">
+                <input type="email" name="email" class="form-control" placeholder="Correo" required>
+            </div>
+            <div class="mb-3">
+                <input type="text" name="telefono" class="form-control" placeholder="Teléfono (opcional)">
+            </div>
+            <div class="mb-3">
+                <textarea name="mensaje" class="form-control" rows="3" placeholder="¿En qué te ayudamos?"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Enviar</button>
+        </form>
+    </div>
+</section>

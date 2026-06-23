@@ -566,6 +566,26 @@ return static function (Container $container): void {
                 $c->get(ConfiguracionService::class),
                 $c->get(\App\Application\Marketing\RenderLandingUseCase::class)));
 
-        // Tasks 13-14 añaden aquí: LeadController, PortalClienteController.
+        $container->singleton(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Repositories\PdoLeadRepository());
+
+        $container->singleton(\App\Application\Marketing\CapturarLeadUseCase::class, function (Container $c) {
+            $destinoInterno = (string) $c->get(ConfiguracionService::class)->get('mkt_mail_from', '');
+            return new \App\Application\Marketing\CapturarLeadUseCase([
+                new \App\Infrastructure\Marketing\LeadCapture\PersistLeadHandler(
+                    $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class)),
+                new \App\Infrastructure\Marketing\LeadCapture\NotifyInternalHandler(
+                    $c->get(\App\Domain\Interfaces\MailerInterface::class),
+                    $destinoInterno),
+                new \App\Infrastructure\Marketing\LeadCapture\AutoresponderHandler(
+                    $c->get(\App\Domain\Interfaces\MailerInterface::class)),
+            ]);
+        });
+
+        $container->bind(\App\Presentation\Controllers\Publico\LeadController::class,
+            fn(Container $c) => new \App\Presentation\Controllers\Publico\LeadController(
+                $c->get(\App\Application\Marketing\CapturarLeadUseCase::class)));
+
+        // Task 14 añade aquí: PortalClienteController.
     }
 };
