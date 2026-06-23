@@ -5,3 +5,8 @@ public/uploads/
 public/error_log
 public/install/error_log
 storage/logs/*.log
+/vertical-kit/
+/vertical-kit.zip
+# Módulo legado de referencia (app WhatsApp SaaS plana). Contiene src/config.php
+# con credenciales locales reales — nunca debe entrar al repo.
+/nuevo_modulo/
