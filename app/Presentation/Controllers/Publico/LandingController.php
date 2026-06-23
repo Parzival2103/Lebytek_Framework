@@ -8,20 +8,24 @@ use App\Kernel\BaseClasses\BaseController;
 use App\Kernel\Http\Request;
 use App\Kernel\Http\Response;
 use App\Application\Services\ConfiguracionService;
+use App\Application\Marketing\RenderLandingUseCase;
 
 final class LandingController extends BaseController
 {
     public function __construct(
-        private readonly ConfiguracionService $configuracionService
+        private readonly ConfiguracionService $configuracionService,
+        private readonly RenderLandingUseCase $renderLanding
     ) {}
 
     public function index(Request $request): Response
     {
+        $vm = $this->renderLanding->ejecutar('home');
+
         return $this->view('publico/landing', [
             'empresaNombre' => $this->configuracionService->empresaNombre(),
             'empresaLogo'   => $this->configuracionService->empresaLogo(),
-            'bloques'       => [],   // Task 12 lo reemplaza por el provider de contenido
-            'paquetes'      => [],   // Task 12 lo reemplaza por el package source
+            'bloques'       => $vm['bloques'],
+            'paquetes'      => $vm['paquetes'],
         ], 'publico/layout');
     }
 }

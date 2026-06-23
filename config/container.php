@@ -545,12 +545,27 @@ return static function (Container $container): void {
 
     // ── Módulo Marketing (bindings condicionales al toggle; ver config/modules/marketing.php) ──
     if ((bool) Config::get('vertical.modules.marketing', false)) {
-        $container->bind(\App\Presentation\Controllers\Publico\LandingController::class, function (Container $c) {
-            return new \App\Presentation\Controllers\Publico\LandingController(
-                $c->get(ConfiguracionService::class)
-            );
-        });
-        // Tasks 12-14 añaden aquí: MarketingContentRepositoryInterface, providers, use cases,
-        // LeadController, PortalClienteController.
+        $container->singleton(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Repositories\PdoMarketingContentRepository());
+
+        $container->singleton(\App\Domain\Marketing\Contracts\LandingContentProviderInterface::class,
+            fn(Container $c) => new \App\Infrastructure\Marketing\CrudLandingContentProvider(
+                $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class)));
+
+        $container->singleton(\App\Domain\Marketing\Contracts\CommercialPackageSourceInterface::class,
+            fn(Container $c) => new \App\Infrastructure\Marketing\CrudCommercialPackageSource(
+                $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class)));
+
+        $container->singleton(\App\Application\Marketing\RenderLandingUseCase::class,
+            fn(Container $c) => new \App\Application\Marketing\RenderLandingUseCase(
+                $c->get(\App\Domain\Marketing\Contracts\LandingContentProviderInterface::class),
+                $c->get(\App\Domain\Marketing\Contracts\CommercialPackageSourceInterface::class)));
+
+        $container->bind(\App\Presentation\Controllers\Publico\LandingController::class,
+            fn(Container $c) => new \App\Presentation\Controllers\Publico\LandingController(
+                $c->get(ConfiguracionService::class),
+                $c->get(\App\Application\Marketing\RenderLandingUseCase::class)));
+
+        // Tasks 13-14 añaden aquí: LeadController, PortalClienteController.
     }
 };
