@@ -18,8 +18,7 @@
       { "name": "created_at", "label": "Recibido", "format": "datetime", "sortable": true }
     ],
     "filters": [ { "field": "estado", "label": "Estado" } ],
-    "actions": ["show", "edit", "delete"],
-    "scope": { "type": "owner", "column": "created_by" }
+    "actions": ["show", "edit", "delete"]
   },
   "form": {
     "fields": [

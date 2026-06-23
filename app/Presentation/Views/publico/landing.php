@@ -33,6 +33,20 @@ $hero     = $bloques['hero'] ?? ['titulo' => '', 'subtitulo' => '', 'cta_texto' 
                             <?php endif; ?>
                             <h3 class="h5"><?= ViewHelper::e($p['nombre'] ?? '') ?></h3>
                             <p class="display-6 fw-bold"><?= ViewHelper::e((string) ($p['precio_mensual'] ?? '')) ?></p>
+                            <?php
+                                $features = $p['features'] ?? [];
+                                if (is_string($features)) {
+                                    $decoded = json_decode($features, true);
+                                    $features = is_array($decoded) ? $decoded : [];
+                                }
+                            ?>
+                            <?php if (!empty($features)): ?>
+                                <ul class="list-unstyled text-start mt-3 mb-0">
+                                    <?php foreach ($features as $feature): ?>
+                                        <li class="mb-1"><i class="bi bi-check-lg text-success me-2"></i><?= ViewHelper::e((string) $feature) ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
