@@ -1,4 +1,7 @@
 /vendor/
+/.cursor/
+/.claude/
+/.superpowers/
 .env
 .envbk
 public/uploads/
