@@ -45,7 +45,13 @@
       { "name": "cancelar", "type": "transition", "to": "cancelado",
         "label": "Cancelar", "icon": "bi-x-octagon", "method": "POST",
         "permission": "cancelar", "confirm": "¿Cancelar este pedido?",
-        "visible_when": { "status": "pendiente" } }
+        "visible_when": { "status": "pendiente" } },
+      { "name": "ticket", "type": "link", "label": "Ticket PDF", "icon": "bi-receipt",
+        "route": "/admin/reportes/documento?fuente=pedidos&id={id}&template=ticket_compra",
+        "permission": "reportes.generar" },
+      { "name": "presupuesto", "type": "link", "label": "Presupuesto PDF", "icon": "bi-file-earmark-text",
+        "route": "/admin/reportes/documento?fuente=pedidos&id={id}&template=presupuesto",
+        "permission": "reportes.generar" }
     ],
     "bulk": [
       { "name": "cancelar", "type": "handler", "handler": "demo_pedido_total",

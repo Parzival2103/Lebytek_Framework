@@ -82,6 +82,12 @@
           "inactivo": "secondary"
         },
         "priority": 4
+      },
+      {
+        "name": "created_at",
+        "label": "Creado",
+        "format": "datetime",
+        "sortable": true
       }
     ],
     "filters": [

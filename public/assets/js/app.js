@@ -882,6 +882,7 @@ const FormSubmit = (() => {
       form.addEventListener('submit', function () {
         const btn = form.querySelector('[type="submit"]');
         if (!btn) return;
+        if (btn.querySelector('.spinner-border, .btn-spinner')) return;
         btn.disabled = true;
         const spinner = document.createElement('span');
         spinner.className = 'spinner-border spinner-border-sm ms-2';
@@ -1017,7 +1018,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     const bp = (document.documentElement.getAttribute('data-base-path') || '').trim();
-    const swUrl = (bp ? `${bp}/` : '/') + 'sw.js';
+    const assetVersion = (document.documentElement.getAttribute('data-asset-version') || '1').trim();
+    const swUrl = (bp ? `${bp}/` : '/') + 'sw.js?v=' + encodeURIComponent(assetVersion);
     navigator.serviceWorker.register(swUrl, { scope: bp ? `${bp}/` : '/' }).catch(() => {});
   }
 });

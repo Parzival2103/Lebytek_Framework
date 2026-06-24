@@ -78,7 +78,7 @@ function reenviar_armar(): array
     $useCase     = new ReenviarVerificacionUseCase(
         usuarioRepo:        $usuarioRepo,
         tokens:             new AuthTokenService($tokenRepo, 3),
-        correo:             new CorreoAuthService($mailer, 'https://app.test'),
+        correo:             fake_correo_auth_service($mailer),
         verificacionTtlMin: 1440
     );
     return [$useCase, $usuarioRepo, $tokenRepo, $mailer];

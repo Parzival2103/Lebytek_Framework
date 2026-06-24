@@ -21,4 +21,9 @@ final class MarketingPaquetesSettingsProvider implements SettingsSectionProvider
              'options' => ['mensual' => 'Mensual', 'anual' => 'Anual'], 'default' => 'mensual'],
         ];
     }
+
+    public function vista(): ?string
+    {
+        return null;
+    }
 }

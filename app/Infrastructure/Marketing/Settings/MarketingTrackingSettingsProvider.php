@@ -21,4 +21,9 @@ final class MarketingTrackingSettingsProvider implements SettingsSectionProvider
             ['name' => 'mkt_captacion_activa', 'label' => 'Captación de leads activa', 'type' => 'toggle', 'default' => '1'],
         ];
     }
+
+    public function vista(): ?string
+    {
+        return null;
+    }
 }

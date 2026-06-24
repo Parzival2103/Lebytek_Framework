@@ -15,7 +15,7 @@ ob_start();
     <p class="text-muted small mb-0">Ingresa tus credenciales para continuar</p>
 </div>
 
-<form method="POST" action="/login" novalidate id="loginForm">
+<form method="POST" action="/login" novalidate id="loginForm" data-no-loading>
     <?= Csrf::field() ?>
 
     <div class="mb-3">

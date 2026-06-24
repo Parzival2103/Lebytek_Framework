@@ -17,7 +17,8 @@ return [
         'calendario'     => true,
         'pdf_kit'        => true,
         'reportes'       => true,
-        'marketing'      => false,
+        'marketing'      => true,
+        'integrations'   => true,
     ],
 
     'labels' => [

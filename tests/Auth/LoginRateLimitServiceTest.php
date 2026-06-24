@@ -72,3 +72,15 @@ test('LoginRateLimitService: limpiarTrasExito borra contadores de ip y email', f
     assert_same(0, count($repo->filas));
     $service->asegurarPermitido('8.8.8.8', 'ok@test.local');
 });
+
+test('LoginRateLimitService: deshabilitado no bloquea ni registra fallos', function (): void {
+    $repo    = new FakeLoginIntentoRepository();
+    $service = new LoginRateLimitService($repo, maxIntentos: 1, ventanaMin: 15, habilitado: false);
+
+    $repo->registrarFallo('1.1.1.1', 'a@test.local');
+
+    $service->asegurarPermitido('1.1.1.1', 'a@test.local');
+    $service->registrarFallo('1.1.1.1', 'a@test.local');
+
+    assert_same(2, count($repo->filas), 'el servicio deshabilitado no debe añadir filas al repo');
+});

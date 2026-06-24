@@ -29,6 +29,8 @@ return [
     'demo_pedido_pagar_guard'  => \App\Application\Crud\Handlers\DemoPedidoPagarGuard::class,
     'demo_cliente_contacto'    => \App\Application\Crud\Handlers\DemoClienteContactoValidator::class,
 
+    'enviar_whatsapp_demo' => \App\Application\Crud\Handlers\EnviarWhatsappDemoHandler::class,
+
     // Ejemplo (descomenta y crea la clase al implementar lógica real):
     // 'clientes'        => \App\Application\Crud\Handlers\ClientesHandler::class,
     // 'anticipo_minimo' => \App\Application\Crud\Handlers\AnticipoMinimoValidator::class,

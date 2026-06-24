@@ -223,6 +223,17 @@ final class ViewHelper
 
     public static function asset(string $path): string
     {
-        return self::url('assets/' . ltrim($path, '/'));
+        $url = self::url('assets/' . ltrim($path, '/'));
+        $version = (string) Config::get('app.asset_version', '1');
+        if ($version !== '') {
+            $url .= (str_contains($url, '?') ? '&' : '?') . 'v=' . rawurlencode($version);
+        }
+
+        return $url;
+    }
+
+    public static function assetVersion(): string
+    {
+        return (string) Config::get('app.asset_version', '1');
     }
 }

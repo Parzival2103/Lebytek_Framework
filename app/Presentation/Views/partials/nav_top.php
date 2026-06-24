@@ -66,12 +66,14 @@ $mostrarEmpresaNombre = AppConstants::empresaMostrarNombre($mostrarEmpresaNombre
 
         <!-- Acciones: SIEMPRE visibles en la barra superior (fuera del drawer) -->
         <div class="topnav-actions d-flex align-items-center gap-2">
+            <?php if (!empty($puedeGestionarApariencia)): ?>
             <button class="btn btn-ghost topbar-btn" id="themeToggle" title="Tema">
                 <i class="bi bi-moon-stars"></i>
             </button>
             <button class="btn btn-ghost topbar-btn" id="stylePanelBtn" title="Personalizar interfaz">
                 <i class="bi bi-palette"></i>
             </button>
+            <?php endif; ?>
             <div class="dropdown">
                 <button class="btn btn-ghost topbar-btn d-flex align-items-center gap-2"
                         data-bs-toggle="dropdown">
@@ -84,6 +86,8 @@ $mostrarEmpresaNombre = AppConstants::empresaMostrarNombre($mostrarEmpresaNombre
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                     <li><h6 class="dropdown-header"><?= ViewHelper::e($usuario['nombreCompleto'] ?? '') ?></h6></li>
+                    <li><a class="dropdown-item" href="/admin/perfil">
+                        <i class="bi bi-person me-2"></i>Mi perfil</a></li>
                     <li><a class="dropdown-item" href="/admin/ajustes"><i class="bi bi-gear me-2"></i>Ajustes</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>

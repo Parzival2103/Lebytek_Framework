@@ -11,4 +11,5 @@ return [
     'key'      => EnvLoader::get('APP_KEY',  ''),
     'timezone' => EnvLoader::get('APP_TIMEZONE', 'America/Mexico_City'),
     'locale'   => EnvLoader::get('APP_LOCALE',   'es'),
+    'asset_version' => EnvLoader::get('APP_ASSET_VERSION', '1'),
 ];

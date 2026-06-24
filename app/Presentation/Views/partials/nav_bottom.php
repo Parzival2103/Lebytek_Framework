@@ -91,6 +91,12 @@ $submenuJson = static function (array $item): string {
         'variant' => 'danger',
         'icon'    => UiConfirmConstants::LOGOUT_ICON,
     ]); ?>
+    <a href="/admin/perfil"
+       class="bottomnav-item flex-grow-1 text-center <?= str_starts_with($uri, '/admin/perfil') ? 'active' : '' ?>"
+       title="Mi perfil">
+        <i class="bi bi-person"></i>
+        <span>Perfil</span>
+    </a>
     <form method="POST" action="/logout" class="bottomnav-logout-form flex-grow-1 m-0 min-w-0 d-flex" <?= $logoutConfirmAttrs ?>>
         <?= ViewHelper::csrfField() ?>
         <button type="submit" class="bottomnav-item bottomnav-sub-btn flex-grow-1 w-100 text-danger"

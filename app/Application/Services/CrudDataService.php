@@ -338,6 +338,24 @@ final class CrudDataService
         return $this->repository->findById($definition->table(), $definition->primaryKey(), $id);
     }
 
+    /**
+     * Un registro por id respetando el mismo row-level scope que el listado.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function findInScope(
+        CrudResourceDefinition $definition,
+        int $id,
+        ?int $userId = null,
+        ?callable $can = null
+    ): ?array {
+        $where = ['deleted = 0', '`' . $definition->primaryKey() . '` = ?'];
+        $params = [$id];
+        $this->applyScopeConditions($definition, [], $userId, $can, $where, $params);
+
+        return $this->repository->findByIdScoped($definition->table(), $where, $params);
+    }
+
     public function store(CrudResourceDefinition $definition, array $input, array $files, ?int $userId, string $ip): int
     {
         $payload = $this->buildPayload($definition, $input, $files, true, null, $userId, $ip);

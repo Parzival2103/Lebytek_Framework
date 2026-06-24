@@ -16,6 +16,7 @@ test('el set de claves a guardar incluye campos de sistema y de providers visibl
         public function icono(): string { return 'bi-envelope'; }
         public function permiso(): string { return 'marketing.gestionar'; }
         public function campos(): array { return [['name'=>'mkt_mail_host','label'=>'Host','type'=>'text']]; }
+        public function vista(): ?string { return null; }
     };
     $reg = new SettingsSectionRegistry([$provider]);
 
@@ -31,6 +32,7 @@ test('sin permisos del módulo no se cuelan campos de provider', function (): vo
         public function icono(): string { return 'bi-x'; }
         public function permiso(): string { return 'marketing.gestionar'; }
         public function campos(): array { return [['name'=>'mkt_x','label'=>'x','type'=>'text']]; }
+        public function vista(): ?string { return null; }
     };
     $reg = new SettingsSectionRegistry([$provider]);
     assert_same([], $reg->fieldNames(['administracion.ver']));

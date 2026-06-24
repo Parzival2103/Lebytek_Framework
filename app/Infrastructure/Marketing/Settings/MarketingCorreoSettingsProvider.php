@@ -21,4 +21,9 @@ final class MarketingCorreoSettingsProvider implements SettingsSectionProviderIn
             ['name' => 'mkt_mail_secuencias', 'label' => 'Activar secuencias', 'type' => 'toggle', 'default' => '0'],
         ];
     }
+
+    public function vista(): ?string
+    {
+        return null;
+    }
 }

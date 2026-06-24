@@ -36,6 +36,7 @@ Connection::configure([
 
 $runner = new SqlFileRunner();
 $incluirCrudEngine = in_array('--crud-engine', $argv ?? [], true);
+$incluirMktDemo = in_array('--marketing-demo', $argv ?? [], true);
 
 $archivos = [
     ROOT_PATH . '/database/schema/schema.sql',
@@ -43,6 +44,10 @@ $archivos = [
 
 if ($incluirCrudEngine) {
     $archivos[] = ROOT_PATH . '/database/schema/modules/crud-engine.sql';
+}
+
+if ($incluirMktDemo) {
+    $archivos[] = ROOT_PATH . '/database/schema/modules/marketing_demo.sql';
 }
 
 echo '=== Bootstrap SQL — ' . count($archivos) . " archivo(s) ===\n\n";

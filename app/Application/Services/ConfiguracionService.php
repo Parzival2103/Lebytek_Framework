@@ -76,7 +76,7 @@ final class ConfiguracionService
 
     public function empresaNombre(): string
     {
-        return $this->get(AppConstants::CONFIG_EMPRESA_NOMBRE, 'Mi Empresa');
+        return AppConstants::resolveEmpresaNombre($this->get(AppConstants::CONFIG_EMPRESA_NOMBRE, null));
     }
 
     public function empresaLogo(): string

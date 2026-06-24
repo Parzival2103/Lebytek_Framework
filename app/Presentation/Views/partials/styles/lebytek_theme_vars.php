@@ -38,12 +38,21 @@ $lebytekCssVariables = is_array($lebytekCssVariables ?? null) ? $lebytekCssVaria
         --bs-btn-hover-bg:       <?= ViewHelper::e($primaryHover ?? '#0b5ed7') ?>;
         --bs-btn-hover-border-color: <?= ViewHelper::e($primaryHover ?? '#0b5ed7') ?>;
         --bs-btn-active-bg:      <?= ViewHelper::e($primaryActive ?? '#0a58ca') ?>;
+        --bs-btn-active-border-color: <?= ViewHelper::e($primaryActive ?? '#0a58ca') ?>;
+        --bs-btn-disabled-opacity: 1;
+        --bs-btn-disabled-color: <?= ViewHelper::e($primaryColor ?? '#0d6efd') ?>;
+        --bs-btn-disabled-bg:    <?= ViewHelper::e($primarySubtle ?? '#e8f0fe') ?>;
+        --bs-btn-disabled-border-color: <?= ViewHelper::e($primarySubtle ?? '#e8f0fe') ?>;
     }
     .btn-outline-primary {
-        --bs-btn-color:          <?= ViewHelper::e($primaryColor ?? '#0d6efd') ?>;
-        --bs-btn-border-color:   <?= ViewHelper::e($primaryColor ?? '#0d6efd') ?>;
-        --bs-btn-hover-bg:       <?= ViewHelper::e($primaryColor ?? '#0d6efd') ?>;
-        --bs-btn-active-bg:      <?= ViewHelper::e($primaryColor ?? '#0d6efd') ?>;
+        --bs-btn-color:               <?= ViewHelper::e($primaryColor ?? '#0d6efd') ?>;
+        --bs-btn-border-color:        <?= ViewHelper::e($primaryActive ?? '#0a58ca') ?>;
+        --bs-btn-hover-color:         #fff;
+        --bs-btn-hover-bg:            <?= ViewHelper::e($primaryColor ?? '#0d6efd') ?>;
+        --bs-btn-hover-border-color:  <?= ViewHelper::e($primaryActive ?? '#0a58ca') ?>;
+        --bs-btn-active-bg:           <?= ViewHelper::e($primaryActive ?? '#0a58ca') ?>;
+        --bs-btn-active-border-color: <?= ViewHelper::e($primaryActive ?? '#0a58ca') ?>;
+        --bs-btn-focus-shadow-rgb:    <?= ViewHelper::e($primaryRgb ?? '13, 110, 253') ?>;
     }
     .form-control:focus,
     .form-select:focus {

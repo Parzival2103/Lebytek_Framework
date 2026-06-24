@@ -7,6 +7,17 @@
     "permission_prefix": "marketing"
   },
   "security": { "allow_core_table": false, "mode": "restricted" },
+  "states": {
+    "column": "activo",
+    "values": {
+      "1":   { "label": "Activo",   "badge": "success" },
+      "0": { "label": "Inactivo", "badge": "secondary" }
+    },
+    "transitions": {
+      "1":   ["0"],
+      "0": ["0"]
+    }
+  },
   "list": {
     "columns": [
       { "name": "id", "label": "ID", "sortable": true },
@@ -32,7 +43,13 @@
     ],
     "validators": []
   },
-  "actions": { "row": [ { "name": "show", "type": "builtin" }, { "name": "edit", "type": "builtin" }, { "name": "delete", "type": "builtin" } ], "bulk": [] },
+  "actions": { "row": [ 
+    { "name": "show", "type": "builtin" }, 
+    { "name": "edit", "type": "builtin" }, 
+    { "name": "delete", "type": "builtin" }, 
+    { "name": "toggle", "type": "handler", "handler": "demo_producto_toggle",
+      "label": "Alternar estado", "icon": "bi-toggle-on", "method": "POST",
+      "permission": "editar", "confirm": "¿Cambiar el estado de este paquete?" } ], "bulk": [] },
   "detail": { "tabs": [ { "key": "general", "label": "Datos", "type": "fields", "columns": ["nombre","precio_mensual","precio_anual","badge","destacado","activo"] } ] },
   "uploads": { "enabled": false, "public_path": "uploads/cruds/mkt_paquetes" },
   "hooks": { "handler": null }

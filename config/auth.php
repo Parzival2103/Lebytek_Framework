@@ -14,6 +14,7 @@ return [
         'max_por_hora'         => 3,
     ],
     'login' => [
+        'habilitado'   => (bool) EnvLoader::get('LOGIN_RATE_LIMIT_ENABLED', true),
         'max_intentos' => (int) EnvLoader::get('LOGIN_MAX_INTENTOS', 5),
         'ventana_min'  => (int) EnvLoader::get('LOGIN_VENTANA_MIN', 15),
     ],

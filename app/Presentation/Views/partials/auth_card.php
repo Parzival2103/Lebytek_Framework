@@ -1,13 +1,15 @@
 <?php
 use App\Kernel\Helpers\ViewHelper;
 use App\Kernel\Security\Session;
+use App\Kernel\Constants\AppConstants;
 
 /*
  * Shell visual común de las vistas de auth (login, registro, recuperación).
  * Recibe: pageTitle, contentHtml (lado del formulario), extraScripts (opcional)
  * y las variables de tema de LebytekUiConfig.
  */
-$empresaNombre = $empresaNombre ?? 'Sistema Administrativo';
+$empresaNombre = AppConstants::resolveEmpresaNombre($empresaNombre ?? null);
+$mostrarEmpresaNombre = AppConstants::empresaMostrarNombre($mostrarEmpresaNombre ?? null);
 $primaryColor  = $primaryColor ?? '#0d6efd';
 $darkMode      = $darkMode ?? false;
 $empresaLogo   = $empresaLogo ?? '';
@@ -20,7 +22,7 @@ $pwaManifestHref = ($pwaBasePath === '' ? '' : $pwaBasePath) . '/manifest.webman
 $lebytekBody   = trim('ct-login-page ' . (string) ($lebytekBodyClasses ?? ''));
 ?>
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="<?= $darkMode ? 'dark' : 'light' ?>" data-base-path="<?= ViewHelper::e($pwaBasePath) ?>">
+<html lang="es" data-bs-theme="<?= $darkMode ? 'dark' : 'light' ?>" data-base-path="<?= ViewHelper::e($pwaBasePath) ?>" data-asset-version="<?= ViewHelper::e(ViewHelper::assetVersion()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,15 +56,17 @@ $lebytekBody   = trim('ct-login-page ' . (string) ($lebytekBodyClasses ?? ''));
 
 <div class="login-wrapper d-flex align-items-center justify-content-center min-vh-100 px-3">
     <div class="login-card ct-login-card card shadow-lg border-0 w-100">
-        <div class="login-brand d-md-flex flex-column align-items-center justify-content-center p-4 p-md-5">
+        <div class="login-brand d-flex flex-column align-items-center justify-content-center text-center p-4 p-md-5">
             <?php if ($empresaLogo !== ''): ?>
-                <img src="<?= ViewHelper::e($empresaLogo) ?>" alt="<?= ViewHelper::e($empresaNombre) ?>" class="mb-4 ct-login-brand-logo">
+                <img src="<?= ViewHelper::e($empresaLogo) ?>" alt="<?= ViewHelper::e($empresaNombre) ?>" class="<?= $mostrarEmpresaNombre ? 'mb-4' : 'mb-3' ?> ct-login-brand-logo mx-auto">
             <?php else: ?>
-                <div class="login-brand-icon mb-4" aria-hidden="true">
+                <div class="login-brand-icon mb-4 mx-auto" aria-hidden="true">
                     <i class="bi bi-grid-3x3-gap-fill"></i>
                 </div>
             <?php endif; ?>
+            <?php if ($mostrarEmpresaNombre): ?>
             <h2 class="fw-bold text-white mb-2"><?= ViewHelper::e($empresaNombre) ?></h2>
+            <?php endif; ?>
             <p class="text-white-50 text-center mb-0 small">
                 Sistema administrativo modular.<br>
                 Accede para gestionar tu operación.

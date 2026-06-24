@@ -24,7 +24,7 @@ function registro_armar(array $overrides = []): array
         rolRepo:            $rolRepo,
         validator:          new CrearUsuarioValidator(),
         tokens:             new AuthTokenService($tokenRepo, 3),
-        correo:             new CorreoAuthService($mailer, 'https://app.test'),
+        correo:             fake_correo_auth_service($mailer),
         habilitado:         $overrides['habilitado'] ?? true,
         rolDefault:         'usuario',
         verificacionTtlMin: 1440

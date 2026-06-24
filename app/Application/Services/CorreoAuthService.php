@@ -24,6 +24,7 @@ final class CorreoAuthService
 {
     public function __construct(
         private readonly MailerInterface $mailer,
+        private readonly ConfiguracionService $configuracionService,
         private readonly string $baseUrl
     ) {
     }
@@ -32,8 +33,9 @@ final class CorreoAuthService
     {
         $url  = $this->url('/registro/verificar', $token);
         $html = ViewHelper::render('emails/verificacion', [
-            'nombre' => $usuario->nombre(),
-            'url'    => $url,
+            'nombre'        => $usuario->nombre(),
+            'url'           => $url,
+            'empresaNombre' => $this->configuracionService->empresaNombre(),
         ], '');
 
         $this->enviar(new MensajeCorreo(
@@ -48,8 +50,9 @@ final class CorreoAuthService
     {
         $url  = $this->url('/restablecer', $token);
         $html = ViewHelper::render('emails/recuperacion', [
-            'nombre' => $usuario->nombre(),
-            'url'    => $url,
+            'nombre'        => $usuario->nombre(),
+            'url'           => $url,
+            'empresaNombre' => $this->configuracionService->empresaNombre(),
         ], '');
 
         $this->enviar(new MensajeCorreo(

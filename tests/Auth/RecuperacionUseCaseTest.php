@@ -20,7 +20,7 @@ function recuperacion_armar(): array
     $solicitar   = new SolicitarRecuperacionUseCase(
         usuarioRepo:        $usuarioRepo,
         tokens:             new AuthTokenService($tokenRepo, 3),
-        correo:             new CorreoAuthService($mailer, 'https://app.test'),
+        correo:             fake_correo_auth_service($mailer),
         recuperacionTtlMin: 60
     );
     $restablecer = new RestablecerPasswordUseCase($usuarioRepo, $tokenRepo);

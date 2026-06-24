@@ -101,6 +101,21 @@
     ],
     "validators": ["demo_cliente_contacto"]
   },
+  "actions": {
+    "row": [
+      { "name": "show", "type": "builtin" },
+      { "name": "edit", "type": "builtin" },
+      { "name": "delete", "type": "builtin" },
+      { "name": "contrato", "type": "link", "label": "Contrato PDF", "icon": "bi-file-earmark-text",
+        "route": "/admin/reportes/documento?fuente=clientes&id={id}&template=contrato",
+        "permission": "reportes.generar" },
+      { "name": "confirmar_wa", "type": "handler", "handler": "enviar_whatsapp_demo",
+        "label": "Confirmar por WhatsApp", "icon": "bi-whatsapp",
+        "permission": "integrations.enviar",
+        "confirm": "¿Enviar confirmación por WhatsApp?" }
+    ],
+    "bulk": []
+  },
   "detail": {
     "tabs": [
       { "key": "general", "label": "Datos generales", "type": "fields", "columns": ["nombre", "email", "telefono", "status", "created_at"] },

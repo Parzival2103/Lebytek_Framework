@@ -100,6 +100,32 @@ final class Session
         session_regenerate_id(true);
     }
 
+    /**
+     * Extiende la cookie de sesión y gc_maxlifetime (p. ej. checkbox "Recordarme").
+     * Llamar tras login exitoso, antes de persistir datos de auth en $_SESSION.
+     */
+    public static function aplicarDuracionRecordar(): void
+    {
+        if (!self::$started || session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+
+        $minutes = (int) Config::get('session.remember_lifetime', 43200);
+        $seconds = max(60, $minutes * 60);
+
+        ini_set('session.gc_maxlifetime', (string) $seconds);
+
+        $params = session_get_cookie_params();
+        setcookie(session_name(), session_id(), [
+            'expires'  => time() + $seconds,
+            'path'     => $params['path'],
+            'domain'   => $params['domain'],
+            'secure'   => $params['secure'],
+            'httponly' => $params['httponly'],
+            'samesite' => 'Lax',
+        ]);
+    }
+
     // ── Flash messages ────────────────────────────────────────────────────────
 
     public static function flash(string $key, mixed $value): void

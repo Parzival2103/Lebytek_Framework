@@ -17,3 +17,25 @@ if (!defined('STORAGE_PATH')) {
 }
 
 require_once APP_PATH . '/Kernel/Autoloader.php';
+
+$composerAutoload = ROOT_PATH . '/vendor/autoload.php';
+if (is_readable($composerAutoload)) {
+    require_once $composerAutoload;
+}
+
+use App\Kernel\Config\Config;
+use App\Kernel\Database\Connection;
+use App\Kernel\EnvLoader;
+
+$envFile = ROOT_PATH . '/.env';
+if (is_readable($envFile)) {
+    EnvLoader::load($envFile);
+} elseif (is_readable(ROOT_PATH . '/.env.example')) {
+    EnvLoader::load(ROOT_PATH . '/.env.example');
+}
+
+Config::init(ROOT_PATH . '/config');
+$dbConfig = Config::get('database', []);
+if (is_array($dbConfig) && $dbConfig !== []) {
+    Connection::configure($dbConfig);
+}

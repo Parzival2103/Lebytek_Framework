@@ -15,16 +15,16 @@ $pwaBasePath = ViewHelper::basePath();
 $pwaManifestHref = ($pwaBasePath === '' ? '' : $pwaBasePath) . '/manifest.webmanifest';
 ?>
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="<?= $dataTheme ?>" data-dark-mode="<?= ($darkMode ?? false) ? '1' : '0' ?>" data-base-path="<?= ViewHelper::e($pwaBasePath) ?>">
+<html lang="es" data-bs-theme="<?= $dataTheme ?>" data-dark-mode="<?= ($darkMode ?? false) ? '1' : '0' ?>" data-base-path="<?= ViewHelper::e($pwaBasePath) ?>" data-asset-version="<?= ViewHelper::e(ViewHelper::assetVersion()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= ViewHelper::e($empresaNombre ?? 'Sistema') ?> — Panel Administrativo">
+    <meta name="description" content="<?= ViewHelper::e($empresaNombre ?? AppConstants::EMPRESA_NOMBRE_DEFAULT) ?> — Panel Administrativo">
     <meta name="theme-color" content="<?= ViewHelper::e($primaryColor ?? '#0d6efd') ?>">
     <link rel="manifest" href="<?= ViewHelper::e($pwaManifestHref) ?>">
     <link rel="apple-touch-icon" href="<?= ViewHelper::e(!empty($empresaLogo) ? $empresaLogo : ViewHelper::asset('icons/app-icon.svg')) ?>">
     <?= Csrf::metaTag() ?>
-    <title><?= ViewHelper::e($titulo ?? 'Panel') ?> — <?= ViewHelper::e($empresaNombre ?? 'Sistema') ?></title>
+    <title><?= ViewHelper::e($titulo ?? 'Panel') ?> — <?= ViewHelper::e($empresaNombre ?? AppConstants::EMPRESA_NOMBRE_DEFAULT) ?></title>
 
     <!-- Bootstrap 5 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -61,7 +61,7 @@ $pwaManifestHref = ($pwaBasePath === '' ? '' : $pwaBasePath) . '/manifest.webman
 <body class="<?= $bodyClass ?>">
 
 <?php if (($menuLayout ?? '') === AppConstants::MENU_LAYOUT_TOP): ?>
-    <?= ViewHelper::partial('nav_top', compact('usuario', 'empresaNombre', 'empresaLogo', 'menuFiltrado', 'currentUri')) ?>
+    <?= ViewHelper::partial('nav_top', compact('usuario', 'empresaNombre', 'empresaLogo', 'mostrarEmpresaNombre', 'puedeGestionarApariencia', 'menuFiltrado', 'currentUri')) ?>
     <div class="layout-top-wrapper">
         <main class="main-content container-fluid">
             <?= ViewHelper::partial('flash_alerts', compact('flashAll')) ?>
@@ -73,7 +73,7 @@ $pwaManifestHref = ($pwaBasePath === '' ? '' : $pwaBasePath) . '/manifest.webman
 <?php elseif (($menuLayout ?? '') === AppConstants::MENU_LAYOUT_BOTTOM): ?>
     <!-- Escritorio (≥992px): barra superior como fallback de navegación -->
     <div class="d-none d-lg-block">
-        <?= ViewHelper::partial('nav_top', compact('usuario', 'empresaNombre', 'empresaLogo', 'menuFiltrado', 'currentUri')) ?>
+        <?= ViewHelper::partial('nav_top', compact('usuario', 'empresaNombre', 'empresaLogo', 'mostrarEmpresaNombre', 'puedeGestionarApariencia', 'menuFiltrado', 'currentUri')) ?>
     </div>
     <div class="layout-bottom-wrapper">
         <main class="main-content container-fluid">
@@ -81,27 +81,29 @@ $pwaManifestHref = ($pwaBasePath === '' ? '' : $pwaBasePath) . '/manifest.webman
             <?= ViewHelper::partial('breadcrumb', ['titulo' => $titulo ?? '']) ?>
             <?= $content ?? '' ?>
         </main>
-        <?= ViewHelper::partial('footer') ?>
+        <?= ViewHelper::partial('footer', compact('empresaNombre')) ?>
     </div>
     <!-- Móvil (<992px): barra inferior fija -->
-    <?= ViewHelper::partial('nav_bottom', compact('usuario', 'empresaNombre', 'menuFiltrado', 'currentUri')) ?>
+    <?= ViewHelper::partial('nav_bottom', compact('usuario', 'empresaNombre', 'mostrarEmpresaNombre', 'menuFiltrado', 'currentUri')) ?>
 
 <?php else: /* side (default) */ ?>
     <div class="layout-side-wrapper d-flex">
-        <?= ViewHelper::partial('nav_side', compact('usuario', 'empresaNombre', 'empresaLogo', 'menuFiltrado', 'currentUri')) ?>
+        <?= ViewHelper::partial('nav_side', compact('usuario', 'empresaNombre', 'empresaLogo', 'mostrarEmpresaNombre', 'menuFiltrado', 'currentUri')) ?>
         <div class="layout-side-content d-flex flex-column flex-grow-1 overflow-hidden">
-            <?= ViewHelper::partial('topbar', compact('usuario', 'empresaNombre', 'empresaLogo', 'titulo')) ?>
+            <?= ViewHelper::partial('topbar', compact('usuario', 'empresaNombre', 'empresaLogo', 'titulo', 'puedeGestionarApariencia')) ?>
             <main class="main-content flex-grow-1">
                 <?= ViewHelper::partial('flash_alerts', compact('flashAll')) ?>
                 <?= ViewHelper::partial('breadcrumb', ['titulo' => $titulo ?? '']) ?>
                 <?= $content ?? '' ?>
             </main>
-            <?= ViewHelper::partial('footer') ?>
+            <?= ViewHelper::partial('footer', compact('empresaNombre')) ?>
         </div>
     </div>
 <?php endif; ?>
 
+<?php if (!empty($puedeGestionarApariencia)): ?>
 <?= ViewHelper::partial('style_panel', compact('usuario')) ?>
+<?php endif; ?>
 <?= ViewHelper::partial('confirm_modal') ?>
 
 <!-- Bootstrap 5 JS -->

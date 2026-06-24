@@ -1,5 +1,5 @@
 <?php
-// app/Presentation/Views/admin/ajustes/_provider_section.php
+// app/Presentation/Views/partials/admin/ajustes/_provider_section.php
 
 use App\Kernel\Helpers\ViewHelper;
 
@@ -7,6 +7,9 @@ use App\Kernel\Helpers\ViewHelper;
 /** @var array $configuracion */
 $c = $configuracion ?? [];
 ob_start();
+if ($section->vista() !== null) {
+    echo ViewHelper::partial($section->vista(), ['configuracion' => $c]);
+} else {
 ?>
 <div class="row g-3">
     <?php foreach ($section->campos() as $campo): ?>
@@ -39,6 +42,7 @@ ob_start();
     <?php endforeach; ?>
 </div>
 <?php
+}
 $bodyHtml = ob_get_clean();
 echo ViewHelper::partial('admin/ajustes_accordion_item', [
     'collapseId' => 'ajustesCollapse' . ucfirst(preg_replace('/[^a-z0-9]/i', '', $section->clave())),

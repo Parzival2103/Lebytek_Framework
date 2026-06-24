@@ -27,7 +27,11 @@ final class PwaController extends BaseController
     {
         $cfg = $this->configuracionService->all();
 
-        $name = trim((string) ($cfg[AppConstants::CONFIG_EMPRESA_NOMBRE] ?? '')) ?: 'Sistema';
+        $name = AppConstants::resolveEmpresaNombre(
+            isset($cfg[AppConstants::CONFIG_EMPRESA_NOMBRE])
+                ? (string) $cfg[AppConstants::CONFIG_EMPRESA_NOMBRE]
+                : null
+        );
         $short = mb_strlen($name) > 12 ? mb_substr($name, 0, 12) : $name;
 
         $logo = trim((string) ($cfg[AppConstants::CONFIG_EMPRESA_LOGO] ?? ''));

@@ -16,6 +16,7 @@ function fakeSettingsProvider(string $clave, string $permiso, array $fieldNames)
         public function campos(): array {
             return array_map(fn($n) => ['name' => $n, 'label' => $n, 'type' => 'text'], $this->f);
         }
+        public function vista(): ?string { return null; }
     };
 }
 

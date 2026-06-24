@@ -193,11 +193,17 @@ final class LebytekUiConfig
             'empresaNombre' => (string) self::firstValue($sysConfig, [
                 'theme.app_name',
                 AppConstants::CONFIG_EMPRESA_NOMBRE,
-            ], 'Sistema'),
+            ], AppConstants::EMPRESA_NOMBRE_DEFAULT),
             'empresaLogo' => (string) self::firstValue($sysConfig, [
                 'theme.logo_path',
                 AppConstants::CONFIG_EMPRESA_LOGO,
             ], ''),
+            'mostrarEmpresaNombre' => AppConstants::empresaMostrarNombre(
+                self::firstValue($sysConfig, [
+                    'ui.empresa_mostrar_nombre',
+                    AppConstants::CONFIG_EMPRESA_MOSTRAR_NOMBRE,
+                ], '1')
+            ),
             'lebytekBodyClasses' => $lebytekBodyClasses,
             'lebytekCssVariables' => $lebytekCssVariables,
             'lebytekLayoutWidth' => $layoutWidth,

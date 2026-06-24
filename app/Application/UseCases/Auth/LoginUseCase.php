@@ -45,5 +45,9 @@ final class LoginUseCase
 
         $this->rateLimit->limpiarTrasExito($ip, $emailNormalizado);
         $this->authService->iniciarSesion($usuario);
+
+        if ($dto->recordar) {
+            \App\Kernel\Security\Session::aplicarDuracionRecordar();
+        }
     }
 }

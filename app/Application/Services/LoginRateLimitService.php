@@ -13,6 +13,7 @@ use App\Kernel\Logging\AppLogger;
 | LoginRateLimitService — Política de límite de intentos de login
 |--------------------------------------------------------------------------
 | Contadores duales IP + email; bloqueo temporal sin lockout de cuenta.
+| Desactivable con LOGIN_RATE_LIMIT_ENABLED=false.
 */
 
 final class LoginRateLimitService
@@ -22,12 +23,17 @@ final class LoginRateLimitService
     public function __construct(
         private readonly LoginIntentoRepositoryInterface $repo,
         private readonly int $maxIntentos,
-        private readonly int $ventanaMin
+        private readonly int $ventanaMin,
+        private readonly bool $habilitado = true
     ) {
     }
 
     public function asegurarPermitido(string $ip, string $emailNormalizado): void
     {
+        if (!$this->habilitado) {
+            return;
+        }
+
         if ($this->estaBloqueado('ip', $ip) || $this->estaBloqueado('email', $emailNormalizado)) {
             AppLogger::warning('Login bloqueado por rate limit', [
                 'ip' => $ip,
@@ -38,6 +44,10 @@ final class LoginRateLimitService
 
     public function registrarFallo(string $ip, string $emailNormalizado): void
     {
+        if (!$this->habilitado) {
+            return;
+        }
+
         $this->repo->registrarFallo($ip, $emailNormalizado);
         $this->repo->purgarAntiguos($this->ventanaMin);
 
@@ -50,6 +60,10 @@ final class LoginRateLimitService
 
     public function limpiarTrasExito(string $ip, string $emailNormalizado): void
     {
+        if (!$this->habilitado) {
+            return;
+        }
+
         $this->repo->limpiarPara($ip, $emailNormalizado);
     }
 

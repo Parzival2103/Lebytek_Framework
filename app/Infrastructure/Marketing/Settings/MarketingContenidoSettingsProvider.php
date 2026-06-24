@@ -21,4 +21,9 @@ final class MarketingContenidoSettingsProvider implements SettingsSectionProvide
             ['name' => 'mkt_mostrar_testimonios', 'label' => 'Mostrar testimonios', 'type' => 'toggle', 'default' => '1'],
         ];
     }
+
+    public function vista(): ?string
+    {
+        return null;
+    }
 }

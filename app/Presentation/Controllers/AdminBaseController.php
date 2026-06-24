@@ -10,6 +10,7 @@ use App\Kernel\Security\Session;
 use App\Kernel\Helpers\LebytekUiConfig;
 use App\Application\Services\AdminNavigationMenuService;
 use App\Application\Services\ConfiguracionService;
+use App\Domain\Policies\RbacPolicy;
 
 abstract class AdminBaseController extends BaseController
 {
@@ -65,12 +66,17 @@ abstract class AdminBaseController extends BaseController
     {
         $config = $this->cargarConfiguracionSistema();
         $uri    = (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+        $rbac   = new RbacPolicy(
+            Session::get('auth_permisos', []),
+            Session::get('auth_roles', [])
+        );
 
         return array_merge($config, [
-            'usuario'       => Session::get('auth_user', []),
-            'flashAll'      => Session::flashAll(),
-            'menuFiltrado'  => $this->filtrarMenuPorPermisos(),
-            'currentUri'    => $uri,
+            'usuario'                  => Session::get('auth_user', []),
+            'flashAll'                 => Session::flashAll(),
+            'menuFiltrado'             => $this->filtrarMenuPorPermisos(),
+            'currentUri'               => $uri,
+            'puedeGestionarApariencia' => $rbac->puede('administracion.ver'),
         ]);
     }
 }

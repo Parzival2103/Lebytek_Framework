@@ -79,6 +79,22 @@ final class Response
         return new self('', $status, ['Location' => $url]);
     }
 
+    /** Respuesta binaria para descarga de archivos (PDF, exportaciones, etc.). */
+    public static function download(string $bytes, string $filename, string $mime = 'application/octet-stream'): self
+    {
+        $safeName = str_replace(['"', "\r", "\n"], '', $filename);
+        if ($safeName === '') {
+            $safeName = 'documento.pdf';
+        }
+
+        return new self($bytes, 200, [
+            'Content-Type'        => $mime,
+            'Content-Disposition' => 'attachment; filename="' . $safeName . '"',
+            'Content-Length'      => (string) strlen($bytes),
+            'Cache-Control'       => 'private, no-cache',
+        ]);
+    }
+
     public static function notFound(): self
     {
         $body = '';

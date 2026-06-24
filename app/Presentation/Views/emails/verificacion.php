@@ -1,10 +1,11 @@
 <?php
 use App\Kernel\Helpers\ViewHelper;
+use App\Kernel\Constants\AppConstants;
 
 /** @var string $nombre */
 /** @var string $url */
-/** @var string $empresaNombre */
-$empresaNombre = $empresaNombre ?? 'Sistema Administrativo';
+/** @var string|null $empresaNombre */
+$empresaNombre = AppConstants::resolveEmpresaNombre($empresaNombre ?? null);
 ?>
 <!DOCTYPE html>
 <html lang="es">

@@ -540,8 +540,51 @@ return static function (Container $container): void {
                 new \App\Infrastructure\Marketing\Settings\MarketingContenidoSettingsProvider(),
             ];
         }
+        if ((bool) Config::get('vertical.modules.integrations', false)) {
+            $providers[] = new \App\Infrastructure\Integrations\Settings\IntegrationsWhatsappSettingsProvider();
+        }
         return new \App\Application\Services\SettingsSectionRegistry($providers);
     });
+
+    // ── Módulo Integraciones (binding condicional al toggle; ver config/modules/integrations.php) ──
+    if ((bool) Config::get('vertical.modules.integrations', false)) {
+        $container->singleton(
+            \App\Application\Integrations\NotificationDispatcher::class,
+            static fn() => \App\Application\Integrations\IntegrationsFactory::dispatcher()
+        );
+
+        $container->singleton(\App\Domain\Integrations\IntegrationAccountRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Integrations\Repositories\IntegrationAccountRepository());
+
+        $container->singleton(\App\Domain\Integrations\PartnerConnectorInterface::class, function () {
+            $base = (array) Config::get('integrations.channels.whatsapp.config', []);
+            return new \App\Infrastructure\Integrations\Partner\GreenApiPartnerConnector(
+                new \App\Infrastructure\Integrations\Http\HttpApiConnector((int) ($base['timeout'] ?? 15)),
+                (string) \App\Kernel\EnvLoader::get('GREEN_API_PARTNER_TOKEN', ''),
+                (string) ($base['base_url'] ?? 'https://api.green-api.com')
+            );
+        });
+
+        $container->singleton(\App\Application\Integrations\DemoProvisioningService::class, function (Container $c) {
+            return new \App\Application\Integrations\DemoProvisioningService(
+                $c->get(\App\Domain\Integrations\IntegrationAccountRepositoryInterface::class),
+                $c->get(\App\Domain\Integrations\PartnerConnectorInterface::class),
+                \App\Application\Integrations\IntegrationsFactory::dispatcher(),
+                (string) \App\Kernel\EnvLoader::get('APP_URL', '')
+            );
+        });
+
+        $container->bind(\App\Presentation\Controllers\Admin\IntegrationsController::class, function (Container $c) {
+            return new \App\Presentation\Controllers\Admin\IntegrationsController(
+                $c->get(ConfiguracionService::class),
+                $c->get(AdminNavigationMenuService::class),
+                $c->get(\App\Domain\Integrations\IntegrationAccountRepositoryInterface::class),
+                $c->get(\App\Domain\Integrations\PartnerConnectorInterface::class),
+                $c->get(\App\Application\Integrations\DemoProvisioningService::class),
+                new \App\Infrastructure\Integrations\Repositories\IntegrationLogRepository()
+            );
+        });
+    }
 
     // ── Módulo Marketing (bindings condicionales al toggle; ver config/modules/marketing.php) ──
     if ((bool) Config::get('vertical.modules.marketing', false)) {

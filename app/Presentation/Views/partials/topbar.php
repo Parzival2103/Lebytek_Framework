@@ -32,6 +32,7 @@ use App\Kernel\Constants\UiConfirmConstants;
             <i class="bi bi-bell"></i>
         </button>
 
+        <?php if (!empty($puedeGestionarApariencia)): ?>
         <!-- Tema -->
         <button class="btn btn-ghost topbar-btn" id="themeToggle" title="Cambiar tema">
             <i class="bi bi-moon-stars"></i>
@@ -41,6 +42,7 @@ use App\Kernel\Constants\UiConfirmConstants;
         <button class="btn btn-ghost topbar-btn" id="stylePanelBtn" title="Personalizar interfaz">
             <i class="bi bi-palette"></i>
         </button>
+        <?php endif; ?>
 
         <!-- Menú usuario -->
         <div class="dropdown">

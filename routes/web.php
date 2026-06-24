@@ -32,6 +32,11 @@ if ($marketingActivo) {
     require ROOT_PATH . '/routes/marketing.php';
 }
 
+$integrationsActivo = (bool) \App\Kernel\Config\Config::get('vertical.modules.integrations', false);
+if ($integrationsActivo) {
+    $router->get('/wa/activar/{token}', [\App\Presentation\Controllers\Admin\IntegrationsController::class, 'activar']);
+}
+
 $router->get('/login',  [AuthController::class, 'showLogin']);
 if (!$marketingActivo) {
     $router->get('/', [AuthController::class, 'showLogin']);
@@ -53,7 +58,7 @@ $router->post('/restablecer', [RecuperacionController::class, 'restablecer'], [C
 $router->group([
     'prefix'      => '/admin',
     'middlewares' => [AuthMiddleware::class],
-], function ($router) {
+], function ($router) use ($integrationsActivo) {
 
     $rbacDashboard = [new RbacMiddleware('dashboard.ver')];
     $rbacAjustes   = [new RbacMiddleware('administracion.ver')];
@@ -138,4 +143,8 @@ $router->group([
     $router->post('/reportes/{id}',           [ReportesController::class, 'actualizar'],[new RbacMiddleware('reportes.editar'), CsrfMiddleware::class]);
     $router->post('/reportes/{id}/eliminar',  [ReportesController::class, 'eliminar'],  [new RbacMiddleware('reportes.eliminar'), CsrfMiddleware::class]);
     $router->post('/reportes/{id}/generar',   [ReportesController::class, 'generar'],   [new RbacMiddleware('reportes.generar'), CsrfMiddleware::class]);
+
+    if ($integrationsActivo) {
+        require ROOT_PATH . '/routes/integrations.php';
+    }
 });

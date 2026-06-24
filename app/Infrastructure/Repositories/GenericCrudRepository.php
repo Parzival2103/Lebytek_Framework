@@ -200,6 +200,21 @@ final class GenericCrudRepository extends BaseRepository implements CrudConstrai
         return $this->queryOne($sql, [$id]);
     }
 
+    /**
+     * Un registro por condiciones WHERE ya seguras (deleted + pk + scope).
+     *
+     * @param list<string> $whereSqlParts
+     * @param list<mixed>  $params
+     * @return array<string,mixed>|null
+     */
+    public function findByIdScoped(string $table, array $whereSqlParts, array $params): ?array
+    {
+        $safeTable = $this->quoteIdentifier($table);
+        $whereSql = empty($whereSqlParts) ? '' : ' WHERE ' . implode(' AND ', $whereSqlParts);
+        $row = $this->queryOne("SELECT * FROM {$safeTable}{$whereSql} LIMIT 1", $params);
+        return is_array($row) ? $row : null;
+    }
+
     public function insertRecord(string $table, array $payload): int
     {
         $columns = array_keys($payload);
