@@ -10,9 +10,9 @@ use App\Kernel\Helpers\ViewHelper;
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h1 class="h4 mb-0"><?= ViewHelper::e($titulo ?? 'Integraciones') ?></h1>
         <?php if ($partnerActivo): ?>
-            <span class="badge bg-success">Partner API activo</span>
+            <span class="badge bg-success" title="GREEN_API_PARTNER_TOKEN configurado en .env">Partner API activo</span>
         <?php else: ?>
-            <span class="badge bg-secondary">Provisión manual</span>
+            <span class="badge bg-secondary" title="Falta GREEN_API_PARTNER_TOKEN en .env (provisión auto de demos)">Provisión manual</span>
         <?php endif; ?>
     </div>
 
@@ -58,9 +58,24 @@ document.getElementById('btnTestConnection')?.addEventListener('click', async ()
   out.textContent = 'Probando…';
   try {
     const fd = new FormData();
-    fd.append('_token', document.querySelector('input[name="_token"]')?.value || '');
-    const res = await fetch('/admin/integraciones/test', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-    const data = await res.json();
+    const csrf = document.querySelector('input[name="_csrf_token"]')?.value
+      || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+      || '';
+    fd.append('_csrf_token', csrf);
+    const res = await fetch('/admin/integraciones/test', {
+      method: 'POST',
+      body: fd,
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+    });
+    const raw = await res.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      out.textContent = 'Respuesta inesperada del servidor (¿sesión expirada?). Recarga la página e intenta de nuevo.';
+      return;
+    }
     out.textContent = data.ok ? ('Estado: ' + (data.state || 'ok')) : (data.error || 'Error');
   } catch (e) {
     out.textContent = 'Error de red';

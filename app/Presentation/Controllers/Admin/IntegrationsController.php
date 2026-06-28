@@ -10,6 +10,7 @@ use App\Application\Services\ConfiguracionService;
 use App\Domain\Integrations\IntegrationAccount;
 use App\Domain\Integrations\IntegrationAccountRepositoryInterface;
 use App\Domain\Integrations\PartnerConnectorInterface;
+use App\Infrastructure\Integrations\GreenApi\GreenApiAccountClient;
 use App\Infrastructure\Integrations\Http\HttpApiConnector;
 use App\Infrastructure\Integrations\Repositories\IntegrationLogRepository;
 use App\Kernel\Config\Config;
@@ -71,15 +72,31 @@ final class IntegrationsController extends AdminBaseController
     public function testConnection(Request $request): Response
     {
         $this->verifyCsrf($request);
-        $acc = $this->accounts->findDefault('green_api');
-        if ($acc === null) {
-            return $this->json(['ok' => false, 'error' => 'No hay instancia interna configurada.']);
-        }
+
         $base = (array) Config::get('integrations.channels.whatsapp.config', []);
-        $baseUrl = rtrim((string) ($base['base_url'] ?? 'https://api.green-api.com'), '/');
-        $http = new HttpApiConnector((int) ($base['timeout'] ?? 15));
-        $url = "{$baseUrl}/waInstance{$acc->instanceId}/getStateInstance/{$acc->token}";
+        $resolved = \App\Application\Integrations\IntegrationsFactory::resolveWhatsappConfig($base);
+        $instanceId = trim((string) ($resolved['instance_id'] ?? ''));
+        $token = trim((string) ($resolved['token'] ?? ''));
+
+        if ($instanceId === '' || $token === '') {
+            return $this->json([
+                'ok'    => false,
+                'error' => 'No hay instancia configurada. Guarda instance ID + token arriba, o define GREEN_API_INSTANCE/GREEN_API_TOKEN en .env.',
+            ]);
+        }
+
+        $baseUrl = rtrim((string) ($resolved['base_url'] ?? 'https://api.green-api.com'), '/');
+        $http = new HttpApiConnector((int) ($resolved['timeout'] ?? 15));
+        $url = "{$baseUrl}/waInstance{$instanceId}/getStateInstance/{$token}";
         $res = $http->request('GET', $url);
+
+        if ((int) ($res['status'] ?? 0) === 0) {
+            return $this->json([
+                'ok'    => false,
+                'error' => 'No se pudo contactar Green API: ' . (string) ($res['body'] ?? 'error de transporte'),
+            ]);
+        }
+
         $state = (string) (($res['json']['stateInstance'] ?? '') ?: 'desconocido');
         return $this->json(['ok' => true, 'state' => $state]);
     }
@@ -127,17 +144,72 @@ final class IntegrationsController extends AdminBaseController
         $token = (string) $request->param('token', '');
         $accountId = SignedToken::verify($token);
         if ($accountId === null) {
-            return $this->view('publico/wa_activar', ['error' => 'Enlace inválido o expirado.', 'qr' => null], 'publico/layout');
+            return $this->view('publico/wa_activar', [
+                'phase' => 'error',
+                'message' => 'Enlace inválido o expirado.',
+                'qr' => null,
+                'qr_url' => null,
+                'state' => null,
+                'api_docs_url' => (string) Config::get('integrations.activation.api_docs_url', '/docs/integraciones/whatsapp-api'),
+                'status_url' => null,
+            ], 'publico/layout');
         }
         $acc = $this->accounts->findById($accountId);
         if ($acc === null) {
-            return $this->view('publico/wa_activar', ['error' => 'Instancia no encontrada.', 'qr' => null], 'publico/layout');
+            return $this->view('publico/wa_activar', [
+                'phase' => 'error',
+                'message' => 'Instancia no encontrada.',
+                'qr' => null,
+                'qr_url' => null,
+                'state' => null,
+                'api_docs_url' => (string) Config::get('integrations.activation.api_docs_url', '/docs/integraciones/whatsapp-api'),
+                'status_url' => null,
+            ], 'publico/layout');
         }
         $base = (array) Config::get('integrations.channels.whatsapp.config', []);
         $baseUrl = rtrim((string) ($base['base_url'] ?? 'https://api.green-api.com'), '/');
         $http = new HttpApiConnector((int) ($base['timeout'] ?? 15));
-        $res = $http->request('GET', "{$baseUrl}/waInstance{$acc->instanceId}/qr/{$acc->token}");
-        $qr = (string) (($res['json']['message'] ?? '') ?: '');
-        return $this->view('publico/wa_activar', ['error' => null, 'qr' => $qr], 'publico/layout');
+        $client = new GreenApiAccountClient($http, $baseUrl);
+        $phase = $client->resolveActivationPhase($acc->instanceId, $acc->token);
+        $apiDocsUrl = (string) Config::get('integrations.activation.api_docs_url', '/docs/integraciones/whatsapp-api');
+
+        return $this->view('publico/wa_activar', [
+            'phase'        => $phase['phase'],
+            'message'      => $phase['message'],
+            'qr'           => $phase['qr_base64'],
+            'qr_url'       => $phase['qr_url'],
+            'state'        => $phase['state'],
+            'api_docs_url' => $apiDocsUrl,
+            'status_url'   => '/wa/activar/' . rawurlencode($token) . '/estado',
+        ], 'publico/layout');
+    }
+
+    public function activarEstado(Request $request): Response
+    {
+        $token = (string) $request->param('token', '');
+        $accountId = SignedToken::verify($token);
+        if ($accountId === null) {
+            return $this->json(['ok' => false, 'phase' => 'error', 'message' => 'Enlace inválido o expirado.']);
+        }
+
+        $acc = $this->accounts->findById($accountId);
+        if ($acc === null) {
+            return $this->json(['ok' => false, 'phase' => 'error', 'message' => 'Instancia no encontrada.']);
+        }
+
+        $base = (array) Config::get('integrations.channels.whatsapp.config', []);
+        $baseUrl = rtrim((string) ($base['base_url'] ?? 'https://api.green-api.com'), '/');
+        $http = new HttpApiConnector((int) ($base['timeout'] ?? 15));
+        $phase = (new GreenApiAccountClient($http, $baseUrl))->resolveActivationPhase($acc->instanceId, $acc->token);
+
+        return $this->json([
+            'ok'         => $phase['phase'] !== 'error',
+            'phase'      => $phase['phase'],
+            'message'    => $phase['message'],
+            'qr_base64'  => $phase['qr_base64'],
+            'qr_url'     => $phase['qr_url'],
+            'state'      => $phase['state'],
+            'docs_url'   => (string) Config::get('integrations.activation.api_docs_url', '/docs/integraciones/whatsapp-api'),
+        ]);
     }
 }

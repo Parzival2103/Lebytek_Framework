@@ -16,9 +16,68 @@
 - Demos (`demo_*`, `marketing_demo`, CRUD showcase) quedan en el esqueleto **OFF** por defecto en `config/vertical.php`. Spec §2.7.
 - El plan **debe** crear el archivo de constancia `docs/superpowers/PENDIENTE-promocion-modulos-providers.md` listando módulos pendientes de promover a provider por módulo (listar, no implementar). Spec §6.4 / criterio #7.
 - Cada cambio estructural termina con el arnés de tests verde antes de commitear.
-- Comando de tests: `php tests/run.php` (confirmar exacto en Task 1).
-- Subtrees de **dominio** que NO se mueven a `src/` (se quedan `App\`): `app/Domain/Marketing`, `app/Application/Marketing`, `app/Infrastructure/Marketing`, y cualquier Presentation Marketing (confirmar lista exacta en Task 3).
+- **Comando de tests (CONFIRMADO):** `php tests/run.php`. Es un arnés propio (no PHPUnit): `tests/run.php` recorre recursivamente `tests/**/*Test.php`, carga `tests/lib/bootstrap.php` + `tests/lib/microtest.php`, y al final imprime `N passed, M failed` (función `microtest_summary()`, exit code 1 si `M>0`). Aserciones disponibles: `test()`, `assert_true()`, `assert_same()`, `assert_null()`, `assert_throws()`. El baseline se mide por la línea final `N passed, M failed` con `M=0`.
+- **API del `Container` (CONFIRMADO en `app/Kernel/Container/Container.php`):** métodos `bind(string $id, \Closure $factory): void`, `singleton(string $id, \Closure $factory): void`, `get(string $id): mixed`, `has(string $id): bool`. No existe `make`. Las factories reciben `Container $c` como primer argumento.
+- **Forma de `config/container.php` (CONFIRMADO):** retorna `return static function (Container $container): void { ... }`. `Bootstrap` lo consume así: `$cfg = require ROOT_PATH.'/config/container.php'; $cfg($container);`. El split (Task 6) debe preservar esta forma de retorno (un callable que recibe `Container`).
+- Subtrees de **dominio** que NO se mueven a `src/` (se quedan `App\`): ver la sección **"Inventario del footprint de dominio"** más abajo — es la lista EXACTA investigada, no "confirmar después".
 - Carpetas a archivar/descartar (no entran a ningún artefacto): `auditoria/`, `nuevo_modulo/`, `plan/`, `vertical-kit/`, `database/migrations_legacy/`, `database/seeds_legacy/`.
+
+---
+
+## Inventario del footprint de dominio (investigado — fuente de verdad)
+
+> Esta sección es el resultado de inspeccionar el repo el 2026-06-27. Reemplaza los "confirmar en Task 3" del plan original. El **dominio** = módulo Marketing + el sitio público (landing/portal/captación de leads). Todo lo demás es framework (incluido el módulo **integrations**, que es genérico `int_*` y se queda en el paquete).
+
+### A. Dominio puro (se queda en `app/`, namespace `App\`) — mover en Task 4, preservar en Task 5
+
+Capas Onion completas de Marketing:
+- `app/Domain/Marketing/` (incluye `Contracts/`, `ValueObjects/`)
+- `app/Application/Marketing/` (`RenderLandingUseCase`, `CapturarLeadUseCase`)
+- `app/Infrastructure/Marketing/` (incluye `LeadCapture/`, `Settings/`)
+
+Presentación del sitio público (domain-purpose, hoy físicamente entre la Presentation del framework):
+- `app/Presentation/Controllers/Publico/LandingController.php`
+- `app/Presentation/Controllers/Publico/LeadController.php`
+- `app/Presentation/Controllers/Publico/PortalClienteController.php`
+- `app/Presentation/Views/publico/` (árbol completo: `landing.php`, `layout.php`, `portal.php`, `wa_activar.php`, `partials/_footer.php`, `_hero.php`, `_lead_form.php`, `_pricing.php`, `_testimonios.php`, `_trust.php`)
+
+**Repos de dominio escondidos en la carpeta compartida del framework** (¡trampa! el plan original los habría mandado a `src/`):
+- `app/Infrastructure/Repositories/PdoLeadRepository.php` → mover a `app/Infrastructure/Marketing/`
+- `app/Infrastructure/Repositories/PdoMarketingContentRepository.php` → mover a `app/Infrastructure/Marketing/`
+- (Tras moverlos, actualizar sus `namespace` a `App\Infrastructure\Marketing` y las 2 referencias en `config/container.php` líneas ~592 y ~613.)
+
+Wiring de dominio (se queda en el `config/container.php` del proyecto, NO en el provider del framework):
+- Bloque `if (vertical.modules.marketing)` de `config/container.php` (≈ líneas 590–end): bindings de `MarketingContentRepositoryInterface`, `LandingContentProviderInterface`, `CommercialPackageSourceInterface`, `RenderLandingUseCase`, `LeadRepositoryInterface`, `CapturarLeadUseCase`, y los controllers `LandingController`/`LeadController`/`PortalClienteController`.
+- Los 4 `Marketing*SettingsProvider` instanciados dentro de `SettingsSectionRegistry` (≈ líneas 535–541).
+
+Rutas de dominio:
+- `routes/marketing.php` (usa `App\Presentation\Controllers\Publico\*`; incluido condicionalmente desde `routes/web.php` con el toggle `marketing`).
+
+Schema/datos de dominio:
+- `database/schema/modules/marketing.sql` y `database/schema/modules/marketing_demo.sql`.
+
+Manifiesto de dominio:
+- `config/modules/marketing.php`.
+
+### B. Framework (se mueve a `src/`, namespace `Lebytek\Framework\`)
+
+Todo el resto de `app/`: `Kernel/`, `Domain/` (excepto `Marketing`), `Application/` (excepto `Marketing`), `Infrastructure/` (excepto `Marketing` y los 2 repos del punto A), `Presentation/` (excepto `Controllers/Publico` y `Views/publico`). Incluye el módulo **integrations** completo (`app/Domain/Integrations`, `app/Application/Integrations`, `app/Infrastructure/Integrations` —incluye el trabajo GreenApi en curso—, su `routes/integrations.php`, manifiesto `config/modules/integrations.php`, schema `integrations.sql`, y su `IntegrationsWhatsappSettingsProvider`).
+
+### C. Ambigüedad resuelta: `wa_activar.php`
+
+`app/Presentation/Views/publico/wa_activar.php` es la página pública de activación de WhatsApp (módulo integrations = framework) **pero** vive en el árbol `Views/publico/` y comparte `publico/layout.php` con el landing de Marketing. **Decisión:** todo el árbol `Views/publico/` + `Controllers/Publico/` se trata como "presentación del sitio público" a nivel **proyecto** (`app/`), incluido `wa_activar.php`. Razón: mantiene cohesivo el layout público; integrations sigue siendo framework en su backend (channels/repos/dispatcher), y su vista pública la sirve una ruta del proyecto. Esto es coherente con que integrations está "pendiente de promover a provider" (Task 10), no plenamente encapsulado aún.
+
+### D. Constantes de ruta y resolución de vistas (riesgo crítico — ver Task 7)
+
+`ViewHelper` (`app/Kernel/Helpers/ViewHelper.php`) y `app/Presentation/bootstrap_error_renderers.php` resuelven vistas con `APP_PATH . '/Presentation/Views/...'`. Tras el carve, las vistas **framework** (admin/auth/errors/layouts/partials) viven en `src/Presentation/Views`, pero `APP_PATH` apunta a `app/` del proyecto (solo vistas de dominio). **Sin un resolver en cascada, TODA vista admin del framework da "Vista no encontrada".** Task 7 añade la cascada proyecto→paquete. Archivos que usan `APP_PATH` para vistas: `ViewHelper.php` (3 usos), `bootstrap_error_renderers.php` (3), `Views/admin/dashboard/index.php` (1).
+
+### E. Referencias al autoloader manual (se rompen al borrarlo — ver Task 2)
+
+`require_once APP_PATH . '/Kernel/Autoloader.php'` aparece en 10 archivos además de `Bootstrap.php`: `tests/lib/bootstrap.php`, `public/install/index.php`, y `scripts/{add_color_configs,crear_usuario,install,migrate,rbac_integrity_report,seed,status}.php`. Task 2 debe arreglarlos todos (el GATE del arnés solo detecta el de `tests/lib/bootstrap.php`; los demás fallan en silencio).
+
+### F. `Bootstrap.php` es un script procedural, no una clase
+
+`app/Kernel/Bootstrap.php` NO declara clase: es un script que `public/index.php` hace `require`. Por eso `\Lebytek\Framework\Kernel\Bootstrap::run()` (Task 7 original) no existe todavía. Task 7 lo refactoriza a clase `Bootstrap` con `public static function run(): void` (autoloadable por Composer, para que el esqueleto lo invoque sin conocer la ruta `vendor/`), preservando la lógica idéntica.
 
 ---
 
@@ -32,13 +91,13 @@
 - Consumes: estado actual del working tree (hay cambios sin commitear de GreenApi).
 - Produces: tag `pre-split-backup` apuntando al estado previo; número de tests que pasan en baseline (referencia para los gates siguientes); comando de test confirmado.
 
-- [ ] **Step 1: Confirmar el comando del arnés de tests**
+- [ ] **Step 1: Confirmar el comando del arnés de tests (ya investigado: `php tests/run.php`)**
 
 Run:
 ```bash
-ls tests/run.php 2>/dev/null && echo "USAR: php tests/run.php" || ls tests/*.php
+php tests/run.php 2>&1 | tail -3
 ```
-Si `tests/run.php` no existe, identificar el runner (p. ej. `tests/HarnessSelfTest.php`) y usar `php tests/HarnessSelfTest.php`. Anotar el comando confirmado; se usará como **GATE** en todas las tareas siguientes.
+Expected: la última línea es `N passed, M failed`. El comando **GATE** de todas las tareas siguientes es `php tests/run.php`. (Detalle del arnés en Global Constraints; no es PHPUnit.)
 
 - [ ] **Step 2: Commitear el trabajo pendiente de GreenApi (para arrancar limpio)**
 
@@ -74,11 +133,15 @@ No hay archivos que commitear; el deliverable es el tag y el baseline anotado. C
 **Files:**
 - Modify: `composer.json` (añadir bloque `autoload`)
 - Modify: `app/Kernel/Bootstrap.php` (reemplazar `require` del autoloader manual por `vendor/autoload.php`)
+- Modify: `tests/lib/bootstrap.php` (quitar el `require` de `Autoloader.php`)
+- Modify: `public/install/index.php` y `scripts/{add_color_configs,crear_usuario,install,migrate,rbac_integrity_report,seed,status}.php` (mismo cambio)
 - Delete: `app/Kernel/Autoloader.php`
 
 **Interfaces:**
 - Consumes: namespace `App\` → `app/` (estado actual).
 - Produces: autoload PSR-4 de Composer activo para `App\` → `app/`. A partir de aquí el arranque depende de `vendor/autoload.php`.
+
+> **Hallazgo (inventario §E):** `require_once APP_PATH . '/Kernel/Autoloader.php'` vive en 11 archivos (Bootstrap + 10 más). Borrar el autoloader sin arreglarlos rompe el arnés (vía `tests/lib/bootstrap.php`) y los scripts CLI (en silencio, sin GATE que los detecte). Por eso Step 3 los reescribe TODOS.
 
 - [ ] **Step 1: Añadir el bloque autoload a composer.json**
 
@@ -99,13 +162,32 @@ composer dump-autoload
 ```
 Expected: "Generated autoload files".
 
-- [ ] **Step 3: Reemplazar el require del autoloader manual en Bootstrap**
+- [ ] **Step 3: Reemplazar el require del autoloader manual en TODOS los archivos**
 
-En `app/Kernel/Bootstrap.php`, localizar la línea que hace `require` de `Autoloader.php` (p. ej. `require __DIR__ . '/Autoloader.php';`) y reemplazarla por la carga del autoloader de Composer:
+En `app/Kernel/Bootstrap.php` (línea 30) la secuencia actual es:
 ```php
-require ROOT_PATH . '/vendor/autoload.php';
+require_once APP_PATH . '/Kernel/Autoloader.php';
+
+$composerAutoload = ROOT_PATH . '/vendor/autoload.php';
+if (is_readable($composerAutoload)) {
+    require_once $composerAutoload;
+}
 ```
-(Asegurar que esta línea quede antes de cualquier uso de clases `App\`.)
+Reemplazarla por (Composer obligatorio):
+```php
+require_once ROOT_PATH . '/vendor/autoload.php';
+```
+
+En `tests/lib/bootstrap.php` (línea 19) hay el mismo patrón seguido de la carga condicional de Composer (líneas 21-23). Borrar la línea `require_once APP_PATH . '/Kernel/Autoloader.php';` y volver el require de Composer incondicional:
+```php
+require_once ROOT_PATH . '/vendor/autoload.php';
+```
+
+Para los 8 archivos CLI/install (`public/install/index.php:13`, `scripts/add_color_configs.php:6`, `scripts/crear_usuario.php:16`, `scripts/install.php:20`, `scripts/migrate.php:16`, `scripts/rbac_integrity_report.php:16`, `scripts/seed.php:18`, `scripts/status.php:18`): cada uno define `ROOT_PATH`/`APP_PATH` arriba; reemplazar su `require_once APP_PATH . '/Kernel/Autoloader.php';` por `require_once ROOT_PATH . '/vendor/autoload.php';`. Verificar que ninguno quede sin tocar:
+```bash
+grep -rln "Kernel/Autoloader" . --include='*.php' | grep -v vendor || echo "OK: sin referencias a Autoloader manual"
+```
+Expected: "OK: sin referencias a Autoloader manual".
 
 - [ ] **Step 4: Eliminar el autoloader manual**
 
@@ -122,44 +204,64 @@ Expected: PASS, con el mismo número de baseline (Task 1 Step 3). Si falla por o
 - [ ] **Step 6: Commit**
 
 ```bash
-git add composer.json app/Kernel/Bootstrap.php
+git add -A
 git commit -m "refactor(kernel): usar autoload de Composer y eliminar autoloader manual"
 ```
+> `git add -A` recoge `composer.json`, `Bootstrap.php`, `tests/lib/bootstrap.php`, `public/install/index.php`, los 7 scripts, la eliminación de `Autoloader.php` y los archivos regenerados de `vendor/composer/` (si `vendor/` no está en `.gitignore`; verificar).
 
 ---
 
-## Task 3: Inventariar los subtrees de dominio (Marketing) a preservar
+## Task 3: Verificar el footprint de dominio y el aislamiento Onion
+
+> El inventario EXACTO ya está en la sección "Inventario del footprint de dominio" (investigado). Esta tarea solo **verifica** que el repo sigue coincidiendo con ese inventario (por si el commit de GreenApi de Task 1 movió algo) y graba el archivo de trabajo que consumirán Tasks 4 y 5.
 
 **Files:**
-- Create: `docs/superpowers/_carve-marketing-namespaces.txt` (archivo de trabajo temporal con la lista exacta)
+- Create: `docs/superpowers/_carve-marketing-namespaces.txt` (lista de prefijos a preservar; entrada del script de Task 5)
 
 **Interfaces:**
-- Consumes: árbol `app/` actual.
-- Produces: la **lista exacta** de namespaces de dominio que NO se renombran (entrada para el script de Task 5). Sin esta lista, el rename global rompería Marketing.
+- Consumes: la sección de inventario + el árbol `app/` actual.
+- Produces: el archivo `_carve-marketing-namespaces.txt` con los prefijos exactos a preservar.
 
-- [ ] **Step 1: Listar todos los namespaces que contienen "Marketing"**
+- [ ] **Step 1: Grabar el archivo de prefijos a preservar (literal del inventario)**
+
+Crear `docs/superpowers/_carve-marketing-namespaces.txt` con exactamente:
+```
+App\Domain\Marketing
+App\Application\Marketing
+App\Infrastructure\Marketing
+App\Presentation\Controllers\Publico
+```
+> Las **vistas** `Views/publico/` no llevan namespace PHP (son plantillas), así que no entran en la lista de rename; se mueven físicamente en Task 4 pero no se tocan en el rename de namespaces. Los 2 repos de dominio (`PdoLeadRepository`, `PdoMarketingContentRepository`) cambian de namespace a `App\Infrastructure\Marketing` al moverse (Task 4 Step 2b), así que su prefijo destino ya está cubierto por la línea `App\Infrastructure\Marketing`.
+
+- [ ] **Step 2: Verificar que el árbol coincide con el inventario**
 
 Run:
 ```bash
-grep -rho 'namespace App\\[A-Za-z0-9_\\]*Marketing[A-Za-z0-9_\\]*' app | sort -u > docs/superpowers/_carve-marketing-namespaces.txt
-grep -rl 'Marketing' app/Presentation 2>/dev/null >> docs/superpowers/_carve-marketing-namespaces.txt
-cat docs/superpowers/_carve-marketing-namespaces.txt
+for p in app/Domain/Marketing app/Application/Marketing app/Infrastructure/Marketing \
+         app/Presentation/Controllers/Publico app/Presentation/Views/publico \
+         app/Infrastructure/Repositories/PdoLeadRepository.php \
+         app/Infrastructure/Repositories/PdoMarketingContentRepository.php; do
+  [ -e "$p" ] && echo "OK   $p" || echo "FALTA $p"
+done
 ```
-Expected: lista con al menos `App\Domain\Marketing`, `App\Application\Marketing`, `App\Infrastructure\Marketing` y cualquier ruta de Presentation con Marketing.
+Expected: 7 líneas `OK`. Si alguna dice `FALTA`, reconciliar con la sección de inventario antes de seguir (el árbol cambió desde la investigación).
 
-- [ ] **Step 2: Confirmar que el framework NO depende de Marketing (regla Onion)**
+- [ ] **Step 3: Confirmar que el framework NO depende del dominio (regla Onion; criterio #2)**
 
 Run:
 ```bash
-grep -rn 'Marketing' app/Kernel app/Domain/Interfaces app/Application/Crud app/Application/Services 2>/dev/null | grep -v '/Marketing/' || echo "OK: sin referencias de framework a Marketing"
+grep -rn 'App\\\(Domain\|Application\|Infrastructure\)\\Marketing\|Controllers\\Publico' \
+  app/Kernel app/Domain/Interfaces app/Application/Crud app/Application/Services \
+  app/Domain/Integrations app/Application/Integrations app/Infrastructure/Integrations 2>/dev/null \
+  | grep -v '/Marketing/' || echo "OK: el framework no referencia dominio"
 ```
-Expected: "OK: sin referencias de framework a Marketing". Si aparece alguna, anotarla: es un acoplamiento a romper antes de continuar (el framework no debe conocer Marketing).
+Expected: "OK: el framework no referencia dominio". Si aparece una referencia, es un acoplamiento que rompe el criterio #2: hay que resolverlo antes de continuar (mover ese código a dominio o invertir la dependencia con una interfaz framework).
 
-- [ ] **Step 3: Commit (archivo de trabajo)**
+- [ ] **Step 4: Commit (archivo de trabajo)**
 
 ```bash
 git add docs/superpowers/_carve-marketing-namespaces.txt
-git commit -m "chore(carve): inventario de namespaces de dominio (Marketing) a preservar"
+git commit -m "chore(carve): inventario verificado de footprint de dominio a preservar"
 ```
 
 ---
@@ -182,25 +284,43 @@ git mv app src
 ```
 Expected: `src/` contiene Kernel, Domain, Application, Infrastructure, Presentation.
 
-- [ ] **Step 2: Devolver los subtrees Marketing a app/ (dominio)**
-
-Run (ajustar si Task 3 reveló rutas Presentation adicionales):
-```bash
-mkdir -p app/Domain app/Application app/Infrastructure
-git mv src/Domain/Marketing app/Domain/Marketing
-git mv src/Application/Marketing app/Application/Marketing
-git mv src/Infrastructure/Marketing app/Infrastructure/Marketing
-```
-Para cada ruta Presentation con Marketing detectada en Task 3, moverla análogamente a `app/Presentation/...`.
-Expected: `app/` contiene solo subtrees Marketing; `src/` ya no tiene carpetas `Marketing`.
-
-- [ ] **Step 3: Verificar que no quedó Marketing en src/**
+- [ ] **Step 2: Devolver las capas Onion de Marketing a app/ (dominio)**
 
 Run:
 ```bash
-find src -type d -name Marketing
+mkdir -p app/Domain app/Application app/Infrastructure app/Presentation/Controllers
+git mv src/Domain/Marketing app/Domain/Marketing
+git mv src/Application/Marketing app/Application/Marketing
+git mv src/Infrastructure/Marketing app/Infrastructure/Marketing
+git mv src/Presentation/Controllers/Publico app/Presentation/Controllers/Publico
+git mv src/Presentation/Views/publico app/Presentation/Views/publico
 ```
-Expected: sin salida.
+Expected: `app/` contiene esas 5 rutas; `src/` ya no las tiene.
+
+- [ ] **Step 2b: Mover los 2 repos de dominio escondidos en la carpeta compartida**
+
+Estos repos son dominio pero viven en `Infrastructure/Repositories/` (carpeta framework). Moverlos a Marketing:
+```bash
+git mv src/Infrastructure/Repositories/PdoLeadRepository.php app/Infrastructure/Marketing/PdoLeadRepository.php
+git mv src/Infrastructure/Repositories/PdoMarketingContentRepository.php app/Infrastructure/Marketing/PdoMarketingContentRepository.php
+```
+Editar el `namespace` de cada archivo movido:
+- `namespace App\Infrastructure\Repositories;` → `namespace App\Infrastructure\Marketing;`
+
+Actualizar las 2 referencias en `config/container.php` (≈ líneas 592 y 613):
+- `\App\Infrastructure\Repositories\PdoMarketingContentRepository` → `\App\Infrastructure\Marketing\PdoMarketingContentRepository`
+- `\App\Infrastructure\Repositories\PdoLeadRepository` → `\App\Infrastructure\Marketing\PdoLeadRepository`
+
+> Estos repos extienden/usan clases base del framework (p. ej. `BaseRepository`, `Connection`). Tras Task 5 esas bases serán `Lebytek\Framework\...`; el `use` se reescribirá automáticamente porque `config/container.php` y `app/` están en `$targets`. El repo de dominio puede depender de bases del framework (dependencia hacia adentro, válida en Onion).
+
+- [ ] **Step 3: Verificar que no quedó dominio en src/**
+
+Run:
+```bash
+find src -type d \( -name Marketing -o -name Publico -o -name publico \); \
+ls src/Infrastructure/Repositories/Pdo{Lead,MarketingContent}Repository.php 2>/dev/null
+```
+Expected: sin salida (ni carpetas de dominio, ni los 2 repos en la carpeta compartida).
 
 - [ ] **Step 4: Añadir el segundo root PSR-4 en composer.json**
 
@@ -258,8 +378,8 @@ $root = dirname(__DIR__);
 $preserve = [
     'App\\Domain\\Marketing',
     'App\\Application\\Marketing',
-    'App\\Infrastructure\\Marketing',
-    // Añadir aquí prefijos Presentation de Marketing si Task 3 los detectó.
+    'App\\Infrastructure\\Marketing',          // incluye los 2 repos movidos en Task 4 Step 2b
+    'App\\Presentation\\Controllers\\Publico',  // LandingController, LeadController, PortalClienteController
 ];
 
 $targets = [
@@ -330,13 +450,17 @@ grep -rn 'App\\' src | grep -v 'Lebytek\\Framework' || echo "OK: src/ sin App\\ 
 ```
 Expected: "OK: src/ sin App\\ residual". Si aparecen líneas, son strings/comentarios; revisarlas manualmente.
 
-- [ ] **Step 4: Verificar que Marketing sigue bajo App\ en app/**
+- [ ] **Step 4: Verificar que el dominio sigue bajo App\ en app/**
 
 Run:
 ```bash
-grep -rn 'namespace App\\\(Domain\|Application\|Infrastructure\)\\Marketing' app | head
+grep -rn 'namespace App\\\(Domain\|Application\|Infrastructure\)\\Marketing\|namespace App\\Presentation\\Controllers\\Publico' app | head -20
 ```
-Expected: las declaraciones `namespace App\Domain\Marketing;` etc. intactas.
+Expected: las declaraciones `namespace App\Domain\Marketing;`, `App\Infrastructure\Marketing;` (incluidos los 2 repos movidos), `App\Presentation\Controllers\Publico;` etc. intactas. Confirmar también que `routes/marketing.php` sigue con `use App\Presentation\Controllers\Publico\...` (no renombrado):
+```bash
+grep -n 'use App\\Presentation\\Controllers\\Publico' routes/marketing.php
+```
+Expected: las 3 líneas `use ...Publico\LandingController/LeadController/PortalClienteController` intactas.
 
 - [ ] **Step 5: Regenerar autoload**
 
@@ -370,7 +494,13 @@ git commit -m "refactor(carve): renombrar framework a Lebytek\\Framework preserv
 
 **Interfaces:**
 - Consumes: `Lebytek\Framework\Kernel\Container\Container`.
-- Produces: `Lebytek\Framework\Kernel\Container\FrameworkServiceProvider::register(Container $c): void` que registra TODOS los bindings genéricos. `config/container.php` del proyecto invoca `FrameworkServiceProvider::register($container)` y luego añade bindings de dominio (`App\…`).
+- Produces: `Lebytek\Framework\Kernel\Container\FrameworkServiceProvider::register(Container $c): void` que registra TODOS los bindings genéricos. `config/container.php` del proyecto invoca `FrameworkServiceProvider::register($container)` y luego ejecuta la **sección de módulos** (gated por toggles: SettingsSectionRegistry + integrations + marketing).
+
+> **Boundary EXACTO del split (investigado).** El `config/container.php` actual es `return static function (Container $container): void { ... }` con dos zonas:
+> - **Zona framework (always-on)** = cuerpo del closure desde el primer binding (≈ línea 84) **hasta el bind de `SistemaEstadoController` inclusive** (≈ línea 529). Todo esto va a `FrameworkServiceProvider::register()`. Son los bindings de repos auth/RBAC, servicios CRUD, dashboard, motor de instalación, controllers admin, etc.
+> - **Zona de módulos (gated)** = desde el comentario `// Registry de secciones de Ajustes` (≈ línea 531) **hasta el final**: el singleton `SettingsSectionRegistry` (que instancia providers de Marketing e Integrations inline), el bloque `if (vertical.modules.integrations)` (≈ 550–588) y el bloque `if (vertical.modules.marketing)` (≈ 590–end). **Toda esta zona se QUEDA en `config/container.php` del proyecto.**
+>
+> Razón de dejar `SettingsSectionRegistry` e integrations en el proyecto (no en el provider): `SettingsSectionRegistry` es un servicio framework pero **construye providers de dominio** (`App\Infrastructure\Marketing\Settings\*`) — meterlo al paquete violaría "el paquete jamás referencia `App\`" (criterio #2). Integrations es módulo framework pero su wiring está "pendiente de promover a provider por módulo" (Task 10); por ahora se cablea desde el proyecto, igual que Marketing. Esto mantiene `FrameworkServiceProvider` 100% libre de `App\` y de toggles de módulo.
 
 - [ ] **Step 1: Escribir el test del provider**
 
@@ -392,7 +522,7 @@ assert_true(
     'FrameworkServiceProvider registra UsuarioRepositoryInterface'
 );
 ```
-> Ajustar el `use` de `UsuarioRepositoryInterface` a su FQCN real tras el rename y el método de chequeo (`has`/`make`) a la API real del `Container` (verificar en `src/Kernel/Container/Container.php`).
+> FQCN real (CONFIRMADO): `Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface` (era `App\Domain\Interfaces\UsuarioRepositoryInterface`, renombrado en Task 5). El `Container` expone `has(string): bool` (confirmado), así que `assert_true($container->has(...))` es correcto — no existe `make`.
 
 - [ ] **Step 2: Ejecutar el test — debe fallar**
 
@@ -401,7 +531,7 @@ Expected: FAIL — `Class FrameworkServiceProvider not found`.
 
 - [ ] **Step 3: Crear el FrameworkServiceProvider moviendo los bindings genéricos**
 
-Crear `src/Kernel/Container/FrameworkServiceProvider.php` con namespace `Lebytek\Framework\Kernel\Container`. Mover dentro de un método estático `register(Container $container): void` **todos** los `bind`/`singleton` actuales de `config/container.php` que apuntan a clases `Lebytek\Framework\…` (es decir, los genéricos). Estructura:
+Crear `src/Kernel/Container/FrameworkServiceProvider.php` con namespace `Lebytek\Framework\Kernel\Container`. Mover dentro de un método estático `register(Container $container): void` el cuerpo de la **zona framework** (≈ líneas 84–529 del closure; ver boundary arriba) junto con sus `use` (las decenas de `use Lebytek\Framework\...` del cabezal de `config/container.php`, ahora ya renombrados). NO mover la zona de módulos (531–end). Estructura:
 ```php
 <?php
 declare(strict_types=1);
@@ -423,22 +553,29 @@ final class FrameworkServiceProvider
 
 - [ ] **Step 4: Adelgazar config/container.php**
 
-Reescribir `config/container.php` para que delegue en el provider y conserve **solo** bindings de dominio (`App\…`, p. ej. Marketing):
+Reescribir `config/container.php`: delega la zona framework en el provider y **conserva la zona de módulos (531–end) tal cual**. Preservar la forma `return static function (Container $container): void { ... }` (confirmado: `Bootstrap` hace `$cfg($container)`):
 ```php
 <?php
 
+declare(strict_types=1);
+
 use Lebytek\Framework\Kernel\Container\Container;
 use Lebytek\Framework\Kernel\Container\FrameworkServiceProvider;
+use Lebytek\Framework\Kernel\Config\Config;
+// (mantener los use que la zona de módulos todavía necesite, p. ej. Config para los toggles)
 
-return function (Container $container): void {
-    // Framework (paquete):
+return static function (Container $container): void {
+    // ── Framework (paquete): todos los bindings genéricos always-on ──
     FrameworkServiceProvider::register($container);
 
-    // Dominio (proyecto) — bindings App\... (Marketing, y a futuro dom_*):
-    // $container->singleton(\App\Domain\Marketing\...Interface::class, fn() => new \App\Infrastructure\Marketing\...());
+    // ── Sección de módulos (gated por toggles) — PEGAR AQUÍ, sin cambios, ──
+    //    las líneas 531–end del container.php original:
+    //    - singleton SettingsSectionRegistry (providers Marketing + Integrations inline)
+    //    - if (Config::get('vertical.modules.integrations')) { ... }
+    //    - if (Config::get('vertical.modules.marketing'))    { ... }
 };
 ```
-> Si hoy `container.php` retorna un array o se consume distinto, conservar su **forma de retorno actual**; lo único que cambia es que los bindings framework salen al provider. Verificar cómo `Bootstrap` carga `container.php` y respetar ese contrato.
+> La zona de módulos referencia clases framework por FQCN (`\Lebytek\Framework\Application\Services\SettingsSectionRegistry`, `\Lebytek\Framework\Application\Integrations\...`) y clases de dominio (`\App\Infrastructure\Marketing\...`). Ambas resuelven por Composer (dos roots PSR-4). Es correcto que el proyecto referencie ambas; lo que importa para el criterio #2 es que el **paquete** (`src/`) no referencie `App\`.
 
 - [ ] **Step 5: GATE — arnés verde**
 
@@ -454,19 +591,128 @@ git commit -m "refactor(container): extraer bindings genericos a FrameworkServic
 
 ---
 
-## Task 7: Recablear el entry point al arranque por Composer + framework
+## Task 7: Bootstrap como clase + entry point por Composer + resolución de vistas en cascada
+
+> Tres cambios entrelazados que comparten un GATE de arranque HTTP. **El central es la cascada de vistas** (inventario §D): sin ella, todas las vistas admin del framework dan "Vista no encontrada" porque viven en `src/Presentation/Views` pero `APP_PATH` apunta al `app/` del proyecto.
 
 **Files:**
-- Modify: `public/index.php` (definir paths, require `vendor/autoload.php`, invocar Bootstrap del framework)
-- Modify: `src/Kernel/Bootstrap.php` (que el require de autoload no dependa de rutas del monolito)
+- Modify: `src/Kernel/Bootstrap.php` (envolver el script procedural en clase `Bootstrap` con `run()`)
+- Modify: `public/index.php` (definir paths, require autoload, `Bootstrap::run()`)
+- Modify: `src/Kernel/Helpers/ViewHelper.php` (resolver con cascada proyecto→paquete)
+- Modify: `src/Presentation/bootstrap_error_renderers.php` y `src/Presentation/Views/admin/dashboard/index.php` (usar la cascada, no `APP_PATH` directo)
+- Test: `tests/Kernel/ViewHelperResolveTest.php`
 
 **Interfaces:**
-- Consumes: `Lebytek\Framework\Kernel\Bootstrap`.
-- Produces: arranque HTTP funcional donde `public/index.php` (propiedad del proyecto) define las constantes de ruta, carga `vendor/autoload.php` y delega en el Bootstrap del framework.
+- Consumes: `Lebytek\Framework\Kernel\Bootstrap`, `Lebytek\Framework\Kernel\Helpers\ViewHelper`.
+- Produces:
+  - `Lebytek\Framework\Kernel\Bootstrap::run(): void` — arranque HTTP (antes script procedural).
+  - `ViewHelper::resolve(string $viewRelPath): string` — devuelve la ruta absoluta del primer `.php` existente buscando primero en las vistas del **proyecto** (`APP_PATH/Presentation/Views`) y luego en las del **paquete** (`__DIR__/../../Presentation/Views`). Lanza `RuntimeException` si no existe en ninguna. `render()`/`partial()` lo usan internamente.
 
-- [ ] **Step 1: Ajustar public/index.php**
+- [ ] **Step 1: Test de la cascada de vistas (TDD) — escribir el test**
 
-Reescribir `public/index.php` para que el require apunte al autoloader de Composer y luego al arranque del framework:
+Crear `tests/Kernel/ViewHelperResolveTest.php`:
+```php
+<?php
+declare(strict_types=1);
+
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+
+// Una vista que SOLO existe en el paquete (admin) debe resolverse via fallback.
+test('ViewHelper resuelve una vista del paquete (admin/dashboard/index)', function (): void {
+    $path = ViewHelper::resolve('admin/dashboard/index');
+    assert_true(is_file($path), "resolve debe devolver un archivo existente, got: {$path}");
+});
+
+// Una vista inexistente lanza RuntimeException.
+test('ViewHelper::resolve lanza si la vista no existe', function (): void {
+    assert_throws(\RuntimeException::class, function (): void {
+        ViewHelper::resolve('no/existe/jamas');
+    });
+});
+```
+> El arnés ya define `APP_PATH` en `tests/lib/bootstrap.php`. La vista `admin/dashboard/index.php` es framework (vive en `src/Presentation/Views`), así que prueba el fallback al paquete.
+
+- [ ] **Step 2: Ejecutar el test — debe fallar**
+
+Run: `php tests/run.php Kernel/ViewHelperResolve`
+Expected: FAIL — `Call to undefined method ...ViewHelper::resolve()`.
+
+- [ ] **Step 3: Implementar `resolve()` y reconectar `render()`/`partial()`**
+
+En `src/Kernel/Helpers/ViewHelper.php`, añadir el resolver en cascada y usarlo en los 3 puntos que hoy concatenan `APP_PATH . '/Presentation/Views/...'` (líneas 33, 47, 73):
+```php
+/** Ruta base de las vistas del paquete (este archivo está en src/Kernel/Helpers). */
+private static function packageViewsPath(): string
+{
+    return dirname(__DIR__, 2) . '/Presentation/Views'; // src/Presentation/Views
+}
+
+/** Ruta base de las vistas del proyecto (dominio/overrides). */
+private static function projectViewsPath(): string
+{
+    return (defined('APP_PATH') ? APP_PATH : dirname(__DIR__, 3) . '/app') . '/Presentation/Views';
+}
+
+/** Resuelve una vista relativa (sin .php): proyecto primero, luego paquete. */
+public static function resolve(string $viewRelPath): string
+{
+    foreach ([self::projectViewsPath(), self::packageViewsPath()] as $base) {
+        $candidate = $base . '/' . $viewRelPath . '.php';
+        if (is_file($candidate)) {
+            return $candidate;
+        }
+    }
+    throw new \RuntimeException("Vista no encontrada: {$viewRelPath}");
+}
+```
+Reescribir los cuerpos existentes:
+- `render()`: `$viewFile = self::resolve($view);` y `$layoutFile = self::resolve($layout);` (en vez de `APP_PATH . '/Presentation/Views/' . ...`). Conservar los mensajes/flujo; `resolve()` ya lanza si falta.
+- `partial()`: `return self::renderFile(self::resolve('partials/' . $name), $data);`
+
+> Cascada proyecto→paquete = el proyecto puede **override** cualquier vista del framework dejando un archivo del mismo nombre en `app/Presentation/Views/...`. Las vistas de dominio (`publico/*`) resuelven desde el proyecto; las admin/auth/errors/layouts/partials desde el paquete.
+
+- [ ] **Step 4: Reconectar los otros 2 consumidores de `APP_PATH` para vistas**
+
+En `src/Presentation/bootstrap_error_renderers.php` (líneas 16/22/28) reemplazar cada `require APP_PATH . '/Presentation/Views/errors/{404,403,500}.php';` por:
+```php
+require \Lebytek\Framework\Kernel\Helpers\ViewHelper::resolve('errors/404'); // (403, 500 análogos)
+```
+En `src/Presentation/Views/admin/dashboard/index.php` (línea 25) reemplazar el chequeo `is_file(APP_PATH . '/Presentation/Views/partials/' . $partial . '.php')` por una comprobación vía resolver tolerante (envolver en try/catch o añadir `ViewHelper::exists()` si se prefiere; lo mínimo: `try { ViewHelper::resolve('partials/' . $partial); $ok = true; } catch (\RuntimeException) { $ok = false; }`).
+
+- [ ] **Step 5: Envolver `Bootstrap.php` en clase `Bootstrap::run()`**
+
+`src/Kernel/Bootstrap.php` HOY es un script procedural (no clase). Refactor mínimo: mover el cuerpo (todo lo de líneas ≈18–113 del original: uses, env, config, error handlers, sesión, DB, container, router, dispatch) dentro de una clase, preservando la lógica:
+```php
+<?php
+declare(strict_types=1);
+
+namespace Lebytek\Framework\Kernel;
+
+use Lebytek\Framework\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\Config\Config;
+// ... (resto de uses, ya renombrados por Task 5) ...
+
+final class Bootstrap
+{
+    public static function run(): void
+    {
+        // <<< pegar aquí el cuerpo procedural original, SIN el require del autoloader
+        //     (ya lo hace public/index.php) y SIN cambiar la lógica de env/config/router >>>
+        // Notas de paths:
+        //   - require de routes/config/container: siguen con ROOT_PATH (son del PROYECTO).
+        //   - require de bootstrap_error_renderers: cambia a self-locate del paquete:
+        //       require __DIR__ . '/../Presentation/bootstrap_error_renderers.php';
+    }
+}
+```
+Cambios puntuales dentro del cuerpo:
+- Quitar `require_once APP_PATH . '/Kernel/Autoloader.php';` y el bloque condicional de Composer (ya cargado por `index.php`).
+- `require_once APP_PATH . '/Presentation/bootstrap_error_renderers.php';` → `require_once __DIR__ . '/../Presentation/bootstrap_error_renderers.php';` (archivo del paquete).
+- `$container = new \App\Kernel\Container\Container();` → `new \Lebytek\Framework\Kernel\Container\Container();` (ya lo hizo Task 5, verificar).
+- `require ROOT_PATH . '/config/container.php'`, `routes/web.php`, `routes/api.php`: **se quedan** con `ROOT_PATH` (son del proyecto).
+
+- [ ] **Step 6: Ajustar `public/index.php`**
+
 ```php
 <?php
 declare(strict_types=1);
@@ -481,27 +727,28 @@ require ROOT_PATH . '/vendor/autoload.php';
 
 \Lebytek\Framework\Kernel\Bootstrap::run();
 ```
-> Ajustar `Bootstrap::run()` al nombre real del método de arranque (verificar en `src/Kernel/Bootstrap.php`; puede ser `boot()`/`handle()`/instanciación). Mantener las constantes que el framework espera.
 
-- [ ] **Step 2: Ajustar Bootstrap si carga el autoloader o asume `app/` para framework**
-
-En `src/Kernel/Bootstrap.php`, eliminar cualquier `require` de `vendor/autoload.php` (ya lo hace `index.php`) y asegurar que las rutas a **código framework** usen `__DIR__`/localización del paquete, no `APP_PATH`. `APP_PATH` solo debe usarse para descubrir código/manifiestos de **dominio**.
-
-- [ ] **Step 3: GATE — arranque + arnés**
+- [ ] **Step 7: GATE — arranque HTTP (admin + público) + arnés**
 
 Run:
 ```bash
 php -S localhost:8000 -t public &
-sleep 2 && curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/ ; kill %1
+SRV=$!; sleep 2
+echo -n "raíz:  "; curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/
+echo -n "login: "; curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/login
+echo -n "admin: "; curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/admin
+kill $SRV
 php tests/run.php
 ```
-Expected: código HTTP de una respuesta válida (200/302/login) y arnés PASS con baseline.
+Expected: códigos HTTP válidos (200/302; nada de 500 por "Vista no encontrada") y arnés PASS con baseline (incluye los 2 tests nuevos de `ViewHelperResolve`). Un 500 en `/login` o `/admin` casi siempre = una vista que `resolve()` no encontró → revisar que esa vista esté en `src/Presentation/Views` y que `resolve()` busque ahí.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add public/index.php src/Kernel/Bootstrap.php
-git commit -m "refactor(bootstrap): arranque por Composer + Bootstrap del framework"
+git add src/Kernel/Bootstrap.php public/index.php src/Kernel/Helpers/ViewHelper.php \
+        src/Presentation/bootstrap_error_renderers.php src/Presentation/Views/admin/dashboard/index.php \
+        tests/Kernel/ViewHelperResolveTest.php
+git commit -m "refactor(bootstrap): Bootstrap como clase, arranque por Composer y resolucion de vistas en cascada"
 ```
 
 ---
@@ -795,6 +1042,8 @@ Cambiar el origin que el VPS hace pull, de `Lebytek_Framework` a `Lebytek_Produc
 ## Notas de ejecución
 
 - **Red de seguridad:** todo está respaldado en el tag `pre-split-backup` (Task 1). Ante un carve que se complique, `git reset --hard pre-split-backup` revierte.
-- **El gate es el arnés:** este es un refactor que **preserva comportamiento**; el arnés de tests (no tests nuevos por feature) es la verificación principal. El único test nuevo es el de `FrameworkServiceProvider` (Task 6).
+- **El gate es el arnés:** este es un refactor que **preserva comportamiento**; el arnés de tests es la verificación principal. Tests nuevos (los únicos): `FrameworkServiceProviderTest` (Task 6) y `ViewHelperResolveTest` (Task 7) — ambos cubren mecanismos del propio carve (registro del provider y cascada de vistas), no features de dominio.
+- **GATE de arranque HTTP:** además del arnés, Task 7 y Task 8 ejercen `php -S` + `curl` porque la cascada de vistas y el contrato paquete↔esqueleto NO los cubre el arnés (que no renderiza HTTP admin completo). Un 500 por "Vista no encontrada" solo aparece en el arranque real.
+- **Trampas confirmadas (ver Inventario):** (§D) vistas del framework dejan de resolverse si no se hace la cascada de Task 7; (§E) borrar el autoloader rompe 10 archivos extra (Task 2); (§F) `Bootstrap` es procedural y debe volverse clase (Task 7); 2 repos de dominio escondidos en `Infrastructure/Repositories/` (Task 4 Step 2b); la zona de módulos de `container.php` (incl. `SettingsSectionRegistry` e integrations) se queda en el proyecto, no en el provider (Task 6).
 - **Tasks 1–11** ocurren en ESTE repo. **Task 12** es operativa (Repo 2 + VPS) y se hace con el usuario.
 - **Fuera de alcance:** los 4 servicios de dominio (A–D) y la promoción módulo-por-módulo (solo se LISTA en Task 10).

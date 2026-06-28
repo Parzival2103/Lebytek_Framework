@@ -35,6 +35,7 @@ if ($marketingActivo) {
 $integrationsActivo = (bool) \App\Kernel\Config\Config::get('vertical.modules.integrations', false);
 if ($integrationsActivo) {
     $router->get('/wa/activar/{token}', [\App\Presentation\Controllers\Admin\IntegrationsController::class, 'activar']);
+    $router->get('/wa/activar/{token}/estado', [\App\Presentation\Controllers\Admin\IntegrationsController::class, 'activarEstado']);
 }
 
 $router->get('/login',  [AuthController::class, 'showLogin']);

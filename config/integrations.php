@@ -36,6 +36,11 @@ return [
         'whatsapp' => ['max' => 30, 'window_seconds' => 60],
     ],
 
+    'activation' => [
+        // Enlace placeholder hasta publicar docs propias del módulo.
+        'api_docs_url' => EnvLoader::get('INTEGRATIONS_API_DOCS_URL', '/docs/integraciones/whatsapp-api'),
+    ],
+
     // Fase 2 (solo diseño): validadores de webhooks por proveedor.
     'webhooks' => [],
 ];
