@@ -589,7 +589,7 @@ return static function (Container $container): void {
     // ── Módulo Marketing (bindings condicionales al toggle; ver config/modules/marketing.php) ──
     if ((bool) Config::get('vertical.modules.marketing', false)) {
         $container->singleton(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class,
-            fn() => new \App\Infrastructure\Repositories\PdoMarketingContentRepository());
+            fn() => new \App\Infrastructure\Marketing\PdoMarketingContentRepository());
 
         $container->singleton(\App\Domain\Marketing\Contracts\LandingContentProviderInterface::class,
             fn(Container $c) => new \App\Infrastructure\Marketing\CrudLandingContentProvider(
@@ -610,7 +610,7 @@ return static function (Container $container): void {
                 $c->get(\App\Application\Marketing\RenderLandingUseCase::class)));
 
         $container->singleton(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class,
-            fn() => new \App\Infrastructure\Repositories\PdoLeadRepository());
+            fn() => new \App\Infrastructure\Marketing\PdoLeadRepository());
 
         $container->singleton(\App\Application\Marketing\CapturarLeadUseCase::class, function (Container $c) {
             $destinoInterno = (string) $c->get(ConfiguracionService::class)->get('mkt_mail_from', '');

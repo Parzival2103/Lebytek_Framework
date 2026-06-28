@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repositories;
+namespace App\Infrastructure\Marketing;
 
 use App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface;
 use App\Kernel\Database\Connection;
