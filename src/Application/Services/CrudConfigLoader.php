@@ -7,10 +7,14 @@ namespace Lebytek\Framework\Application\Services;
 use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 use Lebytek\Framework\Domain\Exceptions\ValidationException;
 use Lebytek\Framework\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Kernel\Paths;
 
 final class CrudConfigLoader
 {
-    private const CRUD_CONFIG_DIR = ROOT_PATH . '/config/cruds';
+    private static function crudConfigDir(): string
+    {
+        return Paths::appRoot() . '/config/cruds';
+    }
 
     /** @var array<string, CrudResourceDefinition> */
     private array $cache = [];
@@ -26,7 +30,7 @@ final class CrudConfigLoader
             return $this->cache[$resource];
         }
 
-        $filePath = self::CRUD_CONFIG_DIR . '/' . $resource . '.json';
+        $filePath = self::crudConfigDir() . '/' . $resource . '.json';
         if (!is_readable($filePath)) {
             throw new ValidationException("No existe configuración CRUD para el recurso {$resource}.");
         }
@@ -74,11 +78,11 @@ final class CrudConfigLoader
     public function listResources(): array
     {
         $resources = [];
-        if (!is_dir(self::CRUD_CONFIG_DIR)) {
+        if (!is_dir(self::crudConfigDir())) {
             return $resources;
         }
 
-        $files = scandir(self::CRUD_CONFIG_DIR) ?: [];
+        $files = scandir(self::crudConfigDir()) ?: [];
         foreach ($files as $file) {
             if (!str_ends_with($file, '.json')) {
                 continue;

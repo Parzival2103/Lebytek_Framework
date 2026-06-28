@@ -26,7 +26,7 @@ function gd_useCase(ReporteRecordSourceInterface $source): GenerarDocumentoUseCa
     return new GenerarDocumentoUseCase(
         new ReporteConfigLoader(new ReporteConfigValidator()),
         $source,
-        new PdfTemplateRegistry(require ROOT_PATH . '/config/pdf_templates.php')
+        new PdfTemplateRegistry(require SKELETON_PATH . '/config/pdf_templates.php')
     );
 }
 

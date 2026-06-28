@@ -82,6 +82,7 @@ use Lebytek\Framework\Application\Install\DependencyResolver;
 use Lebytek\Framework\Application\Install\Installer;
 use Lebytek\Framework\Application\Install\DeploymentStatus;
 use Lebytek\Framework\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Paths;
 
 final class FrameworkServiceProvider
 {
@@ -149,7 +150,7 @@ final class FrameworkServiceProvider
             $container->singleton(GenericCrudRepository::class, fn() => new GenericCrudRepository());
             $container->singleton(CrudHandlerRegistry::class, static function (): CrudHandlerRegistry {
                 /** @var array<string, class-string> $map */
-                $map = require ROOT_PATH . '/config/crud_handlers.php';
+                $map = require Paths::appRoot() . '/config/crud_handlers.php';
                 return new CrudHandlerRegistry(is_array($map) ? $map : []);
             });
             $container->singleton(CrudConfigValidator::class, fn(Container $c) => new CrudConfigValidator(
@@ -254,11 +255,11 @@ final class FrameworkServiceProvider
             $container->singleton(\Lebytek\Framework\Application\Pdf\PdfComponentRenderer::class, fn() => new \Lebytek\Framework\Application\Pdf\PdfComponentRenderer());
         
             $container->singleton(\Lebytek\Framework\Domain\Pdf\PdfEngineInterface::class, fn() => new \Lebytek\Framework\Infrastructure\Pdf\DompdfRenderer(
-                (string) (require ROOT_PATH . '/config/pdf.php')['font']
+                (string) (require Paths::appRoot() . '/config/pdf.php')['font']
             ));
         
             $container->singleton(\Lebytek\Framework\Application\Pdf\PdfTemplateRegistry::class, fn() => new \Lebytek\Framework\Application\Pdf\PdfTemplateRegistry(
-                require ROOT_PATH . '/config/pdf_templates.php'
+                require Paths::appRoot() . '/config/pdf_templates.php'
             ));
         
             $container->singleton(\Lebytek\Framework\Infrastructure\Pdf\PdfStorage::class, fn() => new \Lebytek\Framework\Infrastructure\Pdf\PdfStorage());
@@ -267,7 +268,7 @@ final class FrameworkServiceProvider
                 $c->get(\Lebytek\Framework\Application\Pdf\PdfComponentRenderer::class),
                 $c->get(\Lebytek\Framework\Domain\Pdf\PdfEngineInterface::class),
                 $c->get(\Lebytek\Framework\Application\Pdf\PdfTemplateRegistry::class),
-                require ROOT_PATH . '/config/pdf.php'
+                require Paths::appRoot() . '/config/pdf.php'
             ));
         
             $container->singleton(\Lebytek\Framework\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase::class, fn(Container $c) => new \Lebytek\Framework\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase(
@@ -308,7 +309,7 @@ final class FrameworkServiceProvider
             ));
             $container->singleton(\Lebytek\Framework\Domain\Interfaces\ReporteRepositoryInterface::class, fn() => new \Lebytek\Framework\Infrastructure\Repositories\PdoReporteRepository());
         
-            foreach ((require ROOT_PATH . '/config/dashboard.php')['providers'] as $fqcnProvider) {
+            foreach ((require Paths::appRoot() . '/config/dashboard.php')['providers'] as $fqcnProvider) {
                 if (!$container->has($fqcnProvider)) {
                     $fqcn = $fqcnProvider;
                     $container->singleton($fqcn, static function () use ($fqcn) {
@@ -318,7 +319,7 @@ final class FrameworkServiceProvider
             }
         
             $container->singleton(BuildDashboardViewModelUseCase::class, function (Container $c) {
-                $cfg       = require ROOT_PATH . '/config/dashboard.php';
+                $cfg       = require Paths::appRoot() . '/config/dashboard.php';
                 $providers = [];
                 foreach ($cfg['providers'] as $fqcn) {
                     /** @var DashboardContributionProviderInterface $p */
@@ -506,7 +507,7 @@ final class FrameworkServiceProvider
             $container->singleton(MigrationRepositoryInterface::class, fn() => new MigrationRepository());
             $container->singleton(ModuleStateRepositoryInterface::class, fn() => new ModuleStateRepository());
             $container->singleton(SqlFileRunner::class, fn() => new SqlFileRunner());
-            $container->singleton(ModuleRegistry::class, fn() => new ModuleRegistry(ROOT_PATH . '/config/modules'));
+            $container->singleton(ModuleRegistry::class, fn() => new ModuleRegistry(Paths::appRoot() . '/config/modules'));
             $container->singleton(DependencyResolver::class, fn() => new DependencyResolver());
         
             $container->singleton(Installer::class, fn(Container $c) => new Installer(
@@ -515,8 +516,8 @@ final class FrameworkServiceProvider
                 $c->get(MigrationRepositoryInterface::class),
                 $c->get(ModuleStateRepositoryInterface::class),
                 $c->get(SqlFileRunner::class),
-                ROOT_PATH . '/database/migrations',
-                ROOT_PATH . '/database/seeds'
+                Paths::appRoot() . '/database/migrations',
+                Paths::appRoot() . '/database/seeds'
             ));
         
             $container->singleton(DeploymentStatus::class, fn(Container $c) => new DeploymentStatus(

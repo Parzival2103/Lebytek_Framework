@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lebytek\Framework\Kernel;
 
 use Lebytek\Framework\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\Paths;
 use Lebytek\Framework\Kernel\Config\Config;
 use Lebytek\Framework\Kernel\Config\DebugMode;
 use Lebytek\Framework\Kernel\Database\Connection;
@@ -38,7 +39,7 @@ final class Bootstrap
         EnvLoader::load($envFile);
 
         // ── 2. Configuración ──────────────────────────────────────────────────
-        Config::init(ROOT_PATH . '/config');
+        Config::init(Paths::appRoot() . '/config');
 
         // ── 3. Zona horaria y reporte de errores ──────────────────────────────
         date_default_timezone_set(Config::get('app.timezone', 'America/Mexico_City'));
@@ -95,7 +96,7 @@ final class Bootstrap
 
         // ── 6. Contenedor de dependencias ─────────────────────────────────────
         $container = new \Lebytek\Framework\Kernel\Container\Container();
-        $containerConfig = require ROOT_PATH . '/config/container.php';
+        $containerConfig = require Paths::appRoot() . '/config/container.php';
         $containerConfig($container);
 
         // ── 7. Rutas y despacho ───────────────────────────────────────────────
@@ -103,8 +104,8 @@ final class Bootstrap
         $router  = new Router();
         $router->setContainer($container);
 
-        require ROOT_PATH . '/routes/web.php';
-        require ROOT_PATH . '/routes/api.php';
+        require Paths::appRoot() . '/routes/web.php';
+        require Paths::appRoot() . '/routes/api.php';
 
         $router->dispatch($request);
     }

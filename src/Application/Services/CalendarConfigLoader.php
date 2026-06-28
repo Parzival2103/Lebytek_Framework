@@ -7,11 +7,19 @@ use Lebytek\Framework\Domain\Entities\CalendarDefinition;
 use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 use Lebytek\Framework\Domain\Exceptions\ValidationException;
 use Lebytek\Framework\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Kernel\Paths;
 
 final class CalendarConfigLoader
 {
-    private const DIR = ROOT_PATH . '/config/calendars';
-    private const CRUD_DIR = ROOT_PATH . '/config/cruds';
+    private static function dir(): string
+    {
+        return Paths::appRoot() . '/config/calendars';
+    }
+
+    private static function crudDir(): string
+    {
+        return Paths::appRoot() . '/config/cruds';
+    }
 
     /** @var array<string, CalendarDefinition> */
     private array $cache = [];
@@ -27,7 +35,7 @@ final class CalendarConfigLoader
             return $this->cache[$key];
         }
 
-        $file = self::DIR . '/' . $key . '.json';
+        $file = self::dir() . '/' . $key . '.json';
         if (!is_readable($file)) {
             throw new ValidationException("No existe configuración de calendario para {$key}.");
         }
@@ -62,7 +70,7 @@ final class CalendarConfigLoader
     public function crudDefinition(string $resource): CrudResourceDefinition
     {
         $resource = trim($resource);
-        $file = self::CRUD_DIR . '/' . $resource . '.json';
+        $file = self::crudDir() . '/' . $resource . '.json';
         if ($resource === '' || !is_readable($file)) {
             throw new ValidationException("No existe configuración CRUD para el recurso {$resource}.");
         }
@@ -113,10 +121,10 @@ final class CalendarConfigLoader
     public function listCalendars(): array
     {
         $out = [];
-        if (!is_dir(self::DIR)) {
+        if (!is_dir(self::dir())) {
             return $out;
         }
-        foreach (scandir(self::DIR) ?: [] as $file) {
+        foreach (scandir(self::dir()) ?: [] as $file) {
             if (!str_ends_with($file, '.json')) {
                 continue;
             }

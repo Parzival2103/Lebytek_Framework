@@ -6,13 +6,13 @@ use Lebytek\Framework\Application\Install\ModuleRegistry;
 use Lebytek\Framework\Application\Install\ManifestValidator;
 
 test('Integridad: todos los .sql reales tienen dueño único en algún manifiesto', function (): void {
-    $registry  = new ModuleRegistry(ROOT_PATH . '/config/modules');
+    $registry  = new ModuleRegistry(SKELETON_PATH . '/config/modules');
     $manifests = $registry->all();
 
-    $migraciones = array_map('basename', glob(ROOT_PATH . '/database/migrations/*.sql') ?: []);
-    $seeds       = array_map('basename', glob(ROOT_PATH . '/database/seeds/*.sql') ?: []);
+    $migraciones = array_map('basename', glob(SKELETON_PATH . '/database/migrations/*.sql') ?: []);
+    $seeds       = array_map('basename', glob(SKELETON_PATH . '/database/seeds/*.sql') ?: []);
 
-    $crudFiles = glob(ROOT_PATH . '/config/cruds/*.json') ?: [];
+    $crudFiles = glob(SKELETON_PATH . '/config/cruds/*.json') ?: [];
     $cruds = array_map(static fn(string $f): string => basename($f, '.json'), $crudFiles);
 
     $errores = ManifestValidator::errores($manifests, [
@@ -25,7 +25,7 @@ test('Integridad: todos los .sql reales tienen dueño único en algún manifiest
 });
 
 test('Integridad: core existe y es obligatorio', function (): void {
-    $registry = new ModuleRegistry(ROOT_PATH . '/config/modules');
+    $registry = new ModuleRegistry(SKELETON_PATH . '/config/modules');
     $core = $registry->get('core');
     assert_true($core !== null);
     assert_true($core->obligatorio);

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 test('config/integrations.php define canales whatsapp y email con clases existentes', function (): void {
-    $cfg = require ROOT_PATH . '/config/integrations.php';
+    $cfg = require SKELETON_PATH . '/config/integrations.php';
     assert_true(isset($cfg['channels']['whatsapp']), 'canal whatsapp definido');
     assert_true(isset($cfg['channels']['email']), 'canal email definido');
     assert_same('green_api', $cfg['channels']['whatsapp']['driver'], 'driver whatsapp');
@@ -14,7 +14,7 @@ test('config/integrations.php define canales whatsapp y email con clases existen
 });
 
 test('config/modules/integrations.php es un manifiesto válido', function (): void {
-    $m = require ROOT_PATH . '/config/modules/integrations.php';
+    $m = require SKELETON_PATH . '/config/modules/integrations.php';
     assert_same('integrations', $m['clave'], 'clave del módulo');
     assert_true($m['obligatorio'] === false, 'módulo opcional');
     assert_same('database/schema/modules/integrations.sql', $m['bootstrap_sql'], 'apunta a su SQL');

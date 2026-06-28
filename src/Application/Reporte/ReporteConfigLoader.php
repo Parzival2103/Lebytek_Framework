@@ -7,6 +7,7 @@ use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 use Lebytek\Framework\Domain\Exceptions\ValidationException;
 use Lebytek\Framework\Domain\Reporte\ReporteFuente;
 use Lebytek\Framework\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Kernel\Paths;
 
 /**
  * Carga fuentes reportables desde config/reportes/{key}.json, validándolas contra las
@@ -15,8 +16,15 @@ use Lebytek\Framework\Kernel\Logging\AppLogger;
  */
 final class ReporteConfigLoader
 {
-    private const DIR = ROOT_PATH . '/config/reportes';
-    private const CRUD_DIR = ROOT_PATH . '/config/cruds';
+    private static function dir(): string
+    {
+        return Paths::appRoot() . '/config/reportes';
+    }
+
+    private static function crudDir(): string
+    {
+        return Paths::appRoot() . '/config/cruds';
+    }
 
     /** @var array<string, ReporteFuente> */
     private array $cache = [];
@@ -32,7 +40,7 @@ final class ReporteConfigLoader
             return $this->cache[$key];
         }
 
-        $file = self::DIR . '/' . $key . '.json';
+        $file = self::dir() . '/' . $key . '.json';
         if ($key === '' || !is_readable($file)) {
             throw new ValidationException("No existe configuración de reporte para {$key}.");
         }
@@ -62,7 +70,7 @@ final class ReporteConfigLoader
     public function crudDefinition(string $resource): CrudResourceDefinition
     {
         $resource = trim($resource);
-        $file = self::CRUD_DIR . '/' . $resource . '.json';
+        $file = self::crudDir() . '/' . $resource . '.json';
         if ($resource === '' || !is_readable($file)) {
             throw new ValidationException("No existe configuración CRUD para el recurso {$resource}.");
         }
@@ -80,10 +88,10 @@ final class ReporteConfigLoader
     public function listFuentes(): array
     {
         $out = [];
-        if (!is_dir(self::DIR)) {
+        if (!is_dir(self::dir())) {
             return $out;
         }
-        foreach (scandir(self::DIR) ?: [] as $file) {
+        foreach (scandir(self::dir()) ?: [] as $file) {
             if (!str_ends_with($file, '.json')) {
                 continue;
             }

@@ -67,8 +67,8 @@ test('renderTemplate con motor real produce %PDF', function (): void {
 });
 
 test('la plantilla demo registrada en config produce un PDF de colección', function (): void {
-    $map = require ROOT_PATH . '/config/pdf_templates.php';
-    $pdfConfig = require ROOT_PATH . '/config/pdf.php';
+    $map = require SKELETON_PATH . '/config/pdf_templates.php';
+    $pdfConfig = require SKELETON_PATH . '/config/pdf.php';
 
     $service = new PdfRenderingService(
         new PdfComponentRenderer(),

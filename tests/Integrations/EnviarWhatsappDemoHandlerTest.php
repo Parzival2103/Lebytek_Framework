@@ -15,7 +15,7 @@ function actionContext(?array $record): CrudActionContext
 }
 
 test('el handler está registrado en la whitelist y existe la clase', function (): void {
-    $map = require ROOT_PATH . '/config/crud_handlers.php';
+    $map = require SKELETON_PATH . '/config/crud_handlers.php';
     assert_true(isset($map['enviar_whatsapp_demo']), 'clave registrada');
     assert_true(class_exists($map['enviar_whatsapp_demo']), 'clase existe');
 });

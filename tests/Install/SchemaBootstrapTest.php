@@ -20,7 +20,7 @@ test('schema.sql no referencia migraciones archivadas', function (): void {
 });
 
 test('crud-engine manifiesto declara bootstrap_sql y archivo existe', function (): void {
-    $registry = new ModuleRegistry(ROOT_PATH . '/config/modules');
+    $registry = new ModuleRegistry(SKELETON_PATH . '/config/modules');
     $crud = $registry->get('crud-engine');
     assert_true($crud !== null);
     assert_same('database/schema/modules/crud-engine.sql', $crud->bootstrapSql);
@@ -28,24 +28,24 @@ test('crud-engine manifiesto declara bootstrap_sql y archivo existe', function (
 });
 
 test('calendario manifiesto declara bootstrap_sql, crud y archivo existe', function (): void {
-    $registry = new ModuleRegistry(ROOT_PATH . '/config/modules');
+    $registry = new ModuleRegistry(SKELETON_PATH . '/config/modules');
     $cal = $registry->get('calendario');
     assert_true($cal !== null);
     assert_same('database/schema/modules/calendario.sql', $cal->bootstrapSql);
     assert_true(is_file(ROOT_PATH . '/' . $cal->bootstrapSql));
     assert_true(in_array('demo_citas', $cal->cruds, true), 'declara el crud demo_citas');
     assert_true(in_array('crud-engine', $cal->requiere, true), 'depende de crud-engine');
-    assert_true(is_file(ROOT_PATH . '/config/calendars/demo_citas.json'), 'calendario demo existe');
+    assert_true(is_file(SKELETON_PATH . '/config/calendars/demo_citas.json'), 'calendario demo existe');
 });
 
 test('seeds/ no tiene SQL sueltos (solo baseline consolidado)', function (): void {
-    $seeds = glob(ROOT_PATH . '/database/seeds/*.sql') ?: [];
+    $seeds = glob(SKELETON_PATH . '/database/seeds/*.sql') ?: [];
     assert_same([], $seeds);
 });
 
 test('migraciones incrementales post-baseline están declaradas en un manifiesto', function (): void {
-    $registry    = new ModuleRegistry(ROOT_PATH . '/config/modules');
-    $migraciones = array_map('basename', glob(ROOT_PATH . '/database/migrations/*.sql') ?: []);
+    $registry    = new ModuleRegistry(SKELETON_PATH . '/config/modules');
+    $migraciones = array_map('basename', glob(SKELETON_PATH . '/database/migrations/*.sql') ?: []);
     $declaradas  = [];
     foreach ($registry->all() as $manifest) {
         $declaradas = array_merge($declaradas, $manifest->migraciones);

@@ -16,7 +16,7 @@ test('todo config/cruds/*.json apunta a una tabla existente en database/schema',
     }
 
     // 2) Cada CRUD JSON debe declarar resource.table y existir un CREATE TABLE para ella.
-    $cruds = glob(ROOT_PATH . '/config/cruds/*.json') ?: [];
+    $cruds = glob(SKELETON_PATH . '/config/cruds/*.json') ?: [];
     assert_true(count($cruds) > 0, 'debe haber configs CRUD');
 
     foreach ($cruds as $path) {
