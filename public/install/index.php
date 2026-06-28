@@ -10,7 +10,7 @@ define('STORAGE_PATH', ROOT_PATH . '/storage');
 ini_set('log_errors', '1');
 ini_set('error_log', STORAGE_PATH . '/logs/install-wizard.log');
 
-require_once APP_PATH . '/Kernel/Autoloader.php';
+require_once ROOT_PATH . '/vendor/autoload.php';
 
 use App\Infrastructure\Install\InstallTrace;
 use App\Infrastructure\Install\SqlFileRunner;

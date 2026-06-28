@@ -15,7 +15,7 @@ define('ROOT_PATH', dirname(__DIR__));
 define('APP_PATH', ROOT_PATH . '/app');
 define('STORAGE_PATH', ROOT_PATH . '/storage');
 
-require_once APP_PATH . '/Kernel/Autoloader.php';
+require_once ROOT_PATH . '/vendor/autoload.php';
 
 use App\Infrastructure\Install\SqlFileRunner;
 use App\Kernel\EnvLoader;

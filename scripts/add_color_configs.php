@@ -3,7 +3,7 @@ declare(strict_types=1);
 define('ROOT_PATH', dirname(__DIR__));
 define('APP_PATH',  ROOT_PATH . '/app');
 define('STORAGE_PATH', ROOT_PATH . '/storage');
-require_once APP_PATH . '/Kernel/Autoloader.php';
+require_once ROOT_PATH . '/vendor/autoload.php';
 use App\Kernel\EnvLoader; use App\Kernel\Config\Config; use App\Kernel\Database\Connection;
 EnvLoader::load(ROOT_PATH . '/.env');
 Config::init(ROOT_PATH . '/config');

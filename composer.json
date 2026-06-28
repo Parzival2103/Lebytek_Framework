@@ -6,6 +6,11 @@
     "dompdf/dompdf": "^3.1",
     "phpmailer/phpmailer": "^7.1"
   },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  },
   "config": {
     "sort-packages": true
   }

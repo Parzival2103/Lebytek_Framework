@@ -27,12 +27,7 @@ use App\Kernel\Exceptions\AppException;
 use App\Kernel\Logging\AppLogger;
 
 // ── 1. Autoloader ────────────────────────────────────────────────────────────
-require_once APP_PATH . '/Kernel/Autoloader.php';
-
-$composerAutoload = ROOT_PATH . '/vendor/autoload.php';
-if (is_readable($composerAutoload)) {
-    require_once $composerAutoload;
-}
+require_once ROOT_PATH . '/vendor/autoload.php';
 
 // ── 2. Variables de entorno ───────────────────────────────────────────────────
 $envFile = ROOT_PATH . '/.env';

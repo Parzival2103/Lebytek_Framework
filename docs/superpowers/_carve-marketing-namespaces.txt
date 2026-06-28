@@ -1,0 +1,4 @@
+App\Domain\Marketing
+App\Application\Marketing
+App\Infrastructure\Marketing
+App\Presentation\Controllers\Publico

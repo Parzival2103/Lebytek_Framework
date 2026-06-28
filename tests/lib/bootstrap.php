@@ -16,12 +16,7 @@ if (!defined('STORAGE_PATH')) {
     define('STORAGE_PATH', ROOT_PATH . '/storage');
 }
 
-require_once APP_PATH . '/Kernel/Autoloader.php';
-
-$composerAutoload = ROOT_PATH . '/vendor/autoload.php';
-if (is_readable($composerAutoload)) {
-    require_once $composerAutoload;
-}
+require_once ROOT_PATH . '/vendor/autoload.php';
 
 use App\Kernel\Config\Config;
 use App\Kernel\Database\Connection;
