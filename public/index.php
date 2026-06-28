@@ -16,5 +16,6 @@ define('PUBLIC_PATH', __DIR__);
 define('STORAGE_PATH', ROOT_PATH . '/storage');
 define('APP_START', microtime(true));
 
-// Cargar bootstrap de la aplicación
-require ROOT_PATH . '/app/Kernel/Bootstrap.php';
+require ROOT_PATH . '/vendor/autoload.php';
+
+\Lebytek\Framework\Kernel\Bootstrap::run();

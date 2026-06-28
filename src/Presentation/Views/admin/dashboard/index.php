@@ -22,7 +22,9 @@ foreach ($widgets as $widget) {
     if (!preg_match('/^dashboard\/[a-z0-9_\/-]+$/i', $partial)) {
         continue;
     }
-    if (!is_file(APP_PATH . '/Presentation/Views/partials/' . $partial . '.php')) {
+    try {
+        ViewHelper::resolve('partials/' . $partial);
+    } catch (\RuntimeException) {
         continue;
     }
     $validWidgets[] = $widget;

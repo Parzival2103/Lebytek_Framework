@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 /**
  * Registra en Response los renderers HTML para 404, 403 y 500.
@@ -13,19 +14,19 @@ function registerPresentationErrorRenderers(): void
 {
     Response::setNotFoundRenderer(function (): string {
         ob_start();
-        require APP_PATH . '/Presentation/Views/errors/404.php';
+        require ViewHelper::resolve('errors/404');
         return ob_get_clean();
     });
 
     Response::setForbiddenRenderer(function (): string {
         ob_start();
-        require APP_PATH . '/Presentation/Views/errors/403.php';
+        require ViewHelper::resolve('errors/403');
         return ob_get_clean();
     });
 
     Response::setInternalErrorRenderer(function (): string {
         ob_start();
-        require APP_PATH . '/Presentation/Views/errors/500.php';
+        require ViewHelper::resolve('errors/500');
         return ob_get_clean();
     });
 }
