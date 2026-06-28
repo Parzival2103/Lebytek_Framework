@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Entities\Crud\CrudRelationDefinition;
-use App\Domain\Interfaces\CrudRelationRepositoryInterface;
+use Lebytek\Framework\Domain\Entities\Crud\CrudRelationDefinition;
+use Lebytek\Framework\Domain\Interfaces\CrudRelationRepositoryInterface;
 
 /**
  * Resuelve datos de relaciones: opciones de selects belongsTo y filas hijas

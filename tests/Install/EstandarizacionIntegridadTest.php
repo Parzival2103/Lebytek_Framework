@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Install\ModuleRegistry;
-use App\Application\Install\ManifestValidator;
+use Lebytek\Framework\Application\Install\ModuleRegistry;
+use Lebytek\Framework\Application\Install\ManifestValidator;
 
 test('Integridad: todos los .sql reales tienen dueño único en algún manifiesto', function (): void {
     $registry  = new ModuleRegistry(ROOT_PATH . '/config/modules');

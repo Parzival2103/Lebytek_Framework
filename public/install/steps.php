@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Infrastructure\Install\InstallTrace;
-use App\Kernel\Config\Config;
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Infrastructure\Install\InstallTrace;
+use Lebytek\Framework\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Database\Connection;
 use RuntimeException;
 
 /** Helper de escape para las vistas. */

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Domain\Dashboard\DashboardBuildContext;
-use App\Infrastructure\Dashboard\DefaultPlatformDashboardProvider;
+use Lebytek\Framework\Domain\Dashboard\DashboardBuildContext;
+use Lebytek\Framework\Infrastructure\Dashboard\DefaultPlatformDashboardProvider;
 
 function dash_labels(array $items): array
 {

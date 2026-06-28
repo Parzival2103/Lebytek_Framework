@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Avatares;
+namespace Lebytek\Framework\Application\UseCases\Avatares;
 
-use App\Application\DTO\Files\ImageOptions;
+use Lebytek\Framework\Application\DTO\Files\ImageOptions;
 
 /*
 |--------------------------------------------------------------------------

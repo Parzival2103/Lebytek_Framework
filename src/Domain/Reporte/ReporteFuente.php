@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Domain\Reporte;
+namespace Lebytek\Framework\Domain\Reporte;
 
 /**
  * Fuente reportable declarada por el programador en config/reportes/{key}.json.

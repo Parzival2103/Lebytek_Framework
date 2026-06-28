@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Interfaces\CrudHookHandlerInterface;
-use App\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Interfaces\CrudHookHandlerInterface;
+use Lebytek\Framework\Kernel\Logging\AppLogger;
 
 final class CrudHookRunner
 {

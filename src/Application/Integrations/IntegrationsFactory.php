@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Integrations;
+namespace Lebytek\Framework\Application\Integrations;
 
-use App\Domain\Integrations\ApiConnectorInterface;
-use App\Domain\Interfaces\MailerInterface;
-use App\Infrastructure\Integrations\Channels\EmailChannel;
-use App\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel;
-use App\Infrastructure\Integrations\Http\HttpApiConnector;
-use App\Infrastructure\Integrations\Repositories\IntegrationAccountRepository;
-use App\Infrastructure\Integrations\Repositories\IntegrationLogRepository;
-use App\Infrastructure\Mail\LogMailer;
-use App\Infrastructure\Mail\PhpMailerMailer;
-use App\Kernel\Config\Config;
+use Lebytek\Framework\Domain\Integrations\ApiConnectorInterface;
+use Lebytek\Framework\Domain\Interfaces\MailerInterface;
+use Lebytek\Framework\Infrastructure\Integrations\Channels\EmailChannel;
+use Lebytek\Framework\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel;
+use Lebytek\Framework\Infrastructure\Integrations\Http\HttpApiConnector;
+use Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationAccountRepository;
+use Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationLogRepository;
+use Lebytek\Framework\Infrastructure\Mail\LogMailer;
+use Lebytek\Framework\Infrastructure\Mail\PhpMailerMailer;
+use Lebytek\Framework\Kernel\Config\Config;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,7 +52,7 @@ final class IntegrationsFactory
 
     /**
      * @param array<string, array{driver?:string, enabled?:bool, config?:array}> $channelsConfig
-     * @return array<string, array{driver:string, factory:callable():\App\Domain\Integrations\MessageChannelInterface}>
+     * @return array<string, array{driver:string, factory:callable():\Lebytek\Framework\Domain\Integrations\MessageChannelInterface}>
      */
     public static function buildChannels(array $channelsConfig, MailerInterface $mailer, ApiConnectorInterface $http): array
     {

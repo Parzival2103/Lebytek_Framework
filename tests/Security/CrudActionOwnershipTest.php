@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudScopeResolver;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\Services\CrudScopeResolver;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 /**
  * H2 (IDOR) — la regla de propiedad usada por show/edit/update/delete y por las

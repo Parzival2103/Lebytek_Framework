@@ -2,9 +2,9 @@
 // tests/Integrations/EnviarWhatsappDemoHandlerTest.php
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudActionContext;
-use App\Application\Crud\Handlers\EnviarWhatsappDemoHandler;
-use App\Domain\Interfaces\CrudActionHandlerInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
+use Lebytek\Framework\Application\Crud\Handlers\EnviarWhatsappDemoHandler;
+use Lebytek\Framework\Domain\Interfaces\CrudActionHandlerInterface;
 
 function actionContext(?array $record): CrudActionContext
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\EnvLoader;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,7 +15,7 @@ return [
     'channels' => [
         'whatsapp' => [
             'driver'  => 'green_api',
-            'class'   => \App\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel::class,
+            'class'   => \Lebytek\Framework\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel::class,
             'enabled' => (bool) EnvLoader::get('GREEN_API_ENABLED', false),
             'config'  => [
                 'base_url'    => EnvLoader::get('GREEN_API_BASE_URL', 'https://api.green-api.com'),
@@ -26,7 +26,7 @@ return [
         ],
         'email' => [
             'driver'  => 'mailer_adapter',
-            'class'   => \App\Infrastructure\Integrations\Channels\EmailChannel::class,
+            'class'   => \Lebytek\Framework\Infrastructure\Integrations\Channels\EmailChannel::class,
             'enabled' => true,
             'config'  => [],
         ],

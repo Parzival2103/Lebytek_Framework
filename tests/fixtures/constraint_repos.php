@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Interfaces\CrudConstraintRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudConstraintRepositoryInterface;
 
 if (!class_exists('FakeConstraintRepository')) {
     /** Repositorio en memoria para probar CrudDbConstraintValidator sin DB. */

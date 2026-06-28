@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudConfigValidator;
+use Lebytek\Framework\Application\Services\CrudConfigValidator;
 
 test('CrudConfigValidator: exists sin table es error de forma', function (): void {
     $errors = CrudConfigValidator::validationConstraintShapeErrors([

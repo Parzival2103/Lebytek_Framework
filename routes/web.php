@@ -1,23 +1,23 @@
 <?php
 
-use App\Presentation\Controllers\AuthController;
-use App\Presentation\Controllers\RegistroController;
-use App\Presentation\Controllers\RecuperacionController;
-use App\Presentation\Controllers\Admin\DashboardController;
-use App\Presentation\Controllers\Admin\UsuariosController;
-use App\Presentation\Controllers\Admin\RolesController;
-use App\Presentation\Controllers\Admin\PermisosController;
-use App\Presentation\Controllers\Admin\AjustesController;
-use App\Presentation\Controllers\Admin\PerfilController;
-use App\Presentation\Controllers\Admin\CrudController;
-use App\Presentation\Controllers\Admin\CalendarioController;
-use App\Presentation\Controllers\Admin\PdfKitDemoController;
-use App\Presentation\Controllers\Admin\ReportesController;
-use App\Presentation\Controllers\Admin\SistemaEstadoController;
-use App\Presentation\Controllers\PwaController;
-use App\Presentation\Middlewares\AuthMiddleware;
-use App\Presentation\Middlewares\CsrfMiddleware;
-use App\Presentation\Middlewares\RbacMiddleware;
+use Lebytek\Framework\Presentation\Controllers\AuthController;
+use Lebytek\Framework\Presentation\Controllers\RegistroController;
+use Lebytek\Framework\Presentation\Controllers\RecuperacionController;
+use Lebytek\Framework\Presentation\Controllers\Admin\DashboardController;
+use Lebytek\Framework\Presentation\Controllers\Admin\UsuariosController;
+use Lebytek\Framework\Presentation\Controllers\Admin\RolesController;
+use Lebytek\Framework\Presentation\Controllers\Admin\PermisosController;
+use Lebytek\Framework\Presentation\Controllers\Admin\AjustesController;
+use Lebytek\Framework\Presentation\Controllers\Admin\PerfilController;
+use Lebytek\Framework\Presentation\Controllers\Admin\CrudController;
+use Lebytek\Framework\Presentation\Controllers\Admin\CalendarioController;
+use Lebytek\Framework\Presentation\Controllers\Admin\PdfKitDemoController;
+use Lebytek\Framework\Presentation\Controllers\Admin\ReportesController;
+use Lebytek\Framework\Presentation\Controllers\Admin\SistemaEstadoController;
+use Lebytek\Framework\Presentation\Controllers\PwaController;
+use Lebytek\Framework\Presentation\Middlewares\AuthMiddleware;
+use Lebytek\Framework\Presentation\Middlewares\CsrfMiddleware;
+use Lebytek\Framework\Presentation\Middlewares\RbacMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,15 +27,15 @@ use App\Presentation\Middlewares\RbacMiddleware;
 
 $router->get('/manifest.webmanifest', [PwaController::class, 'manifest']);
 
-$marketingActivo = (bool) \App\Kernel\Config\Config::get('vertical.modules.marketing', false);
+$marketingActivo = (bool) \Lebytek\Framework\Kernel\Config\Config::get('vertical.modules.marketing', false);
 if ($marketingActivo) {
     require ROOT_PATH . '/routes/marketing.php';
 }
 
-$integrationsActivo = (bool) \App\Kernel\Config\Config::get('vertical.modules.integrations', false);
+$integrationsActivo = (bool) \Lebytek\Framework\Kernel\Config\Config::get('vertical.modules.integrations', false);
 if ($integrationsActivo) {
-    $router->get('/wa/activar/{token}', [\App\Presentation\Controllers\Admin\IntegrationsController::class, 'activar']);
-    $router->get('/wa/activar/{token}/estado', [\App\Presentation\Controllers\Admin\IntegrationsController::class, 'activarEstado']);
+    $router->get('/wa/activar/{token}', [\Lebytek\Framework\Presentation\Controllers\Admin\IntegrationsController::class, 'activar']);
+    $router->get('/wa/activar/{token}/estado', [\Lebytek\Framework\Presentation\Controllers\Admin\IntegrationsController::class, 'activarEstado']);
 }
 
 $router->get('/login',  [AuthController::class, 'showLogin']);

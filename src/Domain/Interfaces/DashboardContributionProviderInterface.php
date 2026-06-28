@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Interfaces;
+namespace Lebytek\Framework\Domain\Interfaces;
 
-use App\Domain\Dashboard\DashboardBuildContext;
-use App\Domain\Dashboard\DashboardContribution;
+use Lebytek\Framework\Domain\Dashboard\DashboardBuildContext;
+use Lebytek\Framework\Domain\Dashboard\DashboardContribution;
 
 /**
  * Proveedor de fragmentos para el dashboard plataforma.

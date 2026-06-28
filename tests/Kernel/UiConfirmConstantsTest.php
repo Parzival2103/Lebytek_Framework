@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Kernel\Constants\UiConfirmConstants;
+use Lebytek\Framework\Kernel\Constants\UiConfirmConstants;
 
 test('UiConfirmConstants define textos de logout', function (): void {
     assert_same('Cerrar sesión', UiConfirmConstants::LOGOUT_TITLE);

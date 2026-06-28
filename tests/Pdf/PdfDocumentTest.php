@@ -1,19 +1,19 @@
 <?php
 declare(strict_types=1);
 
-use App\Domain\Pdf\PdfBlock;
-use App\Domain\Pdf\PdfHeader;
-use App\Domain\Pdf\PdfText;
-use App\Domain\Pdf\PdfDataTable;
-use App\Domain\Pdf\PdfIndicatorCard;
-use App\Domain\Pdf\PdfTotalsBlock;
-use App\Domain\Pdf\PdfSignatureBlock;
-use App\Domain\Pdf\PdfLogo;
-use App\Domain\Pdf\PdfFooter;
-use App\Domain\Pdf\PdfSpacer;
-use App\Domain\Pdf\PdfPageBreak;
-use App\Domain\Pdf\PdfDocument;
-use App\Domain\Pdf\PdfPageSetup;
+use Lebytek\Framework\Domain\Pdf\PdfBlock;
+use Lebytek\Framework\Domain\Pdf\PdfHeader;
+use Lebytek\Framework\Domain\Pdf\PdfText;
+use Lebytek\Framework\Domain\Pdf\PdfDataTable;
+use Lebytek\Framework\Domain\Pdf\PdfIndicatorCard;
+use Lebytek\Framework\Domain\Pdf\PdfTotalsBlock;
+use Lebytek\Framework\Domain\Pdf\PdfSignatureBlock;
+use Lebytek\Framework\Domain\Pdf\PdfLogo;
+use Lebytek\Framework\Domain\Pdf\PdfFooter;
+use Lebytek\Framework\Domain\Pdf\PdfSpacer;
+use Lebytek\Framework\Domain\Pdf\PdfPageBreak;
+use Lebytek\Framework\Domain\Pdf\PdfDocument;
+use Lebytek\Framework\Domain\Pdf\PdfPageSetup;
 
 test('cada componente es un PdfBlock y reporta su type()', function (): void {
     $blocks = [

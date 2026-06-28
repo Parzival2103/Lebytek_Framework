@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Middlewares;
+namespace Lebytek\Framework\Presentation\Middlewares;
 
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Http\SafeRedirect;
-use App\Kernel\Security\Csrf;
-use App\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Http\SafeRedirect;
+use Lebytek\Framework\Kernel\Security\Csrf;
+use Lebytek\Framework\Kernel\Security\Session;
 
 /*
 |--------------------------------------------------------------------------

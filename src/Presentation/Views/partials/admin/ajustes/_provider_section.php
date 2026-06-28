@@ -1,9 +1,9 @@
 <?php
 // app/Presentation/Views/partials/admin/ajustes/_provider_section.php
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
-/** @var \App\Domain\Interfaces\SettingsSectionProviderInterface $section */
+/** @var \Lebytek\Framework\Domain\Interfaces\SettingsSectionProviderInterface $section */
 /** @var array $configuracion */
 $c = $configuracion ?? [];
 ob_start();

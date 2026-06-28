@@ -1,22 +1,22 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers\Admin;
+namespace Lebytek\Framework\Presentation\Controllers\Admin;
 
-use App\Application\Reporte\GenerarDocumentoUseCase;
-use App\Application\Reporte\GenerarReporteUseCase;
-use App\Application\Reporte\GuardarReporteUseCase;
-use App\Application\Reporte\ReporteConfigLoader;
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\ConfiguracionService;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\ReporteRepositoryInterface;
-use App\Domain\Policies\RbacPolicy;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Kernel\Vertical\VerticalProfile;
-use App\Presentation\Controllers\AdminBaseController;
+use Lebytek\Framework\Application\Reporte\GenerarDocumentoUseCase;
+use Lebytek\Framework\Application\Reporte\GenerarReporteUseCase;
+use Lebytek\Framework\Application\Reporte\GuardarReporteUseCase;
+use Lebytek\Framework\Application\Reporte\ReporteConfigLoader;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\ReporteRepositoryInterface;
+use Lebytek\Framework\Domain\Policies\RbacPolicy;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Vertical\VerticalProfile;
+use Lebytek\Framework\Presentation\Controllers\AdminBaseController;
 
 /**
  * Módulo Reportes: índice estilo CRUD + wizard de colección + generación de PDF.
@@ -183,7 +183,7 @@ final class ReportesController extends AdminBaseController
         } catch (ValidationException) {
             return Response::notFound();
         } catch (\Throwable $e) {
-            \App\Kernel\Logging\AppLogger::error('Reporte documento: fallo de generación', [
+            \Lebytek\Framework\Kernel\Logging\AppLogger::error('Reporte documento: fallo de generación', [
                 'fuente' => $fuente, 'id' => $id, 'template' => $template, 'error' => $e->getMessage(),
             ]);
             return Response::notFound();

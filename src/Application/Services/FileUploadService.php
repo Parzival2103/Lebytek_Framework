@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Application\DTO\Files\FileUploadConfig;
-use App\Domain\Entities\Archivo;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\ArchivoRepositoryInterface;
+use Lebytek\Framework\Application\DTO\Files\FileUploadConfig;
+use Lebytek\Framework\Domain\Entities\Archivo;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\ArchivoRepositoryInterface;
 
 /*
 |--------------------------------------------------------------------------

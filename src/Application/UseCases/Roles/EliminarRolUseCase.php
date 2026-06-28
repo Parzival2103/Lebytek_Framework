@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Roles;
+namespace Lebytek\Framework\Application\UseCases\Roles;
 
-use App\Domain\Interfaces\RolRepositoryInterface;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\RolRepositoryInterface;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 final class EliminarRolUseCase
 {

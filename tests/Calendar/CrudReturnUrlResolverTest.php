@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CalendarConfigLoader;
-use App\Application\Services\CalendarConfigValidator;
-use App\Application\Services\CrudReturnUrlResolver;
+use Lebytek\Framework\Application\Services\CalendarConfigLoader;
+use Lebytek\Framework\Application\Services\CalendarConfigValidator;
+use Lebytek\Framework\Application\Services\CrudReturnUrlResolver;
 
 test('CrudReturnUrlResolver redirige a calendario cuando el recurso está vinculado', function (): void {
     $resolver = new CrudReturnUrlResolver(new CalendarConfigLoader(new CalendarConfigValidator()));

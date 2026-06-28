@@ -2,10 +2,10 @@
 // tests/Integrations/IntegrationsFactoryDefaultTest.php
 declare(strict_types=1);
 
-use App\Application\Integrations\IntegrationsFactory;
-use App\Domain\Integrations\IntegrationAccount;
-use App\Infrastructure\Integrations\Repositories\IntegrationAccountRepository;
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Application\Integrations\IntegrationsFactory;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccount;
+use Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationAccountRepository;
+use Lebytek\Framework\Kernel\Database\Connection;
 
 test('IntegrationsFactory::resolveWhatsappConfig usa la instancia default de DB', function () {
     $pdo = Connection::getInstance();

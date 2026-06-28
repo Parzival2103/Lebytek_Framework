@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Presenters;
+namespace Lebytek\Framework\Presentation\Presenters;
 
-use App\Domain\Entities\Archivo;
+use Lebytek\Framework\Domain\Entities\Archivo;
 
 /*
 |--------------------------------------------------------------------------

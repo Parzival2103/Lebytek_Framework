@@ -1,5 +1,5 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 if (empty($aggregationSkipped) || empty($aggregationSkipMessage)) {
     return;

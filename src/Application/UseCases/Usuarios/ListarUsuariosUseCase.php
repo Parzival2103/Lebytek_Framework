@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Usuarios;
+namespace Lebytek\Framework\Application\UseCases\Usuarios;
 
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Kernel\Constants\AppConstants;
-use App\Kernel\Helpers\Paginator;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Helpers\Paginator;
 
 final class ListarUsuariosUseCase
 {

@@ -1,6 +1,6 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
-/** @var \App\Application\DTO\Dashboard\DashboardViewModel $dashboard */
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+/** @var \Lebytek\Framework\Application\DTO\Dashboard\DashboardViewModel $dashboard */
 ?>
 <div class="row g-4 mb-4 dashboard-kpi-row">
     <?php foreach ($dashboard->kpis as $i => $kpi): ?>

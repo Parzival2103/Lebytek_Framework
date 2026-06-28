@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Pdf;
+namespace Lebytek\Framework\Application\Pdf;
 
-use App\Domain\Pdf\PdfDataTable;
-use App\Domain\Pdf\PdfDocument;
-use App\Domain\Pdf\PdfFooter;
-use App\Domain\Pdf\PdfHeader;
-use App\Domain\Pdf\PdfIndicatorCard;
-use App\Domain\Pdf\PdfLogo;
-use App\Domain\Pdf\PdfPageBreak;
-use App\Domain\Pdf\PdfPageSetup;
-use App\Domain\Pdf\PdfSignatureBlock;
-use App\Domain\Pdf\PdfSpacer;
-use App\Domain\Pdf\PdfText;
-use App\Domain\Pdf\PdfTotalsBlock;
+use Lebytek\Framework\Domain\Pdf\PdfDataTable;
+use Lebytek\Framework\Domain\Pdf\PdfDocument;
+use Lebytek\Framework\Domain\Pdf\PdfFooter;
+use Lebytek\Framework\Domain\Pdf\PdfHeader;
+use Lebytek\Framework\Domain\Pdf\PdfIndicatorCard;
+use Lebytek\Framework\Domain\Pdf\PdfLogo;
+use Lebytek\Framework\Domain\Pdf\PdfPageBreak;
+use Lebytek\Framework\Domain\Pdf\PdfPageSetup;
+use Lebytek\Framework\Domain\Pdf\PdfSignatureBlock;
+use Lebytek\Framework\Domain\Pdf\PdfSpacer;
+use Lebytek\Framework\Domain\Pdf\PdfText;
+use Lebytek\Framework\Domain\Pdf\PdfTotalsBlock;
 
 /**
  * Datos de demostración del Kit de PDF: payload de demo_reporte y documento
@@ -82,7 +82,7 @@ final class PdfKitDemoData
     /**
      * Bloques individuales para previsualización en el navegador.
      *
-     * @return list<array{slug:string,type:string,label:string,descripcion:string,block:\App\Domain\Pdf\PdfBlock}>
+     * @return list<array{slug:string,type:string,label:string,descripcion:string,block:\Lebytek\Framework\Domain\Pdf\PdfBlock}>
      */
     public static function bloquesParaPrevisualizar(): array
     {

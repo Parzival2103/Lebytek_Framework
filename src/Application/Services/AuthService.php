@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Entities\Usuario;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\Interfaces\PermisoRepositoryInterface;
-use App\Domain\Interfaces\RolRepositoryInterface;
-use App\Domain\Policies\RbacPolicy;
-use App\Domain\Exceptions\AuthException;
-use App\Kernel\Security\Session;
-use App\Kernel\Security\Hash;
+use Lebytek\Framework\Domain\Entities\Usuario;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\PermisoRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\RolRepositoryInterface;
+use Lebytek\Framework\Domain\Policies\RbacPolicy;
+use Lebytek\Framework\Domain\Exceptions\AuthException;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Security\Hash;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +29,7 @@ final class AuthService
 
     public function autenticar(string $email, string $password): Usuario
     {
-        $emailVO  = new \App\Domain\ValueObjects\Email($email);
+        $emailVO  = new \Lebytek\Framework\Domain\ValueObjects\Email($email);
         $usuario  = $this->usuarioRepo->findByEmail($emailVO);
 
         if ($usuario === null || !Hash::verify($password, $usuario->passwordHash())) {

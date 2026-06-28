@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\UseCases\Perfil\ActualizarPerfilUseCase;
-use App\Application\Validators\Usuarios\CrearUsuarioValidator;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\UseCases\Perfil\ActualizarPerfilUseCase;
+use Lebytek\Framework\Application\Validators\Usuarios\CrearUsuarioValidator;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 require_once __DIR__ . '/../fixtures/avatar_fakes.php';
 
@@ -29,9 +29,9 @@ test('ActualizarPerfilUseCase actualiza nombre/apellido/email del propio usuario
 
 test('ActualizarPerfilUseCase preserva password, activo y avatar', function (): void {
     $repo = new FakeUsuarioRepository();
-    $repo->usuarios[3] = new \App\Domain\Entities\Usuario(
+    $repo->usuarios[3] = new \Lebytek\Framework\Domain\Entities\Usuario(
         nombre: 'Ana', apellido: 'Lopez',
-        email: new \App\Domain\ValueObjects\Email('ana@test.local'),
+        email: new \Lebytek\Framework\Domain\ValueObjects\Email('ana@test.local'),
         passwordHash: 'hash-original',
         activo: false,
         avatar: '/uploads/avatars/actual.png',

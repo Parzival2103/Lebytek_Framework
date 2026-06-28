@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Reporte\ReporteConfigLoader;
-use App\Application\Reporte\ReporteConfigValidator;
+use Lebytek\Framework\Application\Reporte\ReporteConfigLoader;
+use Lebytek\Framework\Application\Reporte\ReporteConfigValidator;
 
 function cat_loader(): ReporteConfigLoader
 {

@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Reporte\ReporteConfigValidator;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\Reporte\ReporteConfigValidator;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 function rcv_valid_config(): array
 {

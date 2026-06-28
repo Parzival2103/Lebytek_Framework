@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Usuarios;
+namespace Lebytek\Framework\Application\UseCases\Usuarios;
 
-use App\Application\DTO\Usuarios\ActualizarUsuarioDTO;
-use App\Application\Validators\Usuarios\CrearUsuarioValidator;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\Interfaces\RolRepositoryInterface;
-use App\Domain\ValueObjects\Email;
-use App\Domain\Exceptions\ValidationException;
-use App\Kernel\Security\Hash;
+use Lebytek\Framework\Application\DTO\Usuarios\ActualizarUsuarioDTO;
+use Lebytek\Framework\Application\Validators\Usuarios\CrearUsuarioValidator;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\RolRepositoryInterface;
+use Lebytek\Framework\Domain\ValueObjects\Email;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Kernel\Security\Hash;
 
 final class ActualizarUsuarioUseCase
 {
@@ -44,7 +44,7 @@ final class ActualizarUsuarioUseCase
             ? Hash::make($dto->password)
             : $usuario->passwordHash();
 
-        $actualizado = new \App\Domain\Entities\Usuario(
+        $actualizado = new \Lebytek\Framework\Domain\Entities\Usuario(
             nombre:       $dto->nombre,
             apellido:     $dto->apellido,
             email:        $email,

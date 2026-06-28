@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Entities\CrudFieldDefinition;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Entities\CrudFieldDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 /**
  * Separación explícita: sanitización (limpieza) → normalización (forma canónica) → validación (reglas).

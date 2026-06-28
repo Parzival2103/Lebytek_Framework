@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Entities\Crud\CrudRelationDefinition;
-use App\Domain\Entities\Crud\CrudTabDefinition;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudRelationDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudTabDefinition;
 
 function relations_definition(): CrudResourceDefinition
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
 /**
  * Resuelve la URL de retorno tras mutaciones CRUD cuando el recurso tiene

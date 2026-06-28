@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Reporte\BuildReporteDataUseCase;
-use App\Application\Reporte\PeriodoResolver;
-use App\Application\Reporte\ReporteAggregator;
-use App\Application\Reporte\ReporteConfigLoader;
-use App\Application\Reporte\ReporteConfigValidator;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Reporte\ReporteDataSourceInterface;
-use App\Domain\Reporte\ReporteGuardado;
+use Lebytek\Framework\Application\Reporte\BuildReporteDataUseCase;
+use Lebytek\Framework\Application\Reporte\PeriodoResolver;
+use Lebytek\Framework\Application\Reporte\ReporteAggregator;
+use Lebytek\Framework\Application\Reporte\ReporteConfigLoader;
+use Lebytek\Framework\Application\Reporte\ReporteConfigValidator;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Reporte\ReporteDataSourceInterface;
+use Lebytek\Framework\Domain\Reporte\ReporteGuardado;
 
 final class FakeReporteDataSource implements ReporteDataSourceInterface
 {

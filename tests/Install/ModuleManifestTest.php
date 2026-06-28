@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Install\ModuleManifest;
-use App\Domain\Exceptions\InstallerException;
+use Lebytek\Framework\Application\Install\ModuleManifest;
+use Lebytek\Framework\Domain\Exceptions\InstallerException;
 
 test('ModuleManifest::fromArray expone propiedades y aplica defaults', function (): void {
     $m = ModuleManifest::fromArray([

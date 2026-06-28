@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudContext;
-use App\Application\Crud\Context\CrudValidationContext;
+use Lebytek\Framework\Application\Crud\Context\CrudContext;
+use Lebytek\Framework\Application\Crud\Context\CrudValidationContext;
 
 function make_validation_ctx(bool $isEdit = false): CrudValidationContext
 {

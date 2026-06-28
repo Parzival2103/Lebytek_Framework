@@ -1,8 +1,8 @@
 <?php
 
-use App\Kernel\Security\Csrf;
-use App\Kernel\Helpers\ViewHelper;
-use App\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Security\Csrf;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
 
 $dataTheme = ($darkMode ?? false) ? 'dark' : 'light';
 $bodyClass = trim(

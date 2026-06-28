@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\DTO\Usuarios;
+namespace Lebytek\Framework\Application\DTO\Usuarios;
 
 final class CrearUsuarioDTO
 {

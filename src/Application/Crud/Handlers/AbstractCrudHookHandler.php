@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Crud\Handlers;
+namespace Lebytek\Framework\Application\Crud\Handlers;
 
-use App\Application\Crud\Context\CrudFormContext;
-use App\Application\Crud\Context\CrudListContext;
-use App\Application\Crud\Context\CrudTransitionContext;
-use App\Application\Crud\Context\CrudWriteContext;
-use App\Domain\Interfaces\CrudHookHandlerInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudFormContext;
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Application\Crud\Context\CrudTransitionContext;
+use Lebytek\Framework\Application\Crud\Context\CrudWriteContext;
+use Lebytek\Framework\Domain\Interfaces\CrudHookHandlerInterface;
 
 /**
  * Base no-op para handlers de hooks. Provee también los eventos extendidos

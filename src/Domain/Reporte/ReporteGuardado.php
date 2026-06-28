@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Domain\Reporte;
+namespace Lebytek\Framework\Domain\Reporte;
 
 /**
  * Reporte guardado por un usuario: su selección (columnas, tratamientos, filtros,

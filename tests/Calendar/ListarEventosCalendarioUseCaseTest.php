@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Services\CalendarConfigLoader;
-use App\Application\Services\CalendarConfigValidator;
-use App\Application\Services\CalendarEventMapper;
-use App\Application\UseCases\Calendar\ListarEventosCalendarioUseCase;
-use App\Domain\Calendar\DateRange;
-use App\Domain\Interfaces\CalendarEventSourceInterface;
+use Lebytek\Framework\Application\Services\CalendarConfigLoader;
+use Lebytek\Framework\Application\Services\CalendarConfigValidator;
+use Lebytek\Framework\Application\Services\CalendarEventMapper;
+use Lebytek\Framework\Application\UseCases\Calendar\ListarEventosCalendarioUseCase;
+use Lebytek\Framework\Domain\Calendar\DateRange;
+use Lebytek\Framework\Domain\Interfaces\CalendarEventSourceInterface;
 
 test('UseCase devuelve eventos normalizados a partir de filas scoped', function (): void {
     $fakeSource = new class implements CalendarEventSourceInterface {

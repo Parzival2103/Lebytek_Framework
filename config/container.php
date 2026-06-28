@@ -1,83 +1,83 @@
 <?php
 
-use App\Kernel\Container\Container;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\Interfaces\RolRepositoryInterface;
-use App\Domain\Interfaces\PermisoRepositoryInterface;
-use App\Domain\Interfaces\ConfiguracionRepositoryInterface;
-use App\Infrastructure\Repositories\UsuarioRepository;
-use App\Infrastructure\Repositories\RolRepository;
-use App\Infrastructure\Repositories\PermisoRepository;
-use App\Infrastructure\Repositories\ConfiguracionRepository;
-use App\Application\Services\ConfiguracionService;
-use App\Application\Services\AuthService;
-use App\Application\Services\RbacService;
-use App\Application\Validators\Usuarios\CrearUsuarioValidator;
-use App\Application\Validators\Auth\LoginValidator;
-use App\Application\UseCases\Usuarios\CrearUsuarioUseCase;
-use App\Application\UseCases\Usuarios\ListarUsuariosUseCase;
-use App\Application\UseCases\Usuarios\ActualizarUsuarioUseCase;
-use App\Application\UseCases\Usuarios\EliminarUsuarioUseCase;
-use App\Application\UseCases\Roles\CrearRolUseCase;
-use App\Application\UseCases\Roles\ListarRolesUseCase;
-use App\Application\UseCases\Roles\ActualizarRolUseCase;
-use App\Application\UseCases\Roles\EliminarRolUseCase;
-use App\Application\Services\AuthTokenService;
-use App\Application\Services\CorreoAuthService;
-use App\Application\Services\LoginRateLimitService;
-use App\Application\UseCases\Auth\LoginUseCase;
-use App\Application\UseCases\Auth\LogoutUseCase;
-use App\Application\UseCases\Auth\RegistrarUsuarioUseCase;
-use App\Application\UseCases\Auth\ReenviarVerificacionUseCase;
-use App\Application\UseCases\Auth\VerificarCorreoUseCase;
-use App\Application\UseCases\Auth\SolicitarRecuperacionUseCase;
-use App\Application\UseCases\Auth\RestablecerPasswordUseCase;
-use App\Domain\Interfaces\AuthTokenRepositoryInterface;
-use App\Domain\Interfaces\LoginIntentoRepositoryInterface;
-use App\Domain\Interfaces\MailerInterface;
-use App\Infrastructure\Repositories\AuthTokenRepository;
-use App\Infrastructure\Repositories\LoginIntentoRepository;
-use App\Infrastructure\Mail\LogMailer;
-use App\Infrastructure\Mail\PhpMailerMailer;
-use App\Application\UseCases\Dashboard\BuildDashboardViewModelUseCase;
-use App\Domain\Interfaces\DashboardContributionProviderInterface;
-use App\Domain\Interfaces\MenuCatalogRepositoryInterface;
-use App\Infrastructure\Repositories\MenuCatalogRepository;
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\RbacIntegrityReportService;
-use App\Domain\Interfaces\BitacoraRepositoryInterface;
-use App\Infrastructure\Repositories\BitacoraRepository;
-use App\Infrastructure\Repositories\GenericCrudRepository;
-use App\Application\Services\CrudActionResolver;
-use App\Application\Services\CrudActionService;
-use App\Application\Services\CrudConfigLoader;
-use App\Application\Services\CrudConfigValidator;
-use App\Application\Services\CrudDataService;
-use App\Application\Services\CrudDbConstraintValidator;
-use App\Application\Services\CrudDetailBuilder;
-use App\Application\Services\CrudFieldValidationService;
-use App\Application\Services\CrudFormBuilder;
-use App\Application\Services\CrudHandlerRegistry;
-use App\Application\Services\CrudRelationService;
-use App\Application\Services\CrudScopeResolver;
-use App\Application\Services\FileUploadService;
-use App\Application\Services\ImageProcessor;
-use App\Domain\Interfaces\ArchivoRepositoryInterface;
-use App\Infrastructure\Repositories\ArchivoRepository;
-use App\Application\Services\CrudHookRunner;
-use App\Application\Services\CrudResourceService;
-use App\Application\Services\CrudTableBuilder;
-use App\Application\Services\CrudTransitionService;
-use App\Domain\Interfaces\MigrationRepositoryInterface;
-use App\Domain\Interfaces\ModuleStateRepositoryInterface;
-use App\Infrastructure\Repositories\MigrationRepository;
-use App\Infrastructure\Repositories\ModuleStateRepository;
-use App\Infrastructure\Install\SqlFileRunner;
-use App\Application\Install\ModuleRegistry;
-use App\Application\Install\DependencyResolver;
-use App\Application\Install\Installer;
-use App\Application\Install\DeploymentStatus;
-use App\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Container\Container;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\RolRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\PermisoRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\ConfiguracionRepositoryInterface;
+use Lebytek\Framework\Infrastructure\Repositories\UsuarioRepository;
+use Lebytek\Framework\Infrastructure\Repositories\RolRepository;
+use Lebytek\Framework\Infrastructure\Repositories\PermisoRepository;
+use Lebytek\Framework\Infrastructure\Repositories\ConfiguracionRepository;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Application\Services\AuthService;
+use Lebytek\Framework\Application\Services\RbacService;
+use Lebytek\Framework\Application\Validators\Usuarios\CrearUsuarioValidator;
+use Lebytek\Framework\Application\Validators\Auth\LoginValidator;
+use Lebytek\Framework\Application\UseCases\Usuarios\CrearUsuarioUseCase;
+use Lebytek\Framework\Application\UseCases\Usuarios\ListarUsuariosUseCase;
+use Lebytek\Framework\Application\UseCases\Usuarios\ActualizarUsuarioUseCase;
+use Lebytek\Framework\Application\UseCases\Usuarios\EliminarUsuarioUseCase;
+use Lebytek\Framework\Application\UseCases\Roles\CrearRolUseCase;
+use Lebytek\Framework\Application\UseCases\Roles\ListarRolesUseCase;
+use Lebytek\Framework\Application\UseCases\Roles\ActualizarRolUseCase;
+use Lebytek\Framework\Application\UseCases\Roles\EliminarRolUseCase;
+use Lebytek\Framework\Application\Services\AuthTokenService;
+use Lebytek\Framework\Application\Services\CorreoAuthService;
+use Lebytek\Framework\Application\Services\LoginRateLimitService;
+use Lebytek\Framework\Application\UseCases\Auth\LoginUseCase;
+use Lebytek\Framework\Application\UseCases\Auth\LogoutUseCase;
+use Lebytek\Framework\Application\UseCases\Auth\RegistrarUsuarioUseCase;
+use Lebytek\Framework\Application\UseCases\Auth\ReenviarVerificacionUseCase;
+use Lebytek\Framework\Application\UseCases\Auth\VerificarCorreoUseCase;
+use Lebytek\Framework\Application\UseCases\Auth\SolicitarRecuperacionUseCase;
+use Lebytek\Framework\Application\UseCases\Auth\RestablecerPasswordUseCase;
+use Lebytek\Framework\Domain\Interfaces\AuthTokenRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\LoginIntentoRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\MailerInterface;
+use Lebytek\Framework\Infrastructure\Repositories\AuthTokenRepository;
+use Lebytek\Framework\Infrastructure\Repositories\LoginIntentoRepository;
+use Lebytek\Framework\Infrastructure\Mail\LogMailer;
+use Lebytek\Framework\Infrastructure\Mail\PhpMailerMailer;
+use Lebytek\Framework\Application\UseCases\Dashboard\BuildDashboardViewModelUseCase;
+use Lebytek\Framework\Domain\Interfaces\DashboardContributionProviderInterface;
+use Lebytek\Framework\Domain\Interfaces\MenuCatalogRepositoryInterface;
+use Lebytek\Framework\Infrastructure\Repositories\MenuCatalogRepository;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\RbacIntegrityReportService;
+use Lebytek\Framework\Domain\Interfaces\BitacoraRepositoryInterface;
+use Lebytek\Framework\Infrastructure\Repositories\BitacoraRepository;
+use Lebytek\Framework\Infrastructure\Repositories\GenericCrudRepository;
+use Lebytek\Framework\Application\Services\CrudActionResolver;
+use Lebytek\Framework\Application\Services\CrudActionService;
+use Lebytek\Framework\Application\Services\CrudConfigLoader;
+use Lebytek\Framework\Application\Services\CrudConfigValidator;
+use Lebytek\Framework\Application\Services\CrudDataService;
+use Lebytek\Framework\Application\Services\CrudDbConstraintValidator;
+use Lebytek\Framework\Application\Services\CrudDetailBuilder;
+use Lebytek\Framework\Application\Services\CrudFieldValidationService;
+use Lebytek\Framework\Application\Services\CrudFormBuilder;
+use Lebytek\Framework\Application\Services\CrudHandlerRegistry;
+use Lebytek\Framework\Application\Services\CrudRelationService;
+use Lebytek\Framework\Application\Services\CrudScopeResolver;
+use Lebytek\Framework\Application\Services\FileUploadService;
+use Lebytek\Framework\Application\Services\ImageProcessor;
+use Lebytek\Framework\Domain\Interfaces\ArchivoRepositoryInterface;
+use Lebytek\Framework\Infrastructure\Repositories\ArchivoRepository;
+use Lebytek\Framework\Application\Services\CrudHookRunner;
+use Lebytek\Framework\Application\Services\CrudResourceService;
+use Lebytek\Framework\Application\Services\CrudTableBuilder;
+use Lebytek\Framework\Application\Services\CrudTransitionService;
+use Lebytek\Framework\Domain\Interfaces\MigrationRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\ModuleStateRepositoryInterface;
+use Lebytek\Framework\Infrastructure\Repositories\MigrationRepository;
+use Lebytek\Framework\Infrastructure\Repositories\ModuleStateRepository;
+use Lebytek\Framework\Infrastructure\Install\SqlFileRunner;
+use Lebytek\Framework\Application\Install\ModuleRegistry;
+use Lebytek\Framework\Application\Install\DependencyResolver;
+use Lebytek\Framework\Application\Install\Installer;
+use Lebytek\Framework\Application\Install\DeploymentStatus;
+use Lebytek\Framework\Kernel\Config\Config;
 
 return static function (Container $container): void {
 
@@ -207,8 +207,8 @@ return static function (Container $container): void {
         $c->get(CrudTransitionService::class),
         $c->get(CrudScopeResolver::class)
     ));
-    $container->singleton(\App\Application\Services\CrudReturnUrlResolver::class, fn(Container $c) => new \App\Application\Services\CrudReturnUrlResolver(
-        $c->get(\App\Application\Services\CalendarConfigLoader::class)
+    $container->singleton(\Lebytek\Framework\Application\Services\CrudReturnUrlResolver::class, fn(Container $c) => new \Lebytek\Framework\Application\Services\CrudReturnUrlResolver(
+        $c->get(\Lebytek\Framework\Application\Services\CalendarConfigLoader::class)
     ));
     $container->singleton(CrudResourceService::class, fn(Container $c) => new CrudResourceService(
         $c->get(CrudConfigLoader::class),
@@ -220,87 +220,87 @@ return static function (Container $container): void {
         $c->get(CrudActionService::class),
         $c->get(CrudDetailBuilder::class),
         $c->get(CrudScopeResolver::class),
-        $c->get(\App\Application\Services\CrudReturnUrlResolver::class)
+        $c->get(\Lebytek\Framework\Application\Services\CrudReturnUrlResolver::class)
     ));
 
     // ── Módulo Calendario ───────────────────────────────────────────────────
-    $container->singleton(\App\Application\Services\CalendarConfigValidator::class, fn() => new \App\Application\Services\CalendarConfigValidator());
-    $container->singleton(\App\Application\Services\CalendarConfigLoader::class, fn(Container $c) => new \App\Application\Services\CalendarConfigLoader(
-        $c->get(\App\Application\Services\CalendarConfigValidator::class)
+    $container->singleton(\Lebytek\Framework\Application\Services\CalendarConfigValidator::class, fn() => new \Lebytek\Framework\Application\Services\CalendarConfigValidator());
+    $container->singleton(\Lebytek\Framework\Application\Services\CalendarConfigLoader::class, fn(Container $c) => new \Lebytek\Framework\Application\Services\CalendarConfigLoader(
+        $c->get(\Lebytek\Framework\Application\Services\CalendarConfigValidator::class)
     ));
-    $container->singleton(\App\Application\Services\CalendarEventMapper::class, fn() => new \App\Application\Services\CalendarEventMapper());
-    $container->singleton(\App\Application\Services\CalendarViewModelBuilder::class, fn(Container $c) => new \App\Application\Services\CalendarViewModelBuilder(
-        $c->get(\App\Application\Services\CalendarConfigLoader::class),
+    $container->singleton(\Lebytek\Framework\Application\Services\CalendarEventMapper::class, fn() => new \Lebytek\Framework\Application\Services\CalendarEventMapper());
+    $container->singleton(\Lebytek\Framework\Application\Services\CalendarViewModelBuilder::class, fn(Container $c) => new \Lebytek\Framework\Application\Services\CalendarViewModelBuilder(
+        $c->get(\Lebytek\Framework\Application\Services\CalendarConfigLoader::class),
         $c->get(RbacService::class)
     ));
-    $container->singleton(\App\Application\UseCases\Calendar\ListarEventosCalendarioUseCase::class, fn(Container $c) => new \App\Application\UseCases\Calendar\ListarEventosCalendarioUseCase(
-        $c->get(\App\Application\Services\CalendarConfigLoader::class),
+    $container->singleton(\Lebytek\Framework\Application\UseCases\Calendar\ListarEventosCalendarioUseCase::class, fn(Container $c) => new \Lebytek\Framework\Application\UseCases\Calendar\ListarEventosCalendarioUseCase(
+        $c->get(\Lebytek\Framework\Application\Services\CalendarConfigLoader::class),
         $c->get(CrudResourceService::class),
-        $c->get(\App\Application\Services\CalendarEventMapper::class)
+        $c->get(\Lebytek\Framework\Application\Services\CalendarEventMapper::class)
     ));
     // Pre-vinculado (con su dependencia) para que el loop de proveedores no lo
     // construya sin argumentos.
-    $container->singleton(\App\Infrastructure\Dashboard\CalendarDashboardProvider::class, fn(Container $c) => new \App\Infrastructure\Dashboard\CalendarDashboardProvider(
-        $c->get(\App\Application\Services\CalendarConfigLoader::class)
+    $container->singleton(\Lebytek\Framework\Infrastructure\Dashboard\CalendarDashboardProvider::class, fn(Container $c) => new \Lebytek\Framework\Infrastructure\Dashboard\CalendarDashboardProvider(
+        $c->get(\Lebytek\Framework\Application\Services\CalendarConfigLoader::class)
     ));
 
     // ── Módulo Kit de PDF ───────────────────────────────────────────────────
-    $container->singleton(\App\Application\Pdf\PdfComponentRenderer::class, fn() => new \App\Application\Pdf\PdfComponentRenderer());
+    $container->singleton(\Lebytek\Framework\Application\Pdf\PdfComponentRenderer::class, fn() => new \Lebytek\Framework\Application\Pdf\PdfComponentRenderer());
 
-    $container->singleton(\App\Domain\Pdf\PdfEngineInterface::class, fn() => new \App\Infrastructure\Pdf\DompdfRenderer(
+    $container->singleton(\Lebytek\Framework\Domain\Pdf\PdfEngineInterface::class, fn() => new \Lebytek\Framework\Infrastructure\Pdf\DompdfRenderer(
         (string) (require ROOT_PATH . '/config/pdf.php')['font']
     ));
 
-    $container->singleton(\App\Application\Pdf\PdfTemplateRegistry::class, fn() => new \App\Application\Pdf\PdfTemplateRegistry(
+    $container->singleton(\Lebytek\Framework\Application\Pdf\PdfTemplateRegistry::class, fn() => new \Lebytek\Framework\Application\Pdf\PdfTemplateRegistry(
         require ROOT_PATH . '/config/pdf_templates.php'
     ));
 
-    $container->singleton(\App\Infrastructure\Pdf\PdfStorage::class, fn() => new \App\Infrastructure\Pdf\PdfStorage());
+    $container->singleton(\Lebytek\Framework\Infrastructure\Pdf\PdfStorage::class, fn() => new \Lebytek\Framework\Infrastructure\Pdf\PdfStorage());
 
-    $container->singleton(\App\Application\Pdf\PdfRenderingService::class, fn(Container $c) => new \App\Application\Pdf\PdfRenderingService(
-        $c->get(\App\Application\Pdf\PdfComponentRenderer::class),
-        $c->get(\App\Domain\Pdf\PdfEngineInterface::class),
-        $c->get(\App\Application\Pdf\PdfTemplateRegistry::class),
+    $container->singleton(\Lebytek\Framework\Application\Pdf\PdfRenderingService::class, fn(Container $c) => new \Lebytek\Framework\Application\Pdf\PdfRenderingService(
+        $c->get(\Lebytek\Framework\Application\Pdf\PdfComponentRenderer::class),
+        $c->get(\Lebytek\Framework\Domain\Pdf\PdfEngineInterface::class),
+        $c->get(\Lebytek\Framework\Application\Pdf\PdfTemplateRegistry::class),
         require ROOT_PATH . '/config/pdf.php'
     ));
 
-    $container->singleton(\App\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase::class, fn(Container $c) => new \App\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase(
-        $c->get(\App\Application\Pdf\PdfComponentRenderer::class)
+    $container->singleton(\Lebytek\Framework\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase::class, fn(Container $c) => new \Lebytek\Framework\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase(
+        $c->get(\Lebytek\Framework\Application\Pdf\PdfComponentRenderer::class)
     ));
 
     // ── Módulo Reportes ─────────────────────────────────────────────────────
-    $container->singleton(\App\Application\Reporte\ReporteConfigValidator::class, fn() => new \App\Application\Reporte\ReporteConfigValidator());
-    $container->singleton(\App\Application\Reporte\ReporteConfigLoader::class, fn(Container $c) => new \App\Application\Reporte\ReporteConfigLoader(
-        $c->get(\App\Application\Reporte\ReporteConfigValidator::class)
+    $container->singleton(\Lebytek\Framework\Application\Reporte\ReporteConfigValidator::class, fn() => new \Lebytek\Framework\Application\Reporte\ReporteConfigValidator());
+    $container->singleton(\Lebytek\Framework\Application\Reporte\ReporteConfigLoader::class, fn(Container $c) => new \Lebytek\Framework\Application\Reporte\ReporteConfigLoader(
+        $c->get(\Lebytek\Framework\Application\Reporte\ReporteConfigValidator::class)
     ));
-    $container->singleton(\App\Application\Reporte\PeriodoResolver::class, fn() => new \App\Application\Reporte\PeriodoResolver());
-    $container->singleton(\App\Application\Reporte\ReporteAggregator::class, fn() => new \App\Application\Reporte\ReporteAggregator());
-    $container->singleton(\App\Application\Reporte\CrudReporteDataSource::class, fn(Container $c) => new \App\Application\Reporte\CrudReporteDataSource(
+    $container->singleton(\Lebytek\Framework\Application\Reporte\PeriodoResolver::class, fn() => new \Lebytek\Framework\Application\Reporte\PeriodoResolver());
+    $container->singleton(\Lebytek\Framework\Application\Reporte\ReporteAggregator::class, fn() => new \Lebytek\Framework\Application\Reporte\ReporteAggregator());
+    $container->singleton(\Lebytek\Framework\Application\Reporte\CrudReporteDataSource::class, fn(Container $c) => new \Lebytek\Framework\Application\Reporte\CrudReporteDataSource(
         $c->get(CrudDataService::class),
         $c->get(CrudRelationService::class)
     ));
-    $container->singleton(\App\Domain\Reporte\ReporteDataSourceInterface::class, fn(Container $c) => $c->get(\App\Application\Reporte\CrudReporteDataSource::class));
-    $container->singleton(\App\Domain\Reporte\ReporteRecordSourceInterface::class, fn(Container $c) => $c->get(\App\Application\Reporte\CrudReporteDataSource::class));
-    $container->singleton(\App\Application\Reporte\BuildReporteDataUseCase::class, fn(Container $c) => new \App\Application\Reporte\BuildReporteDataUseCase(
-        $c->get(\App\Application\Reporte\ReporteConfigLoader::class),
-        $c->get(\App\Domain\Reporte\ReporteDataSourceInterface::class),
-        $c->get(\App\Application\Reporte\PeriodoResolver::class),
-        $c->get(\App\Application\Reporte\ReporteAggregator::class)
+    $container->singleton(\Lebytek\Framework\Domain\Reporte\ReporteDataSourceInterface::class, fn(Container $c) => $c->get(\Lebytek\Framework\Application\Reporte\CrudReporteDataSource::class));
+    $container->singleton(\Lebytek\Framework\Domain\Reporte\ReporteRecordSourceInterface::class, fn(Container $c) => $c->get(\Lebytek\Framework\Application\Reporte\CrudReporteDataSource::class));
+    $container->singleton(\Lebytek\Framework\Application\Reporte\BuildReporteDataUseCase::class, fn(Container $c) => new \Lebytek\Framework\Application\Reporte\BuildReporteDataUseCase(
+        $c->get(\Lebytek\Framework\Application\Reporte\ReporteConfigLoader::class),
+        $c->get(\Lebytek\Framework\Domain\Reporte\ReporteDataSourceInterface::class),
+        $c->get(\Lebytek\Framework\Application\Reporte\PeriodoResolver::class),
+        $c->get(\Lebytek\Framework\Application\Reporte\ReporteAggregator::class)
     ));
-    $container->singleton(\App\Application\Reporte\GenerarReporteUseCase::class, fn(Container $c) => new \App\Application\Reporte\GenerarReporteUseCase(
-        $c->get(\App\Application\Reporte\BuildReporteDataUseCase::class),
-        $c->get(\App\Application\Pdf\PdfRenderingService::class)
+    $container->singleton(\Lebytek\Framework\Application\Reporte\GenerarReporteUseCase::class, fn(Container $c) => new \Lebytek\Framework\Application\Reporte\GenerarReporteUseCase(
+        $c->get(\Lebytek\Framework\Application\Reporte\BuildReporteDataUseCase::class),
+        $c->get(\Lebytek\Framework\Application\Pdf\PdfRenderingService::class)
     ));
-    $container->singleton(\App\Application\Reporte\GenerarDocumentoUseCase::class, fn(Container $c) => new \App\Application\Reporte\GenerarDocumentoUseCase(
-        $c->get(\App\Application\Reporte\ReporteConfigLoader::class),
-        $c->get(\App\Domain\Reporte\ReporteRecordSourceInterface::class),
-        $c->get(\App\Application\Pdf\PdfTemplateRegistry::class),
-        $c->get(\App\Application\Pdf\PdfRenderingService::class)
+    $container->singleton(\Lebytek\Framework\Application\Reporte\GenerarDocumentoUseCase::class, fn(Container $c) => new \Lebytek\Framework\Application\Reporte\GenerarDocumentoUseCase(
+        $c->get(\Lebytek\Framework\Application\Reporte\ReporteConfigLoader::class),
+        $c->get(\Lebytek\Framework\Domain\Reporte\ReporteRecordSourceInterface::class),
+        $c->get(\Lebytek\Framework\Application\Pdf\PdfTemplateRegistry::class),
+        $c->get(\Lebytek\Framework\Application\Pdf\PdfRenderingService::class)
     ));
-    $container->singleton(\App\Application\Reporte\GuardarReporteUseCase::class, fn(Container $c) => new \App\Application\Reporte\GuardarReporteUseCase(
-        $c->get(\App\Application\Reporte\ReporteConfigLoader::class)
+    $container->singleton(\Lebytek\Framework\Application\Reporte\GuardarReporteUseCase::class, fn(Container $c) => new \Lebytek\Framework\Application\Reporte\GuardarReporteUseCase(
+        $c->get(\Lebytek\Framework\Application\Reporte\ReporteConfigLoader::class)
     ));
-    $container->singleton(\App\Domain\Interfaces\ReporteRepositoryInterface::class, fn() => new \App\Infrastructure\Repositories\PdoReporteRepository());
+    $container->singleton(\Lebytek\Framework\Domain\Interfaces\ReporteRepositoryInterface::class, fn() => new \Lebytek\Framework\Infrastructure\Repositories\PdoReporteRepository());
 
     foreach ((require ROOT_PATH . '/config/dashboard.php')['providers'] as $fqcnProvider) {
         if (!$container->has($fqcnProvider)) {
@@ -323,39 +323,39 @@ return static function (Container $container): void {
         return new BuildDashboardViewModelUseCase($providers);
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\DashboardController::class, function (Container $c) {
-        return new \App\Presentation\Controllers\Admin\DashboardController(
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\DashboardController::class, function (Container $c) {
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\DashboardController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
             $c->get(BuildDashboardViewModelUseCase::class)
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\PermisosController::class, function (Container $c) {
-        return new \App\Presentation\Controllers\Admin\PermisosController(
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\PermisosController::class, function (Container $c) {
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\PermisosController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
             $c->get(PermisoRepositoryInterface::class)
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\AjustesController::class, function (Container $c) {
-        return new \App\Presentation\Controllers\Admin\AjustesController(
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\AjustesController::class, function (Container $c) {
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\AjustesController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
-            $c->get(\App\Application\Services\SettingsSectionRegistry::class)
+            $c->get(\Lebytek\Framework\Application\Services\SettingsSectionRegistry::class)
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\PwaController::class, function (Container $c) {
-        return new \App\Presentation\Controllers\PwaController(
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\PwaController::class, function (Container $c) {
+        return new \Lebytek\Framework\Presentation\Controllers\PwaController(
             $c->get(ConfiguracionService::class)
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\AuthController::class, function (Container $c) {
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\AuthController::class, function (Container $c) {
         $authService = $c->get(AuthService::class);
-        return new \App\Presentation\Controllers\AuthController(
+        return new \Lebytek\Framework\Presentation\Controllers\AuthController(
             new LoginUseCase(
                 $authService,
                 new LoginValidator(),
@@ -366,11 +366,11 @@ return static function (Container $container): void {
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\RegistroController::class, function (Container $c) {
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\RegistroController::class, function (Container $c) {
         $usuarioRepo = $c->get(UsuarioRepositoryInterface::class);
         $habilitado  = (bool) Config::get('auth.registro.habilitado', false);
         $ttlVerif    = (int) Config::get('auth.tokens.verificacion_ttl_min', 1440);
-        return new \App\Presentation\Controllers\RegistroController(
+        return new \Lebytek\Framework\Presentation\Controllers\RegistroController(
             $c->get(ConfiguracionService::class),
             new RegistrarUsuarioUseCase(
                 usuarioRepo:        $usuarioRepo,
@@ -393,9 +393,9 @@ return static function (Container $container): void {
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\RecuperacionController::class, function (Container $c) {
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\RecuperacionController::class, function (Container $c) {
         $usuarioRepo = $c->get(UsuarioRepositoryInterface::class);
-        return new \App\Presentation\Controllers\RecuperacionController(
+        return new \Lebytek\Framework\Presentation\Controllers\RecuperacionController(
             $c->get(ConfiguracionService::class),
             new SolicitarRecuperacionUseCase(
                 usuarioRepo:        $usuarioRepo,
@@ -407,12 +407,12 @@ return static function (Container $container): void {
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\UsuariosController::class, function (Container $c) {
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\UsuariosController::class, function (Container $c) {
         $usuarioRepo = $c->get(UsuarioRepositoryInterface::class);
         $rolRepo     = $c->get(RolRepositoryInterface::class);
         $archivoRepo = $c->get(ArchivoRepositoryInterface::class);
         $validator   = new CrearUsuarioValidator();
-        return new \App\Presentation\Controllers\Admin\UsuariosController(
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\UsuariosController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
             new CrearUsuarioUseCase($usuarioRepo, $rolRepo, $validator),
@@ -421,34 +421,34 @@ return static function (Container $container): void {
             new EliminarUsuarioUseCase($usuarioRepo),
             $usuarioRepo,
             $rolRepo,
-            new \App\Application\UseCases\Avatares\SubirAvatarUseCase($c->get(FileUploadService::class), $usuarioRepo),
-            new \App\Application\UseCases\Avatares\FijarAvatarActualUseCase($archivoRepo, $usuarioRepo),
-            new \App\Application\UseCases\Avatares\EliminarAvatarUseCase($archivoRepo, $usuarioRepo),
-            new \App\Application\UseCases\Avatares\ListarAvataresUseCase($archivoRepo),
-            new \App\Domain\Policies\AvatarPolicy(),
+            new \Lebytek\Framework\Application\UseCases\Avatares\SubirAvatarUseCase($c->get(FileUploadService::class), $usuarioRepo),
+            new \Lebytek\Framework\Application\UseCases\Avatares\FijarAvatarActualUseCase($archivoRepo, $usuarioRepo),
+            new \Lebytek\Framework\Application\UseCases\Avatares\EliminarAvatarUseCase($archivoRepo, $usuarioRepo),
+            new \Lebytek\Framework\Application\UseCases\Avatares\ListarAvataresUseCase($archivoRepo),
+            new \Lebytek\Framework\Domain\Policies\AvatarPolicy(),
             $c->get(RbacService::class)
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\PerfilController::class, function (Container $c) {
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\PerfilController::class, function (Container $c) {
         $usuarioRepo = $c->get(UsuarioRepositoryInterface::class);
         $archivoRepo = $c->get(ArchivoRepositoryInterface::class);
-        return new \App\Presentation\Controllers\Admin\PerfilController(
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\PerfilController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
             $usuarioRepo,
-            new \App\Application\UseCases\Perfil\ActualizarPerfilUseCase($usuarioRepo, new CrearUsuarioValidator()),
-            new \App\Application\UseCases\Avatares\SubirAvatarUseCase($c->get(FileUploadService::class), $usuarioRepo),
-            new \App\Application\UseCases\Avatares\FijarAvatarActualUseCase($archivoRepo, $usuarioRepo),
-            new \App\Application\UseCases\Avatares\EliminarAvatarUseCase($archivoRepo, $usuarioRepo),
-            new \App\Application\UseCases\Avatares\ListarAvataresUseCase($archivoRepo)
+            new \Lebytek\Framework\Application\UseCases\Perfil\ActualizarPerfilUseCase($usuarioRepo, new CrearUsuarioValidator()),
+            new \Lebytek\Framework\Application\UseCases\Avatares\SubirAvatarUseCase($c->get(FileUploadService::class), $usuarioRepo),
+            new \Lebytek\Framework\Application\UseCases\Avatares\FijarAvatarActualUseCase($archivoRepo, $usuarioRepo),
+            new \Lebytek\Framework\Application\UseCases\Avatares\EliminarAvatarUseCase($archivoRepo, $usuarioRepo),
+            new \Lebytek\Framework\Application\UseCases\Avatares\ListarAvataresUseCase($archivoRepo)
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\RolesController::class, function (Container $c) {
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\RolesController::class, function (Container $c) {
         $rolRepo     = $c->get(RolRepositoryInterface::class);
         $permisoRepo = $c->get(PermisoRepositoryInterface::class);
-        return new \App\Presentation\Controllers\Admin\RolesController(
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\RolesController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
             new ListarRolesUseCase($rolRepo, $permisoRepo),
@@ -458,41 +458,41 @@ return static function (Container $container): void {
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\CrudController::class, function (Container $c) {
-        return new \App\Presentation\Controllers\Admin\CrudController(
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\CrudController::class, function (Container $c) {
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\CrudController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
             $c->get(CrudResourceService::class)
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\CalendarioController::class, function (Container $c) {
-        return new \App\Presentation\Controllers\Admin\CalendarioController(
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\CalendarioController::class, function (Container $c) {
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\CalendarioController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
-            $c->get(\App\Application\Services\CalendarViewModelBuilder::class),
-            $c->get(\App\Application\UseCases\Calendar\ListarEventosCalendarioUseCase::class)
+            $c->get(\Lebytek\Framework\Application\Services\CalendarViewModelBuilder::class),
+            $c->get(\Lebytek\Framework\Application\UseCases\Calendar\ListarEventosCalendarioUseCase::class)
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\PdfKitDemoController::class, function (Container $c) {
-        return new \App\Presentation\Controllers\Admin\PdfKitDemoController(
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\PdfKitDemoController::class, function (Container $c) {
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\PdfKitDemoController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
-            $c->get(\App\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase::class),
-            $c->get(\App\Application\Pdf\PdfRenderingService::class)
+            $c->get(\Lebytek\Framework\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase::class),
+            $c->get(\Lebytek\Framework\Application\Pdf\PdfRenderingService::class)
         );
     });
 
-    $container->bind(\App\Presentation\Controllers\Admin\ReportesController::class, function (Container $c) {
-        return new \App\Presentation\Controllers\Admin\ReportesController(
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\ReportesController::class, function (Container $c) {
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\ReportesController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
-            $c->get(\App\Application\Reporte\ReporteConfigLoader::class),
-            $c->get(\App\Domain\Interfaces\ReporteRepositoryInterface::class),
-            $c->get(\App\Application\Reporte\GuardarReporteUseCase::class),
-            $c->get(\App\Application\Reporte\GenerarReporteUseCase::class),
-            $c->get(\App\Application\Reporte\GenerarDocumentoUseCase::class)
+            $c->get(\Lebytek\Framework\Application\Reporte\ReporteConfigLoader::class),
+            $c->get(\Lebytek\Framework\Domain\Interfaces\ReporteRepositoryInterface::class),
+            $c->get(\Lebytek\Framework\Application\Reporte\GuardarReporteUseCase::class),
+            $c->get(\Lebytek\Framework\Application\Reporte\GenerarReporteUseCase::class),
+            $c->get(\Lebytek\Framework\Application\Reporte\GenerarDocumentoUseCase::class)
         );
     });
 
@@ -520,8 +520,8 @@ return static function (Container $container): void {
         (string) Config::get('app.version', '0.0.0')
     ));
 
-    $container->bind(\App\Presentation\Controllers\Admin\SistemaEstadoController::class, function (Container $c) {
-        return new \App\Presentation\Controllers\Admin\SistemaEstadoController(
+    $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\SistemaEstadoController::class, function (Container $c) {
+        return new \Lebytek\Framework\Presentation\Controllers\Admin\SistemaEstadoController(
             $c->get(ConfiguracionService::class),
             $c->get(AdminNavigationMenuService::class),
             $c->get(DeploymentStatus::class)
@@ -530,7 +530,7 @@ return static function (Container $container): void {
 
     // Registry de secciones de Ajustes — siempre resoluble; los providers se cargan
     // solo si su módulo está activo (toggle inline). AjustesController lo consume.
-    $container->singleton(\App\Application\Services\SettingsSectionRegistry::class, function () {
+    $container->singleton(\Lebytek\Framework\Application\Services\SettingsSectionRegistry::class, function () {
         $providers = [];
         if ((bool) Config::get('vertical.modules.marketing', false)) {
             $providers = [
@@ -541,47 +541,47 @@ return static function (Container $container): void {
             ];
         }
         if ((bool) Config::get('vertical.modules.integrations', false)) {
-            $providers[] = new \App\Infrastructure\Integrations\Settings\IntegrationsWhatsappSettingsProvider();
+            $providers[] = new \Lebytek\Framework\Infrastructure\Integrations\Settings\IntegrationsWhatsappSettingsProvider();
         }
-        return new \App\Application\Services\SettingsSectionRegistry($providers);
+        return new \Lebytek\Framework\Application\Services\SettingsSectionRegistry($providers);
     });
 
     // ── Módulo Integraciones (binding condicional al toggle; ver config/modules/integrations.php) ──
     if ((bool) Config::get('vertical.modules.integrations', false)) {
         $container->singleton(
-            \App\Application\Integrations\NotificationDispatcher::class,
-            static fn() => \App\Application\Integrations\IntegrationsFactory::dispatcher()
+            \Lebytek\Framework\Application\Integrations\NotificationDispatcher::class,
+            static fn() => \Lebytek\Framework\Application\Integrations\IntegrationsFactory::dispatcher()
         );
 
-        $container->singleton(\App\Domain\Integrations\IntegrationAccountRepositoryInterface::class,
-            fn() => new \App\Infrastructure\Integrations\Repositories\IntegrationAccountRepository());
+        $container->singleton(\Lebytek\Framework\Domain\Integrations\IntegrationAccountRepositoryInterface::class,
+            fn() => new \Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationAccountRepository());
 
-        $container->singleton(\App\Domain\Integrations\PartnerConnectorInterface::class, function () {
+        $container->singleton(\Lebytek\Framework\Domain\Integrations\PartnerConnectorInterface::class, function () {
             $base = (array) Config::get('integrations.channels.whatsapp.config', []);
-            return new \App\Infrastructure\Integrations\Partner\GreenApiPartnerConnector(
-                new \App\Infrastructure\Integrations\Http\HttpApiConnector((int) ($base['timeout'] ?? 15)),
-                (string) \App\Kernel\EnvLoader::get('GREEN_API_PARTNER_TOKEN', ''),
+            return new \Lebytek\Framework\Infrastructure\Integrations\Partner\GreenApiPartnerConnector(
+                new \Lebytek\Framework\Infrastructure\Integrations\Http\HttpApiConnector((int) ($base['timeout'] ?? 15)),
+                (string) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_PARTNER_TOKEN', ''),
                 (string) ($base['base_url'] ?? 'https://api.green-api.com')
             );
         });
 
-        $container->singleton(\App\Application\Integrations\DemoProvisioningService::class, function (Container $c) {
-            return new \App\Application\Integrations\DemoProvisioningService(
-                $c->get(\App\Domain\Integrations\IntegrationAccountRepositoryInterface::class),
-                $c->get(\App\Domain\Integrations\PartnerConnectorInterface::class),
-                \App\Application\Integrations\IntegrationsFactory::dispatcher(),
-                (string) \App\Kernel\EnvLoader::get('APP_URL', '')
+        $container->singleton(\Lebytek\Framework\Application\Integrations\DemoProvisioningService::class, function (Container $c) {
+            return new \Lebytek\Framework\Application\Integrations\DemoProvisioningService(
+                $c->get(\Lebytek\Framework\Domain\Integrations\IntegrationAccountRepositoryInterface::class),
+                $c->get(\Lebytek\Framework\Domain\Integrations\PartnerConnectorInterface::class),
+                \Lebytek\Framework\Application\Integrations\IntegrationsFactory::dispatcher(),
+                (string) \Lebytek\Framework\Kernel\EnvLoader::get('APP_URL', '')
             );
         });
 
-        $container->bind(\App\Presentation\Controllers\Admin\IntegrationsController::class, function (Container $c) {
-            return new \App\Presentation\Controllers\Admin\IntegrationsController(
+        $container->bind(\Lebytek\Framework\Presentation\Controllers\Admin\IntegrationsController::class, function (Container $c) {
+            return new \Lebytek\Framework\Presentation\Controllers\Admin\IntegrationsController(
                 $c->get(ConfiguracionService::class),
                 $c->get(AdminNavigationMenuService::class),
-                $c->get(\App\Domain\Integrations\IntegrationAccountRepositoryInterface::class),
-                $c->get(\App\Domain\Integrations\PartnerConnectorInterface::class),
-                $c->get(\App\Application\Integrations\DemoProvisioningService::class),
-                new \App\Infrastructure\Integrations\Repositories\IntegrationLogRepository()
+                $c->get(\Lebytek\Framework\Domain\Integrations\IntegrationAccountRepositoryInterface::class),
+                $c->get(\Lebytek\Framework\Domain\Integrations\PartnerConnectorInterface::class),
+                $c->get(\Lebytek\Framework\Application\Integrations\DemoProvisioningService::class),
+                new \Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationLogRepository()
             );
         });
     }
@@ -618,10 +618,10 @@ return static function (Container $container): void {
                 new \App\Infrastructure\Marketing\LeadCapture\PersistLeadHandler(
                     $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class)),
                 new \App\Infrastructure\Marketing\LeadCapture\NotifyInternalHandler(
-                    $c->get(\App\Domain\Interfaces\MailerInterface::class),
+                    $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
                     $destinoInterno),
                 new \App\Infrastructure\Marketing\LeadCapture\AutoresponderHandler(
-                    $c->get(\App\Domain\Interfaces\MailerInterface::class)),
+                    $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class)),
             ]);
         });
 

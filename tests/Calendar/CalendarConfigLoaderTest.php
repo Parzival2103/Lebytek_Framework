@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Services\CalendarConfigLoader;
-use App\Application\Services\CalendarConfigValidator;
-use App\Domain\Entities\CalendarDefinition;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\Services\CalendarConfigLoader;
+use Lebytek\Framework\Application\Services\CalendarConfigValidator;
+use Lebytek\Framework\Domain\Entities\CalendarDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 test('CalendarConfigLoader carga el calendario demo_citas y resuelve su definición', function (): void {
     $loader = new CalendarConfigLoader(new CalendarConfigValidator());

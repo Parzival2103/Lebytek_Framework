@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use App\Domain\Calendar\CalendarEvent;
+use Lebytek\Framework\Domain\Calendar\CalendarEvent;
 
 test('CalendarEvent::toArray expone forma JSON estable', function (): void {
     $e = new CalendarEvent(

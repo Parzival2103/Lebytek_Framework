@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Container;
+namespace Lebytek\Framework\Kernel\Container;
 
 final class Container
 {

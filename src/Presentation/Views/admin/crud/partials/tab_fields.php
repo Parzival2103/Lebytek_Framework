@@ -1,5 +1,5 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 /** @var array<int, array<string, mixed>> $tabColumns */
 /** @var array<string, mixed> $row */
 $tabColumns = $tabColumns ?? [];

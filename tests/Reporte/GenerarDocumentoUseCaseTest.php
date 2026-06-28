@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Pdf\PdfTemplateRegistry;
-use App\Application\Reporte\GenerarDocumentoUseCase;
-use App\Application\Reporte\ReporteConfigLoader;
-use App\Application\Reporte\ReporteConfigValidator;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Reporte\ReporteRecordSourceInterface;
+use Lebytek\Framework\Application\Pdf\PdfTemplateRegistry;
+use Lebytek\Framework\Application\Reporte\GenerarDocumentoUseCase;
+use Lebytek\Framework\Application\Reporte\ReporteConfigLoader;
+use Lebytek\Framework\Application\Reporte\ReporteConfigValidator;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Reporte\ReporteRecordSourceInterface;
 
 final class FakeReporteRecordSource implements ReporteRecordSourceInterface
 {

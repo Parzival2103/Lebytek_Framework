@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Interfaces\MenuCatalogRepositoryInterface;
-use App\Domain\Interfaces\PermisoRepositoryInterface;
-use App\Domain\Rules\PermisoSlugFormatRule;
+use Lebytek\Framework\Domain\Interfaces\MenuCatalogRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\PermisoRepositoryInterface;
+use Lebytek\Framework\Domain\Rules\PermisoSlugFormatRule;
 
 /**
  * Reporte estático de coherencia entre permisos en BD, menú y rutas/CRUD declarados.

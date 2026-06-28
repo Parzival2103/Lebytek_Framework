@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Interfaces\SettingsSectionProviderInterface;
+use Lebytek\Framework\Domain\Interfaces\SettingsSectionProviderInterface;
 
 final class SettingsSectionRegistry
 {

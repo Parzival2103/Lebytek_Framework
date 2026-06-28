@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudActionContext;
-use App\Application\Crud\Context\CrudContext;
+use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
+use Lebytek\Framework\Application\Crud\Context\CrudContext;
 
 test('CrudActionContext: exposes action target', function (): void {
     $record = ['id' => 5, 'status' => 'pendiente'];

@@ -1,6 +1,6 @@
 <?php
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $views    = $views ?? ['default' => 'month', 'enabled' => ['month', 'table']];
 $enabled  = (array) ($views['enabled'] ?? ['month']);

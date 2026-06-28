@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Interfaces;
+namespace Lebytek\Framework\Domain\Interfaces;
 
 /**
  * Sección extensible de la pantalla de Ajustes. Un módulo registra una o varias

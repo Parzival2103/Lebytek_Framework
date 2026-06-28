@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\DTO\Files\ImageOptions;
-use App\Application\Services\ImageProcessor;
+use Lebytek\Framework\Application\DTO\Files\ImageOptions;
+use Lebytek\Framework\Application\Services\ImageProcessor;
 
 function image_tmp_dir(): string
 {

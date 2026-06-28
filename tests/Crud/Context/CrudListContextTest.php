@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudContext;
-use App\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Application\Crud\Context\CrudContext;
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
 
 function make_list_ctx(): CrudListContext
 {

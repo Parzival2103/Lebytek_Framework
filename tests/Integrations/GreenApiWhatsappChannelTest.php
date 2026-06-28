@@ -2,9 +2,9 @@
 // tests/Integrations/GreenApiWhatsappChannelTest.php
 declare(strict_types=1);
 
-use App\Domain\Integrations\ApiConnectorInterface;
-use App\Domain\Integrations\MessageRequest;
-use App\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel;
+use Lebytek\Framework\Domain\Integrations\ApiConnectorInterface;
+use Lebytek\Framework\Domain\Integrations\MessageRequest;
+use Lebytek\Framework\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel;
 
 /** Conector falso que captura la URL/payload y devuelve una respuesta fija. */
 final class FakeConnector implements ApiConnectorInterface

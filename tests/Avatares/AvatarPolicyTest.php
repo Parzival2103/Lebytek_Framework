@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Policies\AvatarPolicy;
+use Lebytek\Framework\Domain\Policies\AvatarPolicy;
 
 test('AvatarPolicy permite al dueño aunque no tenga permiso de gestión', function (): void {
     $policy = new AvatarPolicy();

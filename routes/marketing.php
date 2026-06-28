@@ -7,7 +7,7 @@
 use App\Presentation\Controllers\Publico\LandingController;
 use App\Presentation\Controllers\Publico\LeadController;
 use App\Presentation\Controllers\Publico\PortalClienteController;
-use App\Presentation\Middlewares\CsrfMiddleware;
+use Lebytek\Framework\Presentation\Middlewares\CsrfMiddleware;
 
 // Raíz pública: con el módulo activo, "/" sirve la landing (no el login).
 $router->get('/', [LandingController::class, 'index']);

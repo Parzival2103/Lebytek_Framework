@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Pdf;
+namespace Lebytek\Framework\Domain\Pdf;
 
 /** Marcador para todo componente atómico de un documento PDF. */
 interface PdfBlock

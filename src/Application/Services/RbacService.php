@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Policies\RbacPolicy;
-use App\Domain\Exceptions\AccesoException;
-use App\Kernel\Security\Session;
+use Lebytek\Framework\Domain\Policies\RbacPolicy;
+use Lebytek\Framework\Domain\Exceptions\AccesoException;
+use Lebytek\Framework\Kernel\Security\Session;
 
 final class RbacService
 {

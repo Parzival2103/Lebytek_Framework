@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\DTO\Files\FileUploadConfig;
-use App\Application\DTO\Files\ImageOptions;
-use App\Application\DTO\Files\ThumbnailOptions;
+use Lebytek\Framework\Application\DTO\Files\FileUploadConfig;
+use Lebytek\Framework\Application\DTO\Files\ImageOptions;
+use Lebytek\Framework\Application\DTO\Files\ThumbnailOptions;
 
 test('FileUploadConfig expone todas las propiedades con argumentos nombrados', function (): void {
     $imagen = new ImageOptions(maxWidth: 1024, maxHeight: 1024, calidad: 82);

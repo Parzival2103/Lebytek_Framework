@@ -15,16 +15,16 @@ declare(strict_types=1);
 | 6. Request → Router → Response
 */
 
-use App\Kernel\EnvLoader;
-use App\Kernel\Config\Config;
-use App\Kernel\Config\DebugMode;
-use App\Kernel\Database\Connection;
-use App\Kernel\Http\Router;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Kernel\Exceptions\AppException;
-use App\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Config\DebugMode;
+use Lebytek\Framework\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\Http\Router;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Exceptions\AppException;
+use Lebytek\Framework\Kernel\Logging\AppLogger;
 
 // ── 1. Autoloader ────────────────────────────────────────────────────────────
 require_once ROOT_PATH . '/vendor/autoload.php';
@@ -93,7 +93,7 @@ Connection::configure([
 ]);
 
 // ── 7. Contenedor de dependencias ─────────────────────────────────────────────
-$container = new \App\Kernel\Container\Container();
+$container = new \Lebytek\Framework\Kernel\Container\Container();
 $containerConfig = require ROOT_PATH . '/config/container.php';
 $containerConfig($container);
 

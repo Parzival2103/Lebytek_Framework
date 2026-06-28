@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Auth;
+namespace Lebytek\Framework\Application\UseCases\Auth;
 
-use App\Domain\Entities\AuthToken;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\AuthTokenRepositoryInterface;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\AuthTokenRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
 
 /*
 |--------------------------------------------------------------------------

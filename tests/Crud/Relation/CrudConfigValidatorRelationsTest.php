@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudConfigValidator;
+use Lebytek\Framework\Application\Services\CrudConfigValidator;
 
 test('CrudConfigValidator: relation con type inválido es error', function (): void {
     $errors = CrudConfigValidator::relationsBlockErrors([

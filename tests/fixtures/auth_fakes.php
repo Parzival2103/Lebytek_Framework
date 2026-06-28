@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\AuthToken;
-use App\Domain\Entities\Rol;
-use App\Domain\Interfaces\AuthTokenRepositoryInterface;
-use App\Domain\Interfaces\RolRepositoryInterface;
-use App\Domain\ValueObjects\Slug;
+use Lebytek\Framework\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Entities\Rol;
+use Lebytek\Framework\Domain\Interfaces\AuthTokenRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\RolRepositoryInterface;
+use Lebytek\Framework\Domain\ValueObjects\Slug;
 
 require_once __DIR__ . '/avatar_fakes.php';
 
@@ -127,13 +127,13 @@ if (!class_exists('FakeRolRepository')) {
 
 if (!class_exists('FakeMailer')) {
     /** Mailer espía: acumula los mensajes enviados; puede simular fallo. */
-    class FakeMailer implements \App\Domain\Interfaces\MailerInterface
+    class FakeMailer implements \Lebytek\Framework\Domain\Interfaces\MailerInterface
     {
-        /** @var list<\App\Application\DTO\Mail\MensajeCorreo> */
+        /** @var list<\Lebytek\Framework\Application\DTO\Mail\MensajeCorreo> */
         public array $enviados = [];
         public ?\Throwable $falla = null;
 
-        public function enviar(\App\Application\DTO\Mail\MensajeCorreo $mensaje): void
+        public function enviar(\Lebytek\Framework\Application\DTO\Mail\MensajeCorreo $mensaje): void
         {
             if ($this->falla !== null) {
                 throw $this->falla;
@@ -144,7 +144,7 @@ if (!class_exists('FakeMailer')) {
 }
 
 if (!class_exists('FakeConfiguracionRepository')) {
-    class FakeConfiguracionRepository implements \App\Domain\Interfaces\ConfiguracionRepositoryInterface
+    class FakeConfiguracionRepository implements \Lebytek\Framework\Domain\Interfaces\ConfiguracionRepositoryInterface
     {
         /** @param array<string, mixed> $datos */
         public function __construct(private array $datos = [])
@@ -177,10 +177,10 @@ if (!class_exists('FakeConfiguracionRepository')) {
 
 if (!class_exists('FakePermisoRepository')) {
     /** Permisos en memoria; slugs vacíos para tests de login. */
-    class FakePermisoRepository implements \App\Domain\Interfaces\PermisoRepositoryInterface
+    class FakePermisoRepository implements \Lebytek\Framework\Domain\Interfaces\PermisoRepositoryInterface
     {
-        public function findById(int $id): ?\App\Domain\Entities\Permiso { return null; }
-        public function findBySlug(string $slug): ?\App\Domain\Entities\Permiso { return null; }
+        public function findById(int $id): ?\Lebytek\Framework\Domain\Entities\Permiso { return null; }
+        public function findBySlug(string $slug): ?\Lebytek\Framework\Domain\Entities\Permiso { return null; }
         public function findAll(): array { return []; }
         public function findAllActivosOrdenadosPorModuloSlug(): array { return []; }
         public function buscarPorRolId(int $rolId): array { return []; }
@@ -189,15 +189,15 @@ if (!class_exists('FakePermisoRepository')) {
         public function listarTodosLosSlugs(): array { return []; }
         public function mapSlugActivo(): array { return []; }
         public function sincronizarPermisosDeRol(int $rolId, array $permisoIds): void {}
-        public function save(\App\Domain\Entities\Permiso $permiso): int { return 0; }
-        public function update(\App\Domain\Entities\Permiso $permiso): void {}
+        public function save(\Lebytek\Framework\Domain\Entities\Permiso $permiso): int { return 0; }
+        public function update(\Lebytek\Framework\Domain\Entities\Permiso $permiso): void {}
         public function delete(int $id): void {}
     }
 }
 
 if (!class_exists('FakeLoginIntentoRepository')) {
     /** Repositorio de intentos de login en memoria; replica el contrato PDO. */
-    class FakeLoginIntentoRepository implements \App\Domain\Interfaces\LoginIntentoRepositoryInterface
+    class FakeLoginIntentoRepository implements \Lebytek\Framework\Domain\Interfaces\LoginIntentoRepositoryInterface
     {
         /** @var list<array{dimension:string,clave:string,created_at:string}> */
         public array $filas = [];
@@ -245,12 +245,12 @@ if (!class_exists('FakeLoginIntentoRepository')) {
     }
 }
 
-function fake_correo_auth_service(?FakeMailer $mailer = null, array $config = []): \App\Application\Services\CorreoAuthService
+function fake_correo_auth_service(?FakeMailer $mailer = null, array $config = []): \Lebytek\Framework\Application\Services\CorreoAuthService
 {
     $mailer ??= new FakeMailer();
-    $configService = new \App\Application\Services\ConfiguracionService(
+    $configService = new \Lebytek\Framework\Application\Services\ConfiguracionService(
         new FakeConfiguracionRepository($config)
     );
 
-    return new \App\Application\Services\CorreoAuthService($mailer, $configService, 'https://app.test');
+    return new \Lebytek\Framework\Application\Services\CorreoAuthService($mailer, $configService, 'https://app.test');
 }

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudTransitionContext;
-use App\Domain\Interfaces\CrudTransitionGuardInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudTransitionContext;
+use Lebytek\Framework\Domain\Interfaces\CrudTransitionGuardInterface;
 
 if (!class_exists('RecordingTransitionGuard')) {
     /** Registra el último contexto recibido para aserciones; nunca bloquea. */

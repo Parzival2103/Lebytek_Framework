@@ -1,6 +1,6 @@
 <?php
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 ?>
 <link rel="stylesheet" href="<?= ViewHelper::asset('css/crud-engine.css') ?>">

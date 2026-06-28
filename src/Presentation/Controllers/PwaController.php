@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers;
+namespace Lebytek\Framework\Presentation\Controllers;
 
-use App\Application\Services\ConfiguracionService;
-use App\Kernel\BaseClasses\BaseController;
-use App\Kernel\Constants\AppConstants;
-use App\Kernel\Helpers\ViewHelper;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Kernel\BaseClasses\BaseController;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
 
 /*
 |--------------------------------------------------------------------------

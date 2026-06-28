@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudContext;
+use Lebytek\Framework\Application\Crud\Context\CrudContext;
 
 test('CrudContext: exposes identity getters', function (): void {
     $ctx = new CrudContext('eventos', 'dom_eventos', 'id', 7, '127.0.0.1');

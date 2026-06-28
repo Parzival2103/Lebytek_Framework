@@ -2,7 +2,7 @@
 // tests/Marketing/ManifestTest.php
 declare(strict_types=1);
 
-use App\Application\Install\ModuleRegistry;
+use Lebytek\Framework\Application\Install\ModuleRegistry;
 
 test('marketing manifiesto se carga con identidad y dependencias correctas', function (): void {
     $registry = new ModuleRegistry(ROOT_PATH . '/config/modules');

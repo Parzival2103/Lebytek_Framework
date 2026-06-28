@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\DTO\Auth;
+namespace Lebytek\Framework\Application\DTO\Auth;
 
 /*
 |--------------------------------------------------------------------------

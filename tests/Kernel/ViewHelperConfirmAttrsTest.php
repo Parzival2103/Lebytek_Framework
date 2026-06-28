@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 test('confirmAttrs genera todos los data-attributes soportados', function (): void {
     $attrs = ViewHelper::confirmAttrs([

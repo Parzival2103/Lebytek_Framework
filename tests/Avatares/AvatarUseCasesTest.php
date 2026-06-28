@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\FileUploadService;
-use App\Application\Services\ImageProcessor;
-use App\Application\UseCases\Avatares\AvatarDefaults;
-use App\Application\UseCases\Avatares\EliminarAvatarUseCase;
-use App\Application\UseCases\Avatares\FijarAvatarActualUseCase;
-use App\Application\UseCases\Avatares\ListarAvataresUseCase;
-use App\Application\UseCases\Avatares\SubirAvatarUseCase;
-use App\Domain\Entities\Archivo;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\Services\FileUploadService;
+use Lebytek\Framework\Application\Services\ImageProcessor;
+use Lebytek\Framework\Application\UseCases\Avatares\AvatarDefaults;
+use Lebytek\Framework\Application\UseCases\Avatares\EliminarAvatarUseCase;
+use Lebytek\Framework\Application\UseCases\Avatares\FijarAvatarActualUseCase;
+use Lebytek\Framework\Application\UseCases\Avatares\ListarAvataresUseCase;
+use Lebytek\Framework\Application\UseCases\Avatares\SubirAvatarUseCase;
+use Lebytek\Framework\Domain\Entities\Archivo;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 require_once __DIR__ . '/../fixtures/archivo_repos.php';
 require_once __DIR__ . '/../fixtures/avatar_fakes.php';

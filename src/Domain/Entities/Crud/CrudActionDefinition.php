@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Entities\Crud;
+namespace Lebytek\Framework\Domain\Entities\Crud;
 
 /**
  * Definición inmutable de una acción de fila o masiva del CRUD Engine.

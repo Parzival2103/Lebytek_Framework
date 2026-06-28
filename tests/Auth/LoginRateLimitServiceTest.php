@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\LoginRateLimitService;
-use App\Domain\Exceptions\AuthException;
+use Lebytek\Framework\Application\Services\LoginRateLimitService;
+use Lebytek\Framework\Domain\Exceptions\AuthException;
 
 require_once __DIR__ . '/../fixtures/auth_fakes.php';
 

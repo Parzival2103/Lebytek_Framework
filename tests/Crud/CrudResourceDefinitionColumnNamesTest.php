@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use App\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 
 test('CrudResourceDefinition::columnNames une PK, columnas de lista y campos de form sin duplicar', function (): void {
     $def = CrudResourceDefinition::fromArray([

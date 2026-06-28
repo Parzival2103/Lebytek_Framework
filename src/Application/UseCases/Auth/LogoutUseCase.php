@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Auth;
+namespace Lebytek\Framework\Application\UseCases\Auth;
 
-use App\Application\Services\AuthService;
+use Lebytek\Framework\Application\Services\AuthService;
 
 final class LogoutUseCase
 {

@@ -1,7 +1,7 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
-use App\Kernel\Security\Session;
-use App\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
 
 /*
  * Shell visual común de las vistas de auth (login, registro, recuperación).

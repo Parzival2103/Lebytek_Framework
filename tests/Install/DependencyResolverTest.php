@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\Install\DependencyResolver;
-use App\Application\Install\ModuleManifest;
-use App\Domain\Exceptions\InstallerException;
+use Lebytek\Framework\Application\Install\DependencyResolver;
+use Lebytek\Framework\Application\Install\ModuleManifest;
+use Lebytek\Framework\Domain\Exceptions\InstallerException;
 
 function dr_manifest(string $clave, array $requiere = []): ModuleManifest
 {

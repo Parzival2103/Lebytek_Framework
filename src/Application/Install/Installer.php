@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Install;
+namespace Lebytek\Framework\Application\Install;
 
-use App\Domain\Interfaces\MigrationRepositoryInterface;
-use App\Domain\Interfaces\ModuleStateRepositoryInterface;
-use App\Infrastructure\Install\InstallTrace;
-use App\Infrastructure\Install\SqlFileRunner;
+use Lebytek\Framework\Domain\Interfaces\MigrationRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\ModuleStateRepositoryInterface;
+use Lebytek\Framework\Infrastructure\Install\InstallTrace;
+use Lebytek\Framework\Infrastructure\Install\SqlFileRunner;
 
 final class Installer
 {

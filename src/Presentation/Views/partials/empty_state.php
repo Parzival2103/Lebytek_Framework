@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $icon = (string) ($icon ?? 'bi-inbox');
 $title = (string) ($title ?? 'Sin contenido');

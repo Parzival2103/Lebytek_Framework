@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudContext;
-use App\Application\Crud\Context\CrudTransitionContext;
+use Lebytek\Framework\Application\Crud\Context\CrudContext;
+use Lebytek\Framework\Application\Crud\Context\CrudTransitionContext;
 
 test('CrudTransitionContext: exposes from/to and status column', function (): void {
     $record = ['id' => 1, 'status' => 'pendiente'];

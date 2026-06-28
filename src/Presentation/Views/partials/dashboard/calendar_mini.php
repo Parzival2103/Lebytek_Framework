@@ -1,6 +1,6 @@
 <?php
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 /** @var array<string,mixed> $data — pasado por ViewHelper::partial */
 $key     = (string) ($key ?? ($data['key'] ?? ''));

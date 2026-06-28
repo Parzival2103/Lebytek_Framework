@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\Crud\CrudStateMachine;
+use Lebytek\Framework\Domain\Entities\Crud\CrudStateMachine;
 
 function demo_machine(): CrudStateMachine
 {

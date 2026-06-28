@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repositories;
+namespace Lebytek\Framework\Infrastructure\Repositories;
 
-use App\Domain\Entities\AuthToken;
-use App\Domain\Interfaces\AuthTokenRepositoryInterface;
-use App\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Interfaces\AuthTokenRepositoryInterface;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
 
 final class AuthTokenRepository extends BaseRepository implements AuthTokenRepositoryInterface
 {

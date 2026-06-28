@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Pdf;
+namespace Lebytek\Framework\Application\Pdf;
 
-use App\Domain\Pdf\PdfDocument;
-use App\Domain\Pdf\PdfEngineInterface;
+use Lebytek\Framework\Domain\Pdf\PdfDocument;
+use Lebytek\Framework\Domain\Pdf\PdfEngineInterface;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 /**
  * Orquesta el render: arma el HTML (esqueleto + bloques) y delega en el motor para
@@ -14,8 +15,6 @@ use App\Domain\Pdf\PdfEngineInterface;
  */
 final class PdfRenderingService
 {
-    private const SKELETON = ROOT_PATH . '/app/Presentation/Views/pdf/document.php';
-
     /** @param array<string,mixed> $config defaults de config/pdf.php (font, etc.) */
     public function __construct(
         private readonly PdfComponentRenderer $renderer,
@@ -42,7 +41,7 @@ final class PdfRenderingService
     {
         $font = (string) ($this->config['font'] ?? 'DejaVu Sans');
         ob_start();
-        include self::SKELETON;
+        include ViewHelper::resolve('pdf/document');
         return (string) ob_get_clean();
     }
 }

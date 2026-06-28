@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Helpers;
+namespace Lebytek\Framework\Kernel\Helpers;
 
-use App\Kernel\Security\Session;
-use App\Kernel\Security\Csrf;
-use App\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Security\Csrf;
+use Lebytek\Framework\Kernel\Config\Config;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +22,36 @@ final class ViewHelper
     private static ?string $currentSection = null;
 
     /**
+     * Ruta base de las vistas del paquete (este archivo está en src/Kernel/Helpers).
+     */
+    private static function packageViewsPath(): string
+    {
+        return dirname(__DIR__, 2) . '/Presentation/Views';
+    }
+
+    /**
+     * Ruta base de las vistas del proyecto (dominio/overrides).
+     */
+    private static function projectViewsPath(): string
+    {
+        return (defined('APP_PATH') ? APP_PATH : dirname(__DIR__, 3) . '/app') . '/Presentation/Views';
+    }
+
+    /**
+     * Resuelve una vista relativa (sin .php): proyecto primero, luego paquete.
+     */
+    public static function resolve(string $viewRelPath): string
+    {
+        foreach ([self::projectViewsPath(), self::packageViewsPath()] as $base) {
+            $candidate = $base . '/' . $viewRelPath . '.php';
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+        throw new \RuntimeException("Vista no encontrada: {$viewRelPath}");
+    }
+
+    /**
      * Renderiza una vista y la envuelve en su layout si se especificó.
      *
      * @param string $view   Ruta relativa a Views/ sin .php (ej: "admin/dashboard")
@@ -30,11 +60,7 @@ final class ViewHelper
      */
     public static function render(string $view, array $data = [], string $layout = 'layouts/base'): string
     {
-        $viewFile = APP_PATH . '/Presentation/Views/' . $view . '.php';
-
-        if (!file_exists($viewFile)) {
-            throw new \RuntimeException("Vista no encontrada: {$viewFile}");
-        }
+        $viewFile = self::resolve($view);
 
         // Renderizar contenido de la vista
         $content = self::renderFile($viewFile, $data);
@@ -44,11 +70,7 @@ final class ViewHelper
         }
 
         // Renderizar layout inyectando el contenido
-        $layoutFile = APP_PATH . '/Presentation/Views/' . $layout . '.php';
-
-        if (!file_exists($layoutFile)) {
-            throw new \RuntimeException("Layout no encontrado: {$layoutFile}");
-        }
+        $layoutFile = self::resolve($layout);
 
         return self::renderFile($layoutFile, array_merge($data, ['content' => $content]));
     }
@@ -69,10 +91,7 @@ final class ViewHelper
      */
     public static function partial(string $name, array $data = []): string
     {
-        return self::renderFile(
-            APP_PATH . '/Presentation/Views/partials/' . $name . '.php',
-            $data
-        );
+        return self::renderFile(self::resolve('partials/' . $name), $data);
     }
 
     // ── Helpers de seguridad para templates ──────────────────────────────────

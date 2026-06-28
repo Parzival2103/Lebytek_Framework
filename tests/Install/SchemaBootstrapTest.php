@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Application\Install\ModuleRegistry;
+use Lebytek\Framework\Application\Install\ModuleRegistry;
 
 test('schema.sql incluye bootstrap admin y datos iniciales', function (): void {
     $sql = file_get_contents(ROOT_PATH . '/database/schema/schema.sql');

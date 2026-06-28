@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers\Admin;
+namespace Lebytek\Framework\Presentation\Controllers\Admin;
 
-use App\Presentation\Controllers\AdminBaseController;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\ConfiguracionService;
-use App\Application\Services\SettingsSectionRegistry;
+use Lebytek\Framework\Presentation\Controllers\AdminBaseController;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Application\Services\SettingsSectionRegistry;
 
 final class AjustesController extends AdminBaseController
 {

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use App\Domain\Pdf\PdfPageSetup;
+use Lebytek\Framework\Domain\Pdf\PdfPageSetup;
 
 test('PdfPageSetup expone defaults A4 vertical', function (): void {
     $s = new PdfPageSetup();

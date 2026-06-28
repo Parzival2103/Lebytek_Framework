@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Crud\Scopes;
+namespace Lebytek\Framework\Application\Crud\Scopes;
 
-use App\Application\Crud\Context\CrudListContext;
-use App\Domain\Interfaces\CrudListScopeInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Domain\Interfaces\CrudListScopeInterface;
 
 /**
  * Scope built-in de propiedad por usuario. Restringe el listado a las filas

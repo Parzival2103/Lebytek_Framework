@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Install;
+namespace Lebytek\Framework\Application\Install;
 
-use App\Domain\Exceptions\InstallerException;
+use Lebytek\Framework\Domain\Exceptions\InstallerException;
 
 final class ModuleManifest
 {

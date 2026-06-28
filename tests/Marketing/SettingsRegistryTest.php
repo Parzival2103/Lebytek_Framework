@@ -2,8 +2,8 @@
 // tests/Marketing/SettingsRegistryTest.php
 declare(strict_types=1);
 
-use App\Application\Services\SettingsSectionRegistry;
-use App\Domain\Interfaces\SettingsSectionProviderInterface;
+use Lebytek\Framework\Application\Services\SettingsSectionRegistry;
+use Lebytek\Framework\Domain\Interfaces\SettingsSectionProviderInterface;
 
 function fakeSettingsProvider(string $clave, string $permiso, array $fieldNames): SettingsSectionProviderInterface
 {

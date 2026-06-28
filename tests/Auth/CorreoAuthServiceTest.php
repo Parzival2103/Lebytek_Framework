@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CorreoAuthService;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\Services\CorreoAuthService;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 require_once __DIR__ . '/../fixtures/auth_fakes.php';
 
@@ -11,7 +11,7 @@ test('CorreoAuthService: verificación envía 1 correo con URL absoluta y token'
     $mailer  = new FakeMailer();
     $service = new CorreoAuthService(
         $mailer,
-        new \App\Application\Services\ConfiguracionService(new FakeConfiguracionRepository()),
+        new \Lebytek\Framework\Application\Services\ConfiguracionService(new FakeConfiguracionRepository()),
         'https://app.test/'
     );
 
@@ -28,7 +28,7 @@ test('CorreoAuthService: recuperación envía 1 correo con URL de restablecer', 
     $mailer  = new FakeMailer();
     $service = new CorreoAuthService(
         $mailer,
-        new \App\Application\Services\ConfiguracionService(new FakeConfiguracionRepository()),
+        new \Lebytek\Framework\Application\Services\ConfiguracionService(new FakeConfiguracionRepository()),
         'https://app.test'
     );
 
@@ -42,7 +42,7 @@ test('CorreoAuthService: usa el nombre de empresa configurado en Admin → Ajust
     $mailer  = new FakeMailer();
     $service = new CorreoAuthService(
         $mailer,
-        new \App\Application\Services\ConfiguracionService(new FakeConfiguracionRepository([
+        new \Lebytek\Framework\Application\Services\ConfiguracionService(new FakeConfiguracionRepository([
             'empresa_nombre' => 'Acme Corp',
         ])),
         'https://app.test'
@@ -58,7 +58,7 @@ test('CorreoAuthService: fallo del transporte se traduce a ValidationException g
     $mailer->falla = new \RuntimeException('SMTP connect() failed con credenciales x');
     $service       = new CorreoAuthService(
         $mailer,
-        new \App\Application\Services\ConfiguracionService(new FakeConfiguracionRepository()),
+        new \Lebytek\Framework\Application\Services\ConfiguracionService(new FakeConfiguracionRepository()),
         'https://app.test'
     );
 

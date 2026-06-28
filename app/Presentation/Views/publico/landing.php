@@ -2,7 +2,7 @@
 // app/Presentation/Views/publico/landing.php
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $bloques  = is_array($bloques ?? null) ? $bloques : [];
 $paquetes = is_array($paquetes ?? null) ? $paquetes : [];

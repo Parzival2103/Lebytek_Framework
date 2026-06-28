@@ -1,6 +1,6 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
-use App\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Security\Session;
 
 $__theme  = get_defined_vars();
 $flashAll = $flashAll ?? Session::flashAll();

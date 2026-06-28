@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Dashboard;
+namespace Lebytek\Framework\Infrastructure\Dashboard;
 
-use App\Domain\Dashboard\DashboardBuildContext;
-use App\Domain\Dashboard\DashboardContribution;
-use App\Domain\Interfaces\DashboardContributionProviderInterface;
+use Lebytek\Framework\Domain\Dashboard\DashboardBuildContext;
+use Lebytek\Framework\Domain\Dashboard\DashboardContribution;
+use Lebytek\Framework\Domain\Interfaces\DashboardContributionProviderInterface;
 
 /**
  * Contenido dashboard por defecto (plataforma: administración + ajustes + mensaje instalación limpia).

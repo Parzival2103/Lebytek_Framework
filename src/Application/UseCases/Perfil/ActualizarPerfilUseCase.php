@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Perfil;
+namespace Lebytek\Framework\Application\UseCases\Perfil;
 
-use App\Application\Validators\Usuarios\CrearUsuarioValidator;
-use App\Domain\Entities\Usuario;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\ValueObjects\Email;
+use Lebytek\Framework\Application\Validators\Usuarios\CrearUsuarioValidator;
+use Lebytek\Framework\Domain\Entities\Usuario;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\ValueObjects\Email;
 
 /*
 |--------------------------------------------------------------------------

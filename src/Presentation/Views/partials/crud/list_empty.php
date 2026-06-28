@@ -1,5 +1,5 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $colspan = (int) ($colspan ?? 1);
 ?>

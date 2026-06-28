@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\Usuario;
-use App\Domain\ValueObjects\Email;
+use Lebytek\Framework\Domain\Entities\Usuario;
+use Lebytek\Framework\Domain\ValueObjects\Email;
 
 test('Usuario: emailVerificadoEn es null por defecto y se expone por getter/toArray', function (): void {
     $usuario = new Usuario(

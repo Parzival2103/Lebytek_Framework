@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Domain\Interfaces;
+namespace Lebytek\Framework\Domain\Interfaces;
 
-use App\Domain\Reporte\ReporteGuardado;
+use Lebytek\Framework\Domain\Reporte\ReporteGuardado;
 
 /**
  * Persistencia de reportes guardados (rep_reportes). El scope owner (propios +

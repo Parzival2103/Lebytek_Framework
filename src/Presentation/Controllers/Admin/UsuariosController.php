@@ -2,30 +2,30 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers\Admin;
+namespace Lebytek\Framework\Presentation\Controllers\Admin;
 
-use App\Presentation\Controllers\AdminBaseController;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Application\UseCases\Usuarios\CrearUsuarioUseCase;
-use App\Application\UseCases\Usuarios\ListarUsuariosUseCase;
-use App\Application\UseCases\Usuarios\ActualizarUsuarioUseCase;
-use App\Application\UseCases\Usuarios\EliminarUsuarioUseCase;
-use App\Application\DTO\Usuarios\CrearUsuarioDTO;
-use App\Application\DTO\Usuarios\ActualizarUsuarioDTO;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\Interfaces\RolRepositoryInterface;
-use App\Domain\Policies\AvatarPolicy;
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\ConfiguracionService;
-use App\Application\Services\RbacService;
-use App\Application\UseCases\Avatares\EliminarAvatarUseCase;
-use App\Application\UseCases\Avatares\FijarAvatarActualUseCase;
-use App\Application\UseCases\Avatares\ListarAvataresUseCase;
-use App\Application\UseCases\Avatares\SubirAvatarUseCase;
-use App\Presentation\Presenters\AvatarPresenter;
+use Lebytek\Framework\Presentation\Controllers\AdminBaseController;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Application\UseCases\Usuarios\CrearUsuarioUseCase;
+use Lebytek\Framework\Application\UseCases\Usuarios\ListarUsuariosUseCase;
+use Lebytek\Framework\Application\UseCases\Usuarios\ActualizarUsuarioUseCase;
+use Lebytek\Framework\Application\UseCases\Usuarios\EliminarUsuarioUseCase;
+use Lebytek\Framework\Application\DTO\Usuarios\CrearUsuarioDTO;
+use Lebytek\Framework\Application\DTO\Usuarios\ActualizarUsuarioDTO;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\RolRepositoryInterface;
+use Lebytek\Framework\Domain\Policies\AvatarPolicy;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Application\Services\RbacService;
+use Lebytek\Framework\Application\UseCases\Avatares\EliminarAvatarUseCase;
+use Lebytek\Framework\Application\UseCases\Avatares\FijarAvatarActualUseCase;
+use Lebytek\Framework\Application\UseCases\Avatares\ListarAvataresUseCase;
+use Lebytek\Framework\Application\UseCases\Avatares\SubirAvatarUseCase;
+use Lebytek\Framework\Presentation\Presenters\AvatarPresenter;
 
 final class UsuariosController extends AdminBaseController
 {

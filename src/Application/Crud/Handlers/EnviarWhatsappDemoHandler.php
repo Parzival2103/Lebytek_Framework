@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Crud\Handlers;
+namespace Lebytek\Framework\Application\Crud\Handlers;
 
-use App\Application\Crud\Context\CrudActionContext;
-use App\Application\Integrations\IntegrationsFactory;
-use App\Domain\Integrations\MessageRequest;
-use App\Domain\Interfaces\CrudActionHandlerInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
+use Lebytek\Framework\Application\Integrations\IntegrationsFactory;
+use Lebytek\Framework\Domain\Integrations\MessageRequest;
+use Lebytek\Framework\Domain\Interfaces\CrudActionHandlerInterface;
 
 /*
 |--------------------------------------------------------------------------

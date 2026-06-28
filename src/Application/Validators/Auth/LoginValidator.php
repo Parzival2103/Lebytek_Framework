@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Validators\Auth;
+namespace Lebytek\Framework\Application\Validators\Auth;
 
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 final class LoginValidator
 {

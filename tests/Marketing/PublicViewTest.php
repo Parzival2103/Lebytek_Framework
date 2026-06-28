@@ -2,7 +2,7 @@
 // tests/Marketing/PublicViewTest.php
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 test('layout público renderiza el contenido inyectado y el nombre de empresa', function (): void {
     $html = ViewHelper::render('publico/landing', [

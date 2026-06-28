@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Entities\AuthToken;
-use App\Domain\Interfaces\AuthTokenRepositoryInterface;
+use Lebytek\Framework\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Interfaces\AuthTokenRepositoryInterface;
 
 /*
 |--------------------------------------------------------------------------

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 require_once ROOT_PATH . '/tests/fixtures/install_repos.php';
 
-use App\Application\Install\DeploymentStatus;
-use App\Application\Install\Installer;
-use App\Application\Install\ModuleRegistry;
-use App\Application\Install\DependencyResolver;
-use App\Infrastructure\Install\SqlFileRunner;
+use Lebytek\Framework\Application\Install\DeploymentStatus;
+use Lebytek\Framework\Application\Install\Installer;
+use Lebytek\Framework\Application\Install\ModuleRegistry;
+use Lebytek\Framework\Application\Install\DependencyResolver;
+use Lebytek\Framework\Infrastructure\Install\SqlFileRunner;
 
 function status_para(array $instalados): DeploymentStatus
 {

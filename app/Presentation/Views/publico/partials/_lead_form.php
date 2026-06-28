@@ -2,8 +2,8 @@
 // app/Presentation/Views/publico/partials/_lead_form.php
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
-use App\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Security\Session;
 
 $flash = $flashAll ?? Session::flashAll();
 $flash = is_array($flash) ? $flash : [];

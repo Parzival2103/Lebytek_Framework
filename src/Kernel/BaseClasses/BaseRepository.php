@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\BaseClasses;
+namespace Lebytek\Framework\Kernel\BaseClasses;
 
 use PDO;
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\Database\Connection;
 
 /*
 |--------------------------------------------------------------------------

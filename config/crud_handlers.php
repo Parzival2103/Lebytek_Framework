@@ -22,16 +22,16 @@ declare(strict_types=1);
 */
 
 return [
-    'demo_producto_toggle' => \App\Application\Crud\Handlers\DemoProductoToggleStatusHandler::class,
-    'demo_producto_state_guard' => \App\Application\Crud\Handlers\DemoProductoStateGuard::class,
+    'demo_producto_toggle' => \Lebytek\Framework\Application\Crud\Handlers\DemoProductoToggleStatusHandler::class,
+    'demo_producto_state_guard' => \Lebytek\Framework\Application\Crud\Handlers\DemoProductoStateGuard::class,
 
-    'demo_pedido_total'        => \App\Application\Crud\Handlers\DemoPedidoTotalValidator::class,
-    'demo_pedido_pagar_guard'  => \App\Application\Crud\Handlers\DemoPedidoPagarGuard::class,
-    'demo_cliente_contacto'    => \App\Application\Crud\Handlers\DemoClienteContactoValidator::class,
+    'demo_pedido_total'        => \Lebytek\Framework\Application\Crud\Handlers\DemoPedidoTotalValidator::class,
+    'demo_pedido_pagar_guard'  => \Lebytek\Framework\Application\Crud\Handlers\DemoPedidoPagarGuard::class,
+    'demo_cliente_contacto'    => \Lebytek\Framework\Application\Crud\Handlers\DemoClienteContactoValidator::class,
 
-    'enviar_whatsapp_demo' => \App\Application\Crud\Handlers\EnviarWhatsappDemoHandler::class,
+    'enviar_whatsapp_demo' => \Lebytek\Framework\Application\Crud\Handlers\EnviarWhatsappDemoHandler::class,
 
     // Ejemplo (descomenta y crea la clase al implementar lógica real):
-    // 'clientes'        => \App\Application\Crud\Handlers\ClientesHandler::class,
-    // 'anticipo_minimo' => \App\Application\Crud\Handlers\AnticipoMinimoValidator::class,
+    // 'clientes'        => \Lebytek\Framework\Application\Crud\Handlers\ClientesHandler::class,
+    // 'anticipo_minimo' => \Lebytek\Framework\Application\Crud\Handlers\AnticipoMinimoValidator::class,
 ];

@@ -2,8 +2,8 @@
 // tests/Integrations/RateLimiterTest.php
 declare(strict_types=1);
 
-use App\Application\Integrations\RateLimiter;
-use App\Domain\Integrations\IntegrationLogRepositoryInterface;
+use Lebytek\Framework\Application\Integrations\RateLimiter;
+use Lebytek\Framework\Domain\Integrations\IntegrationLogRepositoryInterface;
 
 /** Log repo falso que devuelve un conteo fijo. */
 function fakeLogRepoReturning(int $count): IntegrationLogRepositoryInterface

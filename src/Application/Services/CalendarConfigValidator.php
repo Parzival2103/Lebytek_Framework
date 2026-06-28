@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 final class CalendarConfigValidator
 {

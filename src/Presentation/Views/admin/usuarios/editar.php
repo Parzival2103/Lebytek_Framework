@@ -1,4 +1,4 @@
-<?php use App\Kernel\Helpers\ViewHelper; ?>
+<?php use Lebytek\Framework\Kernel\Helpers\ViewHelper; ?>
 
 <div class="row justify-content-center">
     <div class="col-12 col-xl-8">

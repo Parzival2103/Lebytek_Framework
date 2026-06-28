@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Reporte;
+namespace Lebytek\Framework\Application\Reporte;
 
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 /**
  * Valida la configuración de una fuente reportable contra las columnas reales del

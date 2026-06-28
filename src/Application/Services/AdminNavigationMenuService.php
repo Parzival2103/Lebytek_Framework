@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Interfaces\MenuCatalogRepositoryInterface;
-use App\Domain\Policies\RbacPolicy;
-use App\Kernel\Vertical\VerticalProfile;
+use Lebytek\Framework\Domain\Interfaces\MenuCatalogRepositoryInterface;
+use Lebytek\Framework\Domain\Policies\RbacPolicy;
+use Lebytek\Framework\Kernel\Vertical\VerticalProfile;
 
 /*
 |--------------------------------------------------------------------------

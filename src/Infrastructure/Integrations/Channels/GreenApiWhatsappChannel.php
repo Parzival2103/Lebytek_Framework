@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Integrations\Channels;
+namespace Lebytek\Framework\Infrastructure\Integrations\Channels;
 
-use App\Domain\Integrations\ApiConnectorInterface;
-use App\Domain\Integrations\MessageChannelInterface;
-use App\Domain\Integrations\MessageRequest;
-use App\Domain\Integrations\MessageResult;
+use Lebytek\Framework\Domain\Integrations\ApiConnectorInterface;
+use Lebytek\Framework\Domain\Integrations\MessageChannelInterface;
+use Lebytek\Framework\Domain\Integrations\MessageRequest;
+use Lebytek\Framework\Domain\Integrations\MessageResult;
 
 /*
 |--------------------------------------------------------------------------

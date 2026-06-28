@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Pdf;
+namespace Lebytek\Framework\Domain\Pdf;
 
 /**
  * Configuración de página para un documento PDF: tamaño de papel, orientación y

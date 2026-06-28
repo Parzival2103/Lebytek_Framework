@@ -7,8 +7,8 @@ namespace App\Infrastructure\Marketing\LeadCapture;
 use App\Domain\Marketing\Contracts\LeadCaptureHandlerInterface;
 use App\Domain\Marketing\ValueObjects\LeadDraft;
 use App\Domain\Marketing\ValueObjects\LeadResult;
-use App\Domain\Interfaces\MailerInterface;
-use App\Application\DTO\Mail\MensajeCorreo;
+use Lebytek\Framework\Domain\Interfaces\MailerInterface;
+use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
 
 final class NotifyInternalHandler implements LeadCaptureHandlerInterface
 {

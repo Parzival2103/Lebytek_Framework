@@ -1,7 +1,7 @@
 <?php
 
-use App\Presentation\Middlewares\AuthMiddleware;
-use App\Presentation\Controllers\Api\HealthController;
+use Lebytek\Framework\Presentation\Middlewares\AuthMiddleware;
+use Lebytek\Framework\Presentation\Controllers\Api\HealthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,8 +17,8 @@ $router->group([
 ], function ($router) {
 
     // Placeholder — descomentar al implementar controladores API
-    // $router->get('/usuarios',     [App\Presentation\Api\UsuariosApiController::class, 'index']);
-    // $router->get('/usuarios/{id}',[App\Presentation\Api\UsuariosApiController::class, 'show']);
+    // $router->get('/usuarios',     [Lebytek\Framework\Presentation\Api\UsuariosApiController::class, 'index']);
+    // $router->get('/usuarios/{id}',[Lebytek\Framework\Presentation\Api\UsuariosApiController::class, 'show']);
 
     $router->get('/ping', [HealthController::class, 'ping']);
 });

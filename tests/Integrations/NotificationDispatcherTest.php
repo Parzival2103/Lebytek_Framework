@@ -2,13 +2,13 @@
 // tests/Integrations/NotificationDispatcherTest.php
 declare(strict_types=1);
 
-use App\Application\Integrations\ChannelRegistry;
-use App\Application\Integrations\NotificationDispatcher;
-use App\Application\Integrations\RateLimiter;
-use App\Domain\Integrations\IntegrationLogRepositoryInterface;
-use App\Domain\Integrations\MessageChannelInterface;
-use App\Domain\Integrations\MessageRequest;
-use App\Domain\Integrations\MessageResult;
+use Lebytek\Framework\Application\Integrations\ChannelRegistry;
+use Lebytek\Framework\Application\Integrations\NotificationDispatcher;
+use Lebytek\Framework\Application\Integrations\RateLimiter;
+use Lebytek\Framework\Domain\Integrations\IntegrationLogRepositoryInterface;
+use Lebytek\Framework\Domain\Integrations\MessageChannelInterface;
+use Lebytek\Framework\Domain\Integrations\MessageRequest;
+use Lebytek\Framework\Domain\Integrations\MessageResult;
 
 /** Log repo falso que captura la última llamada a record(). */
 class SpyLogRepo implements IntegrationLogRepositoryInterface

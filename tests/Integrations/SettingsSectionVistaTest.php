@@ -2,7 +2,7 @@
 // tests/Integrations/SettingsSectionVistaTest.php
 declare(strict_types=1);
 
-use App\Infrastructure\Integrations\Settings\IntegrationsWhatsappSettingsProvider;
+use Lebytek\Framework\Infrastructure\Integrations\Settings\IntegrationsWhatsappSettingsProvider;
 use App\Infrastructure\Marketing\Settings\MarketingCorreoSettingsProvider;
 
 test('la sección de integraciones declara permiso y vista custom', function () {

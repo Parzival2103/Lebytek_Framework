@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Presentation\Controllers\Publico;
 
-use App\Kernel\BaseClasses\BaseController;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Kernel\BaseClasses\BaseController;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
 use App\Domain\Marketing\ValueObjects\MagicLinkToken;
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\Database\Connection;
 
 final class PortalClienteController extends BaseController
 {

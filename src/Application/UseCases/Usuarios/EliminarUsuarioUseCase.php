@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Usuarios;
+namespace Lebytek\Framework\Application\UseCases\Usuarios;
 
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 final class EliminarUsuarioUseCase
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Dashboard;
+namespace Lebytek\Framework\Domain\Dashboard;
 
 /**
  * Fragmento aportado por un proveedor. Arrays planos según docs/modules/modulo-dashboard.md.

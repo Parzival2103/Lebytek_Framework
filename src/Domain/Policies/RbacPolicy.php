@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Policies;
+namespace Lebytek\Framework\Domain\Policies;
 
 /*
 |--------------------------------------------------------------------------

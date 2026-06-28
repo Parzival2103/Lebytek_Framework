@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Interfaces;
+namespace Lebytek\Framework\Domain\Interfaces;
 
-use App\Domain\Entities\Permiso;
+use Lebytek\Framework\Domain\Entities\Permiso;
 
 interface PermisoRepositoryInterface
 {

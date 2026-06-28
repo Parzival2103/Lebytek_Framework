@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudHandlerRegistry;
-use App\Domain\Interfaces\CrudActionHandlerInterface;
-use App\Domain\Interfaces\CrudHookHandlerInterface;
+use Lebytek\Framework\Application\Services\CrudHandlerRegistry;
+use Lebytek\Framework\Domain\Interfaces\CrudActionHandlerInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudHookHandlerInterface;
 
 require_once dirname(__DIR__) . '/fixtures/hook_handlers.php';
 

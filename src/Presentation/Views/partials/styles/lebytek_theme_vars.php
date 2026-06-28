@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $includeNavChrome = $includeNavChrome ?? true;
 $lebytekCssVariables = is_array($lebytekCssVariables ?? null) ? $lebytekCssVariables : [];

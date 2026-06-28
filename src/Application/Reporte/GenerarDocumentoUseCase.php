@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Reporte;
+namespace Lebytek\Framework\Application\Reporte;
 
-use App\Application\Pdf\PdfRenderingService;
-use App\Application\Pdf\PdfTemplateRegistry;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Reporte\ReporteRecordSourceInterface;
-use App\Kernel\Config\Config;
+use Lebytek\Framework\Application\Pdf\PdfRenderingService;
+use Lebytek\Framework\Application\Pdf\PdfTemplateRegistry;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Reporte\ReporteRecordSourceInterface;
+use Lebytek\Framework\Kernel\Config\Config;
 
 /**
  * Modo registro: valida fuente+plantilla, lee el registro con scope y renderiza PDF.

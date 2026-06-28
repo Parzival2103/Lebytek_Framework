@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Kernel\Config\DebugMode;
+use Lebytek\Framework\Kernel\Config\DebugMode;
 
 // ── Caracterización: entornos no-producción conservan el flag configurado ────
 test('DebugMode respeta debug=true en local', function (): void {

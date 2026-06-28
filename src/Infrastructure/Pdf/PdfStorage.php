@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Pdf;
+namespace Lebytek\Framework\Infrastructure\Pdf;
 
 /**
  * Persiste bytes de PDF bajo storage/pdf con un nombre saneado. Útil para reportes

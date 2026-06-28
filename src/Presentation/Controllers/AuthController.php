@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers;
+namespace Lebytek\Framework\Presentation\Controllers;
 
-use App\Kernel\BaseClasses\BaseController;
-use App\Kernel\Config\Config;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Application\UseCases\Auth\LoginUseCase;
-use App\Application\UseCases\Auth\LogoutUseCase;
-use App\Application\DTO\Auth\LoginDTO;
-use App\Application\Services\ConfiguracionService;
-use App\Kernel\Helpers\LebytekUiConfig;
-use App\Domain\Exceptions\AuthException;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Kernel\BaseClasses\BaseController;
+use Lebytek\Framework\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Application\UseCases\Auth\LoginUseCase;
+use Lebytek\Framework\Application\UseCases\Auth\LogoutUseCase;
+use Lebytek\Framework\Application\DTO\Auth\LoginDTO;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Kernel\Helpers\LebytekUiConfig;
+use Lebytek\Framework\Domain\Exceptions\AuthException;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 final class AuthController extends BaseController
 {

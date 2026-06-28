@@ -2,7 +2,7 @@
 // tests/Integrations/SignedTokenTest.php
 declare(strict_types=1);
 
-use App\Kernel\Security\SignedToken;
+use Lebytek\Framework\Kernel\Security\SignedToken;
 
 test('SignedToken round-trip devuelve el accountId', function () {
     $t = SignedToken::make(42, 3600);

@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers\Admin;
+namespace Lebytek\Framework\Presentation\Controllers\Admin;
 
-use App\Presentation\Controllers\AdminBaseController;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Domain\Entities\Permiso;
-use App\Domain\ValueObjects\Slug;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\PermisoRepositoryInterface;
-use App\Domain\Rules\PermisoModuloFormatRule;
-use App\Domain\Rules\PermisoSlugFormatRule;
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Presentation\Controllers\AdminBaseController;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Domain\Entities\Permiso;
+use Lebytek\Framework\Domain\ValueObjects\Slug;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\PermisoRepositoryInterface;
+use Lebytek\Framework\Domain\Rules\PermisoModuloFormatRule;
+use Lebytek\Framework\Domain\Rules\PermisoSlugFormatRule;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
 
 final class PermisosController extends AdminBaseController
 {

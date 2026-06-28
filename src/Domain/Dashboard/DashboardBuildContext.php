@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Dashboard;
+namespace Lebytek\Framework\Domain\Dashboard;
 
 /**
  * Datos del usuario ya autenticado filtrados para el dominio (sin dependencias de Session en capas inferiores al controlador).

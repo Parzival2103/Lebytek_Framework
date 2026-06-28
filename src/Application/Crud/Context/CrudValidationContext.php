@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Crud\Context;
+namespace Lebytek\Framework\Application\Crud\Context;
 
 /**
  * Contexto para validadores de formulario externos (CrudValidatorInterface).

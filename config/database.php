@@ -1,6 +1,6 @@
 <?php
 
-use App\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\EnvLoader;
 
 return [
     'host'     => EnvLoader::get('DB_HOST',     '127.0.0.1'),

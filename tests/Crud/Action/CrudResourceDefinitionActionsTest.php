@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Entities\Crud\CrudActionDefinition;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition;
 
 test('CrudResourceDefinition: no actions block falls back to list.actions builtins', function (): void {
     $def = CrudResourceDefinition::fromArray([

@@ -2,7 +2,7 @@
 // app/Presentation/Views/publico/partials/_pricing.php
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $paquetes = is_array($paquetes ?? null) ? $paquetes : [];
 if ($paquetes === []) {

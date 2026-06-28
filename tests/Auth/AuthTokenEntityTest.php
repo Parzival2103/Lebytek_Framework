@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Entities\AuthToken;
 
 test('AuthToken: desdeFila hidrata todos los campos', function (): void {
     $token = AuthToken::desdeFila([

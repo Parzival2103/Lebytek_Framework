@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Crud\Context;
+namespace Lebytek\Framework\Application\Crud\Context;
 
 /**
  * Base inmutable de los contextos del CRUD Engine.

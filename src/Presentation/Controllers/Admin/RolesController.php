@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers\Admin;
+namespace Lebytek\Framework\Presentation\Controllers\Admin;
 
-use App\Presentation\Controllers\AdminBaseController;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Domain\Exceptions\ValidationException;
-use App\Application\UseCases\Roles\CrearRolUseCase;
-use App\Application\UseCases\Roles\ActualizarRolUseCase;
-use App\Application\UseCases\Roles\EliminarRolUseCase;
-use App\Application\UseCases\Roles\ListarRolesUseCase;
-use App\Application\DTO\Roles\CrearRolDTO;
-use App\Application\DTO\Roles\ActualizarRolDTO;
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Presentation\Controllers\AdminBaseController;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\UseCases\Roles\CrearRolUseCase;
+use Lebytek\Framework\Application\UseCases\Roles\ActualizarRolUseCase;
+use Lebytek\Framework\Application\UseCases\Roles\EliminarRolUseCase;
+use Lebytek\Framework\Application\UseCases\Roles\ListarRolesUseCase;
+use Lebytek\Framework\Application\DTO\Roles\CrearRolDTO;
+use Lebytek\Framework\Application\DTO\Roles\ActualizarRolDTO;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
 
 final class RolesController extends AdminBaseController
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Pdf;
+namespace Lebytek\Framework\Domain\Pdf;
 
 /** Bloque de totales: lista de ['label','value','format'?]. */
 final class PdfTotalsBlock implements PdfBlock

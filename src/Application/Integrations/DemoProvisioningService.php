@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Integrations;
+namespace Lebytek\Framework\Application\Integrations;
 
-use App\Domain\Integrations\IntegrationAccount;
-use App\Domain\Integrations\IntegrationAccountRepositoryInterface;
-use App\Domain\Integrations\MessageRequest;
-use App\Domain\Integrations\MessageSenderInterface;
-use App\Domain\Integrations\PartnerConnectorInterface;
-use App\Kernel\Security\SignedToken;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccount;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccountRepositoryInterface;
+use Lebytek\Framework\Domain\Integrations\MessageRequest;
+use Lebytek\Framework\Domain\Integrations\MessageSenderInterface;
+use Lebytek\Framework\Domain\Integrations\PartnerConnectorInterface;
+use Lebytek\Framework\Kernel\Security\SignedToken;
 
 final class DemoProvisioningService
 {

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers\Admin;
+namespace Lebytek\Framework\Presentation\Controllers\Admin;
 
-use App\Application\Pdf\PdfKitDemoData;
-use App\Application\Pdf\PdfRenderingService;
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\ConfiguracionService;
-use App\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Vertical\VerticalProfile;
-use App\Presentation\Controllers\AdminBaseController;
+use Lebytek\Framework\Application\Pdf\PdfKitDemoData;
+use Lebytek\Framework\Application\Pdf\PdfRenderingService;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Application\UseCases\Pdf\BuildPdfKitDemoViewModelUseCase;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Vertical\VerticalProfile;
+use Lebytek\Framework\Presentation\Controllers\AdminBaseController;
 
 /**
  * Vistas demo del módulo pdf-kit: previsualización de componentes y descarga PDF.

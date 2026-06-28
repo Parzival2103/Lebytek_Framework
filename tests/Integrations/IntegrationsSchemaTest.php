@@ -12,9 +12,9 @@ test('el bootstrap SQL de integrations es idempotente y crea int_logs', function
 });
 
 test('IntegrationLogRepository implementa el puerto del dominio', function (): void {
-    $ref = new ReflectionClass(\App\Infrastructure\Integrations\Repositories\IntegrationLogRepository::class);
+    $ref = new ReflectionClass(\Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationLogRepository::class);
     assert_true(
-        $ref->implementsInterface(\App\Domain\Integrations\IntegrationLogRepositoryInterface::class),
+        $ref->implementsInterface(\Lebytek\Framework\Domain\Integrations\IntegrationLogRepositoryInterface::class),
         'implementa IntegrationLogRepositoryInterface'
     );
 });

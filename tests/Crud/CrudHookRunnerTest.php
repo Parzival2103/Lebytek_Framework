@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudWriteContext;
-use App\Application\Services\CrudHandlerRegistry;
-use App\Application\Services\CrudHookRunner;
-use App\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Application\Crud\Context\CrudWriteContext;
+use Lebytek\Framework\Application\Services\CrudHandlerRegistry;
+use Lebytek\Framework\Application\Services\CrudHookRunner;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 
 require_once dirname(__DIR__) . '/fixtures/hook_handlers.php';
 

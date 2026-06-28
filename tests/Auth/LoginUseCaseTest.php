@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Application\DTO\Auth\LoginDTO;
-use App\Application\Services\AuthService;
-use App\Application\Services\LoginRateLimitService;
-use App\Application\UseCases\Auth\LoginUseCase;
-use App\Application\Validators\Auth\LoginValidator;
-use App\Domain\Entities\Usuario;
-use App\Domain\Exceptions\AuthException;
-use App\Domain\ValueObjects\Email;
-use App\Kernel\Security\Hash;
+use Lebytek\Framework\Application\DTO\Auth\LoginDTO;
+use Lebytek\Framework\Application\Services\AuthService;
+use Lebytek\Framework\Application\Services\LoginRateLimitService;
+use Lebytek\Framework\Application\UseCases\Auth\LoginUseCase;
+use Lebytek\Framework\Application\Validators\Auth\LoginValidator;
+use Lebytek\Framework\Domain\Entities\Usuario;
+use Lebytek\Framework\Domain\Exceptions\AuthException;
+use Lebytek\Framework\Domain\ValueObjects\Email;
+use Lebytek\Framework\Kernel\Security\Hash;
 
 require_once __DIR__ . '/../fixtures/auth_fakes.php';
 require_once __DIR__ . '/../fixtures/avatar_fakes.php';

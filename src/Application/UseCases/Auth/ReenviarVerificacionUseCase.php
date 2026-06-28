@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Auth;
+namespace Lebytek\Framework\Application\UseCases\Auth;
 
-use App\Application\Services\AuthTokenService;
-use App\Application\Services\CorreoAuthService;
-use App\Domain\Entities\AuthToken;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\ValueObjects\Email;
+use Lebytek\Framework\Application\Services\AuthTokenService;
+use Lebytek\Framework\Application\Services\CorreoAuthService;
+use Lebytek\Framework\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\ValueObjects\Email;
 
 /*
 |--------------------------------------------------------------------------

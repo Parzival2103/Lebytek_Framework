@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Exceptions;
+namespace Lebytek\Framework\Domain\Exceptions;
 
-use App\Kernel\Exceptions\AppException;
+use Lebytek\Framework\Kernel\Exceptions\AppException;
 
 class AccesoException extends AppException
 {

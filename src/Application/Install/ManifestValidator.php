@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Install;
+namespace Lebytek\Framework\Application\Install;
 
 /**
  * Valida un conjunto de manifiestos contra el estado real del filesystem.

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Integrations\Repositories;
+namespace Lebytek\Framework\Infrastructure\Integrations\Repositories;
 
-use App\Domain\Integrations\IntegrationLogRepositoryInterface;
-use App\Kernel\BaseClasses\BaseRepository;
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Domain\Integrations\IntegrationLogRepositoryInterface;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Kernel\Database\Connection;
 
 /*
 |--------------------------------------------------------------------------

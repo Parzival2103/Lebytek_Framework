@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\Archivo;
+use Lebytek\Framework\Domain\Entities\Archivo;
 
 require_once __DIR__ . '/../fixtures/archivo_repos.php';
 

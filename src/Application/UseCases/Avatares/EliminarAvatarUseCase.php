@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Avatares;
+namespace Lebytek\Framework\Application\UseCases\Avatares;
 
-use App\Domain\Interfaces\ArchivoRepositoryInterface;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\ArchivoRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
 
 /*
 |--------------------------------------------------------------------------

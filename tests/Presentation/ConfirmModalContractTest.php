@@ -2,43 +2,52 @@
 
 declare(strict_types=1);
 
-test('Presentation views: no crudDeleteModal ni window.confirm en markup', function (): void {
-    $viewsPath = APP_PATH . '/Presentation/Views';
-    $iterator = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($viewsPath, FilesystemIterator::SKIP_DOTS)
-    );
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
-    foreach ($iterator as $file) {
-        if (!$file->isFile() || $file->getExtension() !== 'php') {
+test('Presentation views: no crudDeleteModal ni window.confirm en markup', function (): void {
+    $viewsPaths = [
+        APP_PATH . '/Presentation/Views',
+        dirname(APP_PATH) . '/src/Presentation/Views',
+    ];
+
+    foreach ($viewsPaths as $viewsPath) {
+        if (!is_dir($viewsPath)) {
             continue;
         }
-        $content = (string) file_get_contents($file->getPathname());
-        $relative = str_replace($viewsPath . DIRECTORY_SEPARATOR, '', $file->getPathname());
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($viewsPath, FilesystemIterator::SKIP_DOTS)
+        );
 
-        assert_true(
-            !str_contains($content, 'crudDeleteModal'),
-            'Legacy modal reference in: ' . $relative
-        );
-        assert_true(
-            !str_contains($content, 'window.confirm'),
-            'Native confirm reference in: ' . $relative
-        );
-        assert_true(
-            !str_contains($content, 'return confirm('),
-            'Native confirm() inline in: ' . $relative
-        );
+        foreach ($iterator as $file) {
+            if (!$file->isFile() || $file->getExtension() !== 'php') {
+                continue;
+            }
+            $content = (string) file_get_contents($file->getPathname());
+            $relative = str_replace($viewsPath . DIRECTORY_SEPARATOR, '', $file->getPathname());
+
+            assert_true(
+                !str_contains($content, 'crudDeleteModal'),
+                'Legacy modal reference in: ' . $relative
+            );
+            assert_true(
+                !str_contains($content, 'window.confirm'),
+                'Native confirm reference in: ' . $relative
+            );
+            assert_true(
+                !str_contains($content, 'return confirm('),
+                'Native confirm() inline in: ' . $relative
+            );
+        }
     }
 });
 
 test('Layout base incluye partial confirm_modal', function (): void {
-    $layoutPath = APP_PATH . '/Presentation/Views/layouts/base.php';
-    $content = (string) file_get_contents($layoutPath);
+    $content = (string) file_get_contents(ViewHelper::resolve('layouts/base'));
     assert_true(str_contains($content, "partial('confirm_modal')"));
 });
 
 test('Partial confirm_modal incluye slot de icono y elementos requeridos', function (): void {
-    $path = APP_PATH . '/Presentation/Views/partials/confirm_modal.php';
-    $content = (string) file_get_contents($path);
+    $content = (string) file_get_contents(ViewHelper::resolve('partials/confirm_modal'));
 
     assert_true(str_contains($content, 'id="confirmModalIcon"'), 'Falta slot de icono');
     assert_true(

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Infrastructure\Install\SqlFileRunner;
+use Lebytek\Framework\Infrastructure\Install\SqlFileRunner;
 
 test('SqlFileRunner::checksum es sha256 del contenido del archivo', function (): void {
     $tmp = tempnam(sys_get_temp_dir(), 'sql');

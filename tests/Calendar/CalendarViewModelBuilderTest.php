@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Services\CalendarConfigLoader;
-use App\Application\Services\CalendarConfigValidator;
-use App\Application\Services\CalendarViewModelBuilder;
-use App\Application\Services\RbacService;
-use App\Domain\Exceptions\AccesoException;
+use Lebytek\Framework\Application\Services\CalendarConfigLoader;
+use Lebytek\Framework\Application\Services\CalendarConfigValidator;
+use Lebytek\Framework\Application\Services\CalendarViewModelBuilder;
+use Lebytek\Framework\Application\Services\RbacService;
+use Lebytek\Framework\Domain\Exceptions\AccesoException;
 
 function vmb_builder(): CalendarViewModelBuilder
 {

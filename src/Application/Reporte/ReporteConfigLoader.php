@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Reporte;
+namespace Lebytek\Framework\Application\Reporte;
 
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Reporte\ReporteFuente;
-use App\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Reporte\ReporteFuente;
+use Lebytek\Framework\Kernel\Logging\AppLogger;
 
 /**
  * Carga fuentes reportables desde config/reportes/{key}.json, validándolas contra las

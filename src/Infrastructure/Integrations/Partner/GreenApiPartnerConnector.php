@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Integrations\Partner;
+namespace Lebytek\Framework\Infrastructure\Integrations\Partner;
 
-use App\Domain\Integrations\ApiConnectorInterface;
-use App\Domain\Integrations\PartnerConnectorInterface;
+use Lebytek\Framework\Domain\Integrations\ApiConnectorInterface;
+use Lebytek\Framework\Domain\Integrations\PartnerConnectorInterface;
 
 final class GreenApiPartnerConnector implements PartnerConnectorInterface
 {

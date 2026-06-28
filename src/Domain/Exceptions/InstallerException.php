@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Exceptions;
+namespace Lebytek\Framework\Domain\Exceptions;
 
 use RuntimeException;
 

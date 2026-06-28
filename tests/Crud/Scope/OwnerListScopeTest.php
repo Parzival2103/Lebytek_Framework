@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudListContext;
-use App\Application\Crud\Scopes\OwnerListScope;
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Application\Crud\Scopes\OwnerListScope;
 
 function scope_ctx(?int $userId): CrudListContext
 {

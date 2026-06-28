@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Integrations\Repositories;
+namespace Lebytek\Framework\Infrastructure\Integrations\Repositories;
 
-use App\Domain\Integrations\IntegrationAccount;
-use App\Domain\Integrations\IntegrationAccountRepositoryInterface;
-use App\Kernel\BaseClasses\BaseRepository;
-use App\Kernel\Database\Connection;
-use App\Kernel\Security\Crypto;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccount;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccountRepositoryInterface;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\Security\Crypto;
 
 final class IntegrationAccountRepository extends BaseRepository implements IntegrationAccountRepositoryInterface
 {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\Usuario;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\ValueObjects\Email;
+use Lebytek\Framework\Domain\Entities\Usuario;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\ValueObjects\Email;
 
 if (!class_exists('FakeUsuarioRepository')) {
     /** Repositorio de usuarios en memoria para tests de avatares/perfil. */

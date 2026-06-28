@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Integrations\Http;
+namespace Lebytek\Framework\Infrastructure\Integrations\Http;
 
-use App\Domain\Integrations\ApiConnectorInterface;
+use Lebytek\Framework\Domain\Integrations\ApiConnectorInterface;
 
 /*
 |--------------------------------------------------------------------------

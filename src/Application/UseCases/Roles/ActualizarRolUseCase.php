@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Roles;
+namespace Lebytek\Framework\Application\UseCases\Roles;
 
-use App\Application\DTO\Roles\ActualizarRolDTO;
-use App\Domain\Entities\Rol;
-use App\Domain\ValueObjects\Slug;
-use App\Domain\Interfaces\RolRepositoryInterface;
-use App\Domain\Interfaces\PermisoRepositoryInterface;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\DTO\Roles\ActualizarRolDTO;
+use Lebytek\Framework\Domain\Entities\Rol;
+use Lebytek\Framework\Domain\ValueObjects\Slug;
+use Lebytek\Framework\Domain\Interfaces\RolRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\PermisoRepositoryInterface;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 final class ActualizarRolUseCase
 {

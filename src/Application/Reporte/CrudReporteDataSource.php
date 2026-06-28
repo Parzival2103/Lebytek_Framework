@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Reporte;
+namespace Lebytek\Framework\Application\Reporte;
 
-use App\Application\Services\CrudDataService;
-use App\Application\Services\CrudRelationService;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Reporte\ReporteDataSourceInterface;
-use App\Domain\Reporte\ReporteRecordSourceInterface;
+use Lebytek\Framework\Application\Services\CrudDataService;
+use Lebytek\Framework\Application\Services\CrudRelationService;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Reporte\ReporteDataSourceInterface;
+use Lebytek\Framework\Domain\Reporte\ReporteRecordSourceInterface;
 
 /**
  * Adaptador de lectura de datos para reportes sobre CrudDataService.

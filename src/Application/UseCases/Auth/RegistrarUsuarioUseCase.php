@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Auth;
+namespace Lebytek\Framework\Application\UseCases\Auth;
 
-use App\Application\DTO\Auth\RegistroDTO;
-use App\Application\Services\AuthTokenService;
-use App\Application\Services\CorreoAuthService;
-use App\Application\Validators\Usuarios\CrearUsuarioValidator;
-use App\Domain\Entities\AuthToken;
-use App\Domain\Entities\Usuario;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\RolRepositoryInterface;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\ValueObjects\Email;
-use App\Kernel\Security\Hash;
+use Lebytek\Framework\Application\DTO\Auth\RegistroDTO;
+use Lebytek\Framework\Application\Services\AuthTokenService;
+use Lebytek\Framework\Application\Services\CorreoAuthService;
+use Lebytek\Framework\Application\Validators\Usuarios\CrearUsuarioValidator;
+use Lebytek\Framework\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Entities\Usuario;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\RolRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\ValueObjects\Email;
+use Lebytek\Framework\Kernel\Security\Hash;
 
 /*
 |--------------------------------------------------------------------------

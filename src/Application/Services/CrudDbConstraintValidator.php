@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Entities\CrudFieldDefinition;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Interfaces\CrudConstraintRepositoryInterface;
+use Lebytek\Framework\Domain\Entities\CrudFieldDefinition;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Interfaces\CrudConstraintRepositoryInterface;
 
 /**
  * Aplica constraints de DB declaradas en validation: `unique` y `exists`.

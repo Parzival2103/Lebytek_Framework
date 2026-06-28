@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\DTO\Files;
+namespace Lebytek\Framework\Application\DTO\Files;
 
 /*
 |--------------------------------------------------------------------------

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\UploadValidator;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\Services\UploadValidator;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 function up_file(string $name, int $size, int $error = UPLOAD_ERR_OK): array
 {

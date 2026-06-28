@@ -19,5 +19,5 @@ return [
     'calendars'     => ['demo_citas'],
     'permisos'      => [],
     'menu'          => [],
-    'providers'     => [\App\Infrastructure\Dashboard\CalendarDashboardProvider::class],
+    'providers'     => [\Lebytek\Framework\Infrastructure\Dashboard\CalendarDashboardProvider::class],
 ];

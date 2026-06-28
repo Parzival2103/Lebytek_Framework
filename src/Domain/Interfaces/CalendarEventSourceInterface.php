@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Domain\Interfaces;
+namespace Lebytek\Framework\Domain\Interfaces;
 
-use App\Domain\Calendar\DateRange;
+use Lebytek\Framework\Domain\Calendar\DateRange;
 
 /**
  * Fuente de filas para el feed de eventos de un calendario. La implementación

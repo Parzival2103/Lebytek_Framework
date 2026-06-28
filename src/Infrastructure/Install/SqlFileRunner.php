@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Install;
+namespace Lebytek\Framework\Infrastructure\Install;
 
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\Database\Connection;
 use RuntimeException;
 use Throwable;
 

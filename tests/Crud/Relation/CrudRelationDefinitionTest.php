@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\Crud\CrudRelationDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudRelationDefinition;
 
 test('CrudRelationDefinition: belongsTo expone columnas value/label y filtro', function (): void {
     $rel = CrudRelationDefinition::fromArray('categoria', [

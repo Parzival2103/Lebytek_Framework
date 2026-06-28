@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Crud\Handlers;
+namespace Lebytek\Framework\Application\Crud\Handlers;
 
-use App\Application\Crud\Context\CrudValidationContext;
-use App\Domain\Interfaces\CrudValidatorInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudValidationContext;
+use Lebytek\Framework\Domain\Interfaces\CrudValidatorInterface;
 
 /**
  * Demo de validación cross-field: un cliente activo debe tener teléfono.

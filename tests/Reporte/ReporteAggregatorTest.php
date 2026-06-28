@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Reporte\ReporteAggregator;
+use Lebytek\Framework\Application\Reporte\ReporteAggregator;
 
 function ra_rows(): array
 {

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repositories;
+namespace Lebytek\Framework\Infrastructure\Repositories;
 
-use App\Domain\Entities\Usuario;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Domain\ValueObjects\Email;
-use App\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Domain\Entities\Usuario;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Domain\ValueObjects\Email;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
 
 final class UsuarioRepository extends BaseRepository implements UsuarioRepositoryInterface
 {

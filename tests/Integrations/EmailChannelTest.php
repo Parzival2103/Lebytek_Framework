@@ -2,10 +2,10 @@
 // tests/Integrations/EmailChannelTest.php
 declare(strict_types=1);
 
-use App\Application\DTO\Mail\MensajeCorreo;
-use App\Domain\Integrations\MessageRequest;
-use App\Domain\Interfaces\MailerInterface;
-use App\Infrastructure\Integrations\Channels\EmailChannel;
+use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
+use Lebytek\Framework\Domain\Integrations\MessageRequest;
+use Lebytek\Framework\Domain\Interfaces\MailerInterface;
+use Lebytek\Framework\Infrastructure\Integrations\Channels\EmailChannel;
 
 /** Mailer falso que captura el último mensaje o lanza. */
 final class SpyMailer implements MailerInterface

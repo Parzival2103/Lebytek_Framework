@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Reporte;
+namespace Lebytek\Framework\Application\Reporte;
 
-use App\Domain\Reporte\ReporteDataSourceInterface;
-use App\Domain\Reporte\ReporteFuente;
-use App\Domain\Reporte\ReporteGuardado;
+use Lebytek\Framework\Domain\Reporte\ReporteDataSourceInterface;
+use Lebytek\Framework\Domain\Reporte\ReporteFuente;
+use Lebytek\Framework\Domain\Reporte\ReporteGuardado;
 
 /**
  * Construye el payload de datos de un reporte de colección: interseca la selección

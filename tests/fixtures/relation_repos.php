@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Interfaces\CrudRelationRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudRelationRepositoryInterface;
 
 if (!class_exists('FakeRelationRepository')) {
     /** Repositorio de relaciones en memoria para tests sin DB. */

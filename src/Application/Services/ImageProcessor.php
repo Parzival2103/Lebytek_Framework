@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Application\DTO\Files\ImageOptions;
-use App\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Application\DTO\Files\ImageOptions;
+use Lebytek\Framework\Kernel\Logging\AppLogger;
 
 /*
 |--------------------------------------------------------------------------

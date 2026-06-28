@@ -1,6 +1,6 @@
 <?php
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $demoPayload = is_array($demoPayload ?? null) ? $demoPayload : [];
 $componentes = is_array($componentes ?? null) ? $componentes : [];

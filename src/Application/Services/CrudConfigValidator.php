@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\CrudHookHandlerInterface;
-use App\Infrastructure\Repositories\GenericCrudRepository;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\CrudHookHandlerInterface;
+use Lebytek\Framework\Infrastructure\Repositories\GenericCrudRepository;
 
 final class CrudConfigValidator
 {
@@ -143,7 +143,7 @@ final class CrudConfigValidator
                 $class = $this->handlerRegistry->classForKey($scopeHandler);
                 if ($class === null || !class_exists($class)) {
                     $errors[] = "La clase del scope '{$scopeHandler}' no existe o no es autoload-eable.";
-                } elseif (!in_array(\App\Domain\Interfaces\CrudListScopeInterface::class, class_implements($class) ?: [], true)) {
+                } elseif (!in_array(\Lebytek\Framework\Domain\Interfaces\CrudListScopeInterface::class, class_implements($class) ?: [], true)) {
                     $errors[] = "El scope '{$scopeHandler}' ({$class}) debe implementar CrudListScopeInterface.";
                 }
             }
@@ -207,7 +207,7 @@ final class CrudConfigValidator
                 $errors[] = "La clase del validador '{$validatorKey}' no existe o no es autoload-eable.";
                 continue;
             }
-            if (!in_array(\App\Domain\Interfaces\CrudValidatorInterface::class, class_implements($class) ?: [], true)) {
+            if (!in_array(\Lebytek\Framework\Domain\Interfaces\CrudValidatorInterface::class, class_implements($class) ?: [], true)) {
                 $errors[] = "El validador '{$validatorKey}' ({$class}) debe implementar CrudValidatorInterface.";
             }
         }

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Pdf;
+namespace Lebytek\Framework\Application\UseCases\Pdf;
 
-use App\Application\Pdf\PdfComponentRenderer;
-use App\Application\Pdf\PdfKitDemoData;
+use Lebytek\Framework\Application\Pdf\PdfComponentRenderer;
+use Lebytek\Framework\Application\Pdf\PdfKitDemoData;
 
 /**
  * Arma el view-model de la vista demo del Kit de PDF: payload demo_reporte,

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 /**
  * Validación pura de un archivo subido: error PHP, tamaño máximo, lista blanca

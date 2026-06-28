@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel;
+namespace Lebytek\Framework\Kernel;
 
 /*
 |--------------------------------------------------------------------------

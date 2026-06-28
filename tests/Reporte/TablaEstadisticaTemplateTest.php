@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Pdf\Templates\TablaEstadisticaTemplate;
-use App\Domain\Pdf\PdfDocument;
-use App\Domain\Reporte\ReporteTemplateInterface;
+use Lebytek\Framework\Application\Pdf\Templates\TablaEstadisticaTemplate;
+use Lebytek\Framework\Domain\Pdf\PdfDocument;
+use Lebytek\Framework\Domain\Reporte\ReporteTemplateInterface;
 
 function tet_payload(): array
 {

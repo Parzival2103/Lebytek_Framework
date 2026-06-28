@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Reporte;
+namespace Lebytek\Framework\Application\Reporte;
 
 /**
  * Aplica tratamientos (agrupar / sum / count / avg / min / max / ordenar) a filas

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Integrations;
+namespace Lebytek\Framework\Application\Integrations;
 
-use App\Domain\Integrations\MessageChannelInterface;
+use Lebytek\Framework\Domain\Integrations\MessageChannelInterface;
 
 /*
 |--------------------------------------------------------------------------

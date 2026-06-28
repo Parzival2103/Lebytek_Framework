@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Application\DTO\Auth\RegistroDTO;
-use App\Application\Services\AuthTokenService;
-use App\Application\Services\CorreoAuthService;
-use App\Application\UseCases\Auth\RegistrarUsuarioUseCase;
-use App\Application\Validators\Usuarios\CrearUsuarioValidator;
-use App\Domain\Entities\AuthToken;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\DTO\Auth\RegistroDTO;
+use Lebytek\Framework\Application\Services\AuthTokenService;
+use Lebytek\Framework\Application\Services\CorreoAuthService;
+use Lebytek\Framework\Application\UseCases\Auth\RegistrarUsuarioUseCase;
+use Lebytek\Framework\Application\Validators\Usuarios\CrearUsuarioValidator;
+use Lebytek\Framework\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 require_once __DIR__ . '/../fixtures/auth_fakes.php';
 

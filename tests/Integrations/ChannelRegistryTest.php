@@ -2,10 +2,10 @@
 // tests/Integrations/ChannelRegistryTest.php
 declare(strict_types=1);
 
-use App\Application\Integrations\ChannelRegistry;
-use App\Domain\Integrations\MessageChannelInterface;
-use App\Domain\Integrations\MessageRequest;
-use App\Domain\Integrations\MessageResult;
+use Lebytek\Framework\Application\Integrations\ChannelRegistry;
+use Lebytek\Framework\Domain\Integrations\MessageChannelInterface;
+use Lebytek\Framework\Domain\Integrations\MessageRequest;
+use Lebytek\Framework\Domain\Integrations\MessageResult;
 
 function fakeChannel(string $key): MessageChannelInterface
 {

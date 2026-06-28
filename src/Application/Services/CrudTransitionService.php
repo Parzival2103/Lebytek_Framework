@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Application\Crud\Context\CrudTransitionContext;
-use App\Domain\Entities\Crud\CrudActionDefinition;
-use App\Domain\Entities\Crud\CrudStateMachine;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\BitacoraRepositoryInterface;
-use App\Domain\Interfaces\CrudTransitionGuardInterface;
-use App\Infrastructure\Repositories\GenericCrudRepository;
+use Lebytek\Framework\Application\Crud\Context\CrudTransitionContext;
+use Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudStateMachine;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\BitacoraRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudTransitionGuardInterface;
+use Lebytek\Framework\Infrastructure\Repositories\GenericCrudRepository;
 
 /**
  * Aplica transiciones de estado del CRUD Engine.

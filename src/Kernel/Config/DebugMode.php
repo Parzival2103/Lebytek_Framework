@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Config;
+namespace Lebytek\Framework\Kernel\Config;
 
 /**
  * Decide si el modo debug está activo. En producción siempre es false, sin

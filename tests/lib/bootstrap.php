@@ -18,9 +18,9 @@ if (!defined('STORAGE_PATH')) {
 
 require_once ROOT_PATH . '/vendor/autoload.php';
 
-use App\Kernel\Config\Config;
-use App\Kernel\Database\Connection;
-use App\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\EnvLoader;
 
 $envFile = ROOT_PATH . '/.env';
 if (is_readable($envFile)) {

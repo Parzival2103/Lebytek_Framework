@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers\Admin;
+namespace Lebytek\Framework\Presentation\Controllers\Admin;
 
-use App\Application\Integrations\DemoProvisioningService;
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\ConfiguracionService;
-use App\Domain\Integrations\IntegrationAccount;
-use App\Domain\Integrations\IntegrationAccountRepositoryInterface;
-use App\Domain\Integrations\PartnerConnectorInterface;
-use App\Infrastructure\Integrations\GreenApi\GreenApiAccountClient;
-use App\Infrastructure\Integrations\Http\HttpApiConnector;
-use App\Infrastructure\Integrations\Repositories\IntegrationLogRepository;
-use App\Kernel\Config\Config;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Kernel\Security\SignedToken;
-use App\Presentation\Controllers\AdminBaseController;
+use Lebytek\Framework\Application\Integrations\DemoProvisioningService;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccount;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccountRepositoryInterface;
+use Lebytek\Framework\Domain\Integrations\PartnerConnectorInterface;
+use Lebytek\Framework\Infrastructure\Integrations\GreenApi\GreenApiAccountClient;
+use Lebytek\Framework\Infrastructure\Integrations\Http\HttpApiConnector;
+use Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationLogRepository;
+use Lebytek\Framework\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Security\SignedToken;
+use Lebytek\Framework\Presentation\Controllers\AdminBaseController;
 
 final class IntegrationsController extends AdminBaseController
 {
@@ -74,7 +74,7 @@ final class IntegrationsController extends AdminBaseController
         $this->verifyCsrf($request);
 
         $base = (array) Config::get('integrations.channels.whatsapp.config', []);
-        $resolved = \App\Application\Integrations\IntegrationsFactory::resolveWhatsappConfig($base);
+        $resolved = \Lebytek\Framework\Application\Integrations\IntegrationsFactory::resolveWhatsappConfig($base);
         $instanceId = trim((string) ($resolved['instance_id'] ?? ''));
         $token = trim((string) ($resolved['token'] ?? ''));
 

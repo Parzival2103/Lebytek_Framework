@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repositories;
+namespace Lebytek\Framework\Infrastructure\Repositories;
 
-use App\Domain\Interfaces\CrudConstraintRepositoryInterface;
-use App\Domain\Interfaces\CrudRelationRepositoryInterface;
-use App\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Domain\Interfaces\CrudConstraintRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudRelationRepositoryInterface;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
 
 final class GenericCrudRepository extends BaseRepository implements CrudConstraintRepositoryInterface, CrudRelationRepositoryInterface
 {

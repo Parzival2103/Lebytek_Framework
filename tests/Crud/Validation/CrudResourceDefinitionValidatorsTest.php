@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 
 test('CrudResourceDefinition: formValidators is empty by default', function (): void {
     $def = CrudResourceDefinition::fromArray([

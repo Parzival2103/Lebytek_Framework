@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudContext;
-use App\Application\Crud\Context\CrudWriteContext;
+use Lebytek\Framework\Application\Crud\Context\CrudContext;
+use Lebytek\Framework\Application\Crud\Context\CrudWriteContext;
 
 function make_write_ctx(array $data = ['nombre' => 'Ana'], bool $isCreate = true): CrudWriteContext
 {

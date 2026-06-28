@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudFieldValidationService;
-use App\Domain\Entities\CrudFieldDefinition;
+use Lebytek\Framework\Application\Services\CrudFieldValidationService;
+use Lebytek\Framework\Domain\Entities\CrudFieldDefinition;
 
 function field_with(array $data): CrudFieldDefinition
 {

@@ -1,6 +1,6 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
-/** @var \App\Application\DTO\Dashboard\DashboardViewModel $dashboard */
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+/** @var \Lebytek\Framework\Application\DTO\Dashboard\DashboardViewModel $dashboard */
 ?>
 <div class="col-12 col-lg-4 fade-stagger" style="--i:1">
     <div class="card border-0 shadow-sm h-100">

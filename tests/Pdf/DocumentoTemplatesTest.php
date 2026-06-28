@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Pdf\Templates\ContratoTemplate;
-use App\Application\Pdf\Templates\PresupuestoTemplate;
-use App\Application\Pdf\Templates\TicketCompraTemplate;
+use Lebytek\Framework\Application\Pdf\Templates\ContratoTemplate;
+use Lebytek\Framework\Application\Pdf\Templates\PresupuestoTemplate;
+use Lebytek\Framework\Application\Pdf\Templates\TicketCompraTemplate;
 
 /** @return list<string> tipos de bloque en orden */
-function doc_types(\App\Domain\Pdf\PdfDocument $doc): array
+function doc_types(\Lebytek\Framework\Domain\Pdf\PdfDocument $doc): array
 {
     return array_map(static fn($b) => $b->type(), $doc->blocks());
 }

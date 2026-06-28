@@ -2,13 +2,13 @@
 // tests/Integrations/DemoProvisioningServiceTest.php
 declare(strict_types=1);
 
-use App\Application\Integrations\DemoProvisioningService;
-use App\Domain\Integrations\IntegrationAccount;
-use App\Domain\Integrations\IntegrationAccountRepositoryInterface;
-use App\Domain\Integrations\MessageRequest;
-use App\Domain\Integrations\MessageResult;
-use App\Domain\Integrations\MessageSenderInterface;
-use App\Domain\Integrations\PartnerConnectorInterface;
+use Lebytek\Framework\Application\Integrations\DemoProvisioningService;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccount;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccountRepositoryInterface;
+use Lebytek\Framework\Domain\Integrations\MessageRequest;
+use Lebytek\Framework\Domain\Integrations\MessageResult;
+use Lebytek\Framework\Domain\Integrations\MessageSenderInterface;
+use Lebytek\Framework\Domain\Integrations\PartnerConnectorInterface;
 
 final class FakeAccountRepo implements IntegrationAccountRepositoryInterface
 {

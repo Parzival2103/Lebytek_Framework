@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Pdf;
+namespace Lebytek\Framework\Domain\Pdf;
 
 /**
  * Plantilla del programador: recibe un payload de datos y compone un PdfDocument.

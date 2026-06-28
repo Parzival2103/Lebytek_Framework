@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Http\Response;
 
 /**
  * Registra en Response los renderers HTML para 404, 403 y 500.

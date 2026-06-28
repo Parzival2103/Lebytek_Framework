@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudRelationService;
-use App\Domain\Entities\Crud\CrudRelationDefinition;
+use Lebytek\Framework\Application\Services\CrudRelationService;
+use Lebytek\Framework\Domain\Entities\Crud\CrudRelationDefinition;
 
 require_once dirname(__DIR__, 2) . '/fixtures/relation_repos.php';
 

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Middlewares;
+namespace Lebytek\Framework\Presentation\Middlewares;
 
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Domain\Policies\RbacPolicy;
-use App\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Domain\Policies\RbacPolicy;
+use Lebytek\Framework\Kernel\Security\Session;
 
 /*
 |--------------------------------------------------------------------------

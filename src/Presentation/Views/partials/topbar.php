@@ -1,6 +1,6 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
-use App\Kernel\Constants\UiConfirmConstants;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Constants\UiConfirmConstants;
 ?>
 
 <header class="topbar ct-topbar d-flex align-items-center px-3 gap-2">

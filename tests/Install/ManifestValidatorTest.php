@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Install\ManifestValidator;
-use App\Application\Install\ModuleManifest;
+use Lebytek\Framework\Application\Install\ManifestValidator;
+use Lebytek\Framework\Application\Install\ModuleManifest;
 
 function mv_manifest(array $over): ModuleManifest
 {

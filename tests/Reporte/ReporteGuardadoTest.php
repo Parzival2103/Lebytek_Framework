@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use App\Domain\Reporte\ReporteGuardado;
+use Lebytek\Framework\Domain\Reporte\ReporteGuardado;
 
 function rg_row(): array
 {

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Application\Pdf\Templates\ContratoTemplate;
-use App\Application\Pdf\Templates\DemoReporteTemplate;
-use App\Application\Pdf\Templates\PresupuestoTemplate;
-use App\Application\Pdf\Templates\TablaEstadisticaTemplate;
-use App\Application\Pdf\Templates\TicketCompraTemplate;
+use Lebytek\Framework\Application\Pdf\Templates\ContratoTemplate;
+use Lebytek\Framework\Application\Pdf\Templates\DemoReporteTemplate;
+use Lebytek\Framework\Application\Pdf\Templates\PresupuestoTemplate;
+use Lebytek\Framework\Application\Pdf\Templates\TablaEstadisticaTemplate;
+use Lebytek\Framework\Application\Pdf\Templates\TicketCompraTemplate;
 
 // Whitelist de plantillas PDF: clave estable => clase PdfTemplateInterface.
 // NUNCA se acepta un FQCN proveniente de datos de usuario; solo estas claves.

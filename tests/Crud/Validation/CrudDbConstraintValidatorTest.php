@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudDbConstraintValidator;
-use App\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Application\Services\CrudDbConstraintValidator;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 
 require_once dirname(__DIR__, 2) . '/fixtures/constraint_repos.php';
 

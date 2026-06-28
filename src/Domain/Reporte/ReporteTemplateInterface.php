@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Domain\Reporte;
+namespace Lebytek\Framework\Domain\Reporte;
 
-use App\Domain\Pdf\PdfTemplateInterface;
+use Lebytek\Framework\Domain\Pdf\PdfTemplateInterface;
 
 /**
  * Plantilla de reporte: además de componer un PdfDocument (PdfTemplateInterface),

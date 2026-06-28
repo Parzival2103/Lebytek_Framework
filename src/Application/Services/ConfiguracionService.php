@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Interfaces\ConfiguracionRepositoryInterface;
-use App\Kernel\Constants\AppConstants;
-use App\Kernel\Security\Session;
+use Lebytek\Framework\Domain\Interfaces\ConfiguracionRepositoryInterface;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Security\Session;
 
 /*
 |--------------------------------------------------------------------------

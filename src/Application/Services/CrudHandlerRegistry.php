@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Interfaces\CrudHookHandlerInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudHookHandlerInterface;
 
 final class CrudHandlerRegistry
 {

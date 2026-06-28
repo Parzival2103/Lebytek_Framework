@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Reporte;
+namespace Lebytek\Framework\Application\Reporte;
 
 /**
  * Convierte un preset de periodo en un rango concreto [from, to] (Y-m-d H:i:s) y una

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Pdf;
+namespace Lebytek\Framework\Domain\Pdf;
 
 /**
  * Tabla de datos. Columnas: lista de ['name','label','format'?]; el renderer aplica

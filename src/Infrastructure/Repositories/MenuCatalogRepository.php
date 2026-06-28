@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repositories;
+namespace Lebytek\Framework\Infrastructure\Repositories;
 
-use App\Domain\Interfaces\MenuCatalogRepositoryInterface;
-use App\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Domain\Interfaces\MenuCatalogRepositoryInterface;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
 
 final class MenuCatalogRepository extends BaseRepository implements MenuCatalogRepositoryInterface
 {

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Application\DTO\Files\FileUploadConfig;
-use App\Application\Services\FileUploadService;
-use App\Application\Services\ImageProcessor;
-use App\Domain\Entities\Archivo;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\DTO\Files\FileUploadConfig;
+use Lebytek\Framework\Application\Services\FileUploadService;
+use Lebytek\Framework\Application\Services\ImageProcessor;
+use Lebytek\Framework\Domain\Entities\Archivo;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 require_once __DIR__ . '/../fixtures/archivo_repos.php';
 

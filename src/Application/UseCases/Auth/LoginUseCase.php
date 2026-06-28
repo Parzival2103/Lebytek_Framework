@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Auth;
+namespace Lebytek\Framework\Application\UseCases\Auth;
 
-use App\Application\DTO\Auth\LoginDTO;
-use App\Application\Services\AuthService;
-use App\Application\Services\LoginRateLimitService;
-use App\Application\Validators\Auth\LoginValidator;
-use App\Domain\Exceptions\AuthException;
+use Lebytek\Framework\Application\DTO\Auth\LoginDTO;
+use Lebytek\Framework\Application\Services\AuthService;
+use Lebytek\Framework\Application\Services\LoginRateLimitService;
+use Lebytek\Framework\Application\Validators\Auth\LoginValidator;
+use Lebytek\Framework\Domain\Exceptions\AuthException;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +47,7 @@ final class LoginUseCase
         $this->authService->iniciarSesion($usuario);
 
         if ($dto->recordar) {
-            \App\Kernel\Security\Session::aplicarDuracionRecordar();
+            \Lebytek\Framework\Kernel\Security\Session::aplicarDuracionRecordar();
         }
     }
 }

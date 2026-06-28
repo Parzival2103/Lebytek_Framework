@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repositories;
+namespace Lebytek\Framework\Infrastructure\Repositories;
 
-use App\Domain\Interfaces\ConfiguracionRepositoryInterface;
-use App\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Domain\Interfaces\ConfiguracionRepositoryInterface;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
 
 final class ConfiguracionRepository extends BaseRepository implements ConfiguracionRepositoryInterface
 {

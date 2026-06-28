@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Security;
+namespace Lebytek\Framework\Kernel\Security;
 
-use App\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Config\Config;
 
 /*
 |--------------------------------------------------------------------------

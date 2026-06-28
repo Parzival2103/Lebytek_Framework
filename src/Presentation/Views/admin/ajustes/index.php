@@ -1,6 +1,6 @@
 <?php
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $c = $configuracion ?? [];
 $uiLayoutWidth = $c['ui_layout_width'] ?? 'fluid';
@@ -10,7 +10,7 @@ $uiTableDensity = $c['ui_table_density'] ?? 'normal';
 $uiEnableAnimations = !isset($c['ui_enable_animations']) || $c['ui_enable_animations'] !== '0';
 $themeBorderRadius = $c['theme_border_radius'] ?? 'md';
 $themeShadowLevel = isset($c['theme_shadow_level']) ? (string) $c['theme_shadow_level'] : '1';
-$empresaMostrarNombre = \App\Kernel\Constants\AppConstants::empresaMostrarNombre($c['empresa_mostrar_nombre'] ?? null);
+$empresaMostrarNombre = \Lebytek\Framework\Kernel\Constants\AppConstants::empresaMostrarNombre($c['empresa_mostrar_nombre'] ?? null);
 
 ?>
 <div class="ct-page">
@@ -298,7 +298,7 @@ $empresaMostrarNombre = \App\Kernel\Constants\AppConstants::empresaMostrarNombre
                     <div class="ct-navbar-preview-icon">
                         <i class="bi bi-grid-3x3-gap-fill text-white" aria-hidden="true"></i>
                     </div>
-                    <span class="ct-navbar-preview-title<?= $empresaMostrarNombre ? '' : ' d-none' ?>" id="navbarPreviewTitle"><?= ViewHelper::e($configuracion['empresa_nombre'] ?? \App\Kernel\Constants\AppConstants::EMPRESA_NOMBRE_DEFAULT) ?></span>
+                    <span class="ct-navbar-preview-title<?= $empresaMostrarNombre ? '' : ' d-none' ?>" id="navbarPreviewTitle"><?= ViewHelper::e($configuracion['empresa_nombre'] ?? \Lebytek\Framework\Kernel\Constants\AppConstants::EMPRESA_NOMBRE_DEFAULT) ?></span>
                     <div class="ms-auto d-flex gap-2">
                         <div class="ct-navbar-preview-dot ct-navbar-preview-dot--muted" aria-hidden="true"></div>
                         <div class="ct-navbar-preview-dot ct-navbar-preview-dot--accent" aria-hidden="true"></div>

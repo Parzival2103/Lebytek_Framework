@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Kernel\Http\SafeRedirect;
+use Lebytek\Framework\Kernel\Http\SafeRedirect;
 
 // ── Caracterización: las variantes legítimas se conservan idénticas ──────────
 test('SafeRedirect conserva una ruta interna simple', function (): void {

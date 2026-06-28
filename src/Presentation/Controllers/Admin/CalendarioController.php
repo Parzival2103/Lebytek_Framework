@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers\Admin;
+namespace Lebytek\Framework\Presentation\Controllers\Admin;
 
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\CalendarViewModelBuilder;
-use App\Application\Services\ConfiguracionService;
-use App\Application\UseCases\Calendar\ListarEventosCalendarioUseCase;
-use App\Domain\Calendar\DateRange;
-use App\Domain\Entities\CalendarDefinition;
-use App\Domain\Exceptions\AccesoException;
-use App\Domain\Exceptions\ValidationException;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Presentation\Controllers\AdminBaseController;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\CalendarViewModelBuilder;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Application\UseCases\Calendar\ListarEventosCalendarioUseCase;
+use Lebytek\Framework\Domain\Calendar\DateRange;
+use Lebytek\Framework\Domain\Entities\CalendarDefinition;
+use Lebytek\Framework\Domain\Exceptions\AccesoException;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Presentation\Controllers\AdminBaseController;
 
 final class CalendarioController extends AdminBaseController
 {

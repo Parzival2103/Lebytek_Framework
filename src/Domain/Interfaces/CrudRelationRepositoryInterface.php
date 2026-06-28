@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Interfaces;
+namespace Lebytek\Framework\Domain\Interfaces;
 
 /**
  * Contrato de lectura para relaciones del CRUD Engine. Implementado por

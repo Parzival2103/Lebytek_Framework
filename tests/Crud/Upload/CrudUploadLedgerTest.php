@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudDataService;
-use App\Application\Services\FileUploadService;
-use App\Application\Services\ImageProcessor;
-use App\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Application\Services\CrudDataService;
+use Lebytek\Framework\Application\Services\FileUploadService;
+use Lebytek\Framework\Application\Services\ImageProcessor;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 
 require_once __DIR__ . '/../../fixtures/archivo_repos.php';
 

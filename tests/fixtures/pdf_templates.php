@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-use App\Domain\Pdf\PdfDocument;
-use App\Domain\Pdf\PdfHeader;
-use App\Domain\Pdf\PdfTemplateInterface;
+use Lebytek\Framework\Domain\Pdf\PdfDocument;
+use Lebytek\Framework\Domain\Pdf\PdfHeader;
+use Lebytek\Framework\Domain\Pdf\PdfTemplateInterface;
 
 final class FixtureOkTemplate implements PdfTemplateInterface
 {

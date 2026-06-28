@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers;
+namespace Lebytek\Framework\Presentation\Controllers;
 
-use App\Kernel\BaseClasses\BaseController;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
-use App\Kernel\Helpers\LebytekUiConfig;
-use App\Application\Services\AdminNavigationMenuService;
-use App\Application\Services\ConfiguracionService;
-use App\Domain\Policies\RbacPolicy;
+use Lebytek\Framework\Kernel\BaseClasses\BaseController;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Helpers\LebytekUiConfig;
+use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Domain\Policies\RbacPolicy;
 
 abstract class AdminBaseController extends BaseController
 {

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudTransitionContext;
-use App\Application\Services\CrudHandlerRegistry;
-use App\Application\Services\CrudTransitionService;
-use App\Domain\Entities\Crud\CrudActionDefinition;
-use App\Domain\Entities\Crud\CrudStateMachine;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\Crud\Context\CrudTransitionContext;
+use Lebytek\Framework\Application\Services\CrudHandlerRegistry;
+use Lebytek\Framework\Application\Services\CrudTransitionService;
+use Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudStateMachine;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 require_once dirname(__DIR__, 1) . '/../fixtures/transition_guards.php';
 

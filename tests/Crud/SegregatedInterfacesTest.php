@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudActionContext;
-use App\Application\Crud\Context\CrudListContext;
-use App\Application\Crud\Context\CrudTransitionContext;
-use App\Application\Crud\Context\CrudValidationContext;
-use App\Domain\Interfaces\CrudActionHandlerInterface;
-use App\Domain\Interfaces\CrudListScopeInterface;
-use App\Domain\Interfaces\CrudTransitionGuardInterface;
-use App\Domain\Interfaces\CrudValidatorInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Application\Crud\Context\CrudTransitionContext;
+use Lebytek\Framework\Application\Crud\Context\CrudValidationContext;
+use Lebytek\Framework\Domain\Interfaces\CrudActionHandlerInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudListScopeInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudTransitionGuardInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudValidatorInterface;
 
 test('segregated interfaces: a class can implement all four', function (): void {
     $impl = new class implements

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Pdf;
+namespace Lebytek\Framework\Domain\Pdf;
 
 /** Motor de render: HTML + configuración de página → bytes del PDF. */
 interface PdfEngineInterface

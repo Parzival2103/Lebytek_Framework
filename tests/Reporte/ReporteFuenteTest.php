@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use App\Domain\Reporte\ReporteFuente;
+use Lebytek\Framework\Domain\Reporte\ReporteFuente;
 
 function rf_config(): array
 {

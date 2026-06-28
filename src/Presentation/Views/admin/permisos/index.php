@@ -1,4 +1,4 @@
-<?php use App\Kernel\Helpers\ViewHelper; ?>
+<?php use Lebytek\Framework\Kernel\Helpers\ViewHelper; ?>
 
 <div class="ct-page">
 <div class="ct-page-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">

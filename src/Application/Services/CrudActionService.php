@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Application\Crud\Context\CrudActionContext;
-use App\Domain\Entities\Crud\CrudActionDefinition;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\BitacoraRepositoryInterface;
-use App\Domain\Interfaces\CrudActionHandlerInterface;
-use App\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
+use Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\BitacoraRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudActionHandlerInterface;
+use Lebytek\Framework\Kernel\Logging\AppLogger;
 
 /**
  * Ejecuta acciones de fila y masivas del CRUD Engine. La decisión de despacho

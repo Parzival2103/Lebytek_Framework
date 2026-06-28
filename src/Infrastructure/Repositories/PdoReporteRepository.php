@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repositories;
+namespace Lebytek\Framework\Infrastructure\Repositories;
 
-use App\Domain\Interfaces\ReporteRepositoryInterface;
-use App\Domain\Reporte\ReporteGuardado;
-use App\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Domain\Interfaces\ReporteRepositoryInterface;
+use Lebytek\Framework\Domain\Reporte\ReporteGuardado;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
 
 /**
  * Persistencia de rep_reportes. Scope owner: cada quien ve los suyos; compartido=1

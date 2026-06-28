@@ -2,8 +2,8 @@
 // tests/Marketing/AjustesExtensibleTest.php
 declare(strict_types=1);
 
-use App\Application\Services\SettingsSectionRegistry;
-use App\Domain\Interfaces\SettingsSectionProviderInterface;
+use Lebytek\Framework\Application\Services\SettingsSectionRegistry;
+use Lebytek\Framework\Domain\Interfaces\SettingsSectionProviderInterface;
 
 // Verifica la lógica de combinación de campos sin arrancar HTTP:
 // los campos de sistema fijos + los de providers visibles forman el set a persistir.

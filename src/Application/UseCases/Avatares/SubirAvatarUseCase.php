@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Avatares;
+namespace Lebytek\Framework\Application\UseCases\Avatares;
 
-use App\Application\DTO\Files\FileUploadConfig;
-use App\Application\Services\FileUploadService;
-use App\Domain\Entities\Archivo;
-use App\Domain\Interfaces\UsuarioRepositoryInterface;
-use App\Kernel\Config\Config;
+use Lebytek\Framework\Application\DTO\Files\FileUploadConfig;
+use Lebytek\Framework\Application\Services\FileUploadService;
+use Lebytek\Framework\Domain\Entities\Archivo;
+use Lebytek\Framework\Domain\Interfaces\UsuarioRepositoryInterface;
+use Lebytek\Framework\Kernel\Config\Config;
 
 /*
 |--------------------------------------------------------------------------

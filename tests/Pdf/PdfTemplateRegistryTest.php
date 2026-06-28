@@ -3,16 +3,16 @@ declare(strict_types=1);
 
 require_once ROOT_PATH . '/tests/fixtures/pdf_templates.php';
 
-use App\Application\Pdf\PdfTemplateRegistry;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Pdf\PdfTemplateInterface;
+use Lebytek\Framework\Application\Pdf\PdfTemplateRegistry;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Pdf\PdfTemplateInterface;
 
 function ptr_registry(): PdfTemplateRegistry
 {
     return new PdfTemplateRegistry([
         'ok'       => FixtureOkTemplate::class,
         'broken'   => FixtureNotATemplate::class,
-        'missing'  => 'App\\Nope\\DoesNotExist',
+        'missing'  => 'Lebytek\Framework\\Nope\\DoesNotExist',
     ]);
 }
 

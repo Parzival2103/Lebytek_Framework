@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Http;
+namespace Lebytek\Framework\Kernel\Http;
 
 /*
 |--------------------------------------------------------------------------

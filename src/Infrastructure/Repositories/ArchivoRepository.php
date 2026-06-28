@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repositories;
+namespace Lebytek\Framework\Infrastructure\Repositories;
 
-use App\Domain\Entities\Archivo;
-use App\Domain\Interfaces\ArchivoRepositoryInterface;
-use App\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Domain\Entities\Archivo;
+use Lebytek\Framework\Domain\Interfaces\ArchivoRepositoryInterface;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
 
 /*
 |--------------------------------------------------------------------------

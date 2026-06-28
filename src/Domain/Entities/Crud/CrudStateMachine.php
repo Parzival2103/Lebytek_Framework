@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Entities\Crud;
+namespace Lebytek\Framework\Domain\Entities\Crud;
 
 /**
  * Máquina de estados inmutable parseada del bloque `states` de la metadata.

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Crud\Handlers;
+namespace Lebytek\Framework\Application\Crud\Handlers;
 
-use App\Application\Crud\Context\CrudTransitionContext;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\CrudTransitionGuardInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudTransitionContext;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\CrudTransitionGuardInterface;
 
 /**
  * Demo de guard de transición (escape hatch). No permite pagar un pedido en

@@ -2,7 +2,7 @@
 // tests/Integrations/MessageResultTest.php
 declare(strict_types=1);
 
-use App\Domain\Integrations\MessageResult;
+use Lebytek\Framework\Domain\Integrations\MessageResult;
 
 test('MessageResult::sent marca ok y conserva el id de proveedor', function (): void {
     $r = MessageResult::sent('ABC123', ['idMessage' => 'ABC123']);

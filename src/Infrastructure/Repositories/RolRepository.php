@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Repositories;
+namespace Lebytek\Framework\Infrastructure\Repositories;
 
-use App\Domain\Entities\Rol;
-use App\Domain\Interfaces\RolRepositoryInterface;
-use App\Domain\ValueObjects\Slug;
-use App\Kernel\BaseClasses\BaseRepository;
+use Lebytek\Framework\Domain\Entities\Rol;
+use Lebytek\Framework\Domain\Interfaces\RolRepositoryInterface;
+use Lebytek\Framework\Domain\ValueObjects\Slug;
+use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
 
 final class RolRepository extends BaseRepository implements RolRepositoryInterface
 {

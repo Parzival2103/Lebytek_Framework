@@ -6,7 +6,7 @@ use App\Infrastructure\Marketing\Settings\MarketingCorreoSettingsProvider;
 use App\Infrastructure\Marketing\Settings\MarketingPaquetesSettingsProvider;
 use App\Infrastructure\Marketing\Settings\MarketingTrackingSettingsProvider;
 use App\Infrastructure\Marketing\Settings\MarketingContenidoSettingsProvider;
-use App\Domain\Interfaces\SettingsSectionProviderInterface;
+use Lebytek\Framework\Domain\Interfaces\SettingsSectionProviderInterface;
 
 test('los 4 providers de marketing implementan la interfaz y exigen marketing.gestionar', function (): void {
     foreach ([

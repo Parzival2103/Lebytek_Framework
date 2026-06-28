@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\CrudFieldDefinition;
+use Lebytek\Framework\Domain\Entities\CrudFieldDefinition;
 
 test('CrudFieldDefinition: relation is null by default', function (): void {
     $f = CrudFieldDefinition::fromArray(['name' => 'nombre', 'label' => 'Nombre']);

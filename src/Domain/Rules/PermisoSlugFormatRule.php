@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Rules;
+namespace Lebytek\Framework\Domain\Rules;
 
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 /**
  * Formato canónico de slug de permiso RBAC: modulo.accion (minúsculas, números, guion bajo).

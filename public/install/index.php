@@ -12,15 +12,15 @@ ini_set('error_log', STORAGE_PATH . '/logs/install-wizard.log');
 
 require_once ROOT_PATH . '/vendor/autoload.php';
 
-use App\Infrastructure\Install\InstallTrace;
-use App\Infrastructure\Install\SqlFileRunner;
+use Lebytek\Framework\Infrastructure\Install\InstallTrace;
+use Lebytek\Framework\Infrastructure\Install\SqlFileRunner;
 
-use App\Kernel\EnvLoader;
-use App\Kernel\Config\Config;
-use App\Kernel\Database\Connection;
-use App\Kernel\Container\Container;
-use App\Application\Install\Installer;
-use App\Application\Install\ModuleRegistry;
+use Lebytek\Framework\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\Container\Container;
+use Lebytek\Framework\Application\Install\Installer;
+use Lebytek\Framework\Application\Install\ModuleRegistry;
 
 EnvLoader::load(ROOT_PATH . '/.env');
 Config::init(ROOT_PATH . '/config');

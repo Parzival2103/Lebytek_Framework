@@ -1,4 +1,4 @@
-<?php /** @var \App\Application\Install\InstallPlan $plan */ /** @var array $seleccion */ /** @var string $csrf */ ?>
+<?php /** @var \Lebytek\Framework\Application\Install\InstallPlan $plan */ /** @var array $seleccion */ /** @var string $csrf */ ?>
 <h2 class="h5 mb-3">5. Revisión</h2>
 <p>Modo: <strong><?= $plan->nueva ? 'Instalación nueva' : 'Actualización' ?></strong></p>
 

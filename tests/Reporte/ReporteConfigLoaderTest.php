@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Reporte\ReporteConfigLoader;
-use App\Application\Reporte\ReporteConfigValidator;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Reporte\ReporteFuente;
+use Lebytek\Framework\Application\Reporte\ReporteConfigLoader;
+use Lebytek\Framework\Application\Reporte\ReporteConfigValidator;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Reporte\ReporteFuente;
 
 function rcl_loader(): ReporteConfigLoader
 {

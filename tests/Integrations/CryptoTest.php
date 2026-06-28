@@ -2,7 +2,7 @@
 // tests/Integrations/CryptoTest.php
 declare(strict_types=1);
 
-use App\Kernel\Security\Crypto;
+use Lebytek\Framework\Kernel\Security\Crypto;
 
 test('Crypto round-trip devuelve el texto original', function () {
     $plain = 'apiTokenInstance-1234567890abcdef';

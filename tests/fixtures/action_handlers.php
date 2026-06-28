@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudActionContext;
-use App\Domain\Interfaces\CrudActionHandlerInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
+use Lebytek\Framework\Domain\Interfaces\CrudActionHandlerInterface;
 
 if (!class_exists('RecordingActionHandler')) {
     /** Registra la última llamada en una propiedad estática para aserciones. */

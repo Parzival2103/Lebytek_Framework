@@ -15,10 +15,10 @@ define('STORAGE_PATH', ROOT_PATH . '/storage');
 
 require_once ROOT_PATH . '/vendor/autoload.php';
 
-use App\Kernel\EnvLoader;
-use App\Kernel\Config\Config;
-use App\Kernel\Database\Connection;
-use App\Kernel\Security\Hash;
+use Lebytek\Framework\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\Security\Hash;
 
 EnvLoader::load(ROOT_PATH . '/.env');
 Config::init(ROOT_PATH . '/config');

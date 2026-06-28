@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Entities\Crud\CrudActionDefinition;
-use App\Domain\Exceptions\ValidationException;
-use App\Kernel\Constants\UiConfirmConstants;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Kernel\Constants\UiConfirmConstants;
 
 /**
  * Lógica pura de resolución de acciones: produce view-models para render y

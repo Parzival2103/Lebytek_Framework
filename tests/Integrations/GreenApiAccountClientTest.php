@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Infrastructure\Integrations\GreenApi\GreenApiAccountClient;
+use Lebytek\Framework\Infrastructure\Integrations\GreenApi\GreenApiAccountClient;
 
-final class FakeQrHttp implements \App\Domain\Integrations\ApiConnectorInterface
+final class FakeQrHttp implements \Lebytek\Framework\Domain\Integrations\ApiConnectorInterface
 {
     public function __construct(private readonly array $response)
     {
@@ -47,7 +47,7 @@ test('fetchQr informa si la instancia ya está autorizada', function () {
 });
 
 test('resolveActivationPhase detecta sincronizacion tras escaneo', function () {
-    $http = new class implements \App\Domain\Integrations\ApiConnectorInterface {
+    $http = new class implements \Lebytek\Framework\Domain\Integrations\ApiConnectorInterface {
         private int $calls = 0;
         public function request(string $method, string $url, array $payload = [], array $headers = []): array
         {
@@ -74,7 +74,7 @@ test('resolveActivationPhase detecta sincronizacion tras escaneo', function () {
 });
 
 test('resolveActivationPhase detecta instancia lista', function () {
-    $http = new class implements \App\Domain\Integrations\ApiConnectorInterface {
+    $http = new class implements \Lebytek\Framework\Domain\Integrations\ApiConnectorInterface {
         public function request(string $method, string $url, array $payload = [], array $headers = []): array
         {
             if (str_contains($url, '/qr/')) {

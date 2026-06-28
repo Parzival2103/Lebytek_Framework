@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Reporte;
+namespace Lebytek\Framework\Application\Reporte;
 
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Reporte\ReporteFuente;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Reporte\ReporteFuente;
 
 /**
  * Valida la selección del usuario contra la fuente vigente y la serializa a las

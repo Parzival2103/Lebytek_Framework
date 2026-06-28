@@ -1,7 +1,7 @@
 <?php
 
-use App\Kernel\Constants\AppConstants;
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $nombreFooter = AppConstants::resolveEmpresaNombre($empresaNombre ?? null);
 $mostrarPoweredBy = AppConstants::footerMuestraPoweredBy($empresaNombre ?? null);

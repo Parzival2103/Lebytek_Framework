@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Interfaces\BitacoraRepositoryInterface;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Interfaces\BitacoraRepositoryInterface;
 
 /**
  * Construye el view-model de pestañas para `show.php`. Sin bloque `detail`,

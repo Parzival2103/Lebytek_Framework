@@ -1,6 +1,6 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
-use App\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
 
 /** @var string $nombre */
 /** @var string $url */

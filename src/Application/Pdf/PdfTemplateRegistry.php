@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Pdf;
+namespace Lebytek\Framework\Application\Pdf;
 
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Pdf\PdfTemplateInterface;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Pdf\PdfTemplateInterface;
 
 /**
  * Whitelist clave → clase de plantilla. Misma política que los handlers del CRUD

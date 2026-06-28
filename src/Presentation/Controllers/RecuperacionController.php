@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Presentation\Controllers;
+namespace Lebytek\Framework\Presentation\Controllers;
 
-use App\Application\Services\ConfiguracionService;
-use App\Application\UseCases\Auth\RestablecerPasswordUseCase;
-use App\Application\UseCases\Auth\SolicitarRecuperacionUseCase;
-use App\Domain\Exceptions\ValidationException;
-use App\Kernel\BaseClasses\BaseController;
-use App\Kernel\Helpers\LebytekUiConfig;
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Security\Session;
+use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Application\UseCases\Auth\RestablecerPasswordUseCase;
+use Lebytek\Framework\Application\UseCases\Auth\SolicitarRecuperacionUseCase;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Kernel\BaseClasses\BaseController;
+use Lebytek\Framework\Kernel\Helpers\LebytekUiConfig;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Security\Session;
 
 /*
 |--------------------------------------------------------------------------

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Presentation\Controllers\Admin\IntegrationsController;
-use App\Presentation\Middlewares\CsrfMiddleware;
-use App\Presentation\Middlewares\RbacMiddleware;
+use Lebytek\Framework\Presentation\Controllers\Admin\IntegrationsController;
+use Lebytek\Framework\Presentation\Middlewares\CsrfMiddleware;
+use Lebytek\Framework\Presentation\Middlewares\RbacMiddleware;
 
-/** @var \App\Kernel\Http\Router $router */
+/** @var \Lebytek\Framework\Kernel\Http\Router $router */
 
 $rbacVer = [new RbacMiddleware('integrations.ver')];
 $rbacConfig = [new RbacMiddleware('integrations.configurar')];

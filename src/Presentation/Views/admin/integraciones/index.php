@@ -1,8 +1,8 @@
 <?php
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
-/** @var \App\Domain\Integrations\IntegrationAccount|null $instancia */
+/** @var \Lebytek\Framework\Domain\Integrations\IntegrationAccount|null $instancia */
 /** @var bool $partnerActivo */
 /** @var list<array<string,mixed>> $logs */
 ?>

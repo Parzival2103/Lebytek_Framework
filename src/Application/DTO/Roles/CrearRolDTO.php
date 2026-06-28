@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\DTO\Roles;
+namespace Lebytek\Framework\Application\DTO\Roles;
 
 final class CrearRolDTO
 {

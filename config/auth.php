@@ -1,6 +1,6 @@
 <?php
 
-use App\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\EnvLoader;
 
 return [
     'registro' => [

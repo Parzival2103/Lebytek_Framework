@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Entities\Crud;
+namespace Lebytek\Framework\Domain\Entities\Crud;
 
 /**
  * Definición inmutable de una pestaña de detalle. Tipos: `fields`, `relation`

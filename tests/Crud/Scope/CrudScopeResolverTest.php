@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudListContext;
-use App\Application\Services\CrudHandlerRegistry;
-use App\Application\Services\CrudScopeResolver;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Interfaces\CrudListScopeInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Application\Services\CrudHandlerRegistry;
+use Lebytek\Framework\Application\Services\CrudScopeResolver;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Interfaces\CrudListScopeInterface;
 
 if (!class_exists('FixtureCustomScope')) {
     class FixtureCustomScope implements CrudListScopeInterface

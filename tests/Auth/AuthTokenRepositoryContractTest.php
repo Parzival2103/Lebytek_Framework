@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Entities\AuthToken;
 
 require_once __DIR__ . '/../fixtures/auth_fakes.php';
 

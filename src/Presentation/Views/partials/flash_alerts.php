@@ -1,4 +1,4 @@
-<?php use App\Kernel\Helpers\ViewHelper; ?>
+<?php use Lebytek\Framework\Kernel\Helpers\ViewHelper; ?>
 
 <?php foreach ($flashAll ?? [] as $type => $message): ?>
     <?php

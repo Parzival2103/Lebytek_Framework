@@ -2,7 +2,7 @@
 // app/Presentation/Views/publico/partials/_hero.php
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $hero      = is_array($hero ?? null) ? $hero : [];
 $titulo    = (string) ($hero['titulo'] ?? '');

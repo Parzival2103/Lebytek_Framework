@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Dashboard;
+namespace Lebytek\Framework\Application\UseCases\Dashboard;
 
-use App\Application\DTO\Dashboard\DashboardViewModel;
-use App\Domain\Dashboard\DashboardBuildContext;
-use App\Domain\Interfaces\DashboardContributionProviderInterface;
+use Lebytek\Framework\Application\DTO\Dashboard\DashboardViewModel;
+use Lebytek\Framework\Domain\Dashboard\DashboardBuildContext;
+use Lebytek\Framework\Domain\Interfaces\DashboardContributionProviderInterface;
 
 /**
  * Fusiona contribuciones de proveedores en el orden de registro (config/dashboard.php).

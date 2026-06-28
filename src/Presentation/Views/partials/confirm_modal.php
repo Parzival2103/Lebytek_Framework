@@ -1,7 +1,7 @@
 <?php
 
-use App\Kernel\Constants\UiConfirmConstants;
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Constants\UiConfirmConstants;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 ?>
 <div class="modal fade ct-confirm-modal" id="confirmModal" tabindex="-1" aria-hidden="true" aria-labelledby="confirmModalTitle">

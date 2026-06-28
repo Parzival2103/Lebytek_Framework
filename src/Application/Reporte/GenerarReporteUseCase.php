@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Reporte;
+namespace Lebytek\Framework\Application\Reporte;
 
-use App\Application\Pdf\PdfRenderingService;
-use App\Domain\Reporte\ReporteGuardado;
-use App\Kernel\Config\Config;
+use Lebytek\Framework\Application\Pdf\PdfRenderingService;
+use Lebytek\Framework\Domain\Reporte\ReporteGuardado;
+use Lebytek\Framework\Kernel\Config\Config;
 
 /**
  * Genera los bytes PDF de un reporte de colección: construye el payload de datos,

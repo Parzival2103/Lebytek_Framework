@@ -1,6 +1,6 @@
 <?php
 
-use App\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\EnvLoader;
 
 return [
     'bcrypt_rounds'      => EnvLoader::get('BCRYPT_ROUNDS', 12),

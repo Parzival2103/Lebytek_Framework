@@ -2,8 +2,8 @@
 // tests/Integrations/GreenApiPartnerConnectorTest.php
 declare(strict_types=1);
 
-use App\Domain\Integrations\ApiConnectorInterface;
-use App\Infrastructure\Integrations\Partner\GreenApiPartnerConnector;
+use Lebytek\Framework\Domain\Integrations\ApiConnectorInterface;
+use Lebytek\Framework\Infrastructure\Integrations\Partner\GreenApiPartnerConnector;
 
 final class FakePartnerHttp implements ApiConnectorInterface
 {

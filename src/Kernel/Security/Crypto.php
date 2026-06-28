@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Security;
+namespace Lebytek\Framework\Kernel\Security;
 
-use App\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\EnvLoader;
 
 final class Crypto
 {

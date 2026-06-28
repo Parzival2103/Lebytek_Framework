@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Constants;
+namespace Lebytek\Framework\Kernel\Constants;
 
 final class UiConfirmConstants
 {

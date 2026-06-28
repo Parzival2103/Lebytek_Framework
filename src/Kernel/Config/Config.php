@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Config;
+namespace Lebytek\Framework\Kernel\Config;
 
-use App\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\EnvLoader;
 
 /*
 |--------------------------------------------------------------------------

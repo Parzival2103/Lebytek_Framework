@@ -1,7 +1,7 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
-use App\Kernel\Constants\AppConstants;
-use App\Kernel\Constants\UiConfirmConstants;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Constants\UiConfirmConstants;
 
 $uri = $currentUri ?? (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $menuItems = $menuFiltrado ?? [];

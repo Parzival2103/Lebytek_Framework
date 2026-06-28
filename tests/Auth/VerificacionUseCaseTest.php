@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\AuthTokenService;
-use App\Application\Services\CorreoAuthService;
-use App\Application\UseCases\Auth\ReenviarVerificacionUseCase;
-use App\Application\UseCases\Auth\VerificarCorreoUseCase;
-use App\Domain\Entities\AuthToken;
-use App\Domain\Entities\Usuario;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\ValueObjects\Email;
+use Lebytek\Framework\Application\Services\AuthTokenService;
+use Lebytek\Framework\Application\Services\CorreoAuthService;
+use Lebytek\Framework\Application\UseCases\Auth\ReenviarVerificacionUseCase;
+use Lebytek\Framework\Application\UseCases\Auth\VerificarCorreoUseCase;
+use Lebytek\Framework\Domain\Entities\AuthToken;
+use Lebytek\Framework\Domain\Entities\Usuario;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\ValueObjects\Email;
 
 require_once __DIR__ . '/../fixtures/auth_fakes.php';
 

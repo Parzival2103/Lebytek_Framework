@@ -1,6 +1,6 @@
 <?php
-/** @var array $fuentes @var array $fuentesMeta @var \App\Domain\Reporte\ReporteGuardado|null $reporte */
-use App\Kernel\Security\Csrf;
+/** @var array $fuentes @var array $fuentesMeta @var \Lebytek\Framework\Domain\Reporte\ReporteGuardado|null $reporte */
+use Lebytek\Framework\Kernel\Security\Csrf;
 
 $editId = $reporte?->id();
 $action = $editId ? '/admin/reportes/' . $editId : '/admin/reportes';

@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Services\CalendarEventMapper;
-use App\Domain\Entities\CalendarDefinition;
+use Lebytek\Framework\Application\Services\CalendarEventMapper;
+use Lebytek\Framework\Domain\Entities\CalendarDefinition;
 
 function map_def(array $overrides = []): CalendarDefinition
 {

@@ -2,10 +2,10 @@
 // tests/Integrations/IntegrationsFactoryTest.php
 declare(strict_types=1);
 
-use App\Application\Integrations\IntegrationsFactory;
-use App\Domain\Integrations\ApiConnectorInterface;
-use App\Infrastructure\Integrations\Channels\EmailChannel;
-use App\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel;
+use Lebytek\Framework\Application\Integrations\IntegrationsFactory;
+use Lebytek\Framework\Domain\Integrations\ApiConnectorInterface;
+use Lebytek\Framework\Infrastructure\Integrations\Channels\EmailChannel;
+use Lebytek\Framework\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel;
 
 test('buildChannels solo incluye canales habilitados y construye la clase correcta', function (): void {
     $mailer = new SpyMailer();          // de EmailChannelTest (cargado por el runner)

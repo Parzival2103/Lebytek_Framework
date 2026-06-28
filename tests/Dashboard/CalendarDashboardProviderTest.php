@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Services\CalendarConfigLoader;
-use App\Application\Services\CalendarConfigValidator;
-use App\Domain\Dashboard\DashboardBuildContext;
-use App\Infrastructure\Dashboard\CalendarDashboardProvider;
+use Lebytek\Framework\Application\Services\CalendarConfigLoader;
+use Lebytek\Framework\Application\Services\CalendarConfigValidator;
+use Lebytek\Framework\Domain\Dashboard\DashboardBuildContext;
+use Lebytek\Framework\Infrastructure\Dashboard\CalendarDashboardProvider;
 
 function cal_provider(): CalendarDashboardProvider
 {

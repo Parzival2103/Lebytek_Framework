@@ -1,6 +1,6 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
-/** @var \App\Application\DTO\Dashboard\DashboardViewModel $dashboard */
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+/** @var \Lebytek\Framework\Application\DTO\Dashboard\DashboardViewModel $dashboard */
 $sec = $dashboard->sections;
 $items = $dashboard->activityItems;
 $title = $sec['activityTitle'] ?? 'Actividad reciente';

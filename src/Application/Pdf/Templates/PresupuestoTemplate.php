@@ -1,17 +1,17 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Pdf\Templates;
+namespace Lebytek\Framework\Application\Pdf\Templates;
 
-use App\Domain\Pdf\PdfDataTable;
-use App\Domain\Pdf\PdfDocument;
-use App\Domain\Pdf\PdfHeader;
-use App\Domain\Pdf\PdfPageSetup;
-use App\Domain\Pdf\PdfSignatureBlock;
-use App\Domain\Pdf\PdfSpacer;
-use App\Domain\Pdf\PdfTemplateInterface;
-use App\Domain\Pdf\PdfText;
-use App\Domain\Pdf\PdfTotalsBlock;
+use Lebytek\Framework\Domain\Pdf\PdfDataTable;
+use Lebytek\Framework\Domain\Pdf\PdfDocument;
+use Lebytek\Framework\Domain\Pdf\PdfHeader;
+use Lebytek\Framework\Domain\Pdf\PdfPageSetup;
+use Lebytek\Framework\Domain\Pdf\PdfSignatureBlock;
+use Lebytek\Framework\Domain\Pdf\PdfSpacer;
+use Lebytek\Framework\Domain\Pdf\PdfTemplateInterface;
+use Lebytek\Framework\Domain\Pdf\PdfText;
+use Lebytek\Framework\Domain\Pdf\PdfTotalsBlock;
 
 /**
  * Documento de registro para un pedido: presupuesto con datos de cliente, conceptos y firma.

@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\UseCases\Calendar;
+namespace Lebytek\Framework\Application\UseCases\Calendar;
 
-use App\Application\Services\CalendarConfigLoader;
-use App\Application\Services\CalendarEventMapper;
-use App\Domain\Calendar\DateRange;
-use App\Domain\Interfaces\CalendarEventSourceInterface;
+use Lebytek\Framework\Application\Services\CalendarConfigLoader;
+use Lebytek\Framework\Application\Services\CalendarEventMapper;
+use Lebytek\Framework\Domain\Calendar\DateRange;
+use Lebytek\Framework\Domain\Interfaces\CalendarEventSourceInterface;
 
 final class ListarEventosCalendarioUseCase
 {

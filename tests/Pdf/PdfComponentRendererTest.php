@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Pdf\PdfComponentRenderer;
-use App\Domain\Pdf\PdfHeader;
-use App\Domain\Pdf\PdfText;
-use App\Domain\Pdf\PdfDataTable;
-use App\Domain\Pdf\PdfTotalsBlock;
-use App\Domain\Pdf\PdfPageBreak;
+use Lebytek\Framework\Application\Pdf\PdfComponentRenderer;
+use Lebytek\Framework\Domain\Pdf\PdfHeader;
+use Lebytek\Framework\Domain\Pdf\PdfText;
+use Lebytek\Framework\Domain\Pdf\PdfDataTable;
+use Lebytek\Framework\Domain\Pdf\PdfTotalsBlock;
+use Lebytek\Framework\Domain\Pdf\PdfPageBreak;
 
 test('renderiza header escapando el título', function (): void {
     $html = (new PdfComponentRenderer())->renderBlocks([new PdfHeader('<b>A&B</b>', 'sub')]);

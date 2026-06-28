@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 require_once ROOT_PATH . '/tests/fixtures/pdf_templates.php';
 
-use App\Application\Pdf\PdfComponentRenderer;
-use App\Application\Pdf\PdfRenderingService;
-use App\Application\Pdf\PdfTemplateRegistry;
-use App\Domain\Pdf\PdfDocument;
-use App\Domain\Pdf\PdfEngineInterface;
-use App\Domain\Pdf\PdfHeader;
-use App\Domain\Pdf\PdfPageSetup;
+use Lebytek\Framework\Application\Pdf\PdfComponentRenderer;
+use Lebytek\Framework\Application\Pdf\PdfRenderingService;
+use Lebytek\Framework\Application\Pdf\PdfTemplateRegistry;
+use Lebytek\Framework\Domain\Pdf\PdfDocument;
+use Lebytek\Framework\Domain\Pdf\PdfEngineInterface;
+use Lebytek\Framework\Domain\Pdf\PdfHeader;
+use Lebytek\Framework\Domain\Pdf\PdfPageSetup;
 
 /** Motor falso: captura el HTML y la configuración recibidos. */
 final class SpyEngine implements PdfEngineInterface
@@ -58,7 +58,7 @@ test('renderTemplate resuelve la clave, compone y renderiza', function (): void 
 test('renderTemplate con motor real produce %PDF', function (): void {
     $service = new PdfRenderingService(
         new PdfComponentRenderer(),
-        new \App\Infrastructure\Pdf\DompdfRenderer(),
+        new \Lebytek\Framework\Infrastructure\Pdf\DompdfRenderer(),
         new PdfTemplateRegistry(['ok' => FixtureOkTemplate::class]),
         []
     );
@@ -72,7 +72,7 @@ test('la plantilla demo registrada en config produce un PDF de colección', func
 
     $service = new PdfRenderingService(
         new PdfComponentRenderer(),
-        new \App\Infrastructure\Pdf\DompdfRenderer(),
+        new \Lebytek\Framework\Infrastructure\Pdf\DompdfRenderer(),
         new PdfTemplateRegistry($map),
         $pdfConfig
     );

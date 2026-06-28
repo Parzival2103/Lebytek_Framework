@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Domain\Interfaces\MigrationRepositoryInterface;
-use App\Domain\Interfaces\ModuleStateRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\MigrationRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\ModuleStateRepositoryInterface;
 
 final class FakeMigrationRepository implements MigrationRepositoryInterface
 {

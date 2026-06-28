@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use App\Domain\Reporte\ReporteFuente;
+use Lebytek\Framework\Domain\Reporte\ReporteFuente;
 
 test('ReporteFuente expone relationNames desde expose.relations', function (): void {
     $fuente = ReporteFuente::fromArray('pedidos', [

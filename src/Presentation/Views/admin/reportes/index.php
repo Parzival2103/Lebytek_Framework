@@ -1,6 +1,6 @@
 <?php
 /** @var array $reportes */
-use App\Kernel\Security\Csrf;
+use Lebytek\Framework\Kernel\Security\Csrf;
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4 mb-0">Reportes</h1>

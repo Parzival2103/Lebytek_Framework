@@ -87,5 +87,5 @@
     </ul>
   </div>
 
-  <?= \App\Kernel\Helpers\ViewHelper::partial('datatables_responsive') ?>
+  <?= \Lebytek\Framework\Kernel\Helpers\ViewHelper::partial('datatables_responsive') ?>
 </div>

@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 return [
     'providers' => [
-        \App\Infrastructure\Dashboard\DefaultPlatformDashboardProvider::class,
-        \App\Infrastructure\Dashboard\CalendarDashboardProvider::class,
+        \Lebytek\Framework\Infrastructure\Dashboard\DefaultPlatformDashboardProvider::class,
+        \Lebytek\Framework\Infrastructure\Dashboard\CalendarDashboardProvider::class,
     ],
 ];

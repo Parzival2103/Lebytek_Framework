@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
 
 test('AppConstants: resolveEmpresaNombre usa Framework Lebytek cuando está vacío', function (): void {
     assert_same('Framework Lebytek', AppConstants::resolveEmpresaNombre(null));

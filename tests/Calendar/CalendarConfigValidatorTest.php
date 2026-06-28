@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Services\CalendarConfigValidator;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\Services\CalendarConfigValidator;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 function cv_cols(): array { return ['id', 'cliente', 'servicio', 'estado', 'fecha_inicio', 'fecha_fin']; }
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Install;
+namespace Lebytek\Framework\Application\Install;
 
 final class InstallPlan
 {

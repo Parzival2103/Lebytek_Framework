@@ -2,7 +2,7 @@
 // app/Presentation/Views/publico/partials/_trust.php
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $items = is_array($trust['items'] ?? null) ? $trust['items'] : [];
 if ($items === []) {

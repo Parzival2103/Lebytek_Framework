@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudActionResolver;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Exceptions\ValidationException;
-use App\Kernel\Constants\UiConfirmConstants;
+use Lebytek\Framework\Application\Services\CrudActionResolver;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Kernel\Constants\UiConfirmConstants;
 
 function resolver_def(): CrudResourceDefinition
 {

@@ -1,6 +1,6 @@
 <?php
-use App\Kernel\Helpers\ViewHelper;
-/** @var \App\Application\DTO\Dashboard\DashboardViewModel $dashboard */
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+/** @var \Lebytek\Framework\Application\DTO\Dashboard\DashboardViewModel $dashboard */
 ?>
 
 <div class="ct-page">

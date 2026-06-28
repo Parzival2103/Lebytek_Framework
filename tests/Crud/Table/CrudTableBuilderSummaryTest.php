@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudTableBuilder;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Kernel\Helpers\Paginator;
+use Lebytek\Framework\Application\Services\CrudTableBuilder;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Kernel\Helpers\Paginator;
 
 function tb_flat_def(): CrudResourceDefinition
 {

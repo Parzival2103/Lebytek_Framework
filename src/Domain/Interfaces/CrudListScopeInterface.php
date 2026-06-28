@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Interfaces;
+namespace Lebytek\Framework\Domain\Interfaces;
 
-use App\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
 
 interface CrudListScopeInterface
 {

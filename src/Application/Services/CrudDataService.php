@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Application\Crud\Context\CrudListContext;
-use App\Application\Crud\Context\CrudValidationContext;
-use App\Application\Crud\Context\CrudWriteContext;
-use App\Domain\Entities\CrudFieldDefinition;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\BitacoraRepositoryInterface;
-use App\Domain\Interfaces\CrudValidatorInterface;
-use App\Infrastructure\Repositories\GenericCrudRepository;
-use App\Kernel\Config\Config;
-use App\Kernel\Helpers\Paginator;
-use App\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Application\Crud\Context\CrudValidationContext;
+use Lebytek\Framework\Application\Crud\Context\CrudWriteContext;
+use Lebytek\Framework\Domain\Entities\CrudFieldDefinition;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\BitacoraRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\CrudValidatorInterface;
+use Lebytek\Framework\Infrastructure\Repositories\GenericCrudRepository;
+use Lebytek\Framework\Kernel\Config\Config;
+use Lebytek\Framework\Kernel\Helpers\Paginator;
+use Lebytek\Framework\Kernel\Logging\AppLogger;
 
 final class CrudDataService
 {
@@ -654,10 +654,10 @@ final class CrudDataService
 
         $service = $this->fileUploadService ?? new FileUploadService(
             new ImageProcessor(),
-            new \App\Infrastructure\Repositories\ArchivoRepository()
+            new \Lebytek\Framework\Infrastructure\Repositories\ArchivoRepository()
         );
 
-        $archivo = $service->handle($file, new \App\Application\DTO\Files\FileUploadConfig(
+        $archivo = $service->handle($file, new \Lebytek\Framework\Application\DTO\Files\FileUploadConfig(
             entidadTipo: 'crud:' . $definition->key(),
             directorio: $definition->uploadsPath(),
             maxBytes: ((int) Config::get('security.max_upload_mb', 10)) * 1024 * 1024,

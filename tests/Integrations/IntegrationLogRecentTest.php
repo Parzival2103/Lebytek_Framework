@@ -2,8 +2,8 @@
 // tests/Integrations/IntegrationLogRecentTest.php
 declare(strict_types=1);
 
-use App\Infrastructure\Integrations\Repositories\IntegrationLogRepository;
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationLogRepository;
+use Lebytek\Framework\Kernel\Database\Connection;
 
 test('recent devuelve los últimos envíos, más nuevos primero', function () {
     $pdo = Connection::getInstance();

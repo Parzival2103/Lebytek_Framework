@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Integrations\GreenApi;
+namespace Lebytek\Framework\Infrastructure\Integrations\GreenApi;
 
-use App\Domain\Integrations\ApiConnectorInterface;
+use Lebytek\Framework\Domain\Integrations\ApiConnectorInterface;
 
 /**
  * Operaciones de cuenta Green API (QR, estado, etc.) para una instancia concreta.

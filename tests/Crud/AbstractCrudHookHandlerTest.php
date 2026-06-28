@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudWriteContext;
-use App\Application\Crud\Handlers\AbstractCrudHookHandler;
-use App\Domain\Interfaces\CrudHookHandlerInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudWriteContext;
+use Lebytek\Framework\Application\Crud\Handlers\AbstractCrudHookHandler;
+use Lebytek\Framework\Domain\Interfaces\CrudHookHandlerInterface;
 
 test('AbstractCrudHookHandler: is a CrudHookHandlerInterface with no-op typed hooks', function (): void {
     $handler = new class extends AbstractCrudHookHandler {};

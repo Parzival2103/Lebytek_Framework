@@ -2,7 +2,7 @@
 // app/Presentation/Views/publico/partials/_footer.php
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $footer        = is_array($footer ?? null) ? $footer : [];
 $columnas      = is_array($footer['columnas'] ?? null) ? $footer['columnas'] : [];

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Install;
+namespace Lebytek\Framework\Infrastructure\Install;
 
 /**
  * Trazas unificadas del wizard/CLI de instalación en error_log.

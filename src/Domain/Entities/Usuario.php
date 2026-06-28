@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Entities;
+namespace Lebytek\Framework\Domain\Entities;
 
-use App\Domain\ValueObjects\Email;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\ValueObjects\Email;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 /*
 |--------------------------------------------------------------------------

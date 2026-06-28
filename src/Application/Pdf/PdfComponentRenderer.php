@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Pdf;
+namespace Lebytek\Framework\Application\Pdf;
 
-use App\Domain\Pdf\PdfBlock;
-use App\Domain\Pdf\PdfDataTable;
-use App\Domain\Pdf\PdfFooter;
-use App\Domain\Pdf\PdfHeader;
-use App\Domain\Pdf\PdfIndicatorCard;
-use App\Domain\Pdf\PdfLogo;
-use App\Domain\Pdf\PdfPageBreak;
-use App\Domain\Pdf\PdfSignatureBlock;
-use App\Domain\Pdf\PdfSpacer;
-use App\Domain\Pdf\PdfText;
-use App\Domain\Pdf\PdfTotalsBlock;
+use Lebytek\Framework\Domain\Pdf\PdfBlock;
+use Lebytek\Framework\Domain\Pdf\PdfDataTable;
+use Lebytek\Framework\Domain\Pdf\PdfFooter;
+use Lebytek\Framework\Domain\Pdf\PdfHeader;
+use Lebytek\Framework\Domain\Pdf\PdfIndicatorCard;
+use Lebytek\Framework\Domain\Pdf\PdfLogo;
+use Lebytek\Framework\Domain\Pdf\PdfPageBreak;
+use Lebytek\Framework\Domain\Pdf\PdfSignatureBlock;
+use Lebytek\Framework\Domain\Pdf\PdfSpacer;
+use Lebytek\Framework\Domain\Pdf\PdfText;
+use Lebytek\Framework\Domain\Pdf\PdfTotalsBlock;
 
 /**
  * Convierte bloques de documento (VOs puros) en HTML pensado para dompdf. Toda
@@ -24,7 +24,10 @@ use App\Domain\Pdf\PdfTotalsBlock;
  */
 final class PdfComponentRenderer
 {
-    private const COMPONENTS_DIR = ROOT_PATH . '/app/Presentation/Views/partials/pdf/components/';
+    private static function componentsDir(): string
+    {
+        return dirname(__DIR__, 2) . '/Presentation/Views/partials/pdf/components/';
+    }
 
     /** @param list<PdfBlock> $blocks */
     public function renderBlocks(array $blocks): string
@@ -108,7 +111,7 @@ final class PdfComponentRenderer
     /** @param array<string,mixed> $vars */
     private function partial(string $name, array $vars): string
     {
-        $file = self::COMPONENTS_DIR . $name . '.php';
+        $file = self::componentsDir() . $name . '.php';
         if (!is_readable($file)) {
             return '';
         }

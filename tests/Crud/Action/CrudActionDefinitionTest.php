@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\Crud\CrudActionDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition;
 
 test('CrudActionDefinition: parses a handler action', function (): void {
     $a = CrudActionDefinition::fromArray([
@@ -88,7 +88,7 @@ test('CrudActionDefinition: builtin predicate', function (): void {
 });
 
 test('CrudActionDefinition: parses guard key for transition actions', function (): void {
-    $a = \App\Domain\Entities\Crud\CrudActionDefinition::fromArray([
+    $a = \Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition::fromArray([
         'name' => 'autorizar',
         'type' => 'transition',
         'to' => 'autorizado',
@@ -100,8 +100,8 @@ test('CrudActionDefinition: parses guard key for transition actions', function (
 });
 
 test('CrudActionDefinition: guard is null when absent or empty', function (): void {
-    $a = \App\Domain\Entities\Crud\CrudActionDefinition::fromArray(['name' => 'edit', 'type' => 'builtin']);
+    $a = \Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition::fromArray(['name' => 'edit', 'type' => 'builtin']);
     assert_null($a->guard());
-    $b = \App\Domain\Entities\Crud\CrudActionDefinition::fromArray(['name' => 'x', 'type' => 'transition', 'to' => 't', 'guard' => '']);
+    $b = \Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition::fromArray(['name' => 'x', 'type' => 'transition', 'to' => 't', 'guard' => '']);
     assert_null($b->guard());
 });

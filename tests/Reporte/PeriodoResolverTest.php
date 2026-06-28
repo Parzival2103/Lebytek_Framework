@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\Reporte\PeriodoResolver;
+use Lebytek\Framework\Application\Reporte\PeriodoResolver;
 
 function pr_now(): DateTimeImmutable
 {

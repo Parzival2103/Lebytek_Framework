@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudConfigValidator;
+use Lebytek\Framework\Application\Services\CrudConfigValidator;
 
 test('actionsBlockErrors: no actions block is fine', function (): void {
     assert_same([], CrudConfigValidator::actionsBlockErrors([]));

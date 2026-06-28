@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Logging;
+namespace Lebytek\Framework\Infrastructure\Logging;
 
-use App\Domain\Interfaces\AuditoriaLoggerInterface;
-use App\Domain\Interfaces\BitacoraRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\AuditoriaLoggerInterface;
+use Lebytek\Framework\Domain\Interfaces\BitacoraRepositoryInterface;
 
 final class InfraLogger implements AuditoriaLoggerInterface
 {

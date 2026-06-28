@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Interfaces;
+namespace Lebytek\Framework\Domain\Interfaces;
 
-use App\Application\Crud\Context\CrudWriteContext;
+use Lebytek\Framework\Application\Crud\Context\CrudWriteContext;
 
 /**
  * Contrato para hooks de escritura del CRUD Engine.

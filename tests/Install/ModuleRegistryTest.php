@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Install\ModuleRegistry;
-use App\Application\Install\ModuleManifest;
+use Lebytek\Framework\Application\Install\ModuleRegistry;
+use Lebytek\Framework\Application\Install\ModuleManifest;
 
 test('ModuleRegistry::all carga manifiestos por clave', function (): void {
     $reg = new ModuleRegistry(ROOT_PATH . '/tests/fixtures/modules_ok');

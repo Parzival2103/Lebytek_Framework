@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\Crud\CrudStateMachine;
-use App\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudStateMachine;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 
 function states_config(array $extra = []): array
 {

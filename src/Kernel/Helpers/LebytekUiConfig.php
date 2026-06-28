@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Helpers;
+namespace Lebytek\Framework\Kernel\Helpers;
 
-use App\Kernel\Constants\AppConstants;
+use Lebytek\Framework\Kernel\Constants\AppConstants;
 
 /**
  * Resuelve tokens visuales LEBYTEK UI desde cfg_configuraciones (claves planas o con prefijos).

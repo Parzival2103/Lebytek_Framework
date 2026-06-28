@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Entities\CalendarDefinition;
-use App\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Entities\CalendarDefinition;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 
 /**
  * Construye los datos del shell del calendario: vistas, filtros (con opciones),

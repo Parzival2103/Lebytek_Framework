@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Pdf;
+namespace Lebytek\Framework\Infrastructure\Pdf;
 
-use App\Domain\Pdf\PdfEngineInterface;
-use App\Domain\Pdf\PdfPageSetup;
+use Lebytek\Framework\Domain\Pdf\PdfEngineInterface;
+use Lebytek\Framework\Domain\Pdf\PdfPageSetup;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 

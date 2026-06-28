@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-use App\Infrastructure\Pdf\DompdfRenderer;
-use App\Infrastructure\Pdf\PdfStorage;
-use App\Domain\Pdf\PdfPageSetup;
+use Lebytek\Framework\Infrastructure\Pdf\DompdfRenderer;
+use Lebytek\Framework\Infrastructure\Pdf\PdfStorage;
+use Lebytek\Framework\Domain\Pdf\PdfPageSetup;
 
 test('DompdfRenderer produce bytes que empiezan con %PDF', function (): void {
     $bytes = (new DompdfRenderer())->render(

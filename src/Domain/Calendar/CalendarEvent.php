@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Domain\Calendar;
+namespace Lebytek\Framework\Domain\Calendar;
 
 final class CalendarEvent
 {

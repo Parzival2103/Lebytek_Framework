@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudActionContext;
-use App\Application\Services\CrudActionService;
-use App\Application\Services\CrudHandlerRegistry;
-use App\Domain\Entities\Crud\CrudActionDefinition;
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
+use Lebytek\Framework\Application\Services\CrudActionService;
+use Lebytek\Framework\Application\Services\CrudHandlerRegistry;
+use Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 require_once dirname(__DIR__, 1) . '/../fixtures/action_handlers.php';
 

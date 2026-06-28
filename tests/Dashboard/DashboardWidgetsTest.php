@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-use App\Application\UseCases\Dashboard\BuildDashboardViewModelUseCase;
-use App\Domain\Dashboard\DashboardBuildContext;
-use App\Domain\Dashboard\DashboardContribution;
-use App\Domain\Interfaces\DashboardContributionProviderInterface;
+use Lebytek\Framework\Application\UseCases\Dashboard\BuildDashboardViewModelUseCase;
+use Lebytek\Framework\Domain\Dashboard\DashboardBuildContext;
+use Lebytek\Framework\Domain\Dashboard\DashboardContribution;
+use Lebytek\Framework\Domain\Interfaces\DashboardContributionProviderInterface;
 
 test('BuildDashboardViewModelUseCase fusiona widgets de los proveedores', function (): void {
     $provider = new class implements DashboardContributionProviderInterface {

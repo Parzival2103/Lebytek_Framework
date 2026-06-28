@@ -1,4 +1,4 @@
-<?php use App\Kernel\Helpers\ViewHelper; ?>
+<?php use Lebytek\Framework\Kernel\Helpers\ViewHelper; ?>
 
 <!-- Overlay del panel de estilos -->
 <div id="stylePanelOverlay"></div>

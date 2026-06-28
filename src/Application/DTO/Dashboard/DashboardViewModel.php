@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\DTO\Dashboard;
+namespace Lebytek\Framework\Application\DTO\Dashboard;
 
 /**
  * Modelo único pasado a la vista admin/dashboard + parciales.

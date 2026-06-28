@@ -6,7 +6,7 @@ namespace App\Infrastructure\Marketing;
 
 use App\Domain\Marketing\Contracts\LeadRepositoryInterface;
 use App\Domain\Marketing\ValueObjects\LeadDraft;
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\Database\Connection;
 
 final class PdoLeadRepository implements LeadRepositoryInterface
 {

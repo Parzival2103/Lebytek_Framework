@@ -1,7 +1,7 @@
 <?php
 // app/Presentation/Views/publico/portal.php
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $mensaje   = $mensaje ?? '';
 $provision = $provision ?? null;

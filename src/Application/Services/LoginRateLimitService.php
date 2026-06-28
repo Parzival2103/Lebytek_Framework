@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Exceptions\AuthException;
-use App\Domain\Interfaces\LoginIntentoRepositoryInterface;
-use App\Kernel\Logging\AppLogger;
+use Lebytek\Framework\Domain\Exceptions\AuthException;
+use Lebytek\Framework\Domain\Interfaces\LoginIntentoRepositoryInterface;
+use Lebytek\Framework\Kernel\Logging\AppLogger;
 
 /*
 |--------------------------------------------------------------------------

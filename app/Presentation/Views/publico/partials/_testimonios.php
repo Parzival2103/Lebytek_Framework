@@ -2,7 +2,7 @@
 // app/Presentation/Views/publico/partials/_testimonios.php
 declare(strict_types=1);
 
-use App\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $items = is_array($testimonios['items'] ?? null) ? $testimonios['items'] : [];
 if ($items === []) {

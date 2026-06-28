@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Calendar\DateRange;
-use App\Domain\Exceptions\ValidationException;
-use App\Domain\Interfaces\CalendarEventSourceInterface;
-use App\Kernel\Security\Session;
+use Lebytek\Framework\Domain\Calendar\DateRange;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\CalendarEventSourceInterface;
+use Lebytek\Framework\Kernel\Security\Session;
 
 final class CrudResourceService implements CalendarEventSourceInterface
 {
@@ -29,7 +29,7 @@ final class CrudResourceService implements CalendarEventSourceInterface
         return $this->returnUrlResolver->resolve($resource, $candidate);
     }
 
-    private function assertOwnership(\App\Domain\Entities\CrudResourceDefinition $definition, array $row, ?int $userId): void
+    private function assertOwnership(\Lebytek\Framework\Domain\Entities\CrudResourceDefinition $definition, array $row, ?int $userId): void
     {
         // Fuente única de verdad del bloqueo de propiedad (ver CrudScopeResolver::assertOwnedBy).
         // Tratar como inexistente para no revelar registros ajenos (404 en show/edit).
@@ -148,7 +148,7 @@ final class CrudResourceService implements CalendarEventSourceInterface
      * @param array<string,mixed> $prefill
      * @return array<string,mixed>
      */
-    private function filterPrefill(\App\Domain\Entities\CrudResourceDefinition $definition, array $prefill): array
+    private function filterPrefill(\Lebytek\Framework\Domain\Entities\CrudResourceDefinition $definition, array $prefill): array
     {
         if ($prefill === []) {
             return [];

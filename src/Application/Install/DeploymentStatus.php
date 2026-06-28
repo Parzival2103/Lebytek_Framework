@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Install;
+namespace Lebytek\Framework\Application\Install;
 
-use App\Domain\Interfaces\ModuleStateRepositoryInterface;
+use Lebytek\Framework\Domain\Interfaces\ModuleStateRepositoryInterface;
 
 /**
  * Fuente única del estado del despliegue: versión de plataforma, módulos

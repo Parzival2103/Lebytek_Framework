@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Domain\Entities\Archivo;
-use App\Domain\Interfaces\ArchivoRepositoryInterface;
+use Lebytek\Framework\Domain\Entities\Archivo;
+use Lebytek\Framework\Domain\Interfaces\ArchivoRepositoryInterface;
 
 if (!class_exists('FakeArchivoRepository')) {
     /**

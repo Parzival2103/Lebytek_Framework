@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use App\Domain\Calendar\DateRange;
+use Lebytek\Framework\Domain\Calendar\DateRange;
 
 test('DateRange::forMonth abarca el mes completo', function (): void {
     $r = DateRange::forMonth(2026, 6);

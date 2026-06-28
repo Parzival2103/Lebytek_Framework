@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Crud\Handlers;
+namespace Lebytek\Framework\Application\Crud\Handlers;
 
-use App\Application\Crud\Context\CrudActionContext;
-use App\Domain\Interfaces\CrudActionHandlerInterface;
-use App\Infrastructure\Repositories\GenericCrudRepository;
+use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
+use Lebytek\Framework\Domain\Interfaces\CrudActionHandlerInterface;
+use Lebytek\Framework\Infrastructure\Repositories\GenericCrudRepository;
 
 /**
  * Acción demo: alterna el estado activo/inactivo de un producto.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudActionContext;
-use App\Application\Crud\Context\CrudWriteContext;
-use App\Application\Crud\Handlers\AbstractCrudHookHandler;
-use App\Domain\Interfaces\CrudActionHandlerInterface;
+use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
+use Lebytek\Framework\Application\Crud\Context\CrudWriteContext;
+use Lebytek\Framework\Application\Crud\Handlers\AbstractCrudHookHandler;
+use Lebytek\Framework\Domain\Interfaces\CrudActionHandlerInterface;
 
 if (!class_exists('MutatingHookHandler')) {
     /** Hook handler que muta data en beforeCreate (prueba del read-back). */

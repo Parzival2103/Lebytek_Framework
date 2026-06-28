@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Http;
+namespace Lebytek\Framework\Kernel\Http;
 
-use App\Kernel\Container\Container;
-use App\Kernel\Exceptions\HttpException;
+use Lebytek\Framework\Kernel\Container\Container;
+use Lebytek\Framework\Kernel\Exceptions\HttpException;
 
 final class Router
 {

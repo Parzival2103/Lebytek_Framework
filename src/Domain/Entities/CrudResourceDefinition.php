@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Entities;
+namespace Lebytek\Framework\Domain\Entities;
 
-use App\Domain\Entities\Crud\CrudActionDefinition;
-use App\Domain\Entities\Crud\CrudRelationDefinition;
-use App\Domain\Entities\Crud\CrudStateMachine;
-use App\Domain\Entities\Crud\CrudTabDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudRelationDefinition;
+use Lebytek\Framework\Domain\Entities\Crud\CrudStateMachine;
+use Lebytek\Framework\Domain\Entities\Crud\CrudTabDefinition;
 
 final class CrudResourceDefinition
 {

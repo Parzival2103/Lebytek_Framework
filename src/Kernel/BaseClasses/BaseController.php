@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\BaseClasses;
+namespace Lebytek\Framework\Kernel\BaseClasses;
 
-use App\Kernel\Http\Request;
-use App\Kernel\Http\Response;
-use App\Kernel\Http\SafeRedirect;
-use App\Kernel\Helpers\ViewHelper;
-use App\Kernel\Security\Session;
-use App\Kernel\Security\Csrf;
+use Lebytek\Framework\Kernel\Http\Request;
+use Lebytek\Framework\Kernel\Http\Response;
+use Lebytek\Framework\Kernel\Http\SafeRedirect;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use Lebytek\Framework\Kernel\Security\Session;
+use Lebytek\Framework\Kernel\Security\Csrf;
 
 abstract class BaseController
 {
@@ -48,7 +48,7 @@ abstract class BaseController
 
         if (!Csrf::verify((string) $token)) {
             Session::flash('error', 'Token de seguridad inválido. Intenta de nuevo.');
-            throw new \App\Kernel\Exceptions\HttpException('CSRF token inválido.', 419);
+            throw new \Lebytek\Framework\Kernel\Exceptions\HttpException('CSRF token inválido.', 419);
         }
     }
 

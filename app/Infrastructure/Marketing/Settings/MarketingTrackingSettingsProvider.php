@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Marketing\Settings;
 
-use App\Domain\Interfaces\SettingsSectionProviderInterface;
+use Lebytek\Framework\Domain\Interfaces\SettingsSectionProviderInterface;
 
 final class MarketingTrackingSettingsProvider implements SettingsSectionProviderInterface
 {

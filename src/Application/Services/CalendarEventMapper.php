@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\Services;
+namespace Lebytek\Framework\Application\Services;
 
-use App\Domain\Calendar\CalendarEvent;
-use App\Domain\Entities\CalendarDefinition;
+use Lebytek\Framework\Domain\Calendar\CalendarEvent;
+use Lebytek\Framework\Domain\Entities\CalendarDefinition;
 
 final class CalendarEventMapper
 {

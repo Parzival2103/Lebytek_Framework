@@ -2,9 +2,9 @@
 // tests/Integrations/IntegrationAccountRepositoryTest.php
 declare(strict_types=1);
 
-use App\Domain\Integrations\IntegrationAccount;
-use App\Infrastructure\Integrations\Repositories\IntegrationAccountRepository;
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Domain\Integrations\IntegrationAccount;
+use Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationAccountRepository;
+use Lebytek\Framework\Kernel\Database\Connection;
 
 test('save + findById conserva datos y descifra el token', function () {
     $pdo = Connection::getInstance();

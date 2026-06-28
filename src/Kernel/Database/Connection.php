@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Database;
+namespace Lebytek\Framework\Kernel\Database;
 
 use PDO;
 use PDOException;
-use App\Kernel\Exceptions\AppException;
+use Lebytek\Framework\Kernel\Exceptions\AppException;
 
 /*
 |--------------------------------------------------------------------------

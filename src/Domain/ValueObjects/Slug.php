@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\ValueObjects;
+namespace Lebytek\Framework\Domain\ValueObjects;
 
-use App\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Exceptions\ValidationException;
 
 /*
 |--------------------------------------------------------------------------

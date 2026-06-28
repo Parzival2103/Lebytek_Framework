@@ -2,7 +2,7 @@
 // tests/Integrations/HttpApiConnectorTest.php
 declare(strict_types=1);
 
-use App\Infrastructure\Integrations\Http\HttpApiConnector;
+use Lebytek\Framework\Infrastructure\Integrations\Http\HttpApiConnector;
 
 test('un host inalcanzable devuelve status 0 sin lanzar excepción', function (): void {
     $connector = new HttpApiConnector(1); // timeout 1s

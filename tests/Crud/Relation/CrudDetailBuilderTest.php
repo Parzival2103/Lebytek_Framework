@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Application\Services\CrudDetailBuilder;
-use App\Application\Services\CrudRelationService;
-use App\Domain\Entities\CrudResourceDefinition;
-use App\Domain\Interfaces\BitacoraRepositoryInterface;
+use Lebytek\Framework\Application\Services\CrudDetailBuilder;
+use Lebytek\Framework\Application\Services\CrudRelationService;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Interfaces\BitacoraRepositoryInterface;
 
 require_once dirname(__DIR__, 2) . '/fixtures/relation_repos.php';
 

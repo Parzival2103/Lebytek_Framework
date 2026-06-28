@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Domain\Reporte;
+namespace Lebytek\Framework\Domain\Reporte;
 
-use App\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 
 /**
  * Frontera de lectura de datos para reportes. La implementación real adapta

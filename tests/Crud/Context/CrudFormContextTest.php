@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Crud\Context\CrudContext;
-use App\Application\Crud\Context\CrudFormContext;
+use Lebytek\Framework\Application\Crud\Context\CrudContext;
+use Lebytek\Framework\Application\Crud\Context\CrudFormContext;
 
 test('CrudFormContext: exposes edit flag and record', function (): void {
     $ctx = new CrudFormContext('eventos', 'dom_eventos', 'id', 1, '', true, ['id' => 5]);

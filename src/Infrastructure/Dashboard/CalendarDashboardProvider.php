@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Dashboard;
+namespace Lebytek\Framework\Infrastructure\Dashboard;
 
-use App\Application\Services\CalendarConfigLoader;
-use App\Domain\Dashboard\DashboardBuildContext;
-use App\Domain\Dashboard\DashboardContribution;
-use App\Domain\Interfaces\DashboardContributionProviderInterface;
+use Lebytek\Framework\Application\Services\CalendarConfigLoader;
+use Lebytek\Framework\Domain\Dashboard\DashboardBuildContext;
+use Lebytek\Framework\Domain\Dashboard\DashboardContribution;
+use Lebytek\Framework\Domain\Interfaces\DashboardContributionProviderInterface;
 
 /**
  * Aporta un widget mini-calendario (solo vista) por cada calendario con

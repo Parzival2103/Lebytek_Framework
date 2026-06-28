@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Marketing;
 
 use App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface;
-use App\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\Database\Connection;
 
 final class PdoMarketingContentRepository implements MarketingContentRepositoryInterface
 {

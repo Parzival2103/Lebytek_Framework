@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Integrations;
+namespace Lebytek\Framework\Domain\Integrations;
 
 interface MessageSenderInterface
 {

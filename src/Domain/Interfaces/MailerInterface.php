@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Interfaces;
+namespace Lebytek\Framework\Domain\Interfaces;
 
-use App\Application\DTO\Mail\MensajeCorreo;
+use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
 
 /*
 |--------------------------------------------------------------------------
