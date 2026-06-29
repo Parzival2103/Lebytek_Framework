@@ -72,11 +72,44 @@ final class Request
             $uri,
             $_GET,
             $_POST,
-            getallheaders() ?: [],
+            self::captureHeaders(),
             $_FILES,
             $_COOKIE,
             $_SERVER
         );
+    }
+
+    /**
+     * getallheaders() solo existe bajo mod_php (Apache). En nginx/FPM hay que
+     * reconstruir cabeceras desde $_SERVER.
+     */
+    private static function captureHeaders(): array
+    {
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+
+            return is_array($headers) ? $headers : [];
+        }
+
+        $headers = [];
+        foreach ($_SERVER as $key => $value) {
+            if (! is_string($value)) {
+                continue;
+            }
+
+            if (str_starts_with($key, 'HTTP_')) {
+                $name = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
+                $headers[$name] = $value;
+                continue;
+            }
+
+            if (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH'], true)) {
+                $name = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))));
+                $headers[$name] = $value;
+            }
+        }
+
+        return $headers;
     }
 
     private static function resolveBasePath(): string
