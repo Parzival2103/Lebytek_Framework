@@ -5,6 +5,7 @@
 .env
 .envbk
 public/uploads/
+scripts/_vps*
 public/error_log
 public/install/error_log
 storage/logs/*.log

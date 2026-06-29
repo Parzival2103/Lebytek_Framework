@@ -8,6 +8,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The local clone lives at `C:\Users\User\OneDrive\Desktop\sistemas\contraste` and tracks `https://github.com/Parzival2103/Lebytek_Framework`. A VPS auto-pulls from `main` (testing environment), so pushes go directly without PRs.
 
+> **Note:** This is the framework **source** repo. The framework is consumed (via Composer,
+> from `vendor/`) by separate application repos — e.g. the skeleton in `skeleton/`, which
+> carries its own `CLAUDE.md` and `.cursor/rules` describing the read-only-`vendor/`
+> working model. Here in the source repo, the framework code under `src/` is edited
+> directly through the usual spec → plan → change flow.
+
 ---
 
 ## Common Commands
