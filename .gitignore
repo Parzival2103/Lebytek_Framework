@@ -13,3 +13,7 @@ storage/logs/*.log
 # Módulo legado de referencia (app WhatsApp SaaS plana). Contiene src/config.php
 # con credenciales locales reales — nunca debe entrar al repo.
 /nuevo_modulo/
+
+# Esqueleto de app consumidora: vive aqui solo como base de trabajo,
+# se mueve a su propio repo y se consume vendor lebytek/framework via Composer.
+/skeleton/
