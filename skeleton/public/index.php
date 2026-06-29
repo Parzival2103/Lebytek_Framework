@@ -16,6 +16,10 @@ define('PUBLIC_PATH', __DIR__);
 define('STORAGE_PATH', ROOT_PATH . '/storage');
 define('APP_START', microtime(true));
 
-require ROOT_PATH . '/vendor/autoload.php';
+$vendorAutoload = ROOT_PATH . '/vendor/autoload.php';
+if (!is_readable($vendorAutoload)) {
+    $vendorAutoload = dirname(__DIR__, 2) . '/vendor/autoload.php';
+}
+require $vendorAutoload;
 
 \Lebytek\Framework\Kernel\Bootstrap::run();
