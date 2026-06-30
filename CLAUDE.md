@@ -13,7 +13,11 @@ Guidance for working in **Lebytek_Framework** — monorepo desplegable en lebyte
 
 **Modelo monorepo:** el framework se edita en `src/`. La app se edita en `app/`, `config/`, `routes/`. Un solo `composer install` en la raíz autoloada ambos. No hay `vendor/lebytek/framework` en desarrollo local de este repo.
 
-Integración api: ver `docs/integration/waapi-api-contract.md` y `waapi-implementation-real.md`.
+Integración api:
+- Contrato API: `docs/integration/waapi-api-contract.md`
+- Delegación roles (lebytek.com ↔ api): `docs/integration/role-delegation-lebytek-api.md`
+- Guía implementación back-office: `docs/integration/lebytek-implementation-real.md`
+- Spec alineación docs (repo api): ver `WhatsApiLebytek/docs/superpowers/specs/2026-06-30-integration-docs-alignment-design.md`
 
 ## Commands
 
