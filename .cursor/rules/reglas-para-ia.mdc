@@ -1,5 +1,5 @@
 ---
-description: Guardrails para desarrollo asistido por IA en este proyecto
+description: Guardrails para desarrollo asistido por IA en la app consumidora
 alwaysApply: true
 ---
 
@@ -7,19 +7,29 @@ alwaysApply: true
 
 Al proponer o implementar cambios, la IA debe:
 
-- Respetar la arquitectura oficial de capas (`Presentation`, `Application`, `Domain`, `Infrastructure`, `Kernel`).
+- Trabajar sobre la app (`app/`, `config/`, `routes/`, `database/`, `tests/`), no sobre el
+  framework. El framework vive en `vendor/` y es de solo lectura aquí
+  (ver regla `framework-en-vendor`).
+- Respetar la arquitectura oficial de capas (`Presentation`, `Application`, `Domain`, `Infrastructure`).
 - Ubicar cada clase, modulo o archivo en su capa correspondiente.
 - Mantener convenciones de nombres y estructura existentes.
 - Integrar cambios al sistema actual, sin crear estructuras paralelas.
+- Reusar la plataforma del framework (auth, RBAC, CRUD Engine, dashboard) en lugar de
+  reimplementarla.
 
 ## La IA no debe
 
-- Crear estructuras fuera de las capas oficiales.
+- **Editar, crear ni borrar nada bajo `vendor/`.** Un cambio al framework se prepara como
+  spec + plan en el repo fuente `Lebytek_Framework`, nunca como parche directo a `vendor/`.
+- Crear un `Kernel` local ni estructuras fuera de las capas oficiales.
 - Renombrar componentes estructurales existentes sin justificacion.
 - Colocar logica de negocio en `Presentation`.
 - Colocar logica tecnica de infraestructura en `Domain`.
-- Usar `Kernel` para codigo improvisado o de modulo.
 
-## En caso de inconsistencia
+## En caso de inconsistencia o de fallo en el framework
 
 - Si detecta una inconsistencia arquitectonica, reportarla claramente antes de modificar.
+- Si la causa raíz de un bug vive en `vendor/` (el framework), seguir el protocolo de la
+  regla `framework-en-vendor`: declararlo, recordar el flujo del repo del framework,
+  ofrecer redactar el spec/plan, y solo proponer workaround del lado de la app si hay
+  urgencia — nunca editar `vendor/`.

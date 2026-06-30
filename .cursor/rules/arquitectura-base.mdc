@@ -1,11 +1,13 @@
 ---
-description: Arquitectura base MVC + Onion y responsabilidades por capa
+description: Arquitectura base MVC + Onion de la app consumidora (sobre el framework)
 alwaysApply: true
 ---
 
-# Arquitectura base del proyecto
+# Arquitectura base de la app
 
-Este proyecto usa arquitectura hibrida MVC + Onion.
+Esta app extiende el Lebytek Framework (en `vendor/`) y reusa su arquitectura híbrida
+MVC + Onion. El código propio vive en `app/` con cuatro capas; el `Kernel` lo aporta el
+framework, no la app.
 
 ## Principios obligatorios
 
@@ -14,14 +16,21 @@ Este proyecto usa arquitectura hibrida MVC + Onion.
 - El dominio del negocio es el nucleo y debe protegerse.
 - La consistencia estructural tiene prioridad sobre la velocidad de implementacion.
 - No crear atajos que salten capas sin justificacion explicita.
+- Construir módulos de negocio (`dom_*`) como verticales sobre la plataforma; no duplicar
+  lo que el framework ya ofrece (auth, RBAC, CRUD Engine, dashboard).
 
-## Capas oficiales
+## Capas propias en `app/`
 
 - `Presentation`: rutas, controladores, vistas, respuestas HTTP/JSON, validaciones de entrada basicas y adaptadores de entrada/salida.
 - `Application`: casos de uso, orquestacion, DTOs, comandos/consultas y coordinacion entre dominio e infraestructura.
 - `Domain`: entidades, value objects, reglas de negocio, invariantes, contratos e interfaces de repositorio.
 - `Infrastructure`: persistencia, integraciones, implementaciones tecnicas de contratos y servicios externos.
-- `Kernel`: componentes transversales reutilizables (config base, errores base, utilidades comunes y bootstrapping).
+
+## Plataforma aportada por el framework (vendor)
+
+- `Kernel` (bootstrap, router, contenedor DI, config, sesión, seguridad, conexión a BD),
+  clases base, CRUD Engine, RBAC, dashboard. **Solo lectura** — ver regla
+  `framework-en-vendor`.
 
 ## Prohibiciones clave
 
@@ -29,4 +38,4 @@ Este proyecto usa arquitectura hibrida MVC + Onion.
 - `Application` no contiene logica de presentacion ni detalles tecnicos de infraestructura.
 - `Domain` no depende de frameworks, base de datos, `Presentation` ni `Infrastructure`.
 - `Infrastructure` no define reglas de negocio ni flujo de aplicacion.
-- `Kernel` no se usa como carpeta de codigo improvisado ni para negocio de modulos.
+- No recrear un `Kernel` local ni reimplementar plataforma que ya vive en `vendor/`.

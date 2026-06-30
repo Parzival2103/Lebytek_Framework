@@ -2,6 +2,7 @@
 /.cursor/
 /.claude/
 /.superpowers/
+/.agents/
 .env
 .envbk
 public/uploads/
@@ -9,12 +10,9 @@ scripts/_vps*
 public/error_log
 public/install/error_log
 storage/logs/*.log
+!storage/logs/.gitkeep
+!storage/cache/.gitkeep
+!storage/sessions/.gitkeep
 /vertical-kit/
 /vertical-kit.zip
-# Módulo legado de referencia (app WhatsApp SaaS plana). Contiene src/config.php
-# con credenciales locales reales — nunca debe entrar al repo.
 /nuevo_modulo/
-
-# Esqueleto de app consumidora: vive aqui solo como base de trabajo,
-# se mueve a su propio repo y se consume vendor lebytek/framework via Composer.
-/skeleton/

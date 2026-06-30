@@ -11,13 +11,14 @@ alwaysApply: true
 - `Application` puede depender de `Domain`.
 - `Infrastructure` puede depender de `Domain` o `Application` para implementar contratos.
 - `Domain` no depende de `Presentation` ni de `Infrastructure`.
-- `Kernel` puede ser utilizado por todas las capas.
+- Toda capa puede usar el `Kernel` y las clases base del framework (desde `vendor/`),
+  pero nunca editarlas ahí.
 - Las dependencias deben apuntar hacia el dominio, no hacia presentacion.
 
 ## Flujo estandar de una solicitud
 
-1. Entra por ruta.
-2. Llega a controlador en `Presentation`.
+1. Entra por ruta (resuelta por el router del framework).
+2. Pasa por los middlewares (Auth, CSRF, RBAC del framework) y llega al controlador en `Presentation`.
 3. El controlador procesa entrada y delega en `Application`.
 4. `Application` coordina el caso de uso.
 5. `Domain` aplica reglas de negocio.
@@ -26,8 +27,10 @@ alwaysApply: true
 
 ## Crecimiento y refactorizacion
 
-- Integrar nuevas funcionalidades en capas existentes.
-- No crear estructuras paralelas ni duplicar logica.
+- Integrar nuevas funcionalidades en capas existentes de `app/`.
+- No crear estructuras paralelas ni duplicar logica que el framework ya provee.
 - No mover negocio fuera de `Domain`/`Application` sin justificacion.
 - No saltar capas para acelerar entregas.
+- Si una funcionalidad requiere cambiar el framework, prepararla como spec + plan en el
+  repo `Lebytek_Framework`; no parchear `vendor/`.
 - Documentar cambios arquitectonicos importantes e impacto entre capas.

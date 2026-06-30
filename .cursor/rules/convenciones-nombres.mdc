@@ -1,10 +1,9 @@
 ---
 description: Convenciones oficiales de nombres para BD, codigo, APIs y variables
 alwaysApply: true
-
 ---
 
-# Convenciones de nombres del proyecto
+# Convenciones de nombres
 
 ## Reglas generales
 
@@ -21,9 +20,9 @@ alwaysApply: true
 
 - Tablas: `snake_case` y plural (ej. `clientes`, `eventos`, `visitas_frecuentes`).
 - Columnas: `snake_case` (ej. `created_at`, `cliente_id`).
-- PK: `id`.
-- FK: `tabla_id` (ej. `usuario_id`, `evento_id`).
-- Tablas pivote: `tabla_tabla` (ej. `usuarios_roles`).
+- PK: `id`. FK: `tabla_id` (ej. `usuario_id`). Pivote: `tabla_tabla` (ej. `usuarios_roles`).
+- Prefijos de plataforma reservados por el framework: `auth_`, `cfg_`, `log_`, `core_`,
+  `int_`, `rep_`, `tmp_`, `sys_`. Los módulos de negocio de la app usan `dom_*`.
 
 ## PHP y codigo
 
@@ -31,35 +30,33 @@ alwaysApply: true
 - Metodos: `camelCase` (ej. `obtenerUsuarios()`).
 - Variables: `camelCase` (ej. `$clienteNombre`).
 - Constantes: `UPPER_SNAKE_CASE` (ej. `MAX_UPLOAD_SIZE`).
+- Namespace de la app: `App\` (PSR-4 sobre `app/`). El framework usa `Lebytek\Framework\`.
 
 ## Archivos y carpetas
 
 - Archivos de clases: `PascalCase.php`.
 - Vistas y rutas: `snake_case.php`.
-- Capas: `PascalCase` (`Presentation`, `Application`, `Domain`, `Infrastructure`, `Kernel`).
+- Capas: `PascalCase` (`Presentation`, `Application`, `Domain`, `Infrastructure`).
 - Modulos: `snake_case`.
 
 ## APIs, JSON y entorno
 
 - Rutas API: `/api/recurso`, `/api/recurso/{id}`, `/api/recurso/{id}/accion`.
 - JSON: llaves en `camelCase`.
+- Permisos RBAC: slug `modulo.accion` (ej. `clientes.ver`).
 - Variables de entorno: `UPPER_SNAKE_CASE` (ej. `DB_HOST`, `JWT_SECRET`).
 
 ## Consistencia obligatoria
 
 - El mismo concepto usa el mismo nombre en todo el sistema.
-- Si la tabla es `clientes`, la FK es `cliente_id`.
-- Si la clase es `Cliente`, el archivo es `Cliente.php`.
+- Si la tabla es `clientes`, la FK es `cliente_id`; si la clase es `Cliente`, el archivo es `Cliente.php`.
 - Si existe `/api/clientes`, no crear variantes inconsistentes como `/api/client`.
 - No renombrar elementos existentes sin justificacion.
 
 ## Guardrails para IA
 
 - Respetar estas convenciones en todo cambio propuesto o implementado.
-- No inventar nuevos estilos de nombres.
-- No crear sinonimos para la misma entidad.
+- No inventar nuevos estilos de nombres ni crear sinonimos para la misma entidad.
 - Mantener consistencia entre base de datos, codigo y API.
-
-## Documentacion
-
-- Version legible extendida para el equipo en `docs/core/convenciones_nombres.md` del repositorio; mantener reglas coherentes entre ambos.
+- Seguir las convenciones del framework; la referencia canónica vive en el repo del
+  framework (`docs/core/convenciones_nombres.md`), no en `vendor/`.

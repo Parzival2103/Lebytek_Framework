@@ -1,0 +1,132 @@
+{
+  "resource": {
+    "key": "demo_clientes",
+    "title": "Demo Clientes",
+    "table": "dom_demo_clientes",
+    "primary_key": "id",
+    "permission_prefix": "demo_clientes"
+  },
+  "security": {
+    "allow_core_table": false,
+    "mode": "restricted"
+  },
+  "list": {
+    "columns": [
+      {
+        "name": "id",
+        "label": "ID",
+        "sortable": true
+      },
+      {
+        "name": "nombre",
+        "label": "Nombre",
+        "searchable": true,
+        "sortable": true
+      },
+      {
+        "name": "email",
+        "label": "Correo",
+        "searchable": true,
+        "sortable": true
+      },
+      {
+        "name": "telefono",
+        "label": "Teléfono",
+        "sortable": true
+      },
+      {
+        "name": "status",
+        "label": "Estado",
+        "badge": {
+          "activo": "success",
+          "inactivo": "secondary"
+        }
+      },
+      {
+        "name": "created_at",
+        "label": "Creado",
+        "format": "datetime",
+        "sortable": true
+      }
+    ],
+    "filters": [
+      {
+        "field": "status",
+        "label": "Estado"
+      }
+    ],
+    "actions": ["show", "edit", "delete"],
+    "scope": {"type": "owner", "column": "created_by"}
+  },
+  "form": {
+    "fields": [
+      {
+        "name": "nombre",
+        "label": "Nombre",
+        "type": "text",
+        "required": true,
+        "col": "col-md-6"
+      },
+      {
+        "name": "email",
+        "label": "Correo",
+        "type": "text",
+        "required": true,
+        "col": "col-md-6",
+        "validation": {
+          "type": "email",
+          "unique": { "ignore_self": true },
+          "messages": { "email": "Correo inválido", "unique": "Ese correo ya está registrado" }
+        }
+      },
+      {
+        "name": "telefono",
+        "label": "Teléfono",
+        "type": "text",
+        "required": false,
+        "col": "col-md-6"
+      },
+      {
+        "name": "status",
+        "label": "Estado",
+        "type": "select",
+        "required": true,
+        "options": {
+          "activo": "Activo",
+          "inactivo": "Inactivo"
+        },
+        "default": "activo",
+        "col": "col-md-6"
+      }
+    ],
+    "validators": ["demo_cliente_contacto"]
+  },
+  "actions": {
+    "row": [
+      { "name": "show", "type": "builtin" },
+      { "name": "edit", "type": "builtin" },
+      { "name": "delete", "type": "builtin" },
+      { "name": "contrato", "type": "link", "label": "Contrato PDF", "icon": "bi-file-earmark-text",
+        "route": "/admin/reportes/documento?fuente=clientes&id={id}&template=contrato",
+        "permission": "reportes.generar" },
+      { "name": "confirmar_wa", "type": "handler", "handler": "enviar_whatsapp_demo",
+        "label": "Confirmar por WhatsApp", "icon": "bi-whatsapp",
+        "permission": "integrations.enviar",
+        "confirm": "¿Enviar confirmación por WhatsApp?" }
+    ],
+    "bulk": []
+  },
+  "detail": {
+    "tabs": [
+      { "key": "general", "label": "Datos generales", "type": "fields", "columns": ["nombre", "email", "telefono", "status", "created_at"] },
+      { "key": "historial", "label": "Historial", "type": "history" }
+    ]
+  },
+  "uploads": {
+    "enabled": false,
+    "public_path": "uploads/cruds/demo_clientes"
+  },
+  "hooks": {
+    "handler": null
+  }
+}
