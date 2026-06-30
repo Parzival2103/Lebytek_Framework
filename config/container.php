@@ -115,5 +115,22 @@ return static function (Container $container): void {
         $container->bind(\App\Presentation\Controllers\Publico\PortalClienteController::class,
             fn(Container $c) => new \App\Presentation\Controllers\Publico\PortalClienteController(
                 $c->get(ConfiguracionService::class)));
+
+        $container->singleton(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class, fn () => new \App\Infrastructure\Integrations\LebytekApi\LebytekApiClient(
+            baseUrl: (string) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_URL', ''),
+            token: (string) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_TOKEN', ''),
+            timeoutSeconds: (int) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_TIMEOUT', 30),
+            maxRetries: (int) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_RETRY_MAX', 3),
+        ));
+
+        $container->singleton(\App\Application\Marketing\LeadApiProvisioningService::class, fn (Container $c) => new \App\Application\Marketing\LeadApiProvisioningService(
+            $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
+            $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
+            $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
+        ));
+
+        $container->bind(\App\Presentation\Controllers\Admin\MarketingLeadsController::class, fn (Container $c) => new \App\Presentation\Controllers\Admin\MarketingLeadsController(
+            $c->get(\App\Application\Marketing\LeadApiProvisioningService::class),
+        ));
     }
 };

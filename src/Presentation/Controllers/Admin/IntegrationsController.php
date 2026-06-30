@@ -103,6 +103,11 @@ final class IntegrationsController extends AdminBaseController
 
     public function provisionForm(Request $request): Response
     {
+        if ($this->apiProvisioningEnabled()) {
+            Session::flash('error', 'Provisión local desactivada: usa "Provisionar demo (api)" en Leads (LEBYTEK_API_TOKEN configurado).');
+            return $this->redirect('/admin/crud/mkt_leads');
+        }
+
         return $this->view('admin/integraciones/provision', [
             'titulo'        => 'Provisionar demo WhatsApp',
             'leadId'        => (int) $request->input('lead_id', 0),
@@ -113,6 +118,12 @@ final class IntegrationsController extends AdminBaseController
     public function provision(Request $request): Response
     {
         $this->verifyCsrf($request);
+
+        if ($this->apiProvisioningEnabled()) {
+            Session::flash('error', 'Provisión local desactivada: usa "Provisionar demo (api)" en Leads.');
+            return $this->redirect('/admin/crud/mkt_leads');
+        }
+
         $leadId = (int) $request->input('lead_id', 0);
         $nombre = trim((string) $request->input('lead_nombre', ''));
         $email  = trim((string) $request->input('lead_email', ''));
@@ -211,5 +222,10 @@ final class IntegrationsController extends AdminBaseController
             'state'      => $phase['state'],
             'docs_url'   => (string) Config::get('integrations.activation.api_docs_url', '/docs/integraciones/whatsapp-api'),
         ]);
+    }
+
+    private function apiProvisioningEnabled(): bool
+    {
+        return trim((string) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_TOKEN', '')) !== '';
     }
 }

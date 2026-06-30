@@ -148,4 +148,8 @@ $router->group([
     if ($integrationsActivo) {
         require ROOT_PATH . '/routes/integrations.php';
     }
+
+    if ($marketingActivo) {
+        require ROOT_PATH . '/routes/marketing_admin.php';
+    }
 });

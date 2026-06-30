@@ -15,6 +15,10 @@ CREATE TABLE IF NOT EXISTS `dom_mkt_leads` (
   `utm_source`    VARCHAR(120)    DEFAULT NULL,
   `utm_medium`    VARCHAR(120)    DEFAULT NULL,
   `utm_campaign`  VARCHAR(120)    DEFAULT NULL,
+  `api_tenant_public_id` CHAR(26) NULL,
+  `external_ref`  VARCHAR(255)    DEFAULT NULL,
+  `api_provisioned_at` DATETIME   DEFAULT NULL,
+  `api_provision_error` TEXT       DEFAULT NULL,
   `deleted`       TINYINT(1)      NOT NULL DEFAULT 0,
   `created_at`    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_by`    BIGINT UNSIGNED DEFAULT NULL,
@@ -24,7 +28,9 @@ CREATE TABLE IF NOT EXISTS `dom_mkt_leads` (
   `deleted_by`    BIGINT UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_mkt_leads_estado` (`estado`),
-  KEY `idx_mkt_leads_deleted` (`deleted`)
+  KEY `idx_mkt_leads_deleted` (`deleted`),
+  UNIQUE KEY `dom_mkt_leads_api_tenant_public_id_unique` (`api_tenant_public_id`),
+  UNIQUE KEY `dom_mkt_leads_external_ref_unique` (`external_ref`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `dom_mkt_provisiones` (

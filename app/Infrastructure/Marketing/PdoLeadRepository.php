@@ -28,6 +28,48 @@ final class PdoLeadRepository implements LeadRepositoryInterface
             'm'        => $utm['utm_medium']   ?? null,
             'c'        => $utm['utm_campaign'] ?? null,
         ]);
+
         return (int) $pdo->lastInsertId();
+    }
+
+    /** @return array<string, mixed>|null */
+    public function findById(int $id): ?array
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare('SELECT * FROM dom_mkt_leads WHERE id = :id AND deleted = 0 LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $row : null;
+    }
+
+    public function markApiProvisioned(int $leadId, string $tenantPublicId, string $externalRef): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_leads
+             SET api_tenant_public_id = :public_id,
+                 external_ref = :external_ref,
+                 api_provisioned_at = NOW(),
+                 api_provision_error = NULL,
+                 estado = :estado,
+                 updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'public_id'    => $tenantPublicId,
+            'external_ref' => $externalRef,
+            'estado'       => 'demo_enviada',
+            'id'           => $leadId,
+        ]);
+    }
+
+    public function markApiProvisionError(int $leadId, string $error): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_leads SET api_provision_error = :error, updated_at = NOW() WHERE id = :id'
+        );
+        $stmt->execute(['error' => $error, 'id' => $leadId]);
     }
 }
