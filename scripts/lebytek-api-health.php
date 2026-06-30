@@ -6,10 +6,9 @@ require dirname(__DIR__).'/vendor/autoload.php';
 
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiClient;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiException;
-use Lebytek\Framework\Kernel\Bootstrap;
 use Lebytek\Framework\Kernel\EnvLoader;
 
-Bootstrap::init(dirname(__DIR__));
+EnvLoader::load(dirname(__DIR__).'/.env');
 
 $client = new LebytekApiClient(
     baseUrl: (string) EnvLoader::get('LEBYTEK_API_URL', ''),
