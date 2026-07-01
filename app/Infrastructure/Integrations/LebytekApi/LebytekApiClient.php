@@ -11,6 +11,7 @@ final class LebytekApiClient
         private readonly string $token,
         private readonly int $timeoutSeconds = 30,
         private readonly int $maxRetries = 3,
+        private readonly ?LebytekApiTransport $transport = null,
     ) {}
 
     /**
@@ -99,30 +100,23 @@ final class LebytekApiClient
         }
 
         $allHeaders = array_merge($baseHeaders, $headers);
+        $encodedBody = ($body !== null && $method !== 'DELETE')
+            ? json_encode($body, JSON_THROW_ON_ERROR)
+            : null;
+
+        $transport = $this->transport ?? new CurlLebytekApiTransport($this->timeoutSeconds);
         $attempt = 0;
         $delayMs = 500;
 
         while (true) {
             $attempt++;
 
-            $ch = curl_init($url);
-            curl_setopt_array($ch, [
-                CURLOPT_CUSTOMREQUEST => $method,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => $this->timeoutSeconds,
-                CURLOPT_HTTPHEADER => $allHeaders,
-            ]);
+            $result = $transport->execute($method, $url, $allHeaders, $encodedBody);
+            $status = $result['status'];
+            $raw = $result['body'];
+            $curlError = $result['error'];
 
-            if ($body !== null && $method !== 'DELETE') {
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body, JSON_THROW_ON_ERROR));
-            }
-
-            $raw = curl_exec($ch);
-            $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
-
-            if ($raw === false) {
+            if ($status === 0 && $curlError !== '') {
                 if ($attempt < $this->maxRetries) {
                     usleep($delayMs * 1000);
                     $delayMs *= 2;
