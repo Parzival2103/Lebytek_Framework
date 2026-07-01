@@ -14,7 +14,9 @@
       { "name": "email", "label": "Correo", "searchable": true, "sortable": true },
       { "name": "telefono", "label": "Teléfono" },
       { "name": "estado", "label": "Estado",
-        "badge": { "pendiente": "secondary", "validada": "info", "demo_enviada": "success", "demo_baja": "warning", "rechazada": "danger" } },
+        "badge": { "pendiente": "secondary", "validada": "info", "demo_enviada": "success", "demo_baja_pendiente": "warning", "demo_baja": "secondary", "rechazada": "danger" } },
+      { "name": "api_lifecycle_status", "label": "Ciclo API",
+        "badge": { "none": "secondary", "provision_initiated": "info", "deprovision_initiated": "warning", "deprovisioned": "secondary" } },
       { "name": "api_tenant_public_id", "label": "Tenant API", "format": "truncate", "max_length": 26 },
       { "name": "api_provisioned_at", "label": "Provisionado", "format": "datetime", "sortable": true },
       { "name": "api_provision_error", "label": "Error API", "badge_nonempty": "danger" },
@@ -30,7 +32,7 @@
         "validation": { "type": "email", "messages": { "email": "Correo inválido" } } },
       { "name": "telefono", "label": "Teléfono", "type": "text", "col": "col-md-6" },
       { "name": "estado", "label": "Estado", "type": "select", "required": true, "col": "col-md-6",
-        "options": { "pendiente": "Pendiente", "validada": "Validada", "demo_enviada": "Demo enviada", "demo_baja": "Demo dada de baja", "rechazada": "Rechazada" },
+        "options": { "pendiente": "Pendiente", "validada": "Validada", "demo_enviada": "Demo enviada", "demo_baja_pendiente": "Baja demo pendiente", "demo_baja": "Demo dada de baja", "rechazada": "Rechazada" },
         "default": "pendiente" },
       { "name": "mensaje", "label": "Mensaje", "type": "textarea", "col": "col-12" }
     ],
@@ -47,7 +49,7 @@
         "route": "/admin/marketing/leads/deprovision-api?lead_id={id}", "permission": "marketing.leads",
         "visible_when": { "estado": "demo_enviada" } }
     ], "bulk": [] },
-  "detail": { "tabs": [ { "key": "general", "label": "Datos", "type": "fields", "columns": ["nombre","email","telefono","estado","mensaje","external_ref","api_tenant_public_id","api_provisioned_at","api_provision_error","created_at"] }, { "key": "historial", "label": "Historial", "type": "history" } ] },
+  "detail": { "tabs": [ { "key": "general", "label": "Datos", "type": "fields", "columns": ["nombre","email","telefono","estado","mensaje","external_ref","api_tenant_public_id","api_instance_public_id","api_lifecycle_status","api_provisioned_at","api_provision_error","created_at"] }, { "key": "historial", "label": "Historial", "type": "history" } ] },
   "uploads": { "enabled": false, "public_path": "uploads/cruds/mkt_leads" },
   "hooks": { "handler": null }
 }

@@ -54,10 +54,10 @@ final class MarketingLeadsController extends AdminBaseController
             match ($result['status']) {
                 'skipped' => Session::flash('info', 'Este lead ya tiene demo activa en la API.'),
                 'mail_failed' => Session::flash(
-                    'warning',
-                    'Demo creada en la API, pero falló el envío del correo: '.($result['message'] ?? 'error desconocido'),
+                    'error',
+                    'No se marcó la demo como enviada: falló el correo con credenciales ('.($result['message'] ?? 'error desconocido').').',
                 ),
-                default => Session::flash('success', 'Demo provisionada vía api.lebytek.com. Se envió el correo con credenciales al cliente.'),
+                default => Session::flash('success', 'Demo provisionada vía api.lebytek.com. Correo con credenciales enviado al cliente. Green API sigue provisionando la instancia en segundo plano.'),
             };
         } catch (LebytekApiException $e) {
             Session::flash('error', 'Error de api: '.$e->getMessage());
@@ -94,10 +94,10 @@ final class MarketingLeadsController extends AdminBaseController
             $result = $this->deprovisioning->deprovisionLead($leadId);
             $count = (int) ($result['deleted'] ?? 0);
             Session::flash(
-                'success',
+                'info',
                 $count === 1
-                    ? 'Demo dada de baja. La instancia WhatsApp se está eliminando en Green API (puede tardar unos minutos).'
-                    : "Demo dada de baja. Se encolaron {$count} instancias para eliminación en Green API.",
+                    ? 'Baja iniciada: la instancia WhatsApp se está eliminando en Green API. El lead pasará a «demo dada de baja» cuando se confirme.'
+                    : "Baja iniciada: se encolaron {$count} instancias para eliminación. El lead pasará a «demo dada de baja» cuando se confirme.",
             );
         } catch (LebytekApiException $e) {
             Session::flash('error', 'Error de api al dar de baja: '.$e->getMessage());

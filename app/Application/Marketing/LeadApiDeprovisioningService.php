@@ -15,7 +15,7 @@ final class LeadApiDeprovisioningService
         private readonly LeadRepositoryInterface $leads,
     ) {}
 
-    /** @return array{deleted: int} */
+    /** @return array{deleted: int, status: 'initiated'} */
     public function deprovisionLead(int $leadId): array
     {
         $lead = $this->leads->findById($leadId);
@@ -26,6 +26,11 @@ final class LeadApiDeprovisioningService
         $tenantPublicId = (string) ($lead['api_tenant_public_id'] ?? '');
         if ($tenantPublicId === '') {
             throw new \InvalidArgumentException('Este lead no tiene demo activa en la API.');
+        }
+
+        $lifecycle = (string) ($lead['api_lifecycle_status'] ?? 'none');
+        if ($lifecycle === 'deprovision_initiated') {
+            throw new \InvalidArgumentException('La baja de esta demo ya está en curso.');
         }
 
         try {
@@ -62,13 +67,45 @@ final class LeadApiDeprovisioningService
                 );
             }
 
-            $this->leads->markApiDeprovisioned($leadId);
+            $this->leads->markApiDeprovisionInitiated($leadId);
 
-            return ['deleted' => $deleted];
+            return ['deleted' => $deleted, 'status' => 'initiated'];
         } catch (LebytekApiException $e) {
             $this->leads->markApiProvisionError($leadId, 'Baja demo: '.$e->getMessage());
             throw $e;
         }
+    }
+
+    /** Confirma bajas async cuando la API ya no lista instancias del tenant. */
+    /** @return array{pending: int, confirmed: int, errors: list<string>} */
+    public function confirmPendingDeprovisions(): array
+    {
+        $pending = 0;
+        $confirmed = 0;
+        $errors = [];
+
+        foreach ($this->leads->findPendingDeprovisions() as $lead) {
+            $pending++;
+            $leadId = (int) ($lead['id'] ?? 0);
+            $tenantPublicId = (string) ($lead['api_tenant_public_id'] ?? '');
+            if ($leadId <= 0 || $tenantPublicId === '') {
+                continue;
+            }
+
+            try {
+                $instances = $this->api->listInstances($tenantPublicId);
+                if ($instances !== []) {
+                    continue;
+                }
+
+                $this->leads->markApiDeprovisionCompleted($leadId);
+                $confirmed++;
+            } catch (\Throwable $e) {
+                $errors[] = "Lead #{$leadId}: ".$e->getMessage();
+            }
+        }
+
+        return ['pending' => $pending, 'confirmed' => $confirmed, 'errors' => $errors];
     }
 
     /** @return array{processed: int, failed: int, errors: list<string>} */

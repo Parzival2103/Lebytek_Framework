@@ -23,8 +23,15 @@ interface LeadRepositoryInterface
 
     public function markApiProvisionError(int $leadId, string $error): void;
 
-    public function markApiDeprovisioned(int $leadId): void;
+    /** DELETE aceptado en API; baja async en Green — conserva refs para confirmación. */
+    public function markApiDeprovisionInitiated(int $leadId): void;
+
+    /** Instancias confirmadas eliminadas en la API. */
+    public function markApiDeprovisionCompleted(int $leadId): void;
 
     /** @return list<array<string, mixed>> */
     public function findDemosOlderThanDays(int $days): array;
+
+    /** @return list<array<string, mixed>> */
+    public function findPendingDeprovisions(): array;
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Application\Marketing\LeadApiDeprovisioningService;
 use App\Application\Marketing\LeadApiProvisioningService;
 use App\Domain\Marketing\Contracts\LeadRepositoryInterface;
+use App\Domain\Marketing\LeadApiLifecycleStatus;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiClient;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiTransport;
 use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
@@ -29,19 +30,42 @@ final class DeprovisionInMemoryLeadRepo implements LeadRepositoryInterface
         $this->rows[$id]['api_tenant_public_id'] = $p;
         $this->rows[$id]['api_instance_public_id'] = $instancePublicId !== '' ? $instancePublicId : null;
         $this->rows[$id]['external_ref'] = $e;
+        $this->rows[$id]['external_ref'] = $e;
         $this->rows[$id]['estado'] = 'demo_enviada';
+        $this->rows[$id]['api_lifecycle_status'] = LeadApiLifecycleStatus::PROVISION_INITIATED;
     }
 
     public function markApiProvisionError(int $id, string $err): void
     {
         $this->rows[$id]['api_provision_error'] = $err;
+        $this->rows[$id]['api_lifecycle_status'] = LeadApiLifecycleStatus::NONE;
     }
 
-    public function markApiDeprovisioned(int $id): void
+    public function markApiDeprovisionInitiated(int $id): void
+    {
+        $this->rows[$id]['api_provision_error'] = null;
+        $this->rows[$id]['api_lifecycle_status'] = LeadApiLifecycleStatus::DEPROVISION_INITIATED;
+        $this->rows[$id]['estado'] = 'demo_baja_pendiente';
+    }
+
+    public function markApiDeprovisionCompleted(int $id): void
     {
         unset($this->rows[$id]['api_tenant_public_id'], $this->rows[$id]['external_ref']);
         $this->rows[$id]['api_provision_error'] = null;
+        $this->rows[$id]['api_lifecycle_status'] = LeadApiLifecycleStatus::DEPROVISIONED;
         $this->rows[$id]['estado'] = 'demo_baja';
+    }
+
+    public function findPendingDeprovisions(): array
+    {
+        $pending = [];
+        foreach ($this->rows as $row) {
+            if (($row['api_lifecycle_status'] ?? '') === LeadApiLifecycleStatus::DEPROVISION_INITIATED) {
+                $pending[] = $row;
+            }
+        }
+
+        return $pending;
     }
 
     public function findDemosOlderThanDays(int $days): array
@@ -90,9 +114,9 @@ final class FailingMailer implements MailerInterface
     }
 }
 
-test('LeadApiProvisioningService returns mail_failed when SMTP fails after API success', function () {
+test('LeadApiProvisioningService returns mail_failed when SMTP fails and does not mark demo_enviada', function () {
     $repo = new DeprovisionInMemoryLeadRepo();
-    $repo->rows[5] = ['id' => 5, 'nombre' => 'Ana', 'email' => 'a@t.com', 'api_tenant_public_id' => null];
+    $repo->rows[5] = ['id' => 5, 'nombre' => 'Ana', 'email' => 'a@t.com', 'estado' => 'validada', 'api_tenant_public_id' => null];
     $transport = new DeprovisionSequenceTransport([
         ['status' => 201, 'body' => '{"publicId":"01JTENANT"}', 'error' => ''],
         ['status' => 202, 'body' => '{"publicId":"01JINST"}', 'error' => ''],
@@ -102,11 +126,12 @@ test('LeadApiProvisioningService returns mail_failed when SMTP fails after API s
     $svc = new LeadApiProvisioningService($api, $repo, new FailingMailer());
     $result = $svc->provisionLead(5);
     assert_same('mail_failed', $result['status']);
-    assert_same('demo_enviada', $repo->rows[5]['estado']);
+    assert_same('validada', $repo->rows[5]['estado']);
+    assert_true(! isset($repo->rows[5]['api_tenant_public_id']));
     assert_true(str_contains((string) $repo->rows[5]['api_provision_error'], 'SMTP down'));
 });
 
-test('LeadApiDeprovisioningService deletes instances and marks lead demo_baja', function () {
+test('LeadApiDeprovisioningService initiates deprovision without clearing tenant until confirmed', function () {
     $repo = new DeprovisionInMemoryLeadRepo();
     $repo->rows[7] = [
         'id' => 7,
@@ -124,9 +149,32 @@ test('LeadApiDeprovisioningService deletes instances and marks lead demo_baja', 
     $svc = new LeadApiDeprovisioningService($api, $repo);
     $result = $svc->deprovisionLead(7);
     assert_same(1, $result['deleted']);
-    assert_same('demo_baja', $repo->rows[7]['estado']);
-    assert_true(! isset($repo->rows[7]['api_tenant_public_id']));
+    assert_same('initiated', $result['status']);
+    assert_same('demo_baja_pendiente', $repo->rows[7]['estado']);
+    assert_same(LeadApiLifecycleStatus::DEPROVISION_INITIATED, $repo->rows[7]['api_lifecycle_status']);
+    assert_same('01JTENANT', $repo->rows[7]['api_tenant_public_id']);
     assert_same(0, count($transport->responses));
+});
+
+test('LeadApiDeprovisioningService confirmPendingDeprovisions completes when API has no instances', function () {
+    $repo = new DeprovisionInMemoryLeadRepo();
+    $repo->rows[7] = [
+        'id' => 7,
+        'api_tenant_public_id' => '01JTENANT',
+        'api_lifecycle_status' => LeadApiLifecycleStatus::DEPROVISION_INITIATED,
+        'estado' => 'demo_baja_pendiente',
+    ];
+    $transport = new DeprovisionSequenceTransport([
+        ['status' => 200, 'body' => '{"data":[]}', 'error' => ''],
+    ]);
+    $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
+    $svc = new LeadApiDeprovisioningService($api, $repo);
+    $result = $svc->confirmPendingDeprovisions();
+    assert_same(1, $result['pending']);
+    assert_same(1, $result['confirmed']);
+    assert_same('demo_baja', $repo->rows[7]['estado']);
+    assert_same(LeadApiLifecycleStatus::DEPROVISIONED, $repo->rows[7]['api_lifecycle_status']);
+    assert_true(! isset($repo->rows[7]['api_tenant_public_id']));
 });
 
 test('LebytekApiClient listInstances sends X-Tenant-Id', function () {

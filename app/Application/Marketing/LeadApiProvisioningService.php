@@ -70,8 +70,6 @@ final class LeadApiProvisioningService
                 throw new LebytekApiException('API no devolvió token por-tenant.');
             }
 
-            $this->leads->markApiProvisioned($leadId, $tenantPublicId, $externalRef, $instancePublicId);
-
             try {
                 $this->sendCredentialsEmail($nombre, $email, $plainToken);
             } catch (\Throwable $mailError) {
@@ -82,6 +80,8 @@ final class LeadApiProvisioningService
                     'message' => $mailError->getMessage(),
                 ];
             }
+
+            $this->leads->markApiProvisioned($leadId, $tenantPublicId, $externalRef, $instancePublicId);
 
             return ['status' => 'ok'];
         } catch (LebytekApiException $e) {

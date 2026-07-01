@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Marketing;
 
 use App\Domain\Marketing\Contracts\LeadRepositoryInterface;
+use App\Domain\Marketing\LeadApiLifecycleStatus;
 use App\Domain\Marketing\ValueObjects\LeadDraft;
 use Lebytek\Framework\Kernel\Database\Connection;
 
@@ -57,6 +58,7 @@ final class PdoLeadRepository implements LeadRepositoryInterface
                  external_ref = :external_ref,
                  api_provisioned_at = NOW(),
                  api_provision_error = NULL,
+                 api_lifecycle_status = :lifecycle,
                  estado = :estado,
                  updated_at = NOW()
              WHERE id = :id'
@@ -65,6 +67,7 @@ final class PdoLeadRepository implements LeadRepositoryInterface
             'public_id'           => $tenantPublicId,
             'instance_public_id'  => $instancePublicId !== '' ? $instancePublicId : null,
             'external_ref'        => $externalRef,
+            'lifecycle'           => LeadApiLifecycleStatus::PROVISION_INITIATED,
             'estado'              => 'demo_enviada',
             'id'                  => $leadId,
         ]);
@@ -74,12 +77,38 @@ final class PdoLeadRepository implements LeadRepositoryInterface
     {
         $pdo = Connection::getInstance();
         $stmt = $pdo->prepare(
-            'UPDATE dom_mkt_leads SET api_provision_error = :error, updated_at = NOW() WHERE id = :id'
+            'UPDATE dom_mkt_leads
+             SET api_provision_error = :error,
+                 api_lifecycle_status = :lifecycle,
+                 updated_at = NOW()
+             WHERE id = :id'
         );
-        $stmt->execute(['error' => $error, 'id' => $leadId]);
+        $stmt->execute([
+            'error'     => $error,
+            'lifecycle' => LeadApiLifecycleStatus::NONE,
+            'id'        => $leadId,
+        ]);
     }
 
-    public function markApiDeprovisioned(int $leadId): void
+    public function markApiDeprovisionInitiated(int $leadId): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_leads
+             SET api_provision_error = NULL,
+                 api_lifecycle_status = :lifecycle,
+                 estado = :estado,
+                 updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'lifecycle' => LeadApiLifecycleStatus::DEPROVISION_INITIATED,
+            'estado'    => 'demo_baja_pendiente',
+            'id'        => $leadId,
+        ]);
+    }
+
+    public function markApiDeprovisionCompleted(int $leadId): void
     {
         $pdo = Connection::getInstance();
         $stmt = $pdo->prepare(
@@ -89,14 +118,38 @@ final class PdoLeadRepository implements LeadRepositoryInterface
                  external_ref = NULL,
                  api_provisioned_at = NULL,
                  api_provision_error = NULL,
+                 api_lifecycle_status = :lifecycle,
                  estado = :estado,
                  updated_at = NOW()
              WHERE id = :id'
         );
         $stmt->execute([
-            'estado' => 'demo_baja',
-            'id'     => $leadId,
+            'lifecycle' => LeadApiLifecycleStatus::DEPROVISIONED,
+            'estado'    => 'demo_baja',
+            'id'        => $leadId,
         ]);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function findPendingDeprovisions(): array
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM dom_mkt_leads
+             WHERE deleted = 0
+               AND api_lifecycle_status = :lifecycle
+               AND api_tenant_public_id IS NOT NULL'
+        );
+        $stmt->execute(['lifecycle' => LeadApiLifecycleStatus::DEPROVISION_INITIATED]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    /** @deprecated use markApiDeprovisionInitiated / markApiDeprovisionCompleted */
+    public function markApiDeprovisioned(int $leadId): void
+    {
+        $this->markApiDeprovisionCompleted($leadId);
     }
 
     /** @return list<array<string, mixed>> */

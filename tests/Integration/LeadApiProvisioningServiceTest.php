@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Application\Marketing\LeadApiProvisioningService;
 use App\Domain\Marketing\Contracts\LeadRepositoryInterface;
+use App\Domain\Marketing\LeadApiLifecycleStatus;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiClient;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiException;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiTransport;
@@ -30,19 +31,34 @@ final class InMemoryLeadRepo implements LeadRepositoryInterface
         $this->rows[$id]['api_instance_public_id'] = $instancePublicId !== '' ? $instancePublicId : null;
         $this->rows[$id]['external_ref'] = $e;
         $this->rows[$id]['api_provision_error'] = null;
+        $this->rows[$id]['api_lifecycle_status'] = LeadApiLifecycleStatus::PROVISION_INITIATED;
         $this->rows[$id]['estado'] = 'demo_enviada';
     }
 
     public function markApiProvisionError(int $id, string $err): void
     {
         $this->rows[$id]['api_provision_error'] = $err;
+        $this->rows[$id]['api_lifecycle_status'] = LeadApiLifecycleStatus::NONE;
     }
 
-    public function markApiDeprovisioned(int $id): void
+    public function markApiDeprovisionInitiated(int $id): void
+    {
+        $this->rows[$id]['api_provision_error'] = null;
+        $this->rows[$id]['api_lifecycle_status'] = LeadApiLifecycleStatus::DEPROVISION_INITIATED;
+        $this->rows[$id]['estado'] = 'demo_baja_pendiente';
+    }
+
+    public function markApiDeprovisionCompleted(int $id): void
     {
         unset($this->rows[$id]['api_tenant_public_id'], $this->rows[$id]['external_ref']);
         $this->rows[$id]['api_provision_error'] = null;
+        $this->rows[$id]['api_lifecycle_status'] = LeadApiLifecycleStatus::DEPROVISIONED;
         $this->rows[$id]['estado'] = 'demo_baja';
+    }
+
+    public function findPendingDeprovisions(): array
+    {
+        return [];
     }
 
     public function findDemosOlderThanDays(int $days): array
@@ -96,6 +112,7 @@ test('LeadApiProvisioningService full flow persists lead and sends email', funct
     assert_same('01JTENANT', $repo->rows[5]['api_tenant_public_id']);
     assert_same('01JINST', $repo->rows[5]['api_instance_public_id']);
     assert_same('demo_enviada', $repo->rows[5]['estado']);
+    assert_same(LeadApiLifecycleStatus::PROVISION_INITIATED, $repo->rows[5]['api_lifecycle_status']);
     assert_true($mailer->last !== null);
     assert_same('Tu acceso a la API está listo — Lebytek', $mailer->last->asunto);
     assert_true(str_contains($mailer->last->html, '12|abc'));

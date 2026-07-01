@@ -3,12 +3,8 @@
 declare(strict_types=1);
 
 /**
- * Expira demos con más de N días y confirma bajas async pendientes.
- *
- * Cron diario (único job necesario), ej. 03:00:
- *   0 3 * * * cd /home/lebytek/htdocs/lebytek.com && php scripts/expire-api-demos.php 30
- *
- * No hace falta cron aparte para confirm-api-lifecycle.php: este script ya lo invoca al final.
+ * Confirma bajas async cuando la API ya no lista instancias del tenant.
+ * Invocado por expire-api-demos.php (cron diario); no requiere crontab propio.
  */
 
 define('ROOT_PATH', dirname(__DIR__));
@@ -33,12 +29,6 @@ Connection::configure([
     'password' => Config::get('database.password'),
 ]);
 
-$days = (int) ($argv[1] ?? 30);
-if ($days < 1) {
-    fwrite(STDERR, "Uso: php scripts/expire-api-demos.php [dias=30]\n");
-    exit(1);
-}
-
 $api = new LebytekApiClient(
     baseUrl: (string) EnvLoader::get('LEBYTEK_API_URL', ''),
     token: (string) EnvLoader::get('LEBYTEK_API_TOKEN', ''),
@@ -46,19 +36,12 @@ $api = new LebytekApiClient(
     maxRetries: (int) EnvLoader::get('LEBYTEK_API_RETRY_MAX', 3),
 );
 $service = new LeadApiDeprovisioningService($api, new PdoLeadRepository());
-$result = $service->expireDemosOlderThanDays($days);
-$confirm = $service->confirmPendingDeprovisions();
+$result = $service->confirmPendingDeprovisions();
 
-fwrite(STDOUT, "expire_days={$days}\n");
-fwrite(STDOUT, 'processed='.$result['processed']."\n");
-fwrite(STDOUT, 'failed='.$result['failed']."\n");
-fwrite(STDOUT, 'confirm_pending='.$confirm['pending']."\n");
-fwrite(STDOUT, 'confirm_completed='.$confirm['confirmed']."\n");
+fwrite(STDOUT, 'pending='.$result['pending']."\n");
+fwrite(STDOUT, 'confirmed='.$result['confirmed']."\n");
 foreach ($result['errors'] as $error) {
     fwrite(STDOUT, 'error='.$error."\n");
 }
-foreach ($confirm['errors'] as $error) {
-    fwrite(STDOUT, 'confirm_error='.$error."\n");
-}
 
-exit($result['failed'] > 0 || count($confirm['errors']) > 0 ? 1 : 0);
+exit(count($result['errors']) > 0 ? 1 : 0);

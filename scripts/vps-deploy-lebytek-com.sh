@@ -60,6 +60,9 @@ if [ "$INSTALL_RC" -eq 0 ]; then
   if [ -f "$APP_DIR/database/migrations/20260701160000_mkt_leads_api_instance_public_id.sql" ]; then
     sudo -u lebytek bash -c "cd '$APP_DIR' && mariadb -h \"\$(grep ^DB_HOST= .env | cut -d= -f2)\" -u \"\$(grep ^DB_USERNAME= .env | cut -d= -f2)\" -p\"\$(grep ^DB_PASSWORD= .env | cut -d= -f2-)\" \"\$(grep ^DB_DATABASE= .env | cut -d= -f2)\" < database/migrations/20260701160000_mkt_leads_api_instance_public_id.sql" 2>&1 || echo "instance migration sql skipped"
   fi
+  if [ -f "$APP_DIR/database/migrations/20260701170000_mkt_leads_api_lifecycle_status.sql" ]; then
+    sudo -u lebytek bash -c "cd '$APP_DIR' && mariadb -h \"\$(grep ^DB_HOST= .env | cut -d= -f2)\" -u \"\$(grep ^DB_USERNAME= .env | cut -d= -f2)\" -p\"\$(grep ^DB_PASSWORD= .env | cut -d= -f2-)\" \"\$(grep ^DB_DATABASE= .env | cut -d= -f2)\" < database/migrations/20260701170000_mkt_leads_api_lifecycle_status.sql" 2>&1 || echo "lifecycle migration sql skipped"
+  fi
 else
   echo "WARN: install.php failed — set DB_PASSWORD in $APP_DIR/.env and re-run: php scripts/install.php"
 fi
