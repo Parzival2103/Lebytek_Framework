@@ -51,12 +51,13 @@ final class LeadApiProvisioningService
             }
 
             $instanceExternalRef = $externalRef.'_instance';
-            $this->api->createInstance(
+            $instanceResponse = $this->api->createInstance(
                 $tenantPublicId,
                 'Demo '.$nombre,
                 $instanceExternalRef,
                 'demo',
             );
+            $instancePublicId = (string) ($instanceResponse['publicId'] ?? '');
 
             $tokenResponse = $this->api->issueTenantToken(
                 $tenantPublicId,
@@ -69,7 +70,7 @@ final class LeadApiProvisioningService
                 throw new LebytekApiException('API no devolvió token por-tenant.');
             }
 
-            $this->leads->markApiProvisioned($leadId, $tenantPublicId, $externalRef);
+            $this->leads->markApiProvisioned($leadId, $tenantPublicId, $externalRef, $instancePublicId);
 
             try {
                 $this->sendCredentialsEmail($nombre, $email, $plainToken);

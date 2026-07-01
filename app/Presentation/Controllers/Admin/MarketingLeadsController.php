@@ -91,8 +91,14 @@ final class MarketingLeadsController extends AdminBaseController
         }
 
         try {
-            $this->deprovisioning->deprovisionLead($leadId);
-            Session::flash('success', 'Demo dada de baja. Las instancias WhatsApp se están eliminando en la API.');
+            $result = $this->deprovisioning->deprovisionLead($leadId);
+            $count = (int) ($result['deleted'] ?? 0);
+            Session::flash(
+                'success',
+                $count === 1
+                    ? 'Demo dada de baja. La instancia WhatsApp se está eliminando en Green API (puede tardar unos minutos).'
+                    : "Demo dada de baja. Se encolaron {$count} instancias para eliminación en Green API.",
+            );
         } catch (LebytekApiException $e) {
             Session::flash('error', 'Error de api al dar de baja: '.$e->getMessage());
         } catch (\Throwable $e) {

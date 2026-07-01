@@ -43,12 +43,17 @@ final class PdoLeadRepository implements LeadRepositoryInterface
         return is_array($row) ? $row : null;
     }
 
-    public function markApiProvisioned(int $leadId, string $tenantPublicId, string $externalRef): void
-    {
+    public function markApiProvisioned(
+        int $leadId,
+        string $tenantPublicId,
+        string $externalRef,
+        string $instancePublicId = '',
+    ): void {
         $pdo = Connection::getInstance();
         $stmt = $pdo->prepare(
             'UPDATE dom_mkt_leads
              SET api_tenant_public_id = :public_id,
+                 api_instance_public_id = :instance_public_id,
                  external_ref = :external_ref,
                  api_provisioned_at = NOW(),
                  api_provision_error = NULL,
@@ -57,10 +62,11 @@ final class PdoLeadRepository implements LeadRepositoryInterface
              WHERE id = :id'
         );
         $stmt->execute([
-            'public_id'    => $tenantPublicId,
-            'external_ref' => $externalRef,
-            'estado'       => 'demo_enviada',
-            'id'           => $leadId,
+            'public_id'           => $tenantPublicId,
+            'instance_public_id'  => $instancePublicId !== '' ? $instancePublicId : null,
+            'external_ref'        => $externalRef,
+            'estado'              => 'demo_enviada',
+            'id'                  => $leadId,
         ]);
     }
 
@@ -79,6 +85,7 @@ final class PdoLeadRepository implements LeadRepositoryInterface
         $stmt = $pdo->prepare(
             'UPDATE dom_mkt_leads
              SET api_tenant_public_id = NULL,
+                 api_instance_public_id = NULL,
                  external_ref = NULL,
                  api_provisioned_at = NULL,
                  api_provision_error = NULL,

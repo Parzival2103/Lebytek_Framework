@@ -43,6 +43,20 @@ final class LebytekApiClient
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function listTenants(int $perPage = 100): array
+    {
+        $decoded = $this->request('GET', '/tenants?perPage='.$perPage);
+        $data = $decoded['data'] ?? $decoded;
+        if (! is_array($data)) {
+            return [];
+        }
+
+        return array_values(array_filter($data, is_array(...)));
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function createInstance(string $tenantPublicId, string $label, string $externalRef, string $purpose = 'demo'): array

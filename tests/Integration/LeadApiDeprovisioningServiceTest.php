@@ -24,9 +24,10 @@ final class DeprovisionInMemoryLeadRepo implements LeadRepositoryInterface
         return $this->rows[$id] ?? null;
     }
 
-    public function markApiProvisioned(int $id, string $p, string $e): void
+    public function markApiProvisioned(int $id, string $p, string $e, string $instancePublicId = ''): void
     {
         $this->rows[$id]['api_tenant_public_id'] = $p;
+        $this->rows[$id]['api_instance_public_id'] = $instancePublicId !== '' ? $instancePublicId : null;
         $this->rows[$id]['external_ref'] = $e;
         $this->rows[$id]['estado'] = 'demo_enviada';
     }
@@ -112,15 +113,17 @@ test('LeadApiDeprovisioningService deletes instances and marks lead demo_baja', 
         'nombre' => 'Luis',
         'email' => 'luis@test.com',
         'api_tenant_public_id' => '01JTENANT',
+        'api_instance_public_id' => '01JINST',
         'estado' => 'demo_enviada',
     ];
     $transport = new DeprovisionSequenceTransport([
-        ['status' => 200, 'body' => '{"data":[{"publicId":"01JINST"}]}', 'error' => ''],
         ['status' => 202, 'body' => '{"accepted":true}', 'error' => ''],
+        ['status' => 200, 'body' => '{"data":[]}', 'error' => ''],
     ]);
     $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
     $svc = new LeadApiDeprovisioningService($api, $repo);
-    $svc->deprovisionLead(7);
+    $result = $svc->deprovisionLead(7);
+    assert_same(1, $result['deleted']);
     assert_same('demo_baja', $repo->rows[7]['estado']);
     assert_true(! isset($repo->rows[7]['api_tenant_public_id']));
     assert_same(0, count($transport->responses));

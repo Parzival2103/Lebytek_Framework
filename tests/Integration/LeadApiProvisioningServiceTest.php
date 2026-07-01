@@ -24,9 +24,10 @@ final class InMemoryLeadRepo implements LeadRepositoryInterface
         return $this->rows[$id] ?? null;
     }
 
-    public function markApiProvisioned(int $id, string $p, string $e): void
+    public function markApiProvisioned(int $id, string $p, string $e, string $instancePublicId = ''): void
     {
         $this->rows[$id]['api_tenant_public_id'] = $p;
+        $this->rows[$id]['api_instance_public_id'] = $instancePublicId !== '' ? $instancePublicId : null;
         $this->rows[$id]['external_ref'] = $e;
         $this->rows[$id]['api_provision_error'] = null;
         $this->rows[$id]['estado'] = 'demo_enviada';
@@ -93,6 +94,7 @@ test('LeadApiProvisioningService full flow persists lead and sends email', funct
     $result = $svc->provisionLead(5);
     assert_same('ok', $result['status']);
     assert_same('01JTENANT', $repo->rows[5]['api_tenant_public_id']);
+    assert_same('01JINST', $repo->rows[5]['api_instance_public_id']);
     assert_same('demo_enviada', $repo->rows[5]['estado']);
     assert_true($mailer->last !== null);
     assert_same('Tu acceso a la API está listo — Lebytek', $mailer->last->asunto);

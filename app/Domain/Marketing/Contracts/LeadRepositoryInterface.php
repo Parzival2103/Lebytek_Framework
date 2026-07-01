@@ -18,6 +18,7 @@ interface LeadRepositoryInterface
         int $leadId,
         string $tenantPublicId,
         string $externalRef,
+        string $instancePublicId = '',
     ): void;
 
     public function markApiProvisionError(int $leadId, string $error): void;

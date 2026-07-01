@@ -15,7 +15,8 @@ final class LeadApiDeprovisioningService
         private readonly LeadRepositoryInterface $leads,
     ) {}
 
-    public function deprovisionLead(int $leadId): void
+    /** @return array{deleted: int} */
+    public function deprovisionLead(int $leadId): array
     {
         $lead = $this->leads->findById($leadId);
         if ($lead === null) {
@@ -28,15 +29,42 @@ final class LeadApiDeprovisioningService
         }
 
         try {
+            $deleted = 0;
+            $knownInstancePublicId = (string) ($lead['api_instance_public_id'] ?? '');
+
+            if ($knownInstancePublicId !== '') {
+                $this->api->deleteInstance($tenantPublicId, $knownInstancePublicId);
+                $deleted++;
+            }
+
             $instances = $this->api->listInstances($tenantPublicId);
             foreach ($instances as $instance) {
                 $instancePublicId = (string) ($instance['publicId'] ?? '');
-                if ($instancePublicId !== '') {
-                    $this->api->deleteInstance($tenantPublicId, $instancePublicId);
+                if ($instancePublicId === '' || $instancePublicId === $knownInstancePublicId) {
+                    continue;
                 }
+
+                $this->api->deleteInstance($tenantPublicId, $instancePublicId);
+                $deleted++;
+            }
+
+            if ($deleted === 0 && $instances === [] && $knownInstancePublicId === '') {
+                throw new LebytekApiException(
+                    'No se encontraron instancias WhatsApp para este lead en la API. Revisa api_provision_error o contacta soporte.',
+                    404,
+                );
+            }
+
+            if ($deleted === 0 && $instances !== []) {
+                throw new LebytekApiException(
+                    'No se pudo encolar la eliminación de ninguna instancia WhatsApp.',
+                    500,
+                );
             }
 
             $this->leads->markApiDeprovisioned($leadId);
+
+            return ['deleted' => $deleted];
         } catch (LebytekApiException $e) {
             $this->leads->markApiProvisionError($leadId, 'Baja demo: '.$e->getMessage());
             throw $e;
