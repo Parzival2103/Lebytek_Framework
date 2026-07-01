@@ -21,4 +21,9 @@ interface LeadRepositoryInterface
     ): void;
 
     public function markApiProvisionError(int $leadId, string $error): void;
+
+    public function markApiDeprovisioned(int $leadId): void;
+
+    /** @return list<array<string, mixed>> */
+    public function findDemosOlderThanDays(int $days): array;
 }

@@ -7,8 +7,10 @@ namespace App\Infrastructure\Marketing\LeadCapture;
 use App\Domain\Marketing\Contracts\LeadCaptureHandlerInterface;
 use App\Domain\Marketing\ValueObjects\LeadDraft;
 use App\Domain\Marketing\ValueObjects\LeadResult;
-use Lebytek\Framework\Domain\Interfaces\MailerInterface;
 use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
+use Lebytek\Framework\Domain\Interfaces\MailerInterface;
+use Lebytek\Framework\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 final class AutoresponderHandler implements LeadCaptureHandlerInterface
 {
@@ -16,13 +18,19 @@ final class AutoresponderHandler implements LeadCaptureHandlerInterface
 
     public function handle(LeadDraft $draft, LeadResult $resultadoPrevio): LeadResult
     {
-        $cuerpo = str_replace('{{nombre}}', htmlspecialchars($draft->nombre()), 'Hola {{nombre}}, recibimos tu solicitud y te contactaremos pronto.');
+        $html = ViewHelper::render('emails/lead_welcome', [
+            'nombre'        => $draft->nombre(),
+            'landingUrl'    => rtrim((string) EnvLoader::get('APP_URL', ''), '/'),
+            'empresaNombre' => null,
+        ], '');
+
         $this->mailer->enviar(new MensajeCorreo(
             $draft->email(),
             $draft->nombre(),
-            'Gracias por tu interés',
-            $cuerpo
+            'Recibimos tu solicitud — WhatsApp API para tu negocio',
+            $html,
         ));
+
         return $resultadoPrevio;
     }
 }

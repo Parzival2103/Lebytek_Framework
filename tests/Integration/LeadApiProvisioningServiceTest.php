@@ -36,6 +36,18 @@ final class InMemoryLeadRepo implements LeadRepositoryInterface
     {
         $this->rows[$id]['api_provision_error'] = $err;
     }
+
+    public function markApiDeprovisioned(int $id): void
+    {
+        unset($this->rows[$id]['api_tenant_public_id'], $this->rows[$id]['external_ref']);
+        $this->rows[$id]['api_provision_error'] = null;
+        $this->rows[$id]['estado'] = 'demo_baja';
+    }
+
+    public function findDemosOlderThanDays(int $days): array
+    {
+        return [];
+    }
 }
 
 final class SequenceTransport implements LebytekApiTransport
@@ -66,6 +78,7 @@ final class LeadApiSpyMailer implements MailerInterface
 
 test('LeadApiProvisioningService full flow persists lead and sends email', function () {
     $_ENV['LEBYTEK_API_URL'] = 'https://api.test/v1';
+    $_ENV['MKT_EMAIL_DOCS_URL'] = 'https://docs.lebytek.com';
 
     $repo = new InMemoryLeadRepo();
     $repo->rows[5] = ['id' => 5, 'nombre' => 'Ana', 'email' => 'ana@test.com', 'api_tenant_public_id' => null];
@@ -77,12 +90,18 @@ test('LeadApiProvisioningService full flow persists lead and sends email', funct
     $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
     $mailer = new LeadApiSpyMailer();
     $svc = new LeadApiProvisioningService($api, $repo, $mailer);
-    $svc->provisionLead(5);
+    $result = $svc->provisionLead(5);
+    assert_same('ok', $result['status']);
     assert_same('01JTENANT', $repo->rows[5]['api_tenant_public_id']);
     assert_same('demo_enviada', $repo->rows[5]['estado']);
     assert_true($mailer->last !== null);
+    assert_same('Tu acceso a la API está listo — Lebytek', $mailer->last->asunto);
     assert_true(str_contains($mailer->last->html, '12|abc'));
     assert_true(str_contains($mailer->last->html, 'https://api.test/v1'));
+    assert_true(str_contains($mailer->last->html, 'https://docs.lebytek.com'));
+    assert_true(str_contains($mailer->last->html, 'Ver documentación'));
+    assert_true(! str_contains(strtolower($mailer->last->html), 'dashboard'));
+    assert_true(! str_contains(strtolower($mailer->last->html), 'waapi'));
 });
 
 test('LeadApiProvisioningService skips when already provisioned', function () {
@@ -92,7 +111,8 @@ test('LeadApiProvisioningService skips when already provisioned', function () {
     $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
     $mailer = new LeadApiSpyMailer();
     $svc = new LeadApiProvisioningService($api, $repo, $mailer);
-    $svc->provisionLead(5);
+    $result = $svc->provisionLead(5);
+    assert_same('skipped', $result['status']);
     assert_same(0, count($transport->responses));
     assert_null($mailer->last);
 });

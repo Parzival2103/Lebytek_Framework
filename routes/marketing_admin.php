@@ -12,3 +12,5 @@ $rbacLeads = [new RbacMiddleware('marketing.leads')];
 
 $router->get('/marketing/leads/provision-api', [MarketingLeadsController::class, 'provisionForm'], $rbacLeads);
 $router->post('/marketing/leads/provision-api', [MarketingLeadsController::class, 'provisionViaApi'], array_merge($rbacLeads, [CsrfMiddleware::class]));
+$router->get('/marketing/leads/deprovision-api', [MarketingLeadsController::class, 'deprovisionForm'], $rbacLeads);
+$router->post('/marketing/leads/deprovision-api', [MarketingLeadsController::class, 'deprovisionViaApi'], array_merge($rbacLeads, [CsrfMiddleware::class]));

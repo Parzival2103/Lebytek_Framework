@@ -69,6 +69,38 @@ final class LebytekApiClient
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function listInstances(string $tenantPublicId, int $perPage = 100): array
+    {
+        $decoded = $this->request(
+            'GET',
+            '/instances?perPage='.$perPage,
+            null,
+            $this->tenantHeaders($tenantPublicId),
+        );
+        $data = $decoded['data'] ?? $decoded;
+        if (! is_array($data)) {
+            return [];
+        }
+
+        return array_values(array_filter($data, is_array(...)));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function deleteInstance(string $tenantPublicId, string $instancePublicId): array
+    {
+        return $this->request(
+            'DELETE',
+            '/instances/'.$instancePublicId,
+            null,
+            $this->tenantHeaders($tenantPublicId),
+        );
+    }
+
+    /**
      * @param  array<string, mixed>|null  $body
      * @param  list<string>  $headers
      * @return array<string, mixed>

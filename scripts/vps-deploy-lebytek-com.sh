@@ -67,8 +67,14 @@ sudo -u lebytek php "$APP_DIR/scripts/lebytek-api-health.php"
 HEALTH_RC=$?
 set -e
 
+echo "==> email template smoke"
+set +e
+sudo -u lebytek php "$APP_DIR/scripts/email-render-smoke.php"
+EMAIL_SMOKE_RC=$?
+set -e
+
 echo "==> smoke"
 curl -sfI -k https://127.0.0.1/ -H 'Host: lebytek.com' | head -1 || true
 curl -sfI -k https://127.0.0.1/admin/login -H 'Host: lebytek.com' | head -1 || true
 
-echo "DEPLOY_DONE health_rc=$HEALTH_RC install_rc=$INSTALL_RC"
+echo "DEPLOY_DONE health_rc=$HEALTH_RC install_rc=$INSTALL_RC email_smoke_rc=$EMAIL_SMOKE_RC"

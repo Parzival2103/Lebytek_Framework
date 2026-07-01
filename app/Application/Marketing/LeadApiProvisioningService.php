@@ -20,7 +20,10 @@ final class LeadApiProvisioningService
         private readonly MailerInterface $mailer,
     ) {}
 
-    public function provisionLead(int $leadId): void
+    /**
+     * @return array{status: 'ok'|'skipped'|'mail_failed', message?: string}
+     */
+    public function provisionLead(int $leadId): array
     {
         $lead = $this->leads->findById($leadId);
         if ($lead === null) {
@@ -28,7 +31,7 @@ final class LeadApiProvisioningService
         }
 
         if (! empty($lead['api_tenant_public_id'])) {
-            return;
+            return ['status' => 'skipped'];
         }
 
         $nombre = (string) ($lead['nombre'] ?? 'Cliente');
@@ -67,7 +70,19 @@ final class LeadApiProvisioningService
             }
 
             $this->leads->markApiProvisioned($leadId, $tenantPublicId, $externalRef);
-            $this->sendCredentialsEmail($nombre, $email, $plainToken);
+
+            try {
+                $this->sendCredentialsEmail($nombre, $email, $plainToken);
+            } catch (\Throwable $mailError) {
+                $this->leads->markApiProvisionError($leadId, 'Correo: '.$mailError->getMessage());
+
+                return [
+                    'status'  => 'mail_failed',
+                    'message' => $mailError->getMessage(),
+                ];
+            }
+
+            return ['status' => 'ok'];
         } catch (LebytekApiException $e) {
             $this->leads->markApiProvisionError($leadId, $e->getMessage());
             throw $e;
@@ -77,17 +92,20 @@ final class LeadApiProvisioningService
     private function sendCredentialsEmail(string $nombre, string $email, string $token): void
     {
         $apiBaseUrl = rtrim((string) EnvLoader::get('LEBYTEK_API_URL', 'https://api.lebytek.com/api/v1'), '/');
+        $docsUrl = rtrim((string) EnvLoader::get('MKT_EMAIL_DOCS_URL', 'https://docs.lebytek.com'), '/');
 
         $html = ViewHelper::render('emails/lead_api_credentials', [
-            'nombre'     => $nombre,
-            'token'      => $token,
-            'apiBaseUrl' => $apiBaseUrl,
+            'nombre'      => $nombre,
+            'token'       => $token,
+            'apiBaseUrl'  => $apiBaseUrl,
+            'docsUrl'     => $docsUrl,
+            'showDocsCta' => $docsUrl !== '',
         ], '');
 
         $this->mailer->enviar(new MensajeCorreo(
             $email,
             $nombre,
-            'Tus credenciales de acceso — Lebytek',
+            'Tu acceso a la API está listo — Lebytek',
             $html,
         ));
     }

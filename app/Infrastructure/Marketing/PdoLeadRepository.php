@@ -72,4 +72,43 @@ final class PdoLeadRepository implements LeadRepositoryInterface
         );
         $stmt->execute(['error' => $error, 'id' => $leadId]);
     }
+
+    public function markApiDeprovisioned(int $leadId): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_leads
+             SET api_tenant_public_id = NULL,
+                 external_ref = NULL,
+                 api_provisioned_at = NULL,
+                 api_provision_error = NULL,
+                 estado = :estado,
+                 updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'estado' => 'demo_baja',
+            'id'     => $leadId,
+        ]);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function findDemosOlderThanDays(int $days): array
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM dom_mkt_leads
+             WHERE deleted = 0
+               AND estado = :estado
+               AND api_tenant_public_id IS NOT NULL
+               AND api_provisioned_at IS NOT NULL
+               AND api_provisioned_at < DATE_SUB(NOW(), INTERVAL :days DAY)'
+        );
+        $stmt->bindValue('estado', 'demo_enviada');
+        $stmt->bindValue('days', $days, \PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return is_array($rows) ? $rows : [];
+    }
 }

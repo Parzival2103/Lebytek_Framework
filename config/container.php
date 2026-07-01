@@ -129,8 +129,17 @@ return static function (Container $container): void {
             $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
         ));
 
+        $container->singleton(\App\Application\Marketing\LeadApiDeprovisioningService::class, fn (Container $c) => new \App\Application\Marketing\LeadApiDeprovisioningService(
+            $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
+            $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
+        ));
+
         $container->bind(\App\Presentation\Controllers\Admin\MarketingLeadsController::class, fn (Container $c) => new \App\Presentation\Controllers\Admin\MarketingLeadsController(
+            $c->get(ConfiguracionService::class),
+            $c->get(AdminNavigationMenuService::class),
             $c->get(\App\Application\Marketing\LeadApiProvisioningService::class),
+            $c->get(\App\Application\Marketing\LeadApiDeprovisioningService::class),
+            $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
         ));
     }
 };
