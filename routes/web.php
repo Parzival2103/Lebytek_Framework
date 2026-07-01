@@ -59,7 +59,7 @@ $router->post('/restablecer', [RecuperacionController::class, 'restablecer'], [C
 $router->group([
     'prefix'      => '/admin',
     'middlewares' => [AuthMiddleware::class],
-], function ($router) use ($integrationsActivo) {
+], function ($router) use ($integrationsActivo, $marketingActivo) {
 
     $rbacDashboard = [new RbacMiddleware('dashboard.ver')];
     $rbacAjustes   = [new RbacMiddleware('administracion.ver')];
