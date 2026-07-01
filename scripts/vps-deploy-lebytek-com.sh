@@ -52,16 +52,23 @@ INSTALL_RC=$?
 set -e
 
 if [ "$INSTALL_RC" -eq 0 ]; then
-  echo "==> apply mkt_leads api migration SQL"
+  echo "==> apply SQL migrations (post-copy)"
   sudo -u lebytek php "$APP_DIR/scripts/migrate.php" 2>/dev/null || true
-  if [ -f "$APP_DIR/database/migrations/20260630120000_mkt_leads_api_columns.sql" ]; then
-    sudo -u lebytek bash -c "cd '$APP_DIR' && mariadb -h \"\$(grep ^DB_HOST= .env | cut -d= -f2)\" -u \"\$(grep ^DB_USERNAME= .env | cut -d= -f2)\" -p\"\$(grep ^DB_PASSWORD= .env | cut -d= -f2-)\" \"\$(grep ^DB_DATABASE= .env | cut -d= -f2)\" < database/migrations/20260630120000_mkt_leads_api_columns.sql" 2>&1 || echo "migration sql skipped"
-  fi
-  if [ -f "$APP_DIR/database/migrations/20260701160000_mkt_leads_api_instance_public_id.sql" ]; then
-    sudo -u lebytek bash -c "cd '$APP_DIR' && mariadb -h \"\$(grep ^DB_HOST= .env | cut -d= -f2)\" -u \"\$(grep ^DB_USERNAME= .env | cut -d= -f2)\" -p\"\$(grep ^DB_PASSWORD= .env | cut -d= -f2-)\" \"\$(grep ^DB_DATABASE= .env | cut -d= -f2)\" < database/migrations/20260701160000_mkt_leads_api_instance_public_id.sql" 2>&1 || echo "instance migration sql skipped"
-  fi
-  if [ -f "$APP_DIR/database/migrations/20260701170000_mkt_leads_api_lifecycle_status.sql" ]; then
-    sudo -u lebytek bash -c "cd '$APP_DIR' && mariadb -h \"\$(grep ^DB_HOST= .env | cut -d= -f2)\" -u \"\$(grep ^DB_USERNAME= .env | cut -d= -f2)\" -p\"\$(grep ^DB_PASSWORD= .env | cut -d= -f2-)\" \"\$(grep ^DB_DATABASE= .env | cut -d= -f2)\" < database/migrations/20260701170000_mkt_leads_api_lifecycle_status.sql" 2>&1 || echo "lifecycle migration sql skipped"
+  if [ -f "$APP_DIR/scripts/apply-sql-migration.php" ]; then
+    for sql in "$APP_DIR"/database/migrations/202606*.sql "$APP_DIR"/database/migrations/202607*.sql; do
+      [ -f "$sql" ] || continue
+      sudo -u lebytek php "$APP_DIR/scripts/apply-sql-migration.php" "$sql" 2>&1 || echo "migration skipped: $(basename "$sql")"
+    done
+  else
+    if [ -f "$APP_DIR/database/migrations/20260630120000_mkt_leads_api_columns.sql" ]; then
+      sudo -u lebytek bash -c "cd '$APP_DIR' && mariadb -h \"\$(grep ^DB_HOST= .env | cut -d= -f2)\" -u \"\$(grep ^DB_USERNAME= .env | cut -d= -f2)\" -p\"\$(grep ^DB_PASSWORD= .env | cut -d= -f2-)\" \"\$(grep ^DB_DATABASE= .env | cut -d= -f2)\" < database/migrations/20260630120000_mkt_leads_api_columns.sql" 2>&1 || echo "migration sql skipped"
+    fi
+    if [ -f "$APP_DIR/database/migrations/20260701160000_mkt_leads_api_instance_public_id.sql" ]; then
+      sudo -u lebytek bash -c "cd '$APP_DIR' && mariadb -h \"\$(grep ^DB_HOST= .env | cut -d= -f2)\" -u \"\$(grep ^DB_USERNAME= .env | cut -d= -f2)\" -p\"\$(grep ^DB_PASSWORD= .env | cut -d= -f2-)\" \"\$(grep ^DB_DATABASE= .env | cut -d= -f2)\" < database/migrations/20260701160000_mkt_leads_api_instance_public_id.sql" 2>&1 || echo "instance migration sql skipped"
+    fi
+    if [ -f "$APP_DIR/database/migrations/20260701170000_mkt_leads_api_lifecycle_status.sql" ]; then
+      sudo -u lebytek bash -c "cd '$APP_DIR' && mariadb -h \"\$(grep ^DB_HOST= .env | cut -d= -f2)\" -u \"\$(grep ^DB_USERNAME= .env | cut -d= -f2)\" -p\"\$(grep ^DB_PASSWORD= .env | cut -d= -f2-)\" \"\$(grep ^DB_DATABASE= .env | cut -d= -f2)\" < database/migrations/20260701170000_mkt_leads_api_lifecycle_status.sql" 2>&1 || echo "lifecycle migration sql skipped"
+    fi
   fi
 else
   echo "WARN: install.php failed — set DB_PASSWORD in $APP_DIR/.env and re-run: php scripts/install.php"
