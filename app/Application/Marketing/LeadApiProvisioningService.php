@@ -10,6 +10,7 @@ use App\Infrastructure\Integrations\LebytekApi\LebytekApiException;
 use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
 use Lebytek\Framework\Domain\Interfaces\MailerInterface;
 use Lebytek\Framework\Kernel\EnvLoader;
+use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 final class LeadApiProvisioningService
 {
@@ -76,17 +77,18 @@ final class LeadApiProvisioningService
     private function sendCredentialsEmail(string $nombre, string $email, string $token): void
     {
         $apiBaseUrl = rtrim((string) EnvLoader::get('LEBYTEK_API_URL', 'https://api.lebytek.com/api/v1'), '/');
-        $cuerpo = str_replace(
-            ['{{nombre}}', '{{token}}', '{{api_base_url}}'],
-            [htmlspecialchars($nombre), htmlspecialchars($token), htmlspecialchars($apiBaseUrl)],
-            "Hola {{nombre}},\n\nTu demo está lista. Usa este token para conectar con nuestra API:\n\nToken: {{token}}\nBase URL: {{api_base_url}}\n\nConserva este correo; el token no se vuelve a mostrar.\n\nSaludos,\nEquipo Lebytek"
-        );
+
+        $html = ViewHelper::render('emails/lead_api_credentials', [
+            'nombre'     => $nombre,
+            'token'      => $token,
+            'apiBaseUrl' => $apiBaseUrl,
+        ], '');
 
         $this->mailer->enviar(new MensajeCorreo(
             $email,
             $nombre,
             'Tus credenciales de acceso — Lebytek',
-            nl2br($cuerpo)
+            $html,
         ));
     }
 
