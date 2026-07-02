@@ -115,6 +115,7 @@ final class LeadApiSpyMailer implements MailerInterface
 test('LeadApiProvisioningService full flow persists lead and sends email', function () {
     $_ENV['LEBYTEK_API_URL'] = 'https://api.test/v1';
     $_ENV['MKT_EMAIL_DOCS_URL'] = 'https://docs.lebytek.com';
+    $_ENV['MKT_EMAIL_DASHBOARD_URL'] = '';
 
     $repo = new InMemoryLeadRepo();
     $repo->rows[5] = ['id' => 5, 'nombre' => 'Ana', 'email' => 'ana@test.com', 'api_tenant_public_id' => null];
@@ -140,6 +141,27 @@ test('LeadApiProvisioningService full flow persists lead and sends email', funct
     assert_true(str_contains($mailer->last->html, 'Ver documentación'));
     assert_true(! str_contains(strtolower($mailer->last->html), 'dashboard'));
     assert_true(! str_contains(strtolower($mailer->last->html), 'waapi'));
+});
+
+test('LeadApiProvisioningService includes dashboard CTA when MKT_EMAIL_DASHBOARD_URL set', function () {
+    $_ENV['LEBYTEK_API_URL'] = 'https://api.test/v1';
+    $_ENV['MKT_EMAIL_DOCS_URL'] = 'https://docs.lebytek.com';
+    $_ENV['MKT_EMAIL_DASHBOARD_URL'] = 'https://waapi.lebytek.com/portal/acceso';
+
+    $repo = new InMemoryLeadRepo();
+    $repo->rows[9] = ['id' => 9, 'nombre' => 'Pablo', 'email' => 'p@test.com', 'api_tenant_public_id' => null];
+    $transport = new SequenceTransport([
+        ['status' => 201, 'body' => '{"publicId":"01JTENANT"}', 'error' => ''],
+        ['status' => 202, 'body' => '{"publicId":"01JINST"}', 'error' => ''],
+        ['status' => 201, 'body' => '{"token":"12|demo"}', 'error' => ''],
+    ]);
+    $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
+    $mailer = new LeadApiSpyMailer();
+    $svc = new LeadApiProvisioningService($api, $repo, $mailer);
+    $svc->provisionLead(9);
+
+    assert_true(str_contains($mailer->last->html, 'waapi.lebytek.com/portal/acceso'));
+    assert_true(str_contains($mailer->last->html, 'Acceder a tu panel'));
 });
 
 test('LeadApiProvisioningService skips when already provisioned', function () {

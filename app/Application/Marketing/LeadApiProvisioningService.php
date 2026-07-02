@@ -94,13 +94,16 @@ final class LeadApiProvisioningService
     {
         $apiBaseUrl = rtrim((string) EnvLoader::get('LEBYTEK_API_URL', 'https://api.lebytek.com/api/v1'), '/');
         $docsUrl = rtrim((string) EnvLoader::get('MKT_EMAIL_DOCS_URL', 'https://docs.lebytek.com'), '/');
+        $dashboardUrl = rtrim((string) EnvLoader::get('MKT_EMAIL_DASHBOARD_URL', ''), '/');
 
         $html = ViewHelper::render('emails/lead_api_credentials', [
-            'nombre'      => $nombre,
-            'token'       => $token,
-            'apiBaseUrl'  => $apiBaseUrl,
-            'docsUrl'     => $docsUrl,
-            'showDocsCta' => $docsUrl !== '',
+            'nombre'            => $nombre,
+            'token'             => $token,
+            'apiBaseUrl'        => $apiBaseUrl,
+            'docsUrl'           => $docsUrl,
+            'showDocsCta'       => $docsUrl !== '',
+            'dashboardUrl'      => $dashboardUrl,
+            'showDashboardCta'  => $dashboardUrl !== '',
         ], '');
 
         $this->mailer->enviar(new MensajeCorreo(

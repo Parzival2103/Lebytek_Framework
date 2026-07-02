@@ -7,6 +7,8 @@ use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 /** @var string $apiBaseUrl */
 /** @var string $docsUrl */
 /** @var bool $showDocsCta */
+/** @var string|null $dashboardUrl */
+/** @var bool $showDashboardCta */
 /** @var string|null $empresaNombre */
 
 $renderPartial = static function (string $name, array $data = []): string {
@@ -58,6 +60,19 @@ echo $renderPartial('_shell_open', [
             <?= $renderPartial('_cta_button', [
                 'url'   => $docsUrl,
                 'label' => 'Ver documentación',
+            ]) ?>
+        </td>
+    </tr>
+</table>
+<?php endif; ?>
+
+<?php if (! empty($showDashboardCta) && ! empty($dashboardUrl)): ?>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+    <tr>
+        <td align="center">
+            <?= $renderPartial('_cta_button', [
+                'url'   => $dashboardUrl,
+                'label' => 'Acceder a tu panel',
             ]) ?>
         </td>
     </tr>
