@@ -83,6 +83,25 @@ final class SequenceTransport implements LebytekApiTransport
     }
 }
 
+final class CapturingTransport implements LebytekApiTransport
+{
+    public ?string $lastBody = null;
+
+    private int $i = 0;
+
+    /** @param list<array{status:int,body:string,error:string}> */
+    public function __construct(private array $responses) {}
+
+    public function execute(string $method, string $url, array $headers, ?string $body): array
+    {
+        if ($method === 'POST' && str_contains($url, '/tokens')) {
+            $this->lastBody = $body;
+        }
+
+        return $this->responses[$this->i++] ?? ['status' => 500, 'body' => '{}', 'error' => ''];
+    }
+}
+
 final class LeadApiSpyMailer implements MailerInterface
 {
     public ?MensajeCorreo $last = null;
@@ -146,4 +165,27 @@ test('LeadApiProvisioningService persists api_provision_error on failure', funct
     $svc = new LeadApiProvisioningService($api, $repo, new LeadApiSpyMailer());
     assert_throws(LebytekApiException::class, fn () => $svc->provisionLead(5));
     assert_same('slug taken', $repo->rows[5]['api_provision_error']);
+});
+
+test('LeadApiProvisioningService requests mensajes abilities on tenant token', function () {
+    $_ENV['LEBYTEK_API_URL'] = 'https://api.test/v1';
+
+    $repo = new InMemoryLeadRepo();
+    $repo->rows[7] = ['id' => 7, 'nombre' => 'Luis', 'email' => 'luis@test.com', 'api_tenant_public_id' => null];
+
+    $transport = new CapturingTransport([
+        ['status' => 201, 'body' => '{"publicId":"01JTENANT"}', 'error' => ''],
+        ['status' => 202, 'body' => '{"publicId":"01JINST"}', 'error' => ''],
+        ['status' => 201, 'body' => '{"token":"12|demo"}', 'error' => ''],
+    ]);
+
+    $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
+    $svc = new LeadApiProvisioningService($api, $repo, new LeadApiSpyMailer());
+    $svc->provisionLead(7);
+
+    $decoded = json_decode($transport->lastBody ?? '{}', true);
+    assert_same(
+        ['instancias.ver', 'mensajes.enviar', 'mensajes.ver'],
+        $decoded['abilities'] ?? [],
+    );
 });

@@ -62,7 +62,7 @@ final class LeadApiProvisioningService
             $tokenResponse = $this->api->issueTenantToken(
                 $tenantPublicId,
                 'cliente-'.$slug,
-                ['instancias.ver'],
+                ['instancias.ver', 'mensajes.enviar', 'mensajes.ver'],
             );
 
             $plainToken = (string) ($tokenResponse['token'] ?? '');
