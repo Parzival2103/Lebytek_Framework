@@ -28,7 +28,7 @@ use Lebytek\Framework\Presentation\Middlewares\RbacMiddleware;
 $router->get('/manifest.webmanifest', [PwaController::class, 'manifest']);
 
 $marketingActivo = (bool) \Lebytek\Framework\Kernel\Config\Config::get('vertical.modules.marketing', false);
-$waapiPortalActivo = strtolower((string) \Lebytek\Framework\Kernel\EnvLoader::get('WAAPI_PORTAL_ENABLED', 'false')) === 'true';
+$waapiPortalActivo = (bool) \Lebytek\Framework\Kernel\EnvLoader::get('WAAPI_PORTAL_ENABLED', false);
 
 if ($waapiPortalActivo) {
     require ROOT_PATH . '/routes/waapi_portal.php';
