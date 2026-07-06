@@ -95,6 +95,14 @@ return static function (Container $container): void {
         $container->singleton(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class,
             fn() => new \App\Infrastructure\Marketing\PdoLeadRepository());
 
+        $container->singleton(\App\Domain\Marketing\Contracts\ChurnMetricsRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Marketing\PdoChurnMetricsRepository());
+
+        $container->singleton(\App\Infrastructure\Marketing\MarketingChurnDashboardProvider::class,
+            fn(Container $c) => new \App\Infrastructure\Marketing\MarketingChurnDashboardProvider(
+                $c->get(\App\Domain\Marketing\Contracts\ChurnMetricsRepositoryInterface::class),
+            ));
+
         $container->singleton(\App\Application\Marketing\CapturarLeadUseCase::class, function (Container $c) {
             $destinoInterno = (string) $c->get(ConfiguracionService::class)->get('mkt_mail_from', '');
             return new \App\Application\Marketing\CapturarLeadUseCase([

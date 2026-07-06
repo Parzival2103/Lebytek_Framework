@@ -14,5 +14,6 @@ return [
     'providers' => [
         \Lebytek\Framework\Infrastructure\Dashboard\DefaultPlatformDashboardProvider::class,
         \Lebytek\Framework\Infrastructure\Dashboard\CalendarDashboardProvider::class,
+        \App\Infrastructure\Marketing\MarketingChurnDashboardProvider::class,
     ],
 ];
