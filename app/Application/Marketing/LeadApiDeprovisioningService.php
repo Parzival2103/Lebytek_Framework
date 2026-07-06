@@ -115,7 +115,12 @@ final class LeadApiDeprovisioningService
         $failed = 0;
         $errors = [];
 
-        foreach ($this->leads->findDemosOlderThanDays($days) as $lead) {
+        $expired = $this->leads->findDemosExpired();
+        if ($expired === []) {
+            $expired = $this->leads->findDemosOlderThanDays($days);
+        }
+
+        foreach ($expired as $lead) {
             $leadId = (int) ($lead['id'] ?? 0);
             if ($leadId <= 0) {
                 continue;

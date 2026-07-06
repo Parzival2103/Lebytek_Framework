@@ -62,13 +62,29 @@ final class LeadApiProvisioningService
             $tokenResponse = $this->api->issueTenantToken(
                 $tenantPublicId,
                 'cliente-'.$slug,
-                ['instancias.ver', 'mensajes.enviar', 'mensajes.ver'],
+                ['instancias.ver', 'mensajes.enviar', 'mensajes.ver', 'cuenta.ver'],
             );
 
             $plainToken = (string) ($tokenResponse['token'] ?? '');
             if ($plainToken === '') {
                 throw new LebytekApiException('API no devolvió token por-tenant.');
             }
+
+            $demoPackage = $this->leads->findDemoPackageBySlug('demo');
+            $demoDays = (int) ($demoPackage['demo_dias'] ?? 30);
+            $messageLimit = (int) ($demoPackage['mensajes_mes_limite'] ?? 100);
+            $paqueteId = isset($demoPackage['id']) ? (int) $demoPackage['id'] : null;
+            $demoStartedAt = (new \DateTimeImmutable())->format('c');
+            $demoExpiresAt = (new \DateTimeImmutable("+{$demoDays} days"))->format('c');
+
+            $this->api->updateTenant($tenantPublicId, [
+                'commercialStatus' => 'demo',
+                'planSlug' => 'demo',
+                'planName' => (string) ($demoPackage['nombre'] ?? 'Demo'),
+                'demoStartedAt' => $demoStartedAt,
+                'demoExpiresAt' => $demoExpiresAt,
+                'messagesMonthlyLimit' => $messageLimit,
+            ]);
 
             try {
                 $this->sendCredentialsEmail($nombre, $email, $plainToken);
@@ -81,7 +97,15 @@ final class LeadApiProvisioningService
                 ];
             }
 
-            $this->leads->markApiProvisioned($leadId, $tenantPublicId, $externalRef, $instancePublicId);
+            $this->leads->markApiProvisioned(
+                $leadId,
+                $tenantPublicId,
+                $externalRef,
+                $instancePublicId,
+                $paqueteId,
+                'demo',
+                $demoDays,
+            );
 
             return ['status' => 'ok'];
         } catch (LebytekApiException $e) {

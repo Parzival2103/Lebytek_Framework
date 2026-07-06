@@ -43,6 +43,15 @@ final class LebytekApiClient
     }
 
     /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function updateTenant(string $publicId, array $payload): array
+    {
+        return $this->request('PATCH', '/tenants/'.$publicId, $payload);
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function listTenants(int $perPage = 100): array
