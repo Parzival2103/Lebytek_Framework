@@ -103,7 +103,7 @@ final class LeadApiProvisioningService
             'docsUrl'           => $docsUrl,
             'showDocsCta'       => $docsUrl !== '',
             'dashboardUrl'      => $dashboardUrl,
-            'showDashboardCta'  => $dashboardUrl !== '',
+            'showDashboardCta'  => false, // portal desactivado hasta UX de token en correo estable
         ], '');
 
         $this->mailer->enviar(new MensajeCorreo(

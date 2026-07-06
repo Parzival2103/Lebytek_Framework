@@ -143,7 +143,7 @@ test('LeadApiProvisioningService full flow persists lead and sends email', funct
     assert_true(! str_contains(strtolower($mailer->last->html), 'waapi'));
 });
 
-test('LeadApiProvisioningService includes dashboard CTA when MKT_EMAIL_DASHBOARD_URL set', function () {
+test('LeadApiProvisioningService omits dashboard CTA while portal email CTA is disabled', function () {
     $_ENV['LEBYTEK_API_URL'] = 'https://api.test/v1';
     $_ENV['MKT_EMAIL_DOCS_URL'] = 'https://docs.lebytek.com';
     $_ENV['MKT_EMAIL_DASHBOARD_URL'] = 'https://waapi.lebytek.com/portal/acceso';
@@ -160,8 +160,9 @@ test('LeadApiProvisioningService includes dashboard CTA when MKT_EMAIL_DASHBOARD
     $svc = new LeadApiProvisioningService($api, $repo, $mailer);
     $svc->provisionLead(9);
 
-    assert_true(str_contains($mailer->last->html, 'waapi.lebytek.com/portal/acceso'));
-    assert_true(str_contains($mailer->last->html, 'Acceder a tu panel'));
+    assert_true(! str_contains($mailer->last->html, 'waapi.lebytek.com/portal/acceso'));
+    assert_true(! str_contains($mailer->last->html, 'Acceder a tu panel'));
+    assert_true(str_contains($mailer->last->html, 'Copiar al portapapeles'));
 });
 
 test('LeadApiProvisioningService skips when already provisioned', function () {

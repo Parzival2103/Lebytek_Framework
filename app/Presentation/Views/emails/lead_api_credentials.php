@@ -33,23 +33,27 @@ echo $renderPartial('_shell_open', [
     <strong>API de WhatsApp</strong>. A continuación encontrarás tus credenciales de acceso.
 </p>
 
-<?= $renderPartial('_code_block', [
+<?= $renderPartial('_copyable_field', [
     'label' => 'Base URL',
     'value' => $apiBaseUrl,
+    'hint'  => 'Copia esta URL tal cual para el prefijo de tus peticiones a la API.',
+    'showCopyButton' => true,
 ]) ?>
 
-<?= $renderPartial('_code_block', [
+<?= $renderPartial('_copyable_field', [
     'label' => 'Token de acceso',
     'value' => $token,
+    'hint'  => 'Copia <strong>todo</strong> el texto del recuadro, incluido el número y el símbolo <strong>|</strong> (ej. <code style="font-family:monospace;">15|abc…</code>). Ese valor completo es tu token Bearer.',
+    'showCopyButton' => true,
 ]) ?>
 
 <?= $renderPartial('_info_box', [
     'title' => 'Próximos pasos',
     'items' => [
-        'Guarda este correo en un lugar seguro.',
-        'Usa el token en el header Authorization: Bearer para autenticar tus peticiones.',
+        'Copia la Base URL y el Token desde los recuadros de arriba (usa el botón Copiar o selecciona todo el texto).',
+        'Usa el token completo en el header <code style="font-family:monospace;">Authorization: Bearer &lt;token&gt;</code>.',
         'Consulta la documentación de integración para ver ejemplos y endpoints.',
-        'Conecta tu instancia de WhatsApp siguiendo la guía técnica.',
+        'Abre el <strong>Sandbox demo</strong> en la documentación: pega tu token, escanea el QR y envía tu primer WhatsApp en minutos.',
     ],
 ]) ?>
 
@@ -58,8 +62,8 @@ echo $renderPartial('_shell_open', [
     <tr>
         <td align="center">
             <?= $renderPartial('_cta_button', [
-                'url'   => $docsUrl,
-                'label' => 'Ver documentación',
+                'url'   => rtrim($docsUrl, '/').'/#sandbox',
+                'label' => 'Probar demo (5 min)',
             ]) ?>
         </td>
     </tr>

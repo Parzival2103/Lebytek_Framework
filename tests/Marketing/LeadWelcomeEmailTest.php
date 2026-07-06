@@ -35,6 +35,8 @@ test('lead_api_credentials email renders credentials and docs CTA without dashbo
     assert_true(str_contains($html, 'https://api.lebytek.com/api/v1'));
     assert_true(str_contains($html, 'https://docs.lebytek.com'));
     assert_true(str_contains($html, 'Ver documentación'));
+    assert_true(str_contains($html, 'Copiar al portapapeles'));
+    assert_true(str_contains($html, 'símbolo'));
     assert_true(str_contains($html, 'no volverá a mostrarse'));
     assert_true(! str_contains(strtolower($html), 'dashboard'));
     assert_true(! str_contains(strtolower($html), 'waapi'));
