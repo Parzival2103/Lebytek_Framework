@@ -56,6 +56,14 @@ final class ClientTenantApiClient
     /**
      * @return array<string, mixed>
      */
+    public function getUsage(string $token): array
+    {
+        return $this->request('GET', '/usage', null, $token);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     private function request(string $method, string $path, ?array $body, string $token): array
     {
         $url = rtrim($this->baseUrl, '/').$path;

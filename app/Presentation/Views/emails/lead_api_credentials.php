@@ -76,7 +76,7 @@ echo $renderPartial('_shell_open', [
         <td align="center">
             <?= $renderPartial('_cta_button', [
                 'url'   => $dashboardUrl,
-                'label' => 'Acceder a tu panel',
+                'label' => 'Ver métricas de uso',
             ]) ?>
         </td>
     </tr>

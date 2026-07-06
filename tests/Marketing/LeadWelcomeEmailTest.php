@@ -28,13 +28,14 @@ test('lead_api_credentials email renders credentials and docs CTA without dashbo
         'apiBaseUrl'  => 'https://api.lebytek.com/api/v1',
         'docsUrl'     => 'https://docs.lebytek.com',
         'showDocsCta' => true,
+        'showDashboardCta' => false,
     ], '');
 
     assert_true(str_contains($html, 'Carlos'));
     assert_true(str_contains($html, '12|secret-token-xyz'));
     assert_true(str_contains($html, 'https://api.lebytek.com/api/v1'));
     assert_true(str_contains($html, 'https://docs.lebytek.com'));
-    assert_true(str_contains($html, 'Ver documentación'));
+    assert_true(str_contains($html, 'Probar demo (5 min)'));
     assert_true(str_contains($html, 'Copiar al portapapeles'));
     assert_true(str_contains($html, 'símbolo'));
     assert_true(str_contains($html, 'no volverá a mostrarse'));
@@ -51,5 +52,5 @@ test('lead_api_credentials hides docs CTA when showDocsCta is false', function (
         'showDocsCta' => false,
     ], '');
 
-    assert_true(! str_contains($html, 'Ver documentación'));
+    assert_true(! str_contains($html, 'Probar demo (5 min)'));
 });
