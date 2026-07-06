@@ -66,6 +66,29 @@ body.ct-public {
 .ct-trust__valor { font-family: var(--ct-pub-font-head); font-weight: 800; font-size: 1.6rem; color: var(--ct-pub-ink); }
 .ct-trust__etiqueta { color: var(--ct-pub-muted); font-size: .92rem; }
 
+/* Features */
+.ct-features { padding: clamp(3rem, 7vw, 5rem) 0 !important; background: #fff; }
+.ct-feature {
+  background: var(--ct-pub-surface); border: 1px solid var(--ct-pub-border);
+  border-radius: var(--ct-pub-radius); padding: 1.75rem 1.5rem; box-shadow: var(--ct-pub-shadow);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.ct-feature:hover { transform: translateY(-3px); box-shadow: var(--ct-pub-shadow-hover); }
+.ct-feature__icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 3rem; height: 3rem; border-radius: .85rem;
+  background: var(--app-primary-subtle, rgba(37, 211, 102, .12)); color: var(--app-primary, #25D366);
+  font-size: 1.35rem; margin-bottom: 1rem;
+}
+.ct-feature__title { font-weight: 700; font-size: 1.1rem; margin-bottom: .5rem; color: var(--ct-pub-ink); }
+.ct-feature__text { color: var(--ct-pub-muted); margin: 0; line-height: 1.55; }
+
+/* Hero media fallback */
+.ct-hero__mockup {
+  width: 100%; max-width: 520px; margin-inline: auto; display: block;
+  border-radius: var(--ct-pub-radius); box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+}
+
 /* Pricing */
 .ct-pricing { padding: clamp(3rem, 7vw, 5rem) 0; }
 .ct-billing {

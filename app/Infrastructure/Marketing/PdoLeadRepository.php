@@ -49,6 +49,9 @@ final class PdoLeadRepository implements LeadRepositoryInterface
         string $tenantPublicId,
         string $externalRef,
         string $instancePublicId = '',
+        ?int $paqueteId = null,
+        string $planSlug = 'demo',
+        int $demoDays = 30,
     ): void {
         $pdo = Connection::getInstance();
         $stmt = $pdo->prepare(
@@ -57,20 +60,26 @@ final class PdoLeadRepository implements LeadRepositoryInterface
                  api_instance_public_id = :instance_public_id,
                  external_ref = :external_ref,
                  api_provisioned_at = NOW(),
+                 demo_started_at = NOW(),
+                 demo_expires_at = DATE_ADD(NOW(), INTERVAL :demo_days DAY),
+                 paquete_id = :paquete_id,
+                 plan_slug = :plan_slug,
                  api_provision_error = NULL,
                  api_lifecycle_status = :lifecycle,
                  estado = :estado,
                  updated_at = NOW()
              WHERE id = :id'
         );
-        $stmt->execute([
-            'public_id'           => $tenantPublicId,
-            'instance_public_id'  => $instancePublicId !== '' ? $instancePublicId : null,
-            'external_ref'        => $externalRef,
-            'lifecycle'           => LeadApiLifecycleStatus::PROVISION_INITIATED,
-            'estado'              => 'demo_enviada',
-            'id'                  => $leadId,
-        ]);
+        $stmt->bindValue('public_id', $tenantPublicId);
+        $stmt->bindValue('instance_public_id', $instancePublicId !== '' ? $instancePublicId : null);
+        $stmt->bindValue('external_ref', $externalRef);
+        $stmt->bindValue('demo_days', $demoDays, \PDO::PARAM_INT);
+        $stmt->bindValue('paquete_id', $paqueteId, $paqueteId !== null ? \PDO::PARAM_INT : \PDO::PARAM_NULL);
+        $stmt->bindValue('plan_slug', $planSlug);
+        $stmt->bindValue('lifecycle', LeadApiLifecycleStatus::PROVISION_INITIATED);
+        $stmt->bindValue('estado', 'demo_enviada');
+        $stmt->bindValue('id', $leadId, \PDO::PARAM_INT);
+        $stmt->execute();
     }
 
     public function markApiProvisionError(int $leadId, string $error): void
@@ -170,5 +179,38 @@ final class PdoLeadRepository implements LeadRepositoryInterface
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         return is_array($rows) ? $rows : [];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function findDemosExpired(): array
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            "SELECT * FROM dom_mkt_leads
+             WHERE deleted = 0
+               AND estado = :estado
+               AND api_tenant_public_id IS NOT NULL
+               AND (
+                 (demo_expires_at IS NOT NULL AND demo_expires_at < NOW())
+                 OR (demo_expires_at IS NULL AND api_provisioned_at IS NOT NULL AND api_provisioned_at < DATE_SUB(NOW(), INTERVAL 30 DAY))
+               )"
+        );
+        $stmt->execute(['estado' => 'demo_enviada']);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    /** @return array<string, mixed>|null */
+    public function findDemoPackageBySlug(string $slug): ?array
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM dom_mkt_paquetes WHERE slug = :slug AND deleted = 0 AND activo = 1 LIMIT 1'
+        );
+        $stmt->execute(['slug' => $slug]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $row : null;
     }
 }

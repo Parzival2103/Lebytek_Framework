@@ -19,6 +19,9 @@ interface LeadRepositoryInterface
         string $tenantPublicId,
         string $externalRef,
         string $instancePublicId = '',
+        ?int $paqueteId = null,
+        string $planSlug = 'demo',
+        int $demoDays = 30,
     ): void;
 
     public function markApiProvisionError(int $leadId, string $error): void;
@@ -33,5 +36,11 @@ interface LeadRepositoryInterface
     public function findDemosOlderThanDays(int $days): array;
 
     /** @return list<array<string, mixed>> */
+    public function findDemosExpired(): array;
+
+    /** @return list<array<string, mixed>> */
     public function findPendingDeprovisions(): array;
+
+    /** @return array<string, mixed>|null */
+    public function findDemoPackageBySlug(string $slug): ?array;
 }

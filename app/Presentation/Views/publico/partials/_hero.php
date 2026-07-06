@@ -39,9 +39,9 @@ if ($titulo === '' && $subtitulo === '') {
       </div>
       <div class="col-lg-6">
         <?php if ($mediaImg !== ''): ?>
-          <img src="<?= ViewHelper::e($mediaImg) ?>" alt="<?= ViewHelper::e($mediaAlt) ?>" class="ct-hero__media" loading="lazy">
+          <img src="<?= ViewHelper::e($mediaImg) ?>" alt="<?= ViewHelper::e($mediaAlt) ?>" class="ct-hero__media" fetchpriority="high">
         <?php else: ?>
-          <img src="/assets/publico/hero-dashboard.svg" alt="Vista previa del panel" class="ct-hero__mockup" loading="lazy">
+          <img src="/assets/publico/hero-dashboard.svg" alt="Vista previa del panel" class="ct-hero__mockup" fetchpriority="high">
         <?php endif; ?>
       </div>
     </div>
