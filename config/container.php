@@ -123,24 +123,6 @@ return static function (Container $container): void {
             maxRetries: (int) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_RETRY_MAX', 3),
         ));
 
-        $container->singleton(\App\Infrastructure\Integrations\LebytekApi\ClientTenantApiClient::class, fn () => new \App\Infrastructure\Integrations\LebytekApi\ClientTenantApiClient(
-            transport: new \App\Infrastructure\Integrations\LebytekApi\CurlLebytekApiTransport(
-                (int) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_TIMEOUT', 30),
-            ),
-            baseUrl: (string) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_URL', ''),
-            timeoutSeconds: (int) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_TIMEOUT', 30),
-        ));
-
-        $container->singleton(\App\Application\Marketing\WaapiPortalSession::class, fn (Container $c) => new \App\Application\Marketing\WaapiPortalSession(
-            $c->get(\App\Infrastructure\Integrations\LebytekApi\ClientTenantApiClient::class),
-        ));
-
-        $container->bind(\App\Presentation\Controllers\Publico\WaapiPortalController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\WaapiPortalController(
-            $c->get(ConfiguracionService::class),
-            $c->get(\App\Application\Marketing\WaapiPortalSession::class),
-            $c->get(\App\Infrastructure\Integrations\LebytekApi\ClientTenantApiClient::class),
-        ));
-
         $container->singleton(\App\Application\Marketing\LeadApiProvisioningService::class, fn (Container $c) => new \App\Application\Marketing\LeadApiProvisioningService(
             $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
             $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
@@ -158,6 +140,33 @@ return static function (Container $container): void {
             $c->get(\App\Application\Marketing\LeadApiProvisioningService::class),
             $c->get(\App\Application\Marketing\LeadApiDeprovisioningService::class),
             $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
+        ));
+    }
+
+    // Portal waapi (vhost dedicado: marketing off + WAAPI_PORTAL_ENABLED=true)
+    $waapiPortalEnabled = filter_var(
+        (string) \Lebytek\Framework\Kernel\EnvLoader::get('WAAPI_PORTAL_ENABLED', 'false'),
+        FILTER_VALIDATE_BOOLEAN,
+    );
+    $marketingEnabled = (bool) Config::get('vertical.modules.marketing', false);
+
+    if ($waapiPortalEnabled || $marketingEnabled) {
+        $container->singleton(\App\Infrastructure\Integrations\LebytekApi\ClientTenantApiClient::class, fn () => new \App\Infrastructure\Integrations\LebytekApi\ClientTenantApiClient(
+            transport: new \App\Infrastructure\Integrations\LebytekApi\CurlLebytekApiTransport(
+                (int) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_TIMEOUT', 30),
+            ),
+            baseUrl: (string) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_URL', ''),
+            timeoutSeconds: (int) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_TIMEOUT', 30),
+        ));
+
+        $container->singleton(\App\Application\Marketing\WaapiPortalSession::class, fn (Container $c) => new \App\Application\Marketing\WaapiPortalSession(
+            $c->get(\App\Infrastructure\Integrations\LebytekApi\ClientTenantApiClient::class),
+        ));
+
+        $container->bind(\App\Presentation\Controllers\Publico\WaapiPortalController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\WaapiPortalController(
+            $c->get(ConfiguracionService::class),
+            $c->get(\App\Application\Marketing\WaapiPortalSession::class),
+            $c->get(\App\Infrastructure\Integrations\LebytekApi\ClientTenantApiClient::class),
         ));
     }
 };
