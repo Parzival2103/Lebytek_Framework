@@ -1,0 +1,12 @@
+{
+  "calendar": { "key": "demo_citas", "title": "Agenda de Citas", "resource": "demo_citas", "icon": "bi-calendar-event" },
+  "mapping": {
+    "start": "fecha_inicio", "end": "fecha_fin", "all_day": false,
+    "title": "{cliente} — {servicio}",
+    "color": { "by": "estado", "map": { "pendiente": "warning", "confirmada": "success", "cancelada": "secondary" } }
+  },
+  "views": { "default": "month", "enabled": ["month", "week", "day", "table"] },
+  "interaction": { "create_on_slot": true, "open_detail": true, "edit_from_event": true },
+  "filters": [ { "field": "estado", "label": "Estado" } ],
+  "dashboard_widget": true
+}

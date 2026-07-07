@@ -1,0 +1,83 @@
+[2026-06-12 05:02:40] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:02:40] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:28:07] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:28:07] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:28:08] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:28:08] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:28:53] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:28:53] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:30:51] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:30:51] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:34:39] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612053439_780aeb47.png"}
+[2026-06-12 05:34:52] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612053452_9b5e2eca.png"}
+[2026-06-12 05:34:53] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:34:53] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:35:45] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612053545_7abb9e86.png"}
+[2026-06-12 05:36:16] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612053616_bccf826a.png"}
+[2026-06-12 05:36:16] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612053616_c5c1190f.png"}
+[2026-06-12 05:36:16] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:36:16] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:41:42] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612054142_6be12c40.png"}
+[2026-06-12 05:41:42] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:41:42] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:47:21] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612054721_8d5f1a3a.png"}
+[2026-06-12 05:47:21] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:47:21] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:47:41] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612054741_756a5763.png"}
+[2026-06-12 05:47:41] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:47:41] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 05:47:42] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 05:47:42] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 06:06:32] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612060632_f91071e0.png"}
+[2026-06-12 06:06:32] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 06:06:32] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 16:54:17] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612165417_5936c900.png"}
+[2026-06-12 16:54:17] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 16:54:17] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 17:55:55] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612175555_758f938f.png"}
+[2026-06-12 17:55:55] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 17:55:55] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 18:02:52] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 18:02:52] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 18:06:41] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 18:06:41] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 18:06:43] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612180643_131ea114.png"}
+[2026-06-12 18:06:43] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 18:06:43] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 18:08:50] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 18:08:50] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 18:08:51] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612180851_3148007f.png"}
+[2026-06-12 18:08:51] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 18:08:51] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 20:31:28] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 20:31:28] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 22:25:42] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 22:25:42] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 22:25:43] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612222543_be7d0a97.png"}
+[2026-06-12 22:25:44] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 22:25:44] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 22:26:01] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 22:26:01] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 22:26:02] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612222602_66bbfeb5.png"}
+[2026-06-12 22:26:02] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 22:26:02] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 22:37:43] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 22:37:43] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 22:37:45] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612223745_003cc58b.png"}
+[2026-06-12 22:37:46] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 22:37:46] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 23:07:30] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 23:07:30] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 23:07:32] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612230732_d44ddeae.png"}
+[2026-06-12 23:07:32] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 23:07:32] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 23:07:38] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 23:07:38] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 23:07:40] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612230740_c275a3ba.png"}
+[2026-06-12 23:07:40] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 23:07:40] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-12 23:11:24] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 23:11:24] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-12 23:11:26] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260612231126_86343307.png"}
+[2026-06-12 23:11:26] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-12 23:11:26] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}

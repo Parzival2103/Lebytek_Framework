@@ -1,0 +1,49 @@
+---
+description: Estructura oficial de carpetas de la app consumidora
+alwaysApply: true
+---
+
+# Estructura oficial de la app
+
+Todo cambio debe respetar esta estructura base de la app consumidora:
+
+- `/app` con capas: `Presentation`, `Application`, `Domain`, `Infrastructure`
+  (el `Kernel` lo aporta el framework en `vendor/`, no se crea aquí).
+- `/config`
+- `/database`
+- `/public`
+- `/routes`
+- `/storage`
+- `/tests`
+- `/vendor` — dependencias de Composer, incluido `lebytek/framework`. **Solo lectura**
+  (ver regla `framework-en-vendor`).
+
+## Reglas por capa en `/app`
+
+- `Presentation`: `Controllers`, `Views`, `Middlewares`, `Requests`, `Responses`, `Api`, `Web`.
+- `Application`: `UseCases`, `Services`, `DTO`, `Commands`, `Queries`, `Validators`, `Mappers`.
+- `Domain`: `Entities`, `ValueObjects`, `Interfaces`, `Rules`, `Policies`, `Events`, `Exceptions`.
+- `Infrastructure`: `Persistence`, `Repositories`, `Database`, `ExternalServices`, `Storage`, `Mail`, `Cache`, `Logging`, `Integrations`, `Queue`.
+
+Los módulos de negocio se organizan por dominio dentro de cada capa (p. ej.
+`app/Domain/Marketing`, `app/Application/Marketing`, `app/Infrastructure/Marketing`).
+
+## Reglas por carpeta raiz
+
+- `config`: configuraciones del sistema (incluye bindings de DI en `container.php`,
+  módulos en `vertical.php`, CRUDs en `cruds/`).
+- `database`: `migrations`, `seeds`, `factories`, `schema`, `backups`.
+- `public`: `index.php` y recursos publicos (`assets`, `css`, `js`, `images`, `uploads`).
+- `routes`: definicion de rutas (`web.php`, `api.php` y modulares por dominio).
+- `storage`: archivos generados (`logs`, `uploads`, `temp`, `cache`, `exports`, `imports`).
+- `tests`: pruebas (`Unit`, `Feature`, `Integration`, `Performance`).
+
+## Guardrails obligatorios
+
+- No editar `vendor/`. Plataforma que falta o falla se resuelve en el repo del framework.
+- No crear un `Kernel` local ni carpetas fuera de esta estructura sin documentarlo.
+- Cada archivo debe pertenecer a una capa o carpeta raiz correcta.
+- `Controllers` solo en `Presentation`; casos de uso solo en `Application`; entidades solo
+  en `Domain`; repositorios solo en `Infrastructure`.
+- Configuracion solo en `config`; migraciones solo en `database/migrations`; archivos
+  publicos solo en `public`; scripts solo donde corresponda; tests solo en `tests`.
