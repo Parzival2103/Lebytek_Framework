@@ -11,10 +11,36 @@ use Lebytek\Framework\Kernel\Database\Connection;
 
 final class PdoLeadRepository implements LeadRepositoryInterface
 {
-    public function guardar(LeadDraft $draft): int
+    /** @param array{token:string,code_hash:string,expires_at:string}|null $emailVerification */
+    public function guardar(LeadDraft $draft, ?array $emailVerification = null): int
     {
         $pdo = Connection::getInstance();
         $utm = $draft->utm();
+
+        if ($emailVerification !== null) {
+            $stmt = $pdo->prepare(
+                'INSERT INTO dom_mkt_leads
+                    (nombre, email, telefono, mensaje, estado, email_verify_token, email_verify_code_hash, email_verify_expires_at, utm_source, utm_medium, utm_campaign)
+                 VALUES
+                    (:nombre, :email, :telefono, :mensaje, :estado, :token, :code_hash, :expires_at, :s, :m, :c)'
+            );
+            $stmt->execute([
+                'nombre'     => $draft->nombre(),
+                'email'      => $draft->email(),
+                'telefono'   => $draft->telefono(),
+                'mensaje'    => $draft->mensaje(),
+                'estado'     => 'pendiente',
+                'token'      => $emailVerification['token'],
+                'code_hash'  => $emailVerification['code_hash'],
+                'expires_at' => $emailVerification['expires_at'],
+                's'          => $utm['utm_source']   ?? null,
+                'm'          => $utm['utm_medium']   ?? null,
+                'c'          => $utm['utm_campaign'] ?? null,
+            ]);
+
+            return (int) $pdo->lastInsertId();
+        }
+
         $stmt = $pdo->prepare(
             'INSERT INTO dom_mkt_leads (nombre, email, telefono, mensaje, estado, utm_source, utm_medium, utm_campaign)
              VALUES (:nombre, :email, :telefono, :mensaje, :estado, :s, :m, :c)'
@@ -42,6 +68,44 @@ final class PdoLeadRepository implements LeadRepositoryInterface
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         return is_array($row) ? $row : null;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function findByEmailVerifyToken(string $token): ?array
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare('SELECT * FROM dom_mkt_leads WHERE email_verify_token = :token AND deleted = 0 LIMIT 1');
+        $stmt->execute(['token' => $token]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $row : null;
+    }
+
+    public function incrementEmailVerifyAttempts(int $leadId): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_leads
+             SET email_verify_attempts = email_verify_attempts + 1,
+                 updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute(['id' => $leadId]);
+    }
+
+    public function markEmailVerified(int $leadId): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            "UPDATE dom_mkt_leads
+             SET email_verified_at = NOW(),
+                 email_verify_token = NULL,
+                 email_verify_code_hash = NULL,
+                 estado = 'validada',
+                 updated_at = NOW()
+             WHERE id = :id"
+        );
+        $stmt->execute(['id' => $leadId]);
     }
 
     public function markApiProvisioned(

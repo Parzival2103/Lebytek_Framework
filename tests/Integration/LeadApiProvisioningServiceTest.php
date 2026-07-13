@@ -15,7 +15,7 @@ final class InMemoryLeadRepo implements LeadRepositoryInterface
 {
     public array $rows = [];
 
-    public function guardar(\App\Domain\Marketing\ValueObjects\LeadDraft $d): int
+    public function guardar(\App\Domain\Marketing\ValueObjects\LeadDraft $d, ?array $emailVerification = null): int
     {
         return 1;
     }
@@ -25,8 +25,28 @@ final class InMemoryLeadRepo implements LeadRepositoryInterface
         return $this->rows[$id] ?? null;
     }
 
-    public function markApiProvisioned(int $id, string $p, string $e, string $instancePublicId = ''): void
+    public function findByEmailVerifyToken(string $token): ?array
     {
+        return null;
+    }
+
+    public function incrementEmailVerifyAttempts(int $leadId): void
+    {
+    }
+
+    public function markEmailVerified(int $leadId): void
+    {
+    }
+
+    public function markApiProvisioned(
+        int $id,
+        string $p,
+        string $e,
+        string $instancePublicId = '',
+        ?int $paqueteId = null,
+        string $planSlug = 'demo',
+        int $demoDays = 30,
+    ): void {
         $this->rows[$id]['api_tenant_public_id'] = $p;
         $this->rows[$id]['api_instance_public_id'] = $instancePublicId !== '' ? $instancePublicId : null;
         $this->rows[$id]['external_ref'] = $e;
@@ -64,6 +84,16 @@ final class InMemoryLeadRepo implements LeadRepositoryInterface
     public function findDemosOlderThanDays(int $days): array
     {
         return [];
+    }
+
+    public function findDemosExpired(): array
+    {
+        return [];
+    }
+
+    public function findDemoPackageBySlug(string $slug): ?array
+    {
+        return null;
     }
 }
 

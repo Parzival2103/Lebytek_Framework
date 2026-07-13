@@ -8,11 +8,22 @@ use App\Domain\Marketing\ValueObjects\LeadDraft;
 
 interface LeadRepositoryInterface
 {
-    /** Persiste un lead y devuelve su id. */
-    public function guardar(LeadDraft $draft): int;
+    /**
+     * Persiste un lead y devuelve su id.
+     *
+     * @param array{token:string,code_hash:string,expires_at:string}|null $emailVerification
+     */
+    public function guardar(LeadDraft $draft, ?array $emailVerification = null): int;
 
     /** @return array<string, mixed>|null */
     public function findById(int $id): ?array;
+
+    /** @return array<string, mixed>|null */
+    public function findByEmailVerifyToken(string $token): ?array;
+
+    public function incrementEmailVerifyAttempts(int $leadId): void;
+
+    public function markEmailVerified(int $leadId): void;
 
     public function markApiProvisioned(
         int $leadId,

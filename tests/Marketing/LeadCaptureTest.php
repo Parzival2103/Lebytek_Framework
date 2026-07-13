@@ -11,12 +11,34 @@ use App\Infrastructure\Marketing\LeadCapture\PersistLeadHandler;
 
 test('PersistLeadHandler guarda y rellena leadId', function (): void {
     $repo = new class implements LeadRepositoryInterface {
-        public function guardar(LeadDraft $draft): int { return 7; }
+        public function guardar(LeadDraft $draft, ?array $emailVerification = null): int { return 7; }
+        public function findById(int $id): ?array { return null; }
+        public function findByEmailVerifyToken(string $token): ?array { return null; }
+        public function incrementEmailVerifyAttempts(int $leadId): void {}
+        public function markEmailVerified(int $leadId): void {}
+        public function markApiProvisioned(
+            int $leadId,
+            string $tenantPublicId,
+            string $externalRef,
+            string $instancePublicId = '',
+            ?int $paqueteId = null,
+            string $planSlug = 'demo',
+            int $demoDays = 30,
+        ): void {}
+        public function markApiProvisionError(int $leadId, string $error): void {}
+        public function markApiDeprovisionInitiated(int $leadId): void {}
+        public function markApiDeprovisionCompleted(int $leadId): void {}
+        public function findDemosOlderThanDays(int $days): array { return []; }
+        public function findDemosExpired(): array { return []; }
+        public function findPendingDeprovisions(): array { return []; }
+        public function findDemoPackageBySlug(string $slug): ?array { return null; }
     };
     $h = new PersistLeadHandler($repo);
     $res = $h->handle(new LeadDraft('Ana', 'ana@x.com'), new LeadResult(true));
     assert_same(true, $res->ok());
     assert_same(7, $res->leadId());
+    assert_true($res->emailVerifyToken() !== null);
+    assert_true($res->emailVerifyCode() !== null);
 });
 
 test('CapturarLeadUseCase recorre la cadena en orden', function (): void {
