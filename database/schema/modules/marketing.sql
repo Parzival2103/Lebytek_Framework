@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS `dom_mkt_leads` (
   `telefono`      VARCHAR(40)     DEFAULT NULL,
   `mensaje`       TEXT            DEFAULT NULL,
   `estado`        VARCHAR(30)     NOT NULL DEFAULT 'pendiente',
+  `email_verify_token` VARCHAR(64) NULL,
+  `email_verify_code_hash` VARCHAR(64) NULL,
+  `email_verify_expires_at` DATETIME NULL,
+  `email_verified_at` DATETIME NULL,
+  `email_verify_attempts` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `utm_source`    VARCHAR(120)    DEFAULT NULL,
   `utm_medium`    VARCHAR(120)    DEFAULT NULL,
   `utm_campaign`  VARCHAR(120)    DEFAULT NULL,
@@ -30,7 +35,8 @@ CREATE TABLE IF NOT EXISTS `dom_mkt_leads` (
   KEY `idx_mkt_leads_estado` (`estado`),
   KEY `idx_mkt_leads_deleted` (`deleted`),
   UNIQUE KEY `dom_mkt_leads_api_tenant_public_id_unique` (`api_tenant_public_id`),
-  UNIQUE KEY `dom_mkt_leads_external_ref_unique` (`external_ref`)
+  UNIQUE KEY `dom_mkt_leads_external_ref_unique` (`external_ref`),
+  UNIQUE KEY `uq_mkt_leads_email_verify_token` (`email_verify_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `dom_mkt_provisiones` (
