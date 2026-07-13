@@ -8,7 +8,7 @@ use App\Domain\Marketing\Contracts\LeadTeamAlertNotifierInterface;
 use App\Domain\Marketing\LeadEmailVerification;
 use App\Domain\Marketing\ValueObjects\LeadDraft;
 
-/** In-memory repo keyed by id; findByEmailVerifyToken ignores burned (null) tokens. */
+/** In-memory repo keyed by id; findByEmailVerifyToken matches by token value. */
 final class InMemoryLeadRepository implements LeadRepositoryInterface
 {
     /** @var array<int, array<string, mixed>> */
@@ -67,7 +67,6 @@ final class InMemoryLeadRepository implements LeadRepositoryInterface
         if (isset($this->leads[$leadId])) {
             $this->leads[$leadId]['estado'] = 'validada';
             $this->leads[$leadId]['email_verified_at'] = '2026-07-13 12:00:00';
-            $this->leads[$leadId]['email_verify_token'] = null;
             $this->leads[$leadId]['email_verify_code_hash'] = null;
         }
     }
@@ -236,12 +235,28 @@ test('codigo correcto marca verificado, notifica y devuelve ok', function (): vo
     assert_same('ok', $res['status']);
     assert_same('validada', $repo->findById($id)['estado']);
     assert_true($repo->findById($id)['email_verified_at'] !== null);
-    assert_null($repo->findById($id)['email_verify_token']);
+    assert_same('tok-correcto', $repo->findById($id)['email_verify_token']);
+    assert_null($repo->findById($id)['email_verify_code_hash']);
     assert_same(1, count($notifier->calls));
     assert_same($id, $notifier->calls[0]['id']);
+});
 
-    // El token quemado ya no se encuentra por findByEmailVerifyToken.
-    assert_null($repo->findByEmailVerifyToken('tok-correcto'));
+test('segunda visita con mismo token devuelve already_verified', function (): void {
+    $repo = new InMemoryLeadRepository();
+    $notifier = new SpyLeadTeamAlertNotifier();
+    $repo->seed([
+        'email_verify_token'      => 'tok-revisita',
+        'email_verify_code_hash'  => LeadEmailVerification::hashCode('AB12CD'),
+        'email_verify_expires_at' => date('Y-m-d H:i:s', time() + 3600),
+    ]);
+    $uc = new VerificarLeadEmailUseCase($repo, $notifier);
+
+    $first = $uc->execute('tok-revisita', 'AB12CD');
+    assert_same('ok', $first['status']);
+
+    $second = $uc->execute('tok-revisita', null);
+    assert_same('already_verified', $second['status']);
+    assert_same(1, count($notifier->calls));
 });
 
 test('si el notifier falla, la verificacion sigue devolviendo ok', function (): void {

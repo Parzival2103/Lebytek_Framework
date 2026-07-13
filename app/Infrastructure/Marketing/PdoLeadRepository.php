@@ -99,7 +99,6 @@ final class PdoLeadRepository implements LeadRepositoryInterface
         $stmt = $pdo->prepare(
             "UPDATE dom_mkt_leads
              SET email_verified_at = NOW(),
-                 email_verify_token = NULL,
                  email_verify_code_hash = NULL,
                  estado = 'validada',
                  updated_at = NOW()
