@@ -2,6 +2,7 @@
 /.cursor/
 /.claude/
 /.superpowers/
+/.worktrees/
 /.agents/
 .env
 .envbk
