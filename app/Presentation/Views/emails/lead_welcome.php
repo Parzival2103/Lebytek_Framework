@@ -5,6 +5,8 @@ use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 /** @var string $nombre */
 /** @var string $landingUrl */
 /** @var string|null $empresaNombre */
+/** @var string $codigo */
+/** @var string $verifyUrl */
 
 $renderPartial = static function (string $name, array $data = []): string {
     return ViewHelper::renderFile(ViewHelper::resolve('emails/partials/'.$name), $data);
@@ -28,6 +30,32 @@ echo $renderPartial('_shell_open', [
     <strong>Lebytek</strong> la revisará en breve para ayudarte a integrar
     <strong>WhatsApp en tu negocio</strong> con nuestra API.
 </p>
+
+<?php if (($codigo ?? '') !== ''): ?>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+    <tr>
+        <td align="center" style="padding:20px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px;">
+            <p style="margin:0 0 12px; font-size:14px; color:#6c757d;">Tu código de verificación:</p>
+            <p style="margin:0 0 12px; font-family:Consolas, Monaco, monospace; font-size:28px; font-weight:bold; letter-spacing:4px; color:#0f172a;">
+                <?= ViewHelper::e($codigo) ?>
+            </p>
+            <p style="margin:0; font-size:14px; color:#6c757d;">El código caduca en 24 horas</p>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+    <tr>
+        <td align="center">
+            <?= $renderPartial('_cta_button', [
+                'url'     => $verifyUrl ?? rtrim($landingUrl, '/'),
+                'label'   => 'Verificar mi correo',
+                'bgColor' => '#0d6efd',
+            ]) ?>
+        </td>
+    </tr>
+</table>
+<?php endif; ?>
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
     <tr>
@@ -55,8 +83,8 @@ echo $renderPartial('_shell_open', [
     'borderColor' => '#25D366',
     'bgColor'     => '#f0fdf4',
     'items'       => [
+        'Verifica tu correo con el código o el enlace de arriba.',
         'Revisamos tu solicitud y validamos tu caso de uso.',
-        'Te contactamos para confirmar detalles y el plan adecuado.',
         'Recibirás por correo tus credenciales de acceso a la API.',
     ],
 ]) ?>

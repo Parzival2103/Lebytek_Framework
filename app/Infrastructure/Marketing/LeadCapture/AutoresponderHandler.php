@@ -18,10 +18,17 @@ final class AutoresponderHandler implements LeadCaptureHandlerInterface
 
     public function handle(LeadDraft $draft, LeadResult $resultadoPrevio): LeadResult
     {
+        $base = rtrim((string) EnvLoader::get('APP_URL', ''), '/');
+        $token = (string) ($resultadoPrevio->emailVerifyToken() ?? '');
+        $code  = (string) ($resultadoPrevio->emailVerifyCode() ?? '');
+        $verifyUrl = $token !== '' ? $base . '/verificar-demo/' . rawurlencode($token) : $base;
+
         $html = ViewHelper::render('emails/lead_welcome', [
             'nombre'        => $draft->nombre(),
-            'landingUrl'    => rtrim((string) EnvLoader::get('APP_URL', ''), '/'),
+            'landingUrl'    => $base,
             'empresaNombre' => null,
+            'codigo'        => $code,
+            'verifyUrl'     => $verifyUrl,
         ], '');
 
         $this->mailer->enviar(new MensajeCorreo(
