@@ -12,7 +12,9 @@ return [
     'version'       => '1.0.0',
     'obligatorio'   => false,
     'requiere'      => ['core', 'crud-engine'],
-    'migraciones'   => [],
+    'migraciones'   => [
+        '20260713120000_mkt_leads_email_verify.sql',
+    ],
     'seeds'         => [],
     'bootstrap_sql' => 'database/schema/modules/marketing.sql',
     'cruds'         => ['mkt_leads', 'mkt_paquetes', 'mkt_bloques', 'mkt_plantillas', 'mkt_secuencias'],
