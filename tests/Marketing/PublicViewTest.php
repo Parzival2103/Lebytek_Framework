@@ -179,6 +179,36 @@ test('lead form postea a /lead con CSRF y campos requeridos', function (): void 
     assert_true(str_contains($html, 'csrf'), 'incluye token CSRF');
 });
 
+test('verificar_demo muestra el formulario de código en estado form', function (): void {
+    $html = ViewHelper::render('publico/verificar_demo', [
+        'empresaNombre' => 'ACME', 'empresaLogo' => '',
+        'status' => 'form', 'token' => 'tok-abc',
+    ], 'publico/layout');
+    assert_true(str_contains($html, 'action="/verificar-demo/tok-abc"'), 'postea al token correcto');
+    assert_true(str_contains($html, 'name="codigo"'), 'campo codigo');
+    assert_true(str_contains($html, 'maxlength="6"'), 'limita a 6 caracteres');
+    assert_true(str_contains($html, 'csrf'), 'incluye token CSRF');
+});
+
+test('verificar_demo muestra alerta y formulario en estado wrong_code', function (): void {
+    $html = ViewHelper::render('publico/verificar_demo', [
+        'empresaNombre' => 'ACME', 'empresaLogo' => '',
+        'status' => 'wrong_code', 'token' => 'tok-abc',
+    ], 'publico/layout');
+    assert_true(str_contains($html, 'alert-danger'), 'muestra alerta de error');
+    assert_true(str_contains($html, 'name="codigo"'), 'mantiene el formulario');
+});
+
+test('verificar_demo muestra mensajes terminales sin formulario', function (): void {
+    foreach (['ok', 'already_verified', 'expired', 'locked', 'invalid'] as $status) {
+        $html = ViewHelper::render('publico/verificar_demo', [
+            'empresaNombre' => 'ACME', 'empresaLogo' => '',
+            'status' => $status, 'token' => 'tok-abc',
+        ], 'publico/layout');
+        assert_true(!str_contains($html, 'name="codigo"'), "estado {$status} no muestra el formulario");
+    }
+});
+
 test('landing integra todas las secciones desde bloques y paquetes', function (): void {
     $html = ViewHelper::render('publico/landing', [
         'empresaNombre' => 'ACME', 'empresaLogo' => '',

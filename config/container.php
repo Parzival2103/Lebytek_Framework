@@ -149,6 +149,30 @@ return static function (Container $container): void {
             $c->get(\App\Application\Marketing\LeadApiDeprovisioningService::class),
             $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
         ));
+
+        $container->singleton(\App\Domain\Marketing\Contracts\LeadTeamAlertNotifierInterface::class, function () {
+            $cfg = [
+                'base_url' => (string) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_BASE_URL', 'https://api.green-api.com'),
+                'instance_id' => (string) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_INSTANCE', ''),
+                'token' => (string) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_TOKEN', ''),
+                'timeout' => (int) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_TIMEOUT', 15),
+            ];
+            $channel = new \Lebytek\Framework\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel(
+                new \Lebytek\Framework\Infrastructure\Integrations\Http\HttpApiConnector($cfg['timeout']),
+                $cfg
+            );
+            $enabled = (bool) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_ENABLED', false);
+            return new \App\Infrastructure\Marketing\LeadVerifiedWhatsAppNotifier($channel, $enabled);
+        });
+
+        $container->singleton(\App\Application\Marketing\VerificarLeadEmailUseCase::class, fn (Container $c) => new \App\Application\Marketing\VerificarLeadEmailUseCase(
+            $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\LeadTeamAlertNotifierInterface::class),
+        ));
+
+        $container->bind(\App\Presentation\Controllers\Publico\LeadEmailVerificationController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\LeadEmailVerificationController(
+            $c->get(\App\Application\Marketing\VerificarLeadEmailUseCase::class)
+        ));
     }
 
     // Portal waapi (vhost dedicado: marketing off + WAAPI_PORTAL_ENABLED=true)
