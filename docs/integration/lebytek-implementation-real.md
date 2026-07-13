@@ -274,13 +274,14 @@ final class LeadApiProvisioningService
 
 ## Operaciones — flujo demo (manual)
 
-1. Lead entra → `pendiente`
-2. Admin revisa → cambia a `validada` (cobro manual fuera del sistema o en notas)
-3. Admin clic **Provisionar demo (api)** en la fila
-4. Sistema orquesta tenant + instancia + token + 2º correo
-5. Lead → `demo_enviada` automáticamente
-6. Si falla → `api_provision_error` visible en listado; corregir env y reintentar
+1. Lead entra → `pendiente`; correo #1 con código + enlace `/verificar-demo/{token}` (24 h)
+2. Lead verifica email → `validada` automática + alerta WhatsApp a `MKT_ALERT_WHATSAPP_NUMBERS`
+3. Admin revisa lead validado (cobro manual fuera del sistema o en notas)
+4. Admin clic **Provisionar demo (api)** en la fila
+5. Sistema orquesta tenant + instancia + token + 2º correo → lead `demo_enviada`
+6. Si falla provisioning → `api_provision_error` visible en listado; corregir env y reintentar
 
+**Verificación email (v1):** código 6 caracteres, máx. 5 intentos fallidos, token de un solo uso.  
 **Regla:** no re-provisionar si `api_tenant_public_id` ya existe (idempotente).  
 **Único camino demo en prod:** api.lebytek.com (`GREEN_API_ENABLED=false`).
 
