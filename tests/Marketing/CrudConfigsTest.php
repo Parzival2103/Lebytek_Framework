@@ -21,8 +21,14 @@ test('los 5 CRUD JSON de marketing son válidos y apuntan a tablas dom_mkt_*', f
     }
 });
 
-test('mkt_leads usa scope owner sobre created_by', function (): void {
+test('mkt_leads oculta pendiente y demo_baja vía scope_handler', function (): void {
     $cfg = json_decode((string) file_get_contents(ROOT_PATH . '/config/cruds/mkt_leads.json'), true);
-    assert_same('owner', $cfg['list']['scope']['type']);
-    assert_same('created_by', $cfg['list']['scope']['column']);
+    assert_same('mkt_leads_active', $cfg['list']['scope_handler']);
+
+    $handlers = require ROOT_PATH . '/config/crud_handlers.php';
+    assert_true(isset($handlers['mkt_leads_active']), 'handler registrado');
+    assert_same(
+        \App\Application\Marketing\MktLeadsActiveListScope::class,
+        $handlers['mkt_leads_active']
+    );
 });

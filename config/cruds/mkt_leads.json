@@ -23,6 +23,7 @@
       { "name": "created_at", "label": "Recibido", "format": "datetime", "sortable": true }
     ],
     "filters": [ { "field": "estado", "label": "Estado" } ],
+    "scope_handler": "mkt_leads_active",
     "actions": ["show", "edit", "delete"]
   },
   "form": {
