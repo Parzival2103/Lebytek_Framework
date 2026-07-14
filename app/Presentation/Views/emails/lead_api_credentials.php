@@ -9,6 +9,8 @@ use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 /** @var bool $showDocsCta */
 /** @var string|null $dashboardUrl */
 /** @var bool $showDashboardCta */
+/** @var string|null $packagesUrl */
+/** @var bool $showPackagesCta */
 /** @var string|null $empresaNombre */
 
 $renderPartial = static function (string $name, array $data = []): string {
@@ -77,6 +79,19 @@ echo $renderPartial('_shell_open', [
             <?= $renderPartial('_cta_button', [
                 'url'   => $dashboardUrl,
                 'label' => 'Ver métricas de uso',
+            ]) ?>
+        </td>
+    </tr>
+</table>
+<?php endif; ?>
+
+<?php if (! empty($showPackagesCta) && ! empty($packagesUrl)): ?>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+    <tr>
+        <td align="center">
+            <?= $renderPartial('_cta_button', [
+                'url'   => $packagesUrl,
+                'label' => 'Ver paquetes',
             ]) ?>
         </td>
     </tr>

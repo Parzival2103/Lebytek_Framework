@@ -87,6 +87,7 @@ final class InMemoryLeadRepository implements LeadRepositoryInterface
     public function findDemosExpired(): array { return []; }
     public function findPendingDeprovisions(): array { return []; }
     public function findDemoPackageBySlug(string $slug): ?array { return null; }
+    public function findLatestByEmail(string $email): ?array { return null; }
 }
 
 final class SpyLeadTeamAlertNotifier implements LeadTeamAlertNotifierInterface

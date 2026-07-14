@@ -128,6 +128,8 @@ final class LeadApiProvisioningService
             'showDocsCta'       => $docsUrl !== '',
             'dashboardUrl'      => $dashboardUrl,
             'showDashboardCta'  => $dashboardUrl !== '',
+            'packagesUrl'       => $this->packagesUrl(),
+            'showPackagesCta'   => $this->packagesUrl() !== '',
         ], '');
 
         $this->mailer->enviar(new MensajeCorreo(
@@ -146,5 +148,15 @@ final class LeadApiProvisioningService
         }
 
         return substr($slug, 0, 40).'-'.$leadId;
+    }
+
+    private function packagesUrl(): string
+    {
+        $appUrl = rtrim((string) EnvLoader::get('APP_URL', ''), '/');
+        if ($appUrl === '') {
+            return '';
+        }
+
+        return $appUrl.'/?compras=1#paquetes';
     }
 }

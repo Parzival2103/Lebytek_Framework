@@ -40,3 +40,17 @@ test('LebytekApiClient retries on 429 then succeeds', function () {
     $client->health();
     assert_same(2, count($transport->calls));
 });
+
+test('LebytekApiClient activatePlan hits correct path', function () {
+    $transport = new RecordingTransport();
+    $transport->responses[] = ['status' => 200, 'body' => '{"token":"1|abc"}', 'error' => ''];
+    $client = new LebytekApiClient('https://api.test/v1', 'platform-token', 5, 1, $transport);
+    $client->activatePlan('01JTENANT123', [
+        'planSlug' => 'starter',
+        'billingCycle' => 'monthly',
+        'orderExternalRef' => '01JORD123',
+    ]);
+    assert_same(1, count($transport->calls));
+    assert_same('POST', $transport->calls[0]['method']);
+    assert_true(str_contains($transport->calls[0]['url'], '/tenants/01JTENANT123/activate-plan'));
+});

@@ -276,4 +276,17 @@ final class PdoLeadRepository implements LeadRepositoryInterface
 
         return is_array($row) ? $row : null;
     }
+
+    /** @return array<string, mixed>|null */
+    public function findLatestByEmail(string $email): ?array
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM dom_mkt_leads WHERE email = :email AND deleted = 0 ORDER BY id DESC LIMIT 1'
+        );
+        $stmt->execute(['email' => $email]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $row : null;
+    }
 }

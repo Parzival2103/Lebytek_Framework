@@ -11,4 +11,7 @@ interface MarketingContentRepositoryInterface
 
     /** @return list<array<string,mixed>> */
     public function paquetesActivos(): array;
+
+    /** @return array<string, mixed>|null */
+    public function findPaqueteBySlug(string $slug, bool $requireActive = true): ?array;
 }

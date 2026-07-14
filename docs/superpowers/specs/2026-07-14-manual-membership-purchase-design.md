@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14  
 **Repo:** Lebytek_Framework (`lebytek.com` / waapi tree on `feature/backoffice-api-integration`)  
-**Status:** Draft — awaiting review  
+**Status:** Approved — implementing  
 **Companion spec (api):** `WhatsApiLebytek/docs/superpowers/specs/2026-07-14-plan-activation-and-package-limits-design.md`
 
 ## Problem
