@@ -9,18 +9,19 @@
   "security": { "allow_core_table": false, "mode": "restricted" },
   "list": {
     "columns": [
-      { "name": "id", "label": "ID", "sortable": true },
-      { "name": "nombre", "label": "Nombre", "searchable": true, "sortable": true },
-      { "name": "email", "label": "Correo", "searchable": true, "sortable": true },
-      { "name": "telefono", "label": "Teléfono" },
-      { "name": "estado", "label": "Estado",
+      { "name": "id", "label": "ID", "sortable": true, "priority": 6 },
+      { "name": "nombre", "label": "Nombre", "searchable": true, "sortable": true, "priority": 2 },
+      { "name": "email", "label": "Correo", "searchable": true, "sortable": true, "priority": 4 },
+      { "name": "telefono", "label": "Teléfono", "priority": 5 },
+      { "name": "estado", "label": "Estado", "priority": 2,
         "badge": { "pendiente": "secondary", "validada": "info", "demo_enviada": "success", "demo_baja_pendiente": "warning", "demo_baja": "secondary", "rechazada": "danger" } },
       { "name": "api_lifecycle_status", "label": "Ciclo API",
         "badge": { "none": "secondary", "provision_initiated": "info", "deprovision_initiated": "warning", "deprovisioned": "secondary" } },
       { "name": "api_tenant_public_id", "label": "Tenant API", "format": "truncate", "max_length": 26 },
       { "name": "api_provision_error", "label": "Error API", "badge_nonempty": "danger" },
-      { "name": "created_at", "label": "Recibido", "format": "datetime", "sortable": true }
+      { "name": "created_at", "label": "Recibido", "format": "datetime", "sortable": true, "priority": 5 }
     ],
+    "table_compact": true,
     "filters": [ { "field": "estado", "label": "Estado" } ],
     "exclude": [
       { "field": "estado", "values": ["pendiente", "demo_baja"] }

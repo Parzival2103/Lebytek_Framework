@@ -32,3 +32,16 @@ test('mkt_leads excluye pendiente y demo_baja del listado', function (): void {
         ['field' => 'estado', 'values' => ['pendiente', 'demo_baja']],
     ], $def->listExcludes());
 });
+
+test('mkt_leads prioriza nombre y estado en responsive', function (): void {
+    $cfg = json_decode((string) file_get_contents(ROOT_PATH . '/config/cruds/mkt_leads.json'), true);
+    $byName = [];
+    foreach ($cfg['list']['columns'] as $col) {
+        $byName[(string) $col['name']] = $col;
+    }
+    assert_same(2, (int) $byName['nombre']['priority']);
+    assert_same(2, (int) $byName['estado']['priority']);
+    assert_true((int) $byName['id']['priority'] > (int) $byName['nombre']['priority']);
+    assert_true(empty($byName['api_lifecycle_status']['priority']));
+    assert_true(empty($byName['api_tenant_public_id']['priority']));
+});
