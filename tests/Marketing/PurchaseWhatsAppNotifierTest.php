@@ -41,7 +41,7 @@ test('PurchaseWhatsAppNotifier sends once per configured number', function (): v
     $channel = new PurchaseFakeWhatsAppChannel();
     $notifier = new PurchaseWhatsAppNotifier($channel, true);
 
-    $notifier->notifyTransferPending([
+    $ok = $notifier->notifyTransferPending([
         'id' => 9,
         'public_id' => '01JORDENTEST00000000000001',
         'paquete_slug' => 'starter',
@@ -52,6 +52,7 @@ test('PurchaseWhatsAppNotifier sends once per configured number', function (): v
         'empresa' => 'ACME',
     ]);
 
+    assert_true($ok);
     assert_same(2, count($channel->requests));
     assert_true(str_contains($channel->requests[0]->body, '01JORDENTEST00000000000001'));
     assert_true(str_contains($channel->requests[0]->body, 'https://lebytek.com/crud/mkt_ordenes/9'));
@@ -64,8 +65,9 @@ test('PurchaseWhatsAppNotifier falls back to MKT_ALERT when purchase env empty',
     $channel = new PurchaseFakeWhatsAppChannel();
     $notifier = new PurchaseWhatsAppNotifier($channel, true);
 
-    $notifier->notifyTransferPending(['id' => 1, 'public_id' => 'ORD1', 'paquete_slug' => 'starter', 'ciclo' => 'monthly']);
+    $ok = $notifier->notifyTransferPending(['id' => 1, 'public_id' => 'ORD1', 'paquete_slug' => 'starter', 'ciclo' => 'monthly']);
 
+    assert_true($ok);
     assert_same(1, count($channel->requests));
     assert_same('5215555555555', $channel->requests[0]->recipient);
 });
@@ -76,7 +78,8 @@ test('PurchaseWhatsAppNotifier skips when disabled', function (): void {
     $channel = new PurchaseFakeWhatsAppChannel();
     $notifier = new PurchaseWhatsAppNotifier($channel, false);
 
-    $notifier->notifyTransferPending(['id' => 1, 'public_id' => 'ORD1']);
+    $ok = $notifier->notifyTransferPending(['id' => 1, 'public_id' => 'ORD1']);
 
+    assert_true($ok === false);
     assert_same(0, count($channel->requests));
 });

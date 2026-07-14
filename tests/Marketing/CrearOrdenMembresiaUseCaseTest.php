@@ -143,9 +143,13 @@ final class SpyPurchaseNotifier implements PurchaseTeamAlertNotifierInterface
     /** @var list<array<string, mixed>> */
     public array $calls = [];
 
-    public function notifyTransferPending(array $order): void
+    public function __construct(private readonly bool $ok = true) {}
+
+    public function notifyTransferPending(array $order): bool
     {
         $this->calls[] = $order;
+
+        return $this->ok;
     }
 }
 
@@ -158,10 +162,10 @@ test('CrearOrdenMembresiaUseCase crea orden pending_transfer y notifica', functi
     $leads = new MemLeadInMemoryRepo([
         'id' => 5, 'email' => 'buyer@test.com', 'api_tenant_public_id' => '01JTENANT0000000000000001',
     ]);
-    $notifier = new SpyPurchaseNotifier();
+    $notifier = new SpyPurchaseNotifier(true);
     $uc = new CrearOrdenMembresiaUseCase($content, $orders, $leads, $notifier);
 
-    $order = $uc->ejecutar('starter', [
+    $result = $uc->ejecutar('starter', [
         'nombre' => 'Buyer Test',
         'email' => 'buyer@test.com',
         'telefono' => '5512345678',
@@ -169,13 +173,41 @@ test('CrearOrdenMembresiaUseCase crea orden pending_transfer y notifica', functi
         'direccion' => 'Calle 1',
         'ciclo' => 'monthly',
     ]);
+    $order = $result['order'];
 
+    assert_true($result['alert_sent']);
     assert_same('pending_transfer', $order['status']);
     assert_same('starter', $order['paquete_slug']);
     assert_same(2199.0, (float) $order['precio_snapshot']);
     assert_same(5, $order['lead_id']);
     assert_same('01JTENANT0000000000000001', $order['api_tenant_public_id']);
     assert_same(1, count($notifier->calls));
+    assert_true(($order['transfer_notified_at'] ?? null) !== null);
+});
+
+test('CrearOrdenMembresiaUseCase no marca transfer_notified_at si el aviso falla', function (): void {
+    $orders = new MemOrderInMemoryRepo();
+    $uc = new CrearOrdenMembresiaUseCase(
+        new MemContentInMemoryRepo([
+            'id' => 2, 'slug' => 'starter', 'precio_mensual' => '2199', 'precio_anual' => '21990', 'mensajes_mes_limite' => 5000,
+        ]),
+        $orders,
+        new MemLeadInMemoryRepo(null),
+        new SpyPurchaseNotifier(false),
+    );
+
+    $result = $uc->ejecutar('starter', [
+        'nombre' => 'Buyer Test',
+        'email' => 'buyer2@test.com',
+        'telefono' => '5512345678',
+        'empresa' => 'ACME',
+        'direccion' => 'Calle 1',
+        'ciclo' => 'monthly',
+    ]);
+
+    assert_true($result['alert_sent'] === false);
+    assert_same('pending_transfer', $result['order']['status']);
+    assert_true(($result['order']['transfer_notified_at'] ?? null) === null);
 });
 
 test('CrearOrdenMembresiaUseCase rechaza empresa y precio nulo', function (): void {

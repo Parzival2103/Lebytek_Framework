@@ -40,13 +40,15 @@ final class AutorizarOrdenMembresiaUseCase
             throw new \InvalidArgumentException('Asocia el tenant demo en la orden antes de autorizar.');
         }
 
+        $slug = (string) ($order['paquete_slug'] ?? '');
         $payload = [
-            'planSlug' => (string) ($order['paquete_slug'] ?? ''),
+            'planSlug' => $slug,
             'billingCycle' => (string) ($order['ciclo'] ?? 'monthly'),
             'orderExternalRef' => (string) ($order['public_id'] ?? ''),
-            'tokenName' => 'membresia-'.($order['paquete_slug'] ?? 'plan'),
+            'tokenName' => 'membresia-'.($slug !== '' ? $slug : 'plan'),
         ];
-        if (isset($order['mensajes_mes_limite_snapshot']) && $order['mensajes_mes_limite_snapshot'] !== null) {
+        // Only empresa may override limits; standard slugs use api catalog.
+        if ($slug === 'empresa' && isset($order['mensajes_mes_limite_snapshot']) && $order['mensajes_mes_limite_snapshot'] !== null) {
             $payload['messagesMonthlyLimit'] = (int) $order['mensajes_mes_limite_snapshot'];
         }
 
@@ -64,8 +66,13 @@ final class AutorizarOrdenMembresiaUseCase
             throw new LebytekApiException($msg);
         }
 
-        $this->sendMembershipEmail($order, $plainToken);
         $this->orders->markPaid($orderId, $authorizedBy);
+
+        try {
+            $this->sendMembershipEmail($order, $plainToken);
+        } catch (\Throwable $mailError) {
+            $this->orders->setApiActivationError($orderId, 'Correo: '.$mailError->getMessage());
+        }
 
         $updated = $this->orders->findById($orderId);
 

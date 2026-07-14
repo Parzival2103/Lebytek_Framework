@@ -24,7 +24,7 @@ final class CrearOrdenMembresiaUseCase
 
     /**
      * @param array{nombre:string,email:string,telefono:string,empresa:string,direccion:string,rfc?:?string,ciclo:string} $input
-     * @return array<string, mixed>
+     * @return array{order: array<string, mixed>, alert_sent: bool}
      */
     public function ejecutar(string $paqueteSlug, array $input): array
     {
@@ -97,9 +97,17 @@ final class CrearOrdenMembresiaUseCase
             throw new \RuntimeException('No se pudo recuperar la orden creada.');
         }
 
+        $alertSent = false;
         try {
-            $this->notifier->notifyTransferPending($order);
-            $this->orders->markTransferNotified($orderId);
+            $alertSent = $this->notifier->notifyTransferPending($order);
+            if ($alertSent) {
+                $this->orders->markTransferNotified($orderId);
+                $order = $this->orders->findById($orderId) ?? $order;
+            } else {
+                AppLogger::error('[CrearOrdenMembresia] WhatsApp alert not sent (disabled or no recipients)', [
+                    'order_id' => $orderId,
+                ]);
+            }
         } catch (\Throwable $e) {
             AppLogger::error('[CrearOrdenMembresia] WhatsApp alert failed', [
                 'order_id' => $orderId,
@@ -107,7 +115,7 @@ final class CrearOrdenMembresiaUseCase
             ]);
         }
 
-        return $order;
+        return ['order' => $order, 'alert_sent' => $alertSent];
     }
 
     private function isPositiveNumericPrice(mixed $value): bool

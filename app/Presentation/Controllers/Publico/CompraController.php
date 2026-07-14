@@ -67,7 +67,7 @@ final class CompraController extends BaseController
         $ciclo = $this->normalizeCiclo((string) $request->input('ciclo', 'monthly'));
 
         try {
-            $order = $this->crearOrden->ejecutar($slug, [
+            $result = $this->crearOrden->ejecutar($slug, [
                 'nombre' => (string) $request->input('nombre', ''),
                 'email' => (string) $request->input('email', ''),
                 'telefono' => (string) $request->input('telefono', ''),
@@ -82,6 +82,15 @@ final class CompraController extends BaseController
         } catch (\Throwable $e) {
             Session::flash('error', 'No pudimos registrar tu orden. Inténtalo de nuevo.');
             return $this->redirect('/comprar/'.$slug.'?ciclo='.$ciclo);
+        }
+
+        $order = $result['order'];
+        if (empty($result['alert_sent'])) {
+            // Soft warning for ops: order kept; transfer_notified_at left null for CRUD follow-up.
+            Session::flash(
+                'warning',
+                'Orden registrada. El aviso WhatsApp al equipo no se envió; operaciones debe revisarla en el panel.',
+            );
         }
 
         return $this->redirect('/comprar/orden/'.($order['public_id'] ?? '').'/transferencia');

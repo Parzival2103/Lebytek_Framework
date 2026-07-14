@@ -17,10 +17,10 @@ final class PurchaseWhatsAppNotifier implements PurchaseTeamAlertNotifierInterfa
         private readonly bool $enabled,
     ) {}
 
-    public function notifyTransferPending(array $order): void
+    public function notifyTransferPending(array $order): bool
     {
         if (! $this->enabled) {
-            return;
+            return false;
         }
 
         $dedicated = trim((string) EnvLoader::get('MKT_PURCHASE_ALERT_WHATSAPP_NUMBERS', ''));
@@ -29,7 +29,7 @@ final class PurchaseWhatsAppNotifier implements PurchaseTeamAlertNotifierInterfa
             : (string) EnvLoader::get('MKT_ALERT_WHATSAPP_NUMBERS', '');
         $numbers = array_values(array_filter(array_map('trim', explode(',', $raw))));
         if ($numbers === []) {
-            return;
+            return false;
         }
 
         $base = rtrim((string) EnvLoader::get('APP_URL', ''), '/');
@@ -46,19 +46,25 @@ final class PurchaseWhatsAppNotifier implements PurchaseTeamAlertNotifierInterfa
             . 'Empresa: '.($order['empresa'] ?? '')."\n"
             . "Admin: {$adminUrl}";
 
+        $anyOk = false;
         foreach ($numbers as $phone) {
             $result = $this->whatsapp->send(new MessageRequest('whatsapp', $phone, $body, [
                 'source' => 'membership_transfer_pending',
                 'record_id' => $id,
             ]));
 
-            if (! $result->ok) {
-                AppLogger::error('[PurchaseWA] WhatsApp alert failed', [
-                    'phone' => $phone,
-                    'error' => $result->error,
-                    'order_id' => $id,
-                ]);
+            if ($result->ok) {
+                $anyOk = true;
+                continue;
             }
+
+            AppLogger::error('[PurchaseWA] WhatsApp alert failed', [
+                'phone' => $phone,
+                'error' => $result->error,
+                'order_id' => $id,
+            ]);
         }
+
+        return $anyOk;
     }
 }

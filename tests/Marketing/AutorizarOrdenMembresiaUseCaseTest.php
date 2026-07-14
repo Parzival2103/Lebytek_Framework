@@ -110,10 +110,36 @@ test('AutorizarOrdenMembresiaUseCase happy path activa plan y envía correo', fu
     assert_same('starter', $body['planSlug']);
     assert_same('monthly', $body['billingCycle']);
     assert_same('01JORD00000000000000000001', $body['orderExternalRef']);
-    assert_same(5000, $body['messagesMonthlyLimit']);
+    assert_true(! array_key_exists('messagesMonthlyLimit', $body), 'starter usa catálogo api, sin override');
     assert_true($orders->paid);
     assert_same(1, count($mailer->sent));
     assert_true(str_contains($mailer->sent[0]->html, '99|membership-token'));
+});
+
+test('AutorizarOrdenMembresiaUseCase deja orden desbloqueada si activate-plan falla', function (): void {
+    $transport = new AuthorizeRecordingTransport();
+    $transport->responses[] = ['status' => 422, 'body' => '{"message":"unknown plan"}', 'error' => ''];
+    $api = new LebytekApiClient('https://api.test/v1', 'platform-token', 5, 1, $transport);
+
+    $orders = new AuthorizeMemOrderRepo();
+    $orders->rows[3] = [
+        'id' => 3,
+        'public_id' => '01JORD00000000000000000003',
+        'paquete_slug' => 'starter',
+        'ciclo' => 'monthly',
+        'precio_snapshot' => 2199,
+        'nombre' => 'Buyer',
+        'email' => 'buyer@test.com',
+        'status' => 'pending_transfer',
+        'api_tenant_public_id' => '01JTENANT0000000000000001',
+    ];
+
+    $uc = new AutorizarOrdenMembresiaUseCase($orders, $api, new SpyMembershipMailer());
+
+    assert_throws(\App\Infrastructure\Integrations\LebytekApi\LebytekApiException::class, fn () => $uc->ejecutar(3, 7));
+    assert_true($orders->paid === false);
+    assert_same('pending_transfer', $orders->rows[3]['status']);
+    assert_true(($orders->lastError ?? '') !== '');
 });
 
 test('AutorizarOrdenMembresiaUseCase falla sin tenant asociado', function (): void {
