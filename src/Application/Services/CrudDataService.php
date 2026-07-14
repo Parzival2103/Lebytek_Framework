@@ -104,6 +104,7 @@ final class CrudDataService
             $params[] = $value;
         }
 
+        $this->applyListExcludes($definition, $query, $where, $params);
         $this->applyScopeConditions($definition, $query, $userId, $can, $where, $params);
 
         $candidateCount = $this->repository->countFiltered($definition->table(), $where, $params);
@@ -227,6 +228,43 @@ final class CrudDataService
             'aggregationSkipped' => $aggregationSkipped,
             'aggregationSkipMessage' => $aggregationSkipMessage,
         ];
+    }
+
+    /**
+     * Aplica exclusiones declarativas `list.exclude` (NOT IN). Si el usuario
+     * filtra explícitamente por un valor excluido (`f_{field}`), no se aplica.
+     *
+     * @param array<string,mixed> $query
+     * @param list<string>        $where
+     * @param list<mixed>         $params
+     */
+    private function applyListExcludes(
+        CrudResourceDefinition $definition,
+        array $query,
+        array &$where,
+        array &$params
+    ): void {
+        foreach ($definition->listExcludes() as $exclude) {
+            $field = (string) ($exclude['field'] ?? '');
+            $values = $exclude['values'] ?? [];
+            if ($field === '' || !is_array($values) || $values === []) {
+                continue;
+            }
+
+            $explicit = $query['f_' . $field] ?? null;
+            if ($explicit !== null && $explicit !== '') {
+                foreach ($values as $value) {
+                    if ((string) $explicit === (string) $value) {
+                        continue 2;
+                    }
+                }
+            }
+
+            $where[] = '`' . $field . '` NOT IN (' . implode(', ', array_fill(0, count($values), '?')) . ')';
+            foreach ($values as $value) {
+                $params[] = $value;
+            }
+        }
     }
 
     /**

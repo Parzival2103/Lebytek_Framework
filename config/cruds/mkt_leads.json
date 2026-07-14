@@ -18,12 +18,13 @@
       { "name": "api_lifecycle_status", "label": "Ciclo API",
         "badge": { "none": "secondary", "provision_initiated": "info", "deprovision_initiated": "warning", "deprovisioned": "secondary" } },
       { "name": "api_tenant_public_id", "label": "Tenant API", "format": "truncate", "max_length": 26 },
-      { "name": "api_provisioned_at", "label": "Provisionado", "format": "datetime", "sortable": true },
       { "name": "api_provision_error", "label": "Error API", "badge_nonempty": "danger" },
       { "name": "created_at", "label": "Recibido", "format": "datetime", "sortable": true }
     ],
     "filters": [ { "field": "estado", "label": "Estado" } ],
-    "scope_handler": "mkt_leads_active",
+    "exclude": [
+      { "field": "estado", "values": ["pendiente", "demo_baja"] }
+    ],
     "actions": ["show", "edit", "delete"]
   },
   "form": {

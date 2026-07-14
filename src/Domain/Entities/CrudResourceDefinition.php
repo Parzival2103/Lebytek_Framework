@@ -39,7 +39,8 @@ final class CrudResourceDefinition
         private readonly array $relations,
         private readonly array $detailTabs,
         private readonly ?array $listScope,
-        private readonly ?string $listScopeHandler
+        private readonly ?string $listScopeHandler,
+        private readonly array $listExcludes = []
     ) {}
 
     public static function fromArray(array $config): self
@@ -130,6 +131,28 @@ final class CrudResourceDefinition
             ? $list['scope_handler']
             : null;
 
+        $listExcludes = [];
+        foreach ((is_array($list['exclude'] ?? null) ? $list['exclude'] : []) as $exclude) {
+            if (!is_array($exclude)) {
+                continue;
+            }
+            $field = (string) ($exclude['field'] ?? '');
+            $values = $exclude['values'] ?? null;
+            if ($field === '' || !is_array($values) || $values === []) {
+                continue;
+            }
+            $normalized = [];
+            foreach ($values as $value) {
+                if (is_string($value) || is_int($value) || is_float($value)) {
+                    $normalized[] = $value;
+                }
+            }
+            if ($normalized === []) {
+                continue;
+            }
+            $listExcludes[] = ['field' => $field, 'values' => array_values($normalized)];
+        }
+
         return new self(
             key: (string) ($resource['key'] ?? ''),
             title: (string) ($resource['title'] ?? ''),
@@ -155,7 +178,8 @@ final class CrudResourceDefinition
             relations: $relations,
             detailTabs: $detailTabs,
             listScope: $listScope,
-            listScopeHandler: $listScopeHandler
+            listScopeHandler: $listScopeHandler,
+            listExcludes: $listExcludes
         );
     }
 
@@ -190,6 +214,13 @@ final class CrudResourceDefinition
     }
 
     public function listFilters(): array { return $this->listFilters; }
+
+    /**
+     * Exclusiones fijas del listado: `{ field, values[] }` → `NOT IN`.
+     *
+     * @return list<array{field: string, values: list<string|int|float>}>
+     */
+    public function listExcludes(): array { return $this->listExcludes; }
     public function listActions(): array { return $this->listActions; }
     public function listGroupBy(): string { return $this->listGroupBy; }
     public function listSummaries(): array { return $this->listSummaries; }

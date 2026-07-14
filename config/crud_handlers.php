@@ -31,8 +31,6 @@ return [
 
     'enviar_whatsapp_demo' => \Lebytek\Framework\Application\Crud\Handlers\EnviarWhatsappDemoHandler::class,
 
-    'mkt_leads_active' => \App\Application\Marketing\MktLeadsActiveListScope::class,
-
     // Ejemplo (descomenta y crea la clase al implementar lógica real):
     // 'clientes'        => \Lebytek\Framework\Application\Crud\Handlers\ClientesHandler::class,
     // 'anticipo_minimo' => \Lebytek\Framework\Application\Crud\Handlers\AnticipoMinimoValidator::class,
