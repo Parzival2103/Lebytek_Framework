@@ -15,7 +15,6 @@ use Lebytek\Framework\Kernel\Config\Config;
 $providers = [
     \Lebytek\Framework\Infrastructure\Dashboard\DefaultPlatformDashboardProvider::class,
     \Lebytek\Framework\Infrastructure\Dashboard\CalendarDashboardProvider::class,
-    \App\Infrastructure\Marketing\MarketingChurnDashboardProvider::class,
 ];
 
 if ((bool) Config::get('vertical.modules.marketing', false)) {
