@@ -241,6 +241,19 @@ return static function (Container $container): void {
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
             $c->get(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class),
         ));
+
+        if ((bool) Config::get('vertical.modules.payments', false)) {
+            $container->singleton(\App\Application\Marketing\ConfirmarPagoStripeUseCase::class, fn (Container $c) => new \App\Application\Marketing\ConfirmarPagoStripeUseCase(
+                $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+                $c->get(\Lebytek\Framework\Domain\Payments\PaymentEventLogRepositoryInterface::class),
+                $c->get(\App\Application\Marketing\ActivateMembershipFromOrderService::class),
+            ));
+
+            $container->bind(\App\Presentation\Controllers\Publico\StripeWebhookController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\StripeWebhookController(
+                $c->get(\Lebytek\Framework\Application\Payments\PaymentGatewayRegistry::class),
+                $c->get(\App\Application\Marketing\ConfirmarPagoStripeUseCase::class),
+            ));
+        }
     }
 
     // Portal waapi (vhost dedicado: marketing off + WAAPI_PORTAL_ENABLED=true)
