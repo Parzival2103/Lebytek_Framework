@@ -64,6 +64,14 @@ final class ClientTenantApiClient
     /**
      * @return array<string, mixed>
      */
+    public function getAccountStatus(string $token): array
+    {
+        return $this->request('POST', '/account/status', [], $token);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     private function request(string $method, string $path, ?array $body, string $token): array
     {
         $url = rtrim($this->baseUrl, '/').$path;
@@ -76,8 +84,11 @@ final class ClientTenantApiClient
             ? json_encode($body, JSON_THROW_ON_ERROR)
             : null;
 
-        if ($encodedBody !== null) {
+        if ($method === 'POST' || $method === 'PATCH' || $method === 'PUT') {
             $headers[] = 'Content-Type: application/json';
+            if ($encodedBody === null) {
+                $encodedBody = '{}';
+            }
         }
 
         $result = $this->transport->execute($method, $url, $headers, $encodedBody);
