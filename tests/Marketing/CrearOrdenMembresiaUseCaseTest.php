@@ -50,6 +50,9 @@ final class MemOrderInMemoryRepo implements MembershipOrderRepositoryInterface
     public function setApiActivationError(int $orderId, string $error): void {}
     public function markPaid(int $orderId, int $authorizedBy): void {}
     public function updateTenantPublicId(int $orderId, string $tenantPublicId): void {}
+    public function markPaymentPending(int $orderId, array $patch): void {}
+    public function savePaymentRef(int $orderId, string $provider, string $paymentRef): void {}
+    public function findByPaymentRef(string $provider, string $paymentRef): ?array { return null; }
 }
 
 final class MemContentInMemoryRepo implements MarketingContentRepositoryInterface
