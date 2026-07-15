@@ -71,3 +71,59 @@ test('v2 testimonios sin items no emite sección', function (): void {
     $html = ViewHelper::render('publico/partials/v2/_testimonios', ['testimonios' => []], '');
     assert_true(trim($html) === '', 'degradación');
 });
+
+test('v2 pricing renderiza toggle, precios data-*, destacado y features (array y JSON)', function (): void {
+    $html = ViewHelper::render('publico/partials/v2/_pricing', ['comprasHabilitadas' => true, 'paquetes' => [
+        ['nombre' => 'Starter', 'slug' => 'starter', 'precio_mensual' => '2199.00', 'precio_anual' => '1759.00',
+         'features' => ['1 instancia', 'Hasta 5000 mensajes']],
+        ['nombre' => 'Business', 'slug' => 'business', 'precio_mensual' => '4499.00', 'precio_anual' => '3599.00',
+         'destacado' => 1, 'badge' => 'Más popular', 'features' => '["Hasta 3 instancias"]'],
+        ['nombre' => 'Enterprise', 'slug' => 'empresa', 'precio_mensual' => '', 'precio_anual' => '',
+         'features' => ['A medida']],
+    ]], '');
+    assert_true(str_contains($html, 'data-period="annual"'), 'toggle anual');
+    assert_true(str_contains($html, 'data-monthly="$2,199"'), 'precio mensual formateado');
+    assert_true(str_contains($html, 'data-annual="$1,759"'), 'precio anual formateado');
+    assert_true(str_contains($html, 'Más popular'), 'badge destacado');
+    assert_true(str_contains($html, 'Hasta 5000 mensajes'), 'feature de array');
+    assert_true(str_contains($html, 'Hasta 3 instancias'), 'feature desde JSON');
+    assert_true(str_contains($html, 'A medida'), 'precio vacío');
+    assert_true(str_contains($html, '/comprar/starter?ciclo=monthly'), 'link compra starter');
+    assert_true(str_contains($html, 'data-compra-annual="/comprar/business?ciclo=annual"'), 'link compra anual business');
+    assert_true(!str_contains($html, '/comprar/empresa'), 'enterprise no comprable');
+});
+
+test('v2 pricing sin compras habilitadas no muestra botón comprar', function (): void {
+    $html = ViewHelper::render('publico/partials/v2/_pricing', ['comprasHabilitadas' => false, 'paquetes' => [
+        ['nombre' => 'Starter', 'slug' => 'starter', 'precio_mensual' => '2199.00', 'precio_anual' => '1759.00', 'features' => ['x']],
+    ]], '');
+    assert_true(!str_contains($html, '/comprar/starter'), 'sin link de compra');
+    assert_true(str_contains($html, 'Solicitar demo'), 'mantiene CTA demo');
+});
+
+test('v2 pricing sin paquetes no emite sección', function (): void {
+    $html = ViewHelper::render('publico/partials/v2/_pricing', ['paquetes' => []], '');
+    assert_true(trim($html) === '', 'degradación');
+});
+
+test('v2 faq renderiza preguntas, respuestas y toggles', function (): void {
+    $html = ViewHelper::render('publico/partials/v2/_faq', ['faq' => [
+        'titulo' => 'Preguntas frecuentes', 'lead' => 'Respuestas rápidas',
+        'items' => [
+            ['pregunta' => '¿Qué es la API?', 'respuesta' => 'Envía mensajes desde tu sistema.'],
+            ['pregunta' => '¿Cuánto tarda?', 'respuesta' => 'Minutos.'],
+        ],
+    ]], '');
+    assert_true(str_contains($html, 'Preguntas frecuentes'), 'titulo');
+    assert_true(str_contains($html, 'Respuestas rápidas'), 'lead');
+    assert_true(str_contains($html, '¿Qué es la API?'), 'pregunta');
+    assert_true(str_contains($html, 'Envía mensajes desde tu sistema.'), 'respuesta');
+    assert_true(str_contains($html, 'data-faq-toggle'), 'hook de toggle');
+    assert_true(str_contains($html, 'lb-faq-panel'), 'panel');
+    assert_true(str_contains($html, 'data-reveal-id="faq"'), 'hook de reveal');
+});
+
+test('v2 faq sin items no emite sección', function (): void {
+    $html = ViewHelper::render('publico/partials/v2/_faq', ['faq' => []], '');
+    assert_true(trim($html) === '', 'degradación');
+});
