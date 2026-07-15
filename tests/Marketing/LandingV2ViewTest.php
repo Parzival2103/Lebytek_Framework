@@ -147,3 +147,44 @@ test('v2 lead form muestra flash de éxito y error', function (): void {
     $err = ViewHelper::render('publico/partials/v2/_lead_form', ['flashAll' => ['error' => 'Falló algo']], '');
     assert_true(str_contains($err, 'Falló algo'), 'muestra error');
 });
+
+test('layout_v2 renderiza documento completo, fuentes y assets v2', function (): void {
+    $html = ViewHelper::render('publico/landing_v2', [
+        'empresaNombre' => 'ACME Demo', 'empresaLogo' => '',
+        'bloques' => ['hero' => ['titulo' => 'Hero V2 Full', 'subtitulo' => 'Sub', 'cta_texto' => 'Demo', 'cta_url' => '#demo']],
+        'paquetes' => [],
+    ], 'publico/layout_v2');
+    assert_true(str_contains($html, '<!DOCTYPE html>'), 'documento completo');
+    assert_true(str_contains($html, 'ACME Demo'), 'nombre de empresa en nav');
+    assert_true(str_contains($html, 'Hero V2 Full'), 'inyecta contenido hero');
+    assert_true(str_contains($html, '/assets/publico/landing_v2.css'), 'enlaza css v2');
+    assert_true(str_contains($html, '/assets/publico/landing_v2.js'), 'enlaza js v2');
+    assert_true(str_contains($html, 'family=Syne'), 'carga fuente Syne');
+    assert_true(str_contains($html, 'family=Space+Grotesk'), 'carga fuente Space Grotesk');
+    assert_true(!str_contains($html, 'landing.css"'), 'no enlaza el css v1');
+});
+
+test('landing_v2 integra todas las secciones desde bloques y paquetes', function (): void {
+    $html = ViewHelper::render('publico/landing_v2', [
+        'empresaNombre' => 'ACME', 'empresaLogo' => '',
+        'comprasHabilitadas' => true,
+        'bloques' => [
+            'hero'        => ['titulo' => 'Hero Integrado V2', 'subtitulo' => 'Sub', 'cta_texto' => 'Demo', 'cta_url' => '#demo'],
+            'trust'       => ['items' => [['valor' => '10k+', 'etiqueta' => 'Mensajes al mes']]],
+            'features'    => ['titulo' => 'Funciones', 'items' => [['titulo' => 'API lista', 'texto' => 'URL y token']]],
+            'testimonios' => ['items' => [['texto' => 'Excelente', 'autor' => 'Cliente X']]],
+            'faq'         => ['titulo' => 'Preguntas frecuentes', 'items' => [['pregunta' => '¿Cómo empiezo?', 'respuesta' => 'Solicita una demo.']]],
+        ],
+        'paquetes' => [
+            ['nombre' => 'Business', 'slug' => 'business', 'precio_mensual' => '4499.00', 'precio_anual' => '3599.00', 'destacado' => 1, 'features' => ['Hasta 3 instancias']],
+        ],
+    ], 'publico/layout_v2');
+    assert_true(str_contains($html, 'Hero Integrado V2'), 'sección hero');
+    assert_true(str_contains($html, '10k+'), 'sección trust');
+    assert_true(str_contains($html, 'API lista'), 'sección features');
+    assert_true(str_contains($html, 'Excelente'), 'sección testimonios');
+    assert_true(str_contains($html, 'id="paquetes"'), 'sección pricing');
+    assert_true(str_contains($html, 'id="faq"'), 'sección faq');
+    assert_true(str_contains($html, '¿Cómo empiezo?'), 'pregunta faq');
+    assert_true(str_contains($html, 'action="/lead"'), 'sección formulario');
+});
