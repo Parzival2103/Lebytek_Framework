@@ -2,80 +2,115 @@
 
 use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
+$instance = is_array($instance ?? null) ? $instance : null;
 $usage = is_array($usage ?? null) ? $usage : null;
-$usageError = is_string($usageError ?? null) ? $usageError : null;
+$accountStatus = is_array($accountStatus ?? null) ? $accountStatus : null;
+$error = is_string($error ?? null) ? $error : null;
 $docsUrl = (string) ($docsUrl ?? 'https://docs.lebytek.com');
 
-$messagesSent = (int) ($usage['messagesSent'] ?? 0);
-$messagesReceived = (int) ($usage['messagesReceived'] ?? 0);
-$byStatus = is_array($usage['messagesSentByStatus'] ?? null) ? $usage['messagesSentByStatus'] : [];
-$sentOk = (int) ($byStatus['sent'] ?? 0);
-$queued = (int) ($byStatus['queued'] ?? 0);
-$failed = (int) ($byStatus['failed'] ?? 0);
+$plan = is_array($accountStatus['plan'] ?? null) ? $accountStatus['plan'] : [];
+$demo = is_array($accountStatus['demo'] ?? null) ? $accountStatus['demo'] : [];
+$usageQuota = is_array($accountStatus['usage'] ?? null) ? $accountStatus['usage'] : [];
+
+$daysRemaining = $demo['daysRemaining'] ?? null;
+$messagesRemaining = $usageQuota['messagesRemainingThisMonth'] ?? null;
+$messagesSent = $usageQuota['messagesSentThisMonth'] ?? ($usage['messagesSent'] ?? null);
+$planName = (string) ($plan['name'] ?? 'Demo');
+$requestedAt = (string) ($accountStatus['requestedAt'] ?? '');
+$expiresSoon = is_int($daysRemaining) && $daysRemaining <= 7;
+
+$status = (string) ($instance['status'] ?? 'unknown');
+$badgeClass = match ($status) {
+    'authorized' => 'success',
+    'waiting_qr', 'configuring' => 'warning',
+    'provisioning' => 'info',
+    default => 'secondary',
+};
 ?>
-<section class="py-5">
-    <div class="container">
-        <div class="mb-4">
-            <h1 class="h3 mb-1">Uso de mensajes</h1>
-            <p class="text-muted mb-0">Resumen de actividad de tu cuenta en la API.</p>
-        </div>
-
-        <?php if ($usageError !== null): ?>
-            <div class="alert alert-warning">
-                No se pudieron cargar las métricas: <?= ViewHelper::e($usageError) ?>
-            </div>
-        <?php endif; ?>
-
-        <div class="row g-3 mb-4">
-            <div class="col-sm-6 col-lg-3">
-                <div class="card waapi-metric-card">
-                    <div class="card-body p-4">
-                        <p class="metric-label mb-0">Mensajes enviados</p>
-                        <p class="metric-value mb-0"><?= $messagesSent ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-lg-3">
-                <div class="card waapi-metric-card">
-                    <div class="card-body p-4">
-                        <p class="metric-label mb-0">Mensajes recibidos</p>
-                        <p class="metric-value mb-0"><?= $messagesReceived ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-lg-3">
-                <div class="card waapi-metric-card">
-                    <div class="card-body p-4">
-                        <p class="metric-label mb-0">Entregados</p>
-                        <p class="metric-value mb-0 text-success"><?= $sentOk ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-lg-3">
-                <div class="card waapi-metric-card">
-                    <div class="card-body p-4">
-                        <p class="metric-label mb-0">En cola / fallidos</p>
-                        <p class="metric-value mb-0">
-                            <span class="text-warning"><?= $queued ?></span>
-                            <span class="text-muted fs-5">/</span>
-                            <span class="text-danger"><?= $failed ?></span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h2 class="h6 mb-2">Integración</h2>
-                <p class="text-muted small mb-3">
-                    Para enviar mensajes o consultar detalle de un envío, usa la API REST documentada.
-                    Este panel muestra solo contadores agregados.
-                </p>
-                <a href="<?= ViewHelper::e($docsUrl) ?>" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener">
-                    Ver documentación
-                </a>
-            </div>
-        </div>
+<div class="container py-4 py-lg-5">
+    <div class="mb-4">
+        <h1 class="h3 mb-1">Panel cliente</h1>
+        <p class="text-muted mb-0">Cuota de demo, uso de mensajes e instancia WhatsApp.</p>
     </div>
-</section>
+
+    <?php if ($error !== null): ?>
+        <div class="alert alert-warning"><?= ViewHelper::e($error) ?></div>
+    <?php endif; ?>
+
+    <?php if ($accountStatus !== null): ?>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Paquete</div>
+                        <div class="h5 mb-0"><?= ViewHelper::e($planName) ?></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">D�as restantes</div>
+                        <div class="h5 mb-0">
+                            <?= $daysRemaining !== null ? ViewHelper::e((string) $daysRemaining) : '?' ?>
+                            <?php if ($expiresSoon): ?>
+                                <span class="badge text-bg-warning ms-1">Por vencer</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Mensajes restantes</div>
+                        <div class="h5 mb-0"><?= $messagesRemaining !== null ? ViewHelper::e((string) $messagesRemaining) : '?' ?></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Enviados (mes)</div>
+                        <div class="h5 mb-0"><?= $messagesSent !== null ? ViewHelper::e((string) $messagesSent) : '?' ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php if ($requestedAt !== ''): ?>
+            <p class="text-muted small mb-4">Consulta API: <?= ViewHelper::e($requestedAt) ?></p>
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <?php if ($instance !== null): ?>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                        <h2 class="h6 mb-1"><?= ViewHelper::e((string) ($instance['label'] ?? 'Instancia')) ?></h2>
+                        <p class="text-muted small mb-0 font-monospace"><?= ViewHelper::e((string) ($instance['publicId'] ?? '')) ?></p>
+                    </div>
+                    <span class="badge text-bg-<?= ViewHelper::e($badgeClass) ?>"><?= ViewHelper::e($status) ?></span>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($usage !== null): ?>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 pt-3">
+                <h2 class="h6 mb-0">Detalle de mensajes</h2>
+            </div>
+            <div class="card-body pt-0">
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-4">Enviados (total)</dt>
+                    <dd class="col-sm-8"><?= ViewHelper::e((string) ($usage['messagesSent'] ?? 0)) ?></dd>
+                    <dt class="col-sm-4">Recibidos</dt>
+                    <dd class="col-sm-8"><?= ViewHelper::e((string) ($usage['messagesReceived'] ?? 0)) ?></dd>
+                </dl>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <a href="<?= ViewHelper::e($docsUrl) ?>" class="btn btn-outline-secondary" target="_blank" rel="noopener">Documentaci�n API</a>
+</div>

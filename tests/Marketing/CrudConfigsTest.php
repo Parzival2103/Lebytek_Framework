@@ -46,3 +46,14 @@ test('mkt_leads prioriza nombre y estado en responsive', function (): void {
     assert_true(empty($byName['api_lifecycle_status']['priority']));
     assert_true(empty($byName['api_tenant_public_id']['priority']));
 });
+
+test('mkt_leads lista columnas de churn demo', function (): void {
+    $cfg = json_decode((string) file_get_contents(ROOT_PATH . '/config/cruds/mkt_leads.json'), true);
+    $names = array_map(static fn (array $c): string => (string) $c['name'], $cfg['list']['columns']);
+    assert_true(in_array('demo_expires_at', $names, true));
+    assert_true(in_array('plan_slug', $names, true));
+    assert_true(in_array('last_activity_at', $names, true));
+    $detailCols = $cfg['detail']['tabs'][0]['columns'];
+    assert_true(in_array('demo_expires_at', $detailCols, true));
+    assert_true(in_array('first_message_sent_at', $detailCols, true));
+});

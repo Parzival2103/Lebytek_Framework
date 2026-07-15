@@ -72,19 +72,26 @@ final class WaapiPortalController extends BaseController
 
         $token = (string) $this->session->token();
         $usage = null;
-        $usageError = null;
+        $accountStatus = null;
+        $instance = null;
+        $error = null;
 
         try {
+            $instances = $this->apiClient->listInstances($token);
+            $instance = $instances[0] ?? null;
             $usage = $this->apiClient->getUsage($token);
+            $accountStatus = $this->apiClient->getAccountStatus($token);
         } catch (LebytekApiException $e) {
-            $usageError = $e->getMessage();
+            $error = $e->getMessage();
         }
 
         return $this->view('publico/waapi/dashboard', $this->baseVm([
-            'pageTitle' => 'Uso de mensajes',
+            'pageTitle' => 'Panel cliente',
             'showLogout' => true,
+            'instance' => is_array($instance) ? $instance : null,
             'usage' => is_array($usage) ? $usage : null,
-            'usageError' => $usageError,
+            'accountStatus' => is_array($accountStatus) ? $accountStatus : null,
+            'error' => $error,
             'docsUrl' => rtrim((string) EnvLoader::get('MKT_EMAIL_DOCS_URL', 'https://docs.lebytek.com'), '/'),
         ]), self::LAYOUT);
     }
