@@ -127,3 +127,23 @@ test('v2 faq sin items no emite sección', function (): void {
     $html = ViewHelper::render('publico/partials/v2/_faq', ['faq' => []], '');
     assert_true(trim($html) === '', 'degradación');
 });
+
+test('v2 lead form postea a /lead con CSRF y campos requeridos', function (): void {
+    $html = ViewHelper::render('publico/partials/v2/_lead_form', [], '');
+    assert_true(str_contains($html, 'action="/lead"'), 'postea a /lead');
+    assert_true(str_contains($html, 'method="POST"'), 'método POST');
+    assert_true(str_contains($html, 'name="nombre"'), 'campo nombre');
+    assert_true(str_contains($html, 'name="email"'), 'campo email');
+    assert_true(str_contains($html, 'name="telefono"'), 'campo teléfono');
+    assert_true(str_contains($html, 'name="mensaje"'), 'campo mensaje');
+    assert_true(str_contains($html, 'data-empresa-merge'), 'campo empresa opcional para merge');
+    assert_true(str_contains($html, 'csrf'), 'incluye token CSRF');
+    assert_true(str_contains($html, 'id="demo"'), 'ancla demo');
+});
+
+test('v2 lead form muestra flash de éxito y error', function (): void {
+    $ok  = ViewHelper::render('publico/partials/v2/_lead_form', ['flashAll' => ['success' => '¡Gracias!']], '');
+    assert_true(str_contains($ok, '¡Gracias!'), 'muestra éxito');
+    $err = ViewHelper::render('publico/partials/v2/_lead_form', ['flashAll' => ['error' => 'Falló algo']], '');
+    assert_true(str_contains($err, 'Falló algo'), 'muestra error');
+});
