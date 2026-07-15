@@ -23,9 +23,15 @@ test('marketing manifiesto declara bootstrap_sql existente', function (): void {
 test('marketing manifiesto declara los CRUDs de contenido', function (): void {
     $registry = new ModuleRegistry(ROOT_PATH . '/config/modules');
     $m = $registry->get('marketing');
-    foreach (['mkt_leads','mkt_paquetes','mkt_bloques','mkt_plantillas','mkt_secuencias'] as $crud) {
+    foreach (['mkt_leads','mkt_paquetes','mkt_bloques','mkt_plantillas','mkt_secuencias','mkt_ordenes'] as $crud) {
         assert_true(in_array($crud, $m->cruds, true), "declara crud {$crud}");
     }
+});
+
+test('marketing manifiesto declara permiso marketing.ordenes', function (): void {
+    $registry = new ModuleRegistry(ROOT_PATH . '/config/modules');
+    $m = $registry->get('marketing');
+    assert_true(in_array('marketing.ordenes', $m->permisos, true));
 });
 
 test('toggle marketing existe y por defecto está apagado', function (): void {

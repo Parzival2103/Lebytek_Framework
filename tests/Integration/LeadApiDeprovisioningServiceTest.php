@@ -100,6 +100,15 @@ final class DeprovisionInMemoryLeadRepo implements LeadRepositoryInterface
 
     public function findDemoPackageBySlug(string $slug): ?array
     {
+        if ($slug === 'demo') {
+            return ['id' => 1, 'slug' => 'demo', 'nombre' => 'Demo', 'demo_dias' => 30, 'mensajes_mes_limite' => 100];
+        }
+
+        return null;
+    }
+
+    public function findLatestByEmail(string $email): ?array
+    {
         return null;
     }
 }
@@ -151,6 +160,7 @@ test('LeadApiProvisioningService returns mail_failed when SMTP fails and does no
         ['status' => 201, 'body' => '{"publicId":"01JTENANT"}', 'error' => ''],
         ['status' => 202, 'body' => '{"publicId":"01JINST"}', 'error' => ''],
         ['status' => 201, 'body' => '{"token":"12|abc"}', 'error' => ''],
+        ['status' => 200, 'body' => '{"status":"ok"}', 'error' => ''],
     ]);
     $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
     $svc = new LeadApiProvisioningService($api, $repo, new FailingMailer());

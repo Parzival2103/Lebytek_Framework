@@ -93,6 +93,15 @@ final class InMemoryLeadRepo implements LeadRepositoryInterface
 
     public function findDemoPackageBySlug(string $slug): ?array
     {
+        if ($slug === 'demo') {
+            return ['id' => 1, 'slug' => 'demo', 'nombre' => 'Demo', 'demo_dias' => 30, 'mensajes_mes_limite' => 100];
+        }
+
+        return null;
+    }
+
+    public function findLatestByEmail(string $email): ?array
+    {
         return null;
     }
 }
@@ -153,6 +162,7 @@ test('LeadApiProvisioningService full flow persists lead and sends email', funct
         ['status' => 201, 'body' => '{"publicId":"01JTENANT"}', 'error' => ''],
         ['status' => 202, 'body' => '{"publicId":"01JINST"}', 'error' => ''],
         ['status' => 201, 'body' => '{"token":"12|abc"}', 'error' => ''],
+        ['status' => 200, 'body' => '{"status":"ok"}', 'error' => ''],
     ]);
     $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
     $mailer = new LeadApiSpyMailer();
@@ -184,6 +194,7 @@ test('LeadApiProvisioningService includes dashboard CTA when MKT_EMAIL_DASHBOARD
         ['status' => 201, 'body' => '{"publicId":"01JTENANT"}', 'error' => ''],
         ['status' => 202, 'body' => '{"publicId":"01JINST"}', 'error' => ''],
         ['status' => 201, 'body' => '{"token":"12|demo"}', 'error' => ''],
+        ['status' => 200, 'body' => '{"status":"ok"}', 'error' => ''],
     ]);
     $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
     $mailer = new LeadApiSpyMailer();
@@ -229,6 +240,7 @@ test('LeadApiProvisioningService requests mensajes abilities on tenant token', f
         ['status' => 201, 'body' => '{"publicId":"01JTENANT"}', 'error' => ''],
         ['status' => 202, 'body' => '{"publicId":"01JINST"}', 'error' => ''],
         ['status' => 201, 'body' => '{"token":"12|demo"}', 'error' => ''],
+        ['status' => 200, 'body' => '{"status":"ok"}', 'error' => ''],
     ]);
 
     $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
@@ -237,7 +249,7 @@ test('LeadApiProvisioningService requests mensajes abilities on tenant token', f
 
     $decoded = json_decode($transport->lastBody ?? '{}', true);
     assert_same(
-        ['instancias.ver', 'mensajes.enviar', 'mensajes.ver'],
+        ['instancias.ver', 'mensajes.enviar', 'mensajes.ver', 'cuenta.ver'],
         $decoded['abilities'] ?? [],
     );
 });

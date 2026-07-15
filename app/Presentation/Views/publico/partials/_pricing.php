@@ -5,9 +5,12 @@ declare(strict_types=1);
 use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 $paquetes = is_array($paquetes ?? null) ? $paquetes : [];
+$comprasHabilitadas = ! empty($comprasHabilitadas);
 if ($paquetes === []) {
     return;
 }
+
+$purchasableSlugs = ['starter', 'business'];
 
 $fmt = static function (string $v): string {
     if ($v === '') {
@@ -15,6 +18,9 @@ $fmt = static function (string $v): string {
     }
     $n = (float) $v;
     return '$' . rtrim(rtrim(number_format($n, 2, '.', ','), '0'), '.');
+};
+$isNumericPrice = static function (mixed $v): bool {
+    return $v !== null && $v !== '' && is_numeric($v) && (float) $v > 0;
 };
 ?>
 <section class="ct-pricing" id="paquetes">
@@ -39,6 +45,11 @@ $fmt = static function (string $v): string {
           $mensualTxt = $fmt((string) ($p['precio_mensual'] ?? ''));
           $anualTxt   = $fmt((string) ($p['precio_anual'] ?? ''));
           $numeric    = preg_match('/\d/', $mensualTxt) === 1;
+          $slug       = (string) ($p['slug'] ?? '');
+          $canBuy     = $comprasHabilitadas
+              && in_array($slug, $purchasableSlugs, true)
+              && $isNumericPrice($p['precio_mensual'] ?? null);
+          $isEnterprise = $slug === 'empresa' || ! $isNumericPrice($p['precio_mensual'] ?? null);
         ?>
         <div class="col-md-4">
           <div class="ct-plan <?= $featured ? 'ct-plan--featured' : '' ?>" data-reveal>
@@ -56,7 +67,17 @@ $fmt = static function (string $v): string {
                 <?php endforeach; ?>
               </ul>
             <?php endif; ?>
-            <a href="#demo" class="btn <?= $featured ? 'btn-primary' : 'btn-outline-primary' ?> w-100 mt-auto">Solicitar demo</a>
+            <div class="d-grid gap-2 mt-auto">
+              <a href="#demo" class="btn <?= $featured ? 'btn-primary' : 'btn-outline-primary' ?> w-100">Solicitar demo</a>
+              <?php if ($canBuy): ?>
+                <a href="/comprar/<?= ViewHelper::e($slug) ?>?ciclo=monthly"
+                   class="btn btn-success w-100 ct-plan__comprar"
+                   data-compra-monthly="/comprar/<?= ViewHelper::e($slug) ?>?ciclo=monthly"
+                   data-compra-annual="/comprar/<?= ViewHelper::e($slug) ?>?ciclo=annual">Comprar ya</a>
+              <?php elseif ($comprasHabilitadas && $isEnterprise): ?>
+                <a href="#demo" class="btn btn-outline-secondary w-100">Contactar</a>
+              <?php endif; ?>
+            </div>
           </div>
         </div>
       <?php endforeach; ?>

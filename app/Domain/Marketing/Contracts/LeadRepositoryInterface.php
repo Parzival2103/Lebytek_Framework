@@ -54,4 +54,7 @@ interface LeadRepositoryInterface
 
     /** @return array<string, mixed>|null */
     public function findDemoPackageBySlug(string $slug): ?array;
+
+    /** @return array<string, mixed>|null */
+    public function findLatestByEmail(string $email): ?array;
 }

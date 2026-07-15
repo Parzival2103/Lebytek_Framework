@@ -18,6 +18,9 @@ function fakeContentRepo(): MarketingContentRepositoryInterface
         public function paquetesActivos(): array {
             return [['nombre' => 'Plan A', 'precio_mensual' => '299', 'destacado' => 1, 'badge' => 'Popular']];
         }
+        public function findPaqueteBySlug(string $slug, bool $requireActive = true): ?array {
+            return null;
+        }
     };
 }
 

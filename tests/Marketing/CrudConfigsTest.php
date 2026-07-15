@@ -2,13 +2,14 @@
 // tests/Marketing/CrudConfigsTest.php
 declare(strict_types=1);
 
-test('los 5 CRUD JSON de marketing son válidos y apuntan a tablas dom_mkt_*', function (): void {
+test('los CRUD JSON de marketing son válidos y apuntan a tablas dom_mkt_*', function (): void {
     $map = [
         'mkt_leads'      => 'dom_mkt_leads',
         'mkt_paquetes'   => 'dom_mkt_paquetes',
         'mkt_bloques'    => 'dom_mkt_bloques',
         'mkt_plantillas' => 'dom_mkt_plantillas',
         'mkt_secuencias' => 'dom_mkt_secuencias',
+        'mkt_ordenes'    => 'dom_mkt_ordenes',
     ];
     foreach ($map as $key => $tabla) {
         $path = ROOT_PATH . "/config/cruds/{$key}.json";

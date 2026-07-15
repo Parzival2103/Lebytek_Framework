@@ -173,6 +173,51 @@ return static function (Container $container): void {
         $container->bind(\App\Presentation\Controllers\Publico\LeadEmailVerificationController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\LeadEmailVerificationController(
             $c->get(\App\Application\Marketing\VerificarLeadEmailUseCase::class)
         ));
+
+        $container->singleton(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Marketing\PdoMembershipOrderRepository());
+
+        $container->singleton(\App\Domain\Marketing\Contracts\PurchaseTeamAlertNotifierInterface::class, function () {
+            $cfg = [
+                'base_url' => (string) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_BASE_URL', 'https://api.green-api.com'),
+                'instance_id' => (string) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_INSTANCE', ''),
+                'token' => (string) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_TOKEN', ''),
+                'timeout' => (int) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_TIMEOUT', 15),
+            ];
+            $channel = new \Lebytek\Framework\Infrastructure\Integrations\Channels\GreenApiWhatsappChannel(
+                new \Lebytek\Framework\Infrastructure\Integrations\Http\HttpApiConnector($cfg['timeout']),
+                $cfg
+            );
+            $enabled = (bool) \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_ENABLED', false);
+            return new \App\Infrastructure\Marketing\PurchaseWhatsAppNotifier($channel, $enabled);
+        });
+
+        $container->singleton(\App\Application\Marketing\CrearOrdenMembresiaUseCase::class, fn (Container $c) => new \App\Application\Marketing\CrearOrdenMembresiaUseCase(
+            $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\PurchaseTeamAlertNotifierInterface::class),
+        ));
+
+        $container->singleton(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class, fn (Container $c) => new \App\Application\Marketing\AutorizarOrdenMembresiaUseCase(
+            $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+            $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
+            $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
+        ));
+
+        $container->bind(\App\Presentation\Controllers\Publico\CompraController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\CompraController(
+            $c->get(ConfiguracionService::class),
+            $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+            $c->get(\App\Application\Marketing\CrearOrdenMembresiaUseCase::class),
+        ));
+
+        $container->bind(\App\Presentation\Controllers\Admin\MarketingOrdenesController::class, fn (Container $c) => new \App\Presentation\Controllers\Admin\MarketingOrdenesController(
+            $c->get(ConfiguracionService::class),
+            $c->get(AdminNavigationMenuService::class),
+            $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+            $c->get(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class),
+        ));
     }
 
     // Portal waapi (vhost dedicado: marketing off + WAAPI_PORTAL_ENABLED=true)

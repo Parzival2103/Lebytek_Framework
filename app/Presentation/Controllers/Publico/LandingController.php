@@ -24,6 +24,7 @@ final class LandingController extends BaseController
         $ui = LebytekUiConfig::resolve($this->configuracionService->all());
 
         $nombre = $this->configuracionService->empresaNombre();
+        $comprasHabilitadas = filter_var($request->query('compras', false), FILTER_VALIDATE_BOOLEAN);
 
         return $this->view('publico/landing', [
             'pageTitle'           => $nombre . ' — WhatsApp Business',
@@ -32,6 +33,7 @@ final class LandingController extends BaseController
             'empresaLogo'         => $this->configuracionService->empresaLogo(),
             'bloques'             => $vm['bloques'],
             'paquetes'            => $vm['paquetes'],
+            'comprasHabilitadas'  => $comprasHabilitadas,
             'primaryColor'        => $ui['primaryColor'],
             'primaryHover'        => $ui['primaryHover'],
             'primaryActive'       => $ui['primaryActive'],

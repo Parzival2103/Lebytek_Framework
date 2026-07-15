@@ -14,13 +14,14 @@ return [
     'requiere'      => ['core', 'crud-engine'],
     'migraciones'   => [
         '20260713120000_mkt_leads_email_verify.sql',
+        '20260714200000_mkt_membership_orders.sql',
     ],
     'seeds'         => [],
     'bootstrap_sql' => 'database/schema/modules/marketing.sql',
-    'cruds'         => ['mkt_leads', 'mkt_paquetes', 'mkt_bloques', 'mkt_plantillas', 'mkt_secuencias'],
+    'cruds'         => ['mkt_leads', 'mkt_paquetes', 'mkt_bloques', 'mkt_plantillas', 'mkt_secuencias', 'mkt_ordenes'],
     'permisos'      => [
         'marketing.ver', 'marketing.crear', 'marketing.editar', 'marketing.eliminar',
-        'marketing.gestionar', 'marketing.leads', 'marketing.publicar',
+        'marketing.gestionar', 'marketing.leads', 'marketing.publicar', 'marketing.ordenes',
     ],
     'menu'          => [],
     'providers'     => [],

@@ -71,3 +71,17 @@ test('lead_api_credentials hides docs CTA when showDocsCta is false', function (
 
     assert_true(! str_contains($html, 'Probar demo (5 min)'));
 });
+
+test('lead_api_credentials includes Ver paquetes CTA with compras=1', function (): void {
+    $html = ViewHelper::render('emails/lead_api_credentials', [
+        'nombre'          => 'Carlos',
+        'token'           => '12|secret',
+        'apiBaseUrl'      => 'https://api.lebytek.com/api/v1',
+        'showDocsCta'     => false,
+        'showPackagesCta' => true,
+        'packagesUrl'     => 'https://lebytek.com/?compras=1#paquetes',
+    ], '');
+
+    assert_true(str_contains($html, 'Ver paquetes'));
+    assert_true(str_contains($html, 'https://lebytek.com/?compras=1#paquetes'));
+});

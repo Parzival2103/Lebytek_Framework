@@ -30,7 +30,7 @@ final class PdoMarketingContentRepository implements MarketingContentRepositoryI
     {
         $pdo  = Connection::getInstance();
         $stmt = $pdo->query(
-            'SELECT nombre, precio_mensual, precio_anual, features, destacado, badge
+            'SELECT id, slug, nombre, precio_mensual, precio_anual, mensajes_mes_limite, features, destacado, badge
              FROM dom_mkt_paquetes WHERE activo = 1 AND deleted = 0 ORDER BY orden ASC'
         );
         $out = [];
@@ -40,5 +40,25 @@ final class PdoMarketingContentRepository implements MarketingContentRepositoryI
             $out[] = $row;
         }
         return $out;
+    }
+
+    public function findPaqueteBySlug(string $slug, bool $requireActive = true): ?array
+    {
+        $pdo = Connection::getInstance();
+        $sql = 'SELECT * FROM dom_mkt_paquetes WHERE slug = :slug AND deleted = 0';
+        if ($requireActive) {
+            $sql .= ' AND activo = 1';
+        }
+        $sql .= ' LIMIT 1';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['slug' => $slug]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (! is_array($row)) {
+            return null;
+        }
+        $features = json_decode((string) ($row['features'] ?? '[]'), true);
+        $row['features'] = is_array($features) ? $features : [];
+
+        return $row;
     }
 }

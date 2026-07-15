@@ -33,6 +33,10 @@
           periodEl.textContent = numeric ? (period === 'annual' ? '/año' : '/mes') : '';
         }
       });
+      document.querySelectorAll('.ct-plan__comprar').forEach(function (a) {
+        var href = period === 'annual' ? a.getAttribute('data-compra-annual') : a.getAttribute('data-compra-monthly');
+        if (href) a.setAttribute('href', href);
+      });
     });
   }
 

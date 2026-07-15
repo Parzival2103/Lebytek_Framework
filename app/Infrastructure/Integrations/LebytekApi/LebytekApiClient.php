@@ -111,6 +111,15 @@ final class LebytekApiClient
     }
 
     /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function activatePlan(string $tenantPublicId, array $payload): array
+    {
+        return $this->request('POST', '/tenants/'.$tenantPublicId.'/activate-plan', $payload);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function deleteInstance(string $tenantPublicId, string $instancePublicId): array
