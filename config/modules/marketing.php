@@ -15,6 +15,7 @@ return [
     'migraciones'   => [
         '20260713120000_mkt_leads_email_verify.sql',
         '20260714200000_mkt_membership_orders.sql',
+        '20260715100000_mkt_ordenes_permission_slug.sql',
     ],
     'seeds'         => [],
     'bootstrap_sql' => 'database/schema/modules/marketing.sql',

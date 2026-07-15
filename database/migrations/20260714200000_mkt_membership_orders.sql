@@ -54,7 +54,13 @@ UPDATE `dom_mkt_paquetes`
 SET `activo` = 0
 WHERE `slug` = 'demo' AND `deleted` = 0;
 
-INSERT INTO `auth_permisos` (`clave`, `descripcion`, `modulo`)
-SELECT 'marketing.ordenes', 'Autorizar órdenes de membresía', 'marketing'
+INSERT INTO `auth_permisos` (`nombre`, `slug`, `modulo`, `descripcion`)
+SELECT 'Autorizar órdenes de membresía', 'marketing.ordenes', 'marketing', 'Autorizar órdenes de membresía'
 FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM `auth_permisos` WHERE `clave` = 'marketing.ordenes');
+WHERE NOT EXISTS (SELECT 1 FROM `auth_permisos` WHERE `slug` = 'marketing.ordenes');
+
+INSERT IGNORE INTO `auth_roles_permisos` (`rol_id`, `permiso_id`)
+SELECT `r`.`id`, `p`.`id`
+FROM `auth_roles` `r`
+INNER JOIN `auth_permisos` `p` ON `p`.`slug` = 'marketing.ordenes'
+WHERE `r`.`slug` = 'administrador';

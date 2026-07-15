@@ -64,6 +64,7 @@ final class AuthorizeMemOrderRepo implements MembershipOrderRepositoryInterface
         if (isset($this->rows[$orderId])) {
             $this->rows[$orderId]['status'] = 'paid';
             $this->rows[$orderId]['authorized_by'] = $authorizedBy;
+            $this->rows[$orderId]['api_activation_error'] = null;
         }
     }
 
@@ -162,4 +163,76 @@ test('AutorizarOrdenMembresiaUseCase falla sin tenant asociado', function (): vo
     );
 
     assert_throws(\InvalidArgumentException::class, fn () => $uc->ejecutar(2, 1));
+});
+
+test('AutorizarOrdenMembresiaUseCase marca paid sin correo si api reusa activate-plan con token null', function (): void {
+    $transport = new AuthorizeRecordingTransport();
+    $transport->responses[] = [
+        'status' => 200,
+        'body' => '{"token":null,"tenant":{"publicId":"01JTENANT0000000000000001","commercialStatus":"active","planSlug":"starter"},"plan":{"slug":"starter","name":"Starter","messagesMonthlyLimit":5000,"billingCycle":"monthly"}}',
+        'error' => '',
+    ];
+    $api = new LebytekApiClient('https://api.test/v1', 'platform-token', 5, 1, $transport);
+
+    $orders = new AuthorizeMemOrderRepo();
+    $orders->rows[4] = [
+        'id' => 4,
+        'public_id' => '01JORD00000000000000000004',
+        'paquete_slug' => 'starter',
+        'ciclo' => 'monthly',
+        'precio_snapshot' => 2199,
+        'mensajes_mes_limite_snapshot' => 5000,
+        'nombre' => 'Buyer',
+        'email' => 'buyer@test.com',
+        'status' => 'pending_transfer',
+        'api_tenant_public_id' => '01JTENANT0000000000000001',
+        'api_activation_error' => 'API no devolvió token de membresía.',
+    ];
+
+    $mailer = new SpyMembershipMailer();
+    $uc = new AutorizarOrdenMembresiaUseCase($orders, $api, $mailer);
+    $uc->ejecutar(4, 7);
+
+    assert_true($orders->paid);
+    assert_same('paid', $orders->rows[4]['status']);
+    assert_same(0, count($mailer->sent), 'sin token nuevo no se reenvía email #3');
+    assert_true(
+        ($orders->rows[4]['api_activation_error'] ?? null) === null
+            || $orders->rows[4]['api_activation_error'] === '',
+        'markPaid must clear stale activation error'
+    );
+    assert_same(1, count($transport->calls), 'debió llamar activate-plan una vez');
+});
+
+test('AutorizarOrdenMembresiaUseCase rechaza slug demo sin llamar api', function (): void {
+    $transport = new AuthorizeRecordingTransport();
+    $api = new LebytekApiClient('https://api.test/v1', 'platform-token', 5, 1, $transport);
+
+    $orders = new AuthorizeMemOrderRepo();
+    $orders->rows[5] = [
+        'id' => 5,
+        'public_id' => '01JORD00000000000000000005',
+        'paquete_slug' => 'demo',
+        'ciclo' => 'monthly',
+        'precio_snapshot' => 0,
+        'mensajes_mes_limite_snapshot' => 100,
+        'nombre' => 'Buyer',
+        'email' => 'buyer@test.com',
+        'status' => 'pending_transfer',
+        'api_tenant_public_id' => '01JTENANT0000000000000001',
+    ];
+
+    $mailer = new SpyMembershipMailer();
+    $uc = new AutorizarOrdenMembresiaUseCase($orders, $api, $mailer);
+
+    $thrown = false;
+    try {
+        $uc->ejecutar(5, 7);
+    } catch (\InvalidArgumentException $e) {
+        $thrown = true;
+        assert_true(str_contains($e->getMessage(), 'autorizable') || str_contains($e->getMessage(), 'demo'));
+    }
+    assert_true($thrown, 'debe rechazar slug demo');
+    assert_same(0, count($transport->calls), 'no llamar activate-plan con demo');
+    assert_true(empty($orders->paid), 'orden no paid');
 });

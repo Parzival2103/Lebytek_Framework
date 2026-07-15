@@ -40,6 +40,15 @@ MAIL_USERNAME=
 MAIL_PASSWORD=
 MAIL_FROM_ADDRESS=noreply@lebytek.com
 MAIL_FROM_NAME="Lebytek"
+
+# Membresías (transferencia → admin authorize)
+MKT_BANK_NAME=
+MKT_BANK_BENEFICIARY=
+MKT_BANK_CLABE=
+MKT_BANK_ACCOUNT=
+MKT_BANK_PROOF_GUIDE=
+MKT_PURCHASE_ALERT_WHATSAPP_NUMBERS=
+MKT_MEMBERSHIP_AUTHORIZE_ENABLED=false
 ```
 
 **Obtener token (una vez en VPS api):**
@@ -50,6 +59,32 @@ sudo -u lebytek-api php artisan integration:issue-waapi-token --revoke
 ```
 
 Copiar salida → `LEBYTEK_API_TOKEN` en lebytek.com `.env`. Rotar periódicamente con `--revoke`.
+
+## Autorizar membresía (activate-plan)
+
+Flujo: CRUD `mkt_ordenes` → **Autorizar pago** → `AutorizarOrdenMembresiaUseCase` →
+`LebytekApiClient::activatePlan($tenantPublicId, $payload)`.
+
+Companion api: WhatsApiLebytek `POST /tenants/{publicId}/activate-plan` (catálogo `config/plans.php`).
+VPS smoke / `meta`: ver api plan `2026-07-14-plan-activation-closure.md` Task 4.
+
+| Campo Framework → api | Fuente |
+|-----------------------|--------|
+| `planSlug` | `dom_mkt_ordenes.paquete_slug` (`starter`\|`business`\|`empresa`; nunca `demo`) |
+| `billingCycle` | `ciclo` (`monthly`\|`annual`) |
+| `orderExternalRef` | `public_id` |
+| `tokenName` | `membresia-{slug}` |
+| `messagesMonthlyLimit` | solo si slug `empresa` y snapshot no null |
+
+**Reglas ops:**
+
+1. Dejar `MKT_MEMBERSHIP_AUTHORIZE_ENABLED=false` hasta **sequence steps 2–4** (api VPS smoke + this plan Task 2 deployed + Framework VPS bank/env).
+2. Orden debe tener `api_tenant_public_id` (desde lead demo o edición CRUD).
+3. Email #3 envía el Bearer **solo** si api devolvió `token` no vacío; replay 200 con `token: null` marca `paid` sin reenviar correo.
+4. Nunca autorizar órdenes con `paquete_slug=demo` (pre-flight Task 2).
+5. No usar `PATCH /tenants/{id}` para cobro — deja tokens demo válidos.
+6. No merge Feature → `main` sin orden explícita.
+7. Secuencia canónica: api smoke → hardening 1–7 → VPS Framework → flag (Task 8).
 
 ---
 

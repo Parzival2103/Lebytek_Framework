@@ -58,3 +58,16 @@ test('routes/marketing_admin.php registra autorizar orden', function (): void {
     assert_true(str_contains($admin, '/marketing/ordenes/autorizar'), 'ruta autorizar');
     assert_true(str_contains($admin, 'marketing.ordenes'), 'permiso RBAC');
 });
+
+test('autorización de membresía queda apagada por defecto', function (): void {
+    $envExample = file_get_contents(ROOT_PATH . '/.env.example');
+    $controller = file_get_contents(ROOT_PATH . '/app/Presentation/Controllers/Admin/MarketingOrdenesController.php');
+
+    assert_true($envExample !== false);
+    assert_true($controller !== false);
+    assert_true(str_contains($envExample, 'MKT_MEMBERSHIP_AUTHORIZE_ENABLED=false'), 'env de ejemplo seguro');
+    assert_true(
+        str_contains($controller, "EnvLoader::get('MKT_MEMBERSHIP_AUTHORIZE_ENABLED', 'false')"),
+        'env ausente mantiene autorización apagada',
+    );
+});

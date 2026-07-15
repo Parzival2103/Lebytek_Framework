@@ -59,23 +59,27 @@ CREATE TABLE IF NOT EXISTS `dom_mkt_provisiones` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `dom_mkt_paquetes` (
-  `id`             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `nombre`         VARCHAR(150)    NOT NULL,
-  `precio_mensual` DECIMAL(10,2)   DEFAULT NULL,
-  `precio_anual`   DECIMAL(10,2)   DEFAULT NULL,
-  `features`       JSON            DEFAULT NULL,
-  `destacado`      TINYINT(1)      NOT NULL DEFAULT 0,
-  `badge`          VARCHAR(60)     DEFAULT NULL,
-  `orden`          INT             NOT NULL DEFAULT 0,
-  `activo`         TINYINT(1)      NOT NULL DEFAULT 1,
-  `deleted`        TINYINT(1)      NOT NULL DEFAULT 0,
-  `created_at`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `created_by`     BIGINT UNSIGNED DEFAULT NULL,
-  `updated_at`     DATETIME        DEFAULT NULL,
-  `updated_by`     BIGINT UNSIGNED DEFAULT NULL,
-  `deleted_at`     DATETIME        DEFAULT NULL,
-  `deleted_by`     BIGINT UNSIGNED DEFAULT NULL,
+  `id`                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre`              VARCHAR(150)    NOT NULL,
+  `slug`                VARCHAR(50)     DEFAULT NULL,
+  `precio_mensual`      DECIMAL(10,2)   DEFAULT NULL,
+  `precio_anual`        DECIMAL(10,2)   DEFAULT NULL,
+  `features`            JSON            DEFAULT NULL,
+  `mensajes_mes_limite` INT UNSIGNED    DEFAULT NULL,
+  `demo_dias`           INT UNSIGNED    DEFAULT NULL,
+  `destacado`           TINYINT(1)      NOT NULL DEFAULT 0,
+  `badge`               VARCHAR(60)     DEFAULT NULL,
+  `orden`               INT             NOT NULL DEFAULT 0,
+  `activo`              TINYINT(1)      NOT NULL DEFAULT 1,
+  `deleted`             TINYINT(1)      NOT NULL DEFAULT 0,
+  `created_at`          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_by`          BIGINT UNSIGNED DEFAULT NULL,
+  `updated_at`          DATETIME        DEFAULT NULL,
+  `updated_by`          BIGINT UNSIGNED DEFAULT NULL,
+  `deleted_at`          DATETIME        DEFAULT NULL,
+  `deleted_by`          BIGINT UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `dom_mkt_paquetes_slug_unique` (`slug`),
   KEY `idx_mkt_paquetes_activo` (`activo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -146,6 +150,43 @@ CREATE TABLE IF NOT EXISTS `dom_mkt_paginas` (
   UNIQUE KEY `uq_mkt_paginas_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `dom_mkt_ordenes` (
+  `id`                              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `public_id`                       CHAR(26)        NOT NULL,
+  `paquete_id`                      BIGINT UNSIGNED NOT NULL,
+  `paquete_slug`                    VARCHAR(50)     NOT NULL,
+  `ciclo`                           VARCHAR(20)     NOT NULL,
+  `precio_snapshot`                 DECIMAL(10,2)   NOT NULL,
+  `mensajes_mes_limite_snapshot`    INT UNSIGNED    DEFAULT NULL,
+  `nombre`                          VARCHAR(150)    NOT NULL,
+  `email`                           VARCHAR(190)    NOT NULL,
+  `telefono`                        VARCHAR(40)     NOT NULL,
+  `empresa`                         VARCHAR(190)    NOT NULL,
+  `direccion`                       VARCHAR(255)    NOT NULL,
+  `rfc`                             VARCHAR(20)     DEFAULT NULL,
+  `lead_id`                         BIGINT UNSIGNED DEFAULT NULL,
+  `api_tenant_public_id`            CHAR(26)        DEFAULT NULL,
+  `status`                          VARCHAR(30)     NOT NULL DEFAULT 'pending_transfer',
+  `transfer_notified_at`            DATETIME        DEFAULT NULL,
+  `authorized_at`                   DATETIME        DEFAULT NULL,
+  `authorized_by`                   BIGINT UNSIGNED DEFAULT NULL,
+  `api_activation_error`            TEXT            DEFAULT NULL,
+  `deleted`                         TINYINT(1)      NOT NULL DEFAULT 0,
+  `created_at`                      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_by`                      BIGINT UNSIGNED DEFAULT NULL,
+  `updated_at`                      DATETIME        DEFAULT NULL,
+  `updated_by`                      BIGINT UNSIGNED DEFAULT NULL,
+  `deleted_at`                      DATETIME        DEFAULT NULL,
+  `deleted_by`                      BIGINT UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_mkt_ordenes_public_id` (`public_id`),
+  KEY `idx_mkt_ordenes_status` (`status`),
+  KEY `idx_mkt_ordenes_email` (`email`),
+  KEY `idx_mkt_ordenes_deleted` (`deleted`),
+  KEY `idx_mkt_ordenes_lead` (`lead_id`),
+  KEY `idx_mkt_ordenes_paquete` (`paquete_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ── Permisos RBAC ─────────────────────────────────────────────────────────────
 INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`, `descripcion`) VALUES
 ('Ver marketing',       'marketing.ver',       'marketing', 'Acceso de lectura al módulo de marketing'),
@@ -154,14 +195,15 @@ INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`, `descripcion`) V
 ('Eliminar en marketing','marketing.eliminar', 'marketing', 'Eliminar lógico en marketing'),
 ('Gestionar marketing', 'marketing.gestionar', 'marketing', 'Gestionar ajustes del módulo de marketing'),
 ('Gestionar leads',     'marketing.leads',     'marketing', 'Gestionar la bandeja de leads'),
-('Publicar contenido',  'marketing.publicar',  'marketing', 'Publicar páginas y contenido público');
+('Publicar contenido',  'marketing.publicar',  'marketing', 'Publicar páginas y contenido público'),
+('Autorizar órdenes',   'marketing.ordenes',   'marketing', 'Autorizar órdenes de membresía');
 
 INSERT IGNORE INTO `auth_roles_permisos` (`rol_id`, `permiso_id`)
 SELECT `r`.`id`, `p`.`id`
 FROM `auth_roles` `r`
 INNER JOIN `auth_permisos` `p` ON `p`.`slug` IN (
   'marketing.ver','marketing.crear','marketing.editar','marketing.eliminar',
-  'marketing.gestionar','marketing.leads','marketing.publicar'
+  'marketing.gestionar','marketing.leads','marketing.publicar','marketing.ordenes'
 )
 WHERE `r`.`slug` = 'administrador';
 
@@ -191,30 +233,47 @@ INSERT IGNORE INTO `core_menu_items`
 SELECT p.id, 4, 'marketing-plantillas', 'Plantillas correo', 'bi-envelope-paper', '/admin/crud/mkt_plantillas', '/admin/crud/mkt_plantillas', 'marketing.gestionar', 'marketing', 1
 FROM core_menu_items p WHERE p.slug = 'marketing';
 
+INSERT IGNORE INTO `core_menu_items`
+(`parent_id`, `orden`, `slug`, `label`, `icon`, `url`, `match`, `permiso_slug`, `vertical_module`, `activo`)
+SELECT p.id, 5, 'marketing-ordenes', 'Órdenes', 'bi-receipt', '/admin/crud/mkt_ordenes', '/admin/crud/mkt_ordenes', 'marketing.ordenes', 'marketing', 1
+FROM core_menu_items p WHERE p.slug = 'marketing';
+
 -- ── Datos demo (genéricos, idempotentes) ──────────────────────────────────────
-INSERT INTO `dom_mkt_paquetes` (`nombre`, `precio_mensual`, `precio_anual`, `features`, `destacado`, `badge`, `orden`, `activo`)
+INSERT INTO `dom_mkt_paquetes` (`nombre`, `slug`, `precio_mensual`, `precio_anual`, `features`, `mensajes_mes_limite`, `demo_dias`, `destacado`, `badge`, `orden`, `activo`)
 SELECT * FROM (
-  SELECT 'Starter' AS nombre, 499.00 AS precio_mensual, 4990.00 AS precio_anual,
-         JSON_ARRAY('1 instancia WhatsApp','Hasta 2 usuarios','500 mensajes/mes','Soporte por correo') AS features,
+  SELECT 'Demo' AS nombre, 'demo' AS slug, 0.00 AS precio_mensual, 0.00 AS precio_anual,
+         JSON_ARRAY('100 mensajes/mes', '30 días de prueba', '1 número WhatsApp') AS features,
+         100 AS mensajes_mes_limite, 30 AS demo_dias,
+         0 AS destacado, NULL AS badge, 0 AS orden, 0 AS activo
+) AS t
+WHERE NOT EXISTS (SELECT 1 FROM `dom_mkt_paquetes` WHERE `slug` = 'demo');
+
+INSERT INTO `dom_mkt_paquetes` (`nombre`, `slug`, `precio_mensual`, `precio_anual`, `features`, `mensajes_mes_limite`, `demo_dias`, `destacado`, `badge`, `orden`, `activo`)
+SELECT * FROM (
+  SELECT 'Starter' AS nombre, 'starter' AS slug, 2199.00 AS precio_mensual, 21990.00 AS precio_anual,
+         JSON_ARRAY('1 instancia WhatsApp', 'Hasta ~5000 mensajes/mes', 'Soporte por correo') AS features,
+         5000 AS mensajes_mes_limite, NULL AS demo_dias,
          0 AS destacado, NULL AS badge, 1 AS orden, 1 AS activo
 ) AS t
-WHERE NOT EXISTS (SELECT 1 FROM `dom_mkt_paquetes`);
+WHERE NOT EXISTS (SELECT 1 FROM `dom_mkt_paquetes` WHERE `slug` = 'starter');
 
-INSERT INTO `dom_mkt_paquetes` (`nombre`, `precio_mensual`, `precio_anual`, `features`, `destacado`, `badge`, `orden`, `activo`)
+INSERT INTO `dom_mkt_paquetes` (`nombre`, `slug`, `precio_mensual`, `precio_anual`, `features`, `mensajes_mes_limite`, `demo_dias`, `destacado`, `badge`, `orden`, `activo`)
 SELECT * FROM (
-  SELECT 'Business' AS nombre, 999.00 AS precio_mensual, 9990.00 AS precio_anual,
-         JSON_ARRAY('3 instancias WhatsApp','Hasta 10 usuarios','5 000 mensajes/mes','Campañas + plantillas','Soporte prioritario') AS features,
+  SELECT 'Business' AS nombre, 'business' AS slug, 4499.00 AS precio_mensual, 44990.00 AS precio_anual,
+         JSON_ARRAY('Hasta 3 instancias WhatsApp', 'Hasta ~80000 mensajes/mes', 'Campañas + plantillas', 'Soporte prioritario') AS features,
+         80000 AS mensajes_mes_limite, NULL AS demo_dias,
          1 AS destacado, 'Más popular' AS badge, 2 AS orden, 1 AS activo
 ) AS t
-WHERE NOT EXISTS (SELECT 1 FROM `dom_mkt_paquetes` WHERE `nombre` = 'Business');
+WHERE NOT EXISTS (SELECT 1 FROM `dom_mkt_paquetes` WHERE `slug` = 'business');
 
-INSERT INTO `dom_mkt_paquetes` (`nombre`, `precio_mensual`, `precio_anual`, `features`, `destacado`, `badge`, `orden`, `activo`)
+INSERT INTO `dom_mkt_paquetes` (`nombre`, `slug`, `precio_mensual`, `precio_anual`, `features`, `mensajes_mes_limite`, `demo_dias`, `destacado`, `badge`, `orden`, `activo`)
 SELECT * FROM (
-  SELECT 'Enterprise' AS nombre, NULL AS precio_mensual, NULL AS precio_anual,
-         JSON_ARRAY('Instancias ilimitadas','Usuarios a medida','Volumen personalizado','SLA dedicado','Integración API') AS features,
+  SELECT 'Enterprise' AS nombre, 'empresa' AS slug, NULL AS precio_mensual, NULL AS precio_anual,
+         JSON_ARRAY('Instancias a medida', 'Volumen personalizado', 'SLA dedicado', 'Integración API') AS features,
+         NULL AS mensajes_mes_limite, NULL AS demo_dias,
          0 AS destacado, NULL AS badge, 3 AS orden, 1 AS activo
 ) AS t
-WHERE NOT EXISTS (SELECT 1 FROM `dom_mkt_paquetes` WHERE `nombre` = 'Enterprise');
+WHERE NOT EXISTS (SELECT 1 FROM `dom_mkt_paquetes` WHERE `slug` = 'empresa');
 
 INSERT INTO `dom_mkt_bloques` (`pagina`, `clave`, `contenido`, `orden`, `activo`)
 SELECT * FROM (

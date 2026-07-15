@@ -35,7 +35,7 @@ final class PurchaseWhatsAppNotifier implements PurchaseTeamAlertNotifierInterfa
         $base = rtrim((string) EnvLoader::get('APP_URL', ''), '/');
         $id = (int) ($order['id'] ?? 0);
         $publicId = (string) ($order['public_id'] ?? '');
-        $adminUrl = $base.'/crud/mkt_ordenes/'.$id;
+        $adminUrl = $base.'/admin/crud/mkt_ordenes/'.$id;
 
         $body = "Nueva orden — transferencia pendiente\n"
             . 'Orden: '.$publicId."\n"

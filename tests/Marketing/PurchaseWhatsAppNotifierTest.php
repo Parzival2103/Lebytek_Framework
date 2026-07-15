@@ -55,7 +55,8 @@ test('PurchaseWhatsAppNotifier sends once per configured number', function (): v
     assert_true($ok);
     assert_same(2, count($channel->requests));
     assert_true(str_contains($channel->requests[0]->body, '01JORDENTEST00000000000001'));
-    assert_true(str_contains($channel->requests[0]->body, 'https://lebytek.com/crud/mkt_ordenes/9'));
+    assert_true(str_contains($channel->requests[0]->body, 'https://lebytek.com/admin/crud/mkt_ordenes/9'));
+    assert_true(! str_contains($channel->requests[0]->body, 'https://lebytek.com/crud/mkt_ordenes/9'), 'must not omit /admin');
     assert_same('membership_transfer_pending', $channel->requests[0]->meta['source']);
 });
 

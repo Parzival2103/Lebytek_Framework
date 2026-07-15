@@ -41,6 +41,12 @@ final class AutorizarOrdenMembresiaUseCase
         }
 
         $slug = (string) ($order['paquete_slug'] ?? '');
+        if (! in_array($slug, ['starter', 'business', 'empresa'], true)) {
+            throw new \InvalidArgumentException(
+                'El paquete de la orden no es autorizable vía activate-plan (use starter, business o empresa).'
+            );
+        }
+
         $payload = [
             'planSlug' => $slug,
             'billingCycle' => (string) ($order['ciclo'] ?? 'monthly'),
@@ -59,19 +65,18 @@ final class AutorizarOrdenMembresiaUseCase
             throw $e;
         }
 
-        $plainToken = (string) ($response['token'] ?? '');
-        if ($plainToken === '') {
-            $msg = 'API no devolvió token de membresía.';
-            $this->orders->setApiActivationError($orderId, $msg);
-            throw new LebytekApiException($msg);
-        }
+        // Api 201 → string token; api semantic 200 → JSON null (decode as PHP null).
+        // Fresh Idempotency-Key on every client call means retries land here, not on HTTP cache replay.
+        $plainToken = trim((string) ($response['token'] ?? ''));
 
         $this->orders->markPaid($orderId, $authorizedBy);
 
-        try {
-            $this->sendMembershipEmail($order, $plainToken);
-        } catch (\Throwable $mailError) {
-            $this->orders->setApiActivationError($orderId, 'Correo: '.$mailError->getMessage());
+        if ($plainToken !== '') {
+            try {
+                $this->sendMembershipEmail($order, $plainToken);
+            } catch (\Throwable $mailError) {
+                $this->orders->setApiActivationError($orderId, 'Correo: '.$mailError->getMessage());
+            }
         }
 
         $updated = $this->orders->findById($orderId);

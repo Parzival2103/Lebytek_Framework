@@ -77,7 +77,7 @@ final class MarketingOrdenesController extends AdminBaseController
 
     private function authorizeFeatureEnabled(): bool
     {
-        $raw = EnvLoader::get('MKT_MEMBERSHIP_AUTHORIZE_ENABLED', 'true');
+        $raw = EnvLoader::get('MKT_MEMBERSHIP_AUTHORIZE_ENABLED', 'false');
 
         return filter_var($raw, FILTER_VALIDATE_BOOLEAN);
     }
