@@ -69,6 +69,18 @@ return static function (Container $container): void {
         });
     }
 
+    // ── Módulo Pagos (binding condicional al toggle; ver config/modules/payments.php) ──
+    if ((bool) Config::get('vertical.modules.payments', false)) {
+        $container->singleton(
+            \Lebytek\Framework\Application\Payments\PaymentGatewayRegistry::class,
+            static fn () => \Lebytek\Framework\Application\Payments\PaymentsFactory::registry()
+        );
+        $container->singleton(
+            \Lebytek\Framework\Domain\Payments\PaymentEventLogRepositoryInterface::class,
+            static fn () => new \Lebytek\Framework\Infrastructure\Payments\PdoPaymentEventLogRepository()
+        );
+    }
+
     // ── Módulo Marketing (bindings condicionales al toggle; ver config/modules/marketing.php) ──
     if ((bool) Config::get('vertical.modules.marketing', false)) {
         $container->singleton(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class,
