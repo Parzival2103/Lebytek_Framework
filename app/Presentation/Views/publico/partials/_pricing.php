@@ -23,7 +23,7 @@ $isNumericPrice = static function (mixed $v): bool {
     return $v !== null && $v !== '' && is_numeric($v) && (float) $v > 0;
 };
 ?>
-<section class="ct-pricing" id="paquetes">
+<section class="ct-pricing" id="paquetes" data-section="pricing">
   <div class="container">
     <div class="text-center">
       <h2 class="ct-section__title">Paquetes</h2>

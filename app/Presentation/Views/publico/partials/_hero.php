@@ -20,7 +20,7 @@ if ($titulo === '' && $subtitulo === '') {
     return;
 }
 ?>
-<section class="ct-hero" id="inicio">
+<section class="ct-hero" id="inicio" data-section="hero">
   <span class="ct-hero__glow" aria-hidden="true"></span>
   <div class="container">
     <div class="row align-items-center g-5">
@@ -30,10 +30,10 @@ if ($titulo === '' && $subtitulo === '') {
         <?php if ($subtitulo !== ''): ?><p class="ct-hero__subtitle"><?= ViewHelper::e($subtitulo) ?></p><?php endif; ?>
         <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start mt-4">
           <?php if ($ctaTexto !== ''): ?>
-            <a href="<?= ViewHelper::e($ctaUrl) ?>" class="btn btn-primary btn-lg px-4"><?= ViewHelper::e($ctaTexto) ?></a>
+            <a href="<?= ViewHelper::e($ctaUrl) ?>" class="btn btn-primary btn-lg px-4" data-lb-cta="demo"><?= ViewHelper::e($ctaTexto) ?></a>
           <?php endif; ?>
           <?php if ($cta2Texto !== ''): ?>
-            <a href="<?= ViewHelper::e($cta2Url) ?>" class="btn btn-outline-light btn-lg px-4"><?= ViewHelper::e($cta2Texto) ?></a>
+            <a href="<?= ViewHelper::e($cta2Url) ?>" class="btn btn-outline-light btn-lg px-4" data-lb-cta="pricing"><?= ViewHelper::e($cta2Texto) ?></a>
           <?php endif; ?>
         </div>
       </div>

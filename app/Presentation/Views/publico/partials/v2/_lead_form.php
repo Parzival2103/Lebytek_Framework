@@ -27,6 +27,8 @@ $labelStyle = 'display:block; font-size:12px; color:rgba(245,247,250,0.6); margi
 
       <form method="POST" action="/lead" data-lead-form style="display:flex; flex-direction:column; gap:14px;">
         <?= ViewHelper::csrfField() ?>
+        <input type="hidden" name="landing_variant" value="<?= ViewHelper::e((string)($landingVariant ?? '')) ?>">
+        <input type="hidden" name="visitor_id" value="<?= ViewHelper::e((string)($visitorId ?? '')) ?>">
         <div><label style="<?= $labelStyle ?>">Nombre</label><input type="text" name="nombre" placeholder="Tu nombre" required style="<?= $inputStyle ?>"></div>
         <div><label style="<?= $labelStyle ?>">Correo</label><input type="email" name="email" placeholder="tu@correo.com" required style="<?= $inputStyle ?>"></div>
         <div><label style="<?= $labelStyle ?>">Empresa (opcional)</label><input type="text" data-empresa-merge placeholder="Nombre de tu negocio" style="<?= $inputStyle ?>"></div>

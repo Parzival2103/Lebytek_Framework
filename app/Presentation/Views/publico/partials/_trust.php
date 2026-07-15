@@ -9,7 +9,7 @@ if ($items === []) {
     return;
 }
 ?>
-<section class="ct-trust" aria-label="Indicadores de confianza">
+<section class="ct-trust" aria-label="Indicadores de confianza" data-section="trust">
   <div class="container">
     <div class="row g-4 text-center">
       <?php foreach ($items as $it): ?>

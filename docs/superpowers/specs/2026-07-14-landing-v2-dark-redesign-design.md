@@ -1,5 +1,7 @@
 # Landing v2 — Rediseño oscuro (flag-based)
 
+> **Sucesor de tráfico en producción:** `2026-07-15-landing-experiments-metrics-design.md` — el asignador ponderado sticky reemplaza `LANDING_VARIANT` como selector por request; el flag queda solo como hint de seed de pesos iniciales.
+
 **Fecha:** 2026-07-14
 **Rama:** feature/backoffice-api-integration
 **Origen del diseño:** Claude Design `Lebytek Landing v2.dc.html`

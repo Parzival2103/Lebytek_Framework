@@ -12,7 +12,7 @@ if ($items === []) {
     return;
 }
 ?>
-<section class="ct-faq" id="faq">
+<section class="ct-faq" id="faq" data-section="faq">
   <div class="container">
     <div class="text-center mb-5">
       <h2 class="ct-section__title"><?= ViewHelper::e($titulo) ?></h2>

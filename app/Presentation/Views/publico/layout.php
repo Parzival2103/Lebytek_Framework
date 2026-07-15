@@ -69,5 +69,14 @@ $bloques       = is_array($bloques ?? null) ? $bloques : [];
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/publico/landing.js" defer></script>
+    <script>
+window.__LB_METRICS__ = {
+  variant: <?= json_encode($landingVariant ?? '', JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,
+  visitorId: <?= json_encode($visitorId ?? '', JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,
+  isPreview: <?= !empty($isPreview) ? 'true' : 'false' ?>,
+  endpoint: '/marketing/collect'
+};
+    </script>
+    <script src="/assets/publico/landing_metrics.js" defer></script>
 </body>
 </html>

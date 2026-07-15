@@ -2,15 +2,25 @@
 // app/Presentation/Views/publico/landing_v2.php
 declare(strict_types=1);
 
-use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use App\Presentation\Marketing\LandingSectionRenderer;
 
-$bloques  = is_array($bloques ?? null) ? $bloques : [];
-$paquetes = is_array($paquetes ?? null) ? $paquetes : [];
+// Anti-deuda §P: mismo patrón que landing.php (v1) — happy path usa
+// $sectionsHtml del controller; fallback BC construye vía el mapa único
+// (Anti-deuda §G) para no romper ViewHelper::render('publico/landing_v2', ...)
+// directo (ver LandingV2ViewTest).
+$sectionsHtml = is_string($sectionsHtml ?? null) ? $sectionsHtml : '';
+$sections     = is_array($sections ?? null) && $sections !== []
+    ? $sections
+    : ['hero', 'trust', 'features', 'pricing', 'testimonios', 'faq', 'lead_form'];
 
-echo ViewHelper::render('publico/partials/v2/_hero',        ['hero'        => $bloques['hero']        ?? []], '');
-echo ViewHelper::render('publico/partials/v2/_trust',       ['trust'       => $bloques['trust']       ?? []], '');
-echo ViewHelper::render('publico/partials/v2/_features',    ['features'    => $bloques['features']    ?? []], '');
-echo ViewHelper::render('publico/partials/v2/_pricing',     ['paquetes' => $paquetes, 'comprasHabilitadas' => ! empty($comprasHabilitadas)], '');
-echo ViewHelper::render('publico/partials/v2/_testimonios', ['testimonios' => $bloques['testimonios'] ?? []], '');
-echo ViewHelper::render('publico/partials/v2/_faq',         ['faq'         => $bloques['faq']         ?? []], '');
-echo ViewHelper::render('publico/partials/v2/_lead_form',   [], '');
+if ($sectionsHtml === '') {
+    $sectionsHtml = (new LandingSectionRenderer())->render('v2', $sections, [
+        'bloques' => $bloques ?? [],
+        'paquetes' => $paquetes ?? [],
+        'comprasHabilitadas' => $comprasHabilitadas ?? false,
+        'landingVariant' => $landingVariant ?? '',
+        'visitorId' => $visitorId ?? '',
+    ]);
+}
+
+echo $sectionsHtml;

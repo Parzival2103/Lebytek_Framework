@@ -2,15 +2,26 @@
 // app/Presentation/Views/publico/landing.php
 declare(strict_types=1);
 
-use Lebytek\Framework\Kernel\Helpers\ViewHelper;
+use App\Presentation\Marketing\LandingSectionRenderer;
 
-$bloques  = is_array($bloques ?? null) ? $bloques : [];
-$paquetes = is_array($paquetes ?? null) ? $paquetes : [];
+// Anti-deuda §P: happy path recibe $sectionsHtml ya renderizado por el
+// controller (inyecta LandingSectionRenderer). Fallback BC: si falta o viene
+// vacío (p.ej. tests que llaman ViewHelper::render('publico/landing', ...)
+// directo con solo $bloques/$paquetes), construir aquí con el mismo mapa
+// único (Anti-deuda §G) — nunca duplicar la lista de partials.
+$sectionsHtml = is_string($sectionsHtml ?? null) ? $sectionsHtml : '';
+$sections     = is_array($sections ?? null) && $sections !== []
+    ? $sections
+    : ['hero', 'trust', 'features', 'pricing', 'testimonios', 'faq', 'lead_form'];
 
-echo ViewHelper::render('publico/partials/_hero',        ['hero'        => $bloques['hero']        ?? []], '');
-echo ViewHelper::render('publico/partials/_trust',       ['trust'       => $bloques['trust']       ?? []], '');
-echo ViewHelper::render('publico/partials/_features',    ['features'    => $bloques['features']    ?? []], '');
-echo ViewHelper::render('publico/partials/_pricing',     ['paquetes' => $paquetes, 'comprasHabilitadas' => ! empty($comprasHabilitadas)], '');
-echo ViewHelper::render('publico/partials/_testimonios', ['testimonios' => $bloques['testimonios'] ?? []], '');
-echo ViewHelper::render('publico/partials/_faq',         ['faq'         => $bloques['faq']         ?? []], '');
-echo ViewHelper::render('publico/partials/_lead_form',   [], '');
+if ($sectionsHtml === '') {
+    $sectionsHtml = (new LandingSectionRenderer())->render('v1', $sections, [
+        'bloques' => $bloques ?? [],
+        'paquetes' => $paquetes ?? [],
+        'comprasHabilitadas' => $comprasHabilitadas ?? false,
+        'landingVariant' => $landingVariant ?? '',
+        'visitorId' => $visitorId ?? '',
+    ]);
+}
+
+echo $sectionsHtml;
