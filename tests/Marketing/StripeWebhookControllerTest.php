@@ -2,7 +2,8 @@
 declare(strict_types=1);
 
 test('ruta webhook stripe sin CsrfMiddleware', function (): void {
-    assert_true(class_exists(\App\Presentation\Controllers\Publico\StripeWebhookController::class));
+    $controllerClass = 'App\\Presentation\\Controllers\\Publico\\StripeWebhookController';
+    assert_true(class_exists($controllerClass));
 
     $routes = (string) file_get_contents(ROOT_PATH . '/routes/marketing.php');
     assert_true(str_contains($routes, '/webhooks/stripe'));
