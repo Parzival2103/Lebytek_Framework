@@ -12,4 +12,5 @@ echo ViewHelper::render('publico/partials/_trust',       ['trust'       => $bloq
 echo ViewHelper::render('publico/partials/_features',    ['features'    => $bloques['features']    ?? []], '');
 echo ViewHelper::render('publico/partials/_pricing',     ['paquetes' => $paquetes, 'comprasHabilitadas' => ! empty($comprasHabilitadas)], '');
 echo ViewHelper::render('publico/partials/_testimonios', ['testimonios' => $bloques['testimonios'] ?? []], '');
+echo ViewHelper::render('publico/partials/_faq',         ['faq'         => $bloques['faq']         ?? []], '');
 echo ViewHelper::render('publico/partials/_lead_form',   [], '');

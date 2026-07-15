@@ -126,6 +126,32 @@ body.ct-public {
 .ct-testimonio__text { color: var(--ct-pub-text); }
 .ct-testimonio__autor { color: var(--ct-pub-muted); font-weight: 600; font-size: .9rem; }
 
+/* FAQ */
+.ct-faq { padding: clamp(3rem, 7vw, 5rem) 0; background: #fff; }
+.ct-faq__accordion { max-width: 46rem; margin: 0 auto; }
+.ct-faq__item {
+  border: 1px solid var(--ct-pub-border);
+  border-radius: var(--ct-pub-radius);
+  overflow: hidden;
+  margin-bottom: .75rem;
+  box-shadow: var(--ct-pub-shadow);
+}
+.ct-faq__item .accordion-button {
+  font-family: var(--ct-pub-font-head);
+  font-weight: 700;
+  color: var(--ct-pub-ink);
+  background: var(--ct-pub-surface);
+  box-shadow: none;
+}
+.ct-faq__item .accordion-button:not(.collapsed) {
+  color: var(--ct-pub-ink);
+  background: #fff;
+  box-shadow: none;
+}
+.ct-faq__item .accordion-button:focus { box-shadow: none; border-color: transparent; }
+.ct-faq__answer { color: var(--ct-pub-text); line-height: 1.6; }
+.ct-faq__placeholder { font-style: italic; }
+
 /* Demo form */
 .ct-demo { padding: clamp(3rem, 7vw, 5rem) 0; }
 .ct-demo__card { max-width: 34rem; background: #fff; border: 1px solid var(--ct-pub-border); border-radius: var(--ct-pub-radius); padding: 2rem; box-shadow: var(--ct-pub-shadow); }

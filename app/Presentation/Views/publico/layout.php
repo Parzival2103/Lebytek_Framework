@@ -13,8 +13,8 @@ $bloques       = is_array($bloques ?? null) ? $bloques : [];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= ViewHelper::e($pageTitle ?? ($empresaNombre . ' — WhatsApp Business')) ?></title>
-    <meta name="description" content="<?= ViewHelper::e($metaDescription ?? 'Automatiza WhatsApp para tu negocio: campañas, demo instantánea y panel multi-usuario.') ?>">
+    <title><?= ViewHelper::e($pageTitle ?? 'API WhatsApp Business Lebytek | Automatiza Mensajes y Campañas') ?></title>
+    <meta name="description" content="<?= ViewHelper::e($metaDescription ?? 'Automatiza WhatsApp para tu negocio con Lebytek. Envía campañas, notificaciones y respuestas automáticas en minutos. Planes desde $2,199/mes. Demo inmediata.') ?>">
     <meta name="theme-color" content="<?= ViewHelper::e($primaryColor ?? '#25D366') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,6 +50,7 @@ $bloques       = is_array($bloques ?? null) ? $bloques : [];
                 <ul class="navbar-nav align-items-lg-center gap-lg-2">
                     <li class="nav-item"><a class="nav-link" href="#funciones">Funciones</a></li>
                     <li class="nav-item"><a class="nav-link" href="#paquetes">Paquetes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
                     <li class="nav-item"><a class="nav-link" href="#demo">Demo</a></li>
                     <li class="nav-item"><a class="btn btn-primary btn-sm px-3 ms-lg-2" href="/login">Acceder</a></li>
                 </ul>

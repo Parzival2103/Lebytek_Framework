@@ -216,6 +216,9 @@ test('landing integra todas las secciones desde bloques y paquetes', function ()
             'hero'        => ['titulo' => 'Hero Integrado', 'subtitulo' => 'Sub', 'cta_texto' => 'Demo', 'cta_url' => '#demo'],
             'trust'       => ['items' => [['valor' => 'REST API', 'etiqueta' => 'Integración simple']]],
             'testimonios' => ['items' => [['texto' => 'Excelente servicio', 'autor' => 'Cliente X']]],
+            'faq'         => ['titulo' => 'Preguntas frecuentes', 'items' => [
+                ['pregunta' => '¿Cómo empiezo?', 'respuesta' => 'Solicita una demo.'],
+            ]],
         ],
         'paquetes' => [
             ['nombre' => 'Pro', 'precio_mensual' => '99.00', 'precio_anual' => '899.00', 'destacado' => 1, 'features' => ['30,000 mensajes/mes']],
@@ -225,5 +228,27 @@ test('landing integra todas las secciones desde bloques y paquetes', function ()
     assert_true(str_contains($html, 'REST API'), 'sección trust');
     assert_true(str_contains($html, 'ct-pricing'), 'sección pricing');
     assert_true(str_contains($html, 'Excelente servicio'), 'sección testimonios');
+    assert_true(str_contains($html, 'id="faq"'), 'sección faq');
+    assert_true(str_contains($html, '¿Cómo empiezo?'), 'pregunta faq');
     assert_true(str_contains($html, 'action="/lead"'), 'sección formulario');
+    assert_true(str_contains($html, 'href="#faq"'), 'nav faq');
+});
+
+test('faq renderiza preguntas y placeholder si falta respuesta', function (): void {
+    $html = ViewHelper::render('publico/partials/_faq', ['faq' => [
+        'titulo' => 'FAQ Test',
+        'items' => [
+            ['pregunta' => '¿Pregunta con respuesta?', 'respuesta' => 'Sí, aquí va.'],
+            ['pregunta' => '¿Pregunta sin respuesta?', 'respuesta' => ''],
+        ],
+    ]], '');
+    assert_true(str_contains($html, 'FAQ Test'));
+    assert_true(str_contains($html, '¿Pregunta con respuesta?'));
+    assert_true(str_contains($html, 'Sí, aquí va.'));
+    assert_true(str_contains($html, 'Respuesta pendiente.'), 'placeholder sin respuesta');
+});
+
+test('faq vacío no emite sección (degradación)', function (): void {
+    $html = ViewHelper::render('publico/partials/_faq', ['faq' => []], '');
+    assert_true(trim($html) === '', 'degradación sin faq');
 });
