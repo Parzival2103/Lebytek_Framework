@@ -30,3 +30,28 @@ test('BuildDashboardViewModelUseCase sin proveedores deja widgets vacío', funct
     $vm = (new BuildDashboardViewModelUseCase([]))->execute(new DashboardBuildContext(null, [], []));
     assert_same([], $vm->widgets, 'sin proveedores => sin widgets');
 });
+
+test('BuildDashboardViewModelUseCase aísla fallo de un provider y sigue con el resto', function (): void {
+    $ok = new class implements DashboardContributionProviderInterface {
+        public function priority(): int { return 10; }
+        public function contribute(DashboardBuildContext $c): DashboardContribution {
+            return new DashboardContribution(
+                kpis: [['label' => 'OK', 'value' => '1']],
+                activityItems: [],
+                quickAccess: [],
+                statusBlock: null,
+                widgets: []
+            );
+        }
+    };
+    $boom = new class implements DashboardContributionProviderInterface {
+        public function priority(): int { return 5; }
+        public function contribute(DashboardBuildContext $c): DashboardContribution {
+            throw new RuntimeException('KPI provider incompleto');
+        }
+    };
+
+    $vm = (new BuildDashboardViewModelUseCase([$boom, $ok]))->execute(new DashboardBuildContext(1, [], []));
+    assert_same(1, count($vm->kpis), 'el provider sano aporta KPIs');
+    assert_same('OK', $vm->kpis[0]['label'] ?? null);
+});

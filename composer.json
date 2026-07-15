@@ -1,7 +1,8 @@
 {
     "name": "lebytek/framework",
-    "description": "Lebytek Framework — plataforma PHP para sistemas administrativos (core + modulos genericos)",
+    "description": "Lebytek Framework — plataforma PHP + back-office lebytek.com (monorepo)",
     "type": "library",
+    "license": "proprietary",
     "require": {
         "php": ">=8.1",
         "dompdf/dompdf": "^3.1",
@@ -9,10 +10,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Lebytek\\Framework\\": "src/"
+            "Lebytek\\Framework\\": "src/",
+            "App\\": "app/"
         }
     },
     "config": {
         "sort-packages": true
-    }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }

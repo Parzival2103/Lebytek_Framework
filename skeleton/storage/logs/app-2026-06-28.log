@@ -1,0 +1,120 @@
+[2026-06-28 15:30:23] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:30:23] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:30:24] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 15:30:24] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 15:30:24] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 15:30:28] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628153028_207d6396.png"}
+[2026-06-28 15:30:32] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 15:30:32] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 15:33:17] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:33:17] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:33:17] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 15:33:17] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 15:33:17] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 15:33:20] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628153320_47e7ae92.png"}
+[2026-06-28 15:33:20] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 15:33:20] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 15:37:04] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:37:04] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:37:04] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 15:37:04] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 15:37:04] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 15:37:07] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628153707_921cd843.png"}
+[2026-06-28 15:37:07] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 15:37:07] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 15:43:45] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 15:43:45] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 15:43:46] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 15:43:51] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628154351_0ddf016a.png"}
+[2026-06-28 15:43:51] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 15:43:51] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 15:46:11] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 15:46:11] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 15:46:12] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 15:46:15] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628154615_a4701d6e.png"}
+[2026-06-28 15:46:15] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 15:46:15] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 15:48:31] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 15:48:31] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 15:48:31] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 15:48:34] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628154834_72856c7d.png"}
+[2026-06-28 15:48:34] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 15:48:34] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 15:50:52] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 15:50:52] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 15:50:52] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 15:50:55] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628155055_0e19132c.png"}
+[2026-06-28 15:50:55] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 15:50:55] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 15:54:09] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:54:09] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:54:09] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 15:54:09] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 15:54:10] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 15:54:13] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628155413_7bbfeba3.png"}
+[2026-06-28 15:54:13] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 15:54:13] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 15:57:20] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:57:20] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 15:57:20] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 15:57:20] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 15:57:20] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 15:57:24] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628155724_14e7f197.png"}
+[2026-06-28 15:57:24] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 15:57:24] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 16:26:28] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:26:28] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:26:28] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 16:26:28] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 16:26:28] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 16:26:31] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628162631_9f7528a3.png"}
+[2026-06-28 16:26:31] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 16:26:31] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 16:30:20] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:30:20] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:30:20] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 16:30:20] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 16:30:20] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 16:30:24] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628163024_8f96c3b0.png"}
+[2026-06-28 16:30:24] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 16:30:24] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 16:37:05] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:37:05] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:37:05] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 16:37:05] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 16:37:06] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 16:37:09] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628163709_7f2f512f.png"}
+[2026-06-28 16:37:09] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 16:37:09] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 16:37:24] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:37:24] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:37:24] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 16:37:24] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 16:37:24] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 16:37:28] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628163728_c601a360.png"}
+[2026-06-28 16:37:28] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 16:37:28] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 16:40:22] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:40:22] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:40:22] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 16:40:22] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 16:40:22] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 16:40:26] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628164026_d2cee134.png"}
+[2026-06-28 16:40:26] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 16:40:26] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 16:40:41] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:40:41] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:40:41] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 16:40:41] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 16:40:41] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 16:40:45] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628164045_df31bdf4.png"}
+[2026-06-28 16:40:45] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 16:40:45] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-06-28 16:42:45] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:42:45] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-28 16:42:45] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-28 16:42:45] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-28 16:42:45] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-28 16:42:49] [WARNING] ImageProcessor: extensión GD no disponible; la imagen se guarda sin procesar. {"archivo":"selfie_test_ava_1_20260628164249_391d45a1.png"}
+[2026-06-28 16:42:49] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-06-28 16:42:49] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}

@@ -1,0 +1,51 @@
+---
+description: El framework se consume desde vendor/. Cómo (no) modificarlo.
+alwaysApply: true
+---
+
+# Framework en vendor — límite de modificación
+
+Esta es una **app consumidora**: usa el **Lebytek Framework** como dependencia de Composer.
+El framework vive en `vendor/lebytek/framework/` y **es código de solo lectura aquí**, igual
+que cualquier paquete de Laravel en `vendor/`.
+
+El framework aporta el `Kernel` (bootstrap, router, contenedor DI, sesión, seguridad, base
+de datos), las clases base, el CRUD Engine, RBAC, dashboard y demás plataforma. La app
+**no redefine** nada de eso localmente: lo consume.
+
+El trabajo normal ocurre sobre la app: `app/`, `config/`, `routes/`, `database/`, `public/`,
+`tests/`. Ahí es donde la IA crea, edita y depura.
+
+## Reglas duras
+
+- **NUNCA editar, crear ni borrar archivos bajo `vendor/`.** Ningún parche directo, ni
+  siquiera "temporal", ni siquiera para depurar. Un cambio en `vendor/` se pierde al
+  siguiente `composer update` y crea divergencia silenciosa entre lo instalado y el repo
+  fuente.
+- El framework **sí se puede modificar**, pero el cambio se hace en **otro repositorio**:
+  el repo fuente del framework (`Lebytek_Framework`,
+  https://github.com/Parzival2103/Lebytek_Framework), no aquí.
+- Modificar el framework requiere el flujo formal: **spec → plan → modificación** en el
+  repo del framework, y luego traerlo aquí con `composer update lebytek/framework`.
+
+## Cuando un fallo se diagnostica dentro del framework (vendor/)
+
+Si la IA, al depurar, concluye que la causa raíz vive en `vendor/lebytek/framework/`,
+**siempre** debe, en este orden:
+
+1. **Declararlo explícitamente:** "Esto vive en el framework (vendor), no en la app."
+2. **Recordar el modelo:** el framework es modificable, pero el cambio va en el repo
+   `Lebytek_Framework` mediante spec + plan, no como edición de `vendor/`.
+3. **Ofrecer redactar el spec/plan** del cambio (problema, capa/clase afectada, propuesta,
+   impacto, criterio de aceptación) para llevarlo al repo del framework — en lugar de
+   tocar `vendor/`.
+4. **Si hay urgencia, proponer un workaround del lado de la app** sin tocar `vendor/`:
+   override vía contenedor/DI (`config/container.php`), decorator/subclase en `app/`,
+   ajuste de configuración, o middleware/handler propio. Marcarlo como temporal y anotar
+   que la solución de fondo es el spec en el framework.
+
+## Disciplina equivalente en Laravel
+
+El mismo principio aplicará al trabajar con Laravel: `vendor/` no se edita. Se extiende
+(service providers, contracts, eventos, config, herencia/decoración). Tratar este límite
+como permanente, no como una peculiaridad de este proyecto.

@@ -36,10 +36,12 @@ final class IntegrationsController extends AdminBaseController
     public function index(Request $request): Response
     {
         return $this->view('admin/integraciones/index', [
-            'titulo'        => 'Integraciones / WhatsApp',
-            'instancia'     => $this->accounts->findDefault('green_api'),
-            'partnerActivo' => $this->partner->isAvailable(),
-            'logs'          => $this->logs->recent(50),
+            'titulo'            => 'Integraciones / WhatsApp',
+            'instancia'         => $this->accounts->findDefault('green_api'),
+            'partnerActivo'     => $this->partner->isAvailable(),
+            'logs'              => $this->logs->recent(50),
+            'showLegacyGreenUi' => $this->showLegacyGreenUi(),
+            'apiProvisioning'   => $this->apiProvisioningEnabled(),
         ]);
     }
 
@@ -103,6 +105,11 @@ final class IntegrationsController extends AdminBaseController
 
     public function provisionForm(Request $request): Response
     {
+        if (! $this->legacyGreenEnabled() || $this->apiProvisioningEnabled()) {
+            Session::flash('error', 'Provisión local desactivada: usa "Provisionar demo (api)" en Leads.');
+            return $this->redirect('/admin/crud/mkt_leads');
+        }
+
         return $this->view('admin/integraciones/provision', [
             'titulo'        => 'Provisionar demo WhatsApp',
             'leadId'        => (int) $request->input('lead_id', 0),
@@ -113,6 +120,12 @@ final class IntegrationsController extends AdminBaseController
     public function provision(Request $request): Response
     {
         $this->verifyCsrf($request);
+
+        if (! $this->legacyGreenEnabled() || $this->apiProvisioningEnabled()) {
+            Session::flash('error', 'Provisión local desactivada: usa "Provisionar demo (api)" en Leads.');
+            return $this->redirect('/admin/crud/mkt_leads');
+        }
+
         $leadId = (int) $request->input('lead_id', 0);
         $nombre = trim((string) $request->input('lead_nombre', ''));
         $email  = trim((string) $request->input('lead_email', ''));
@@ -211,5 +224,23 @@ final class IntegrationsController extends AdminBaseController
             'state'      => $phase['state'],
             'docs_url'   => (string) Config::get('integrations.activation.api_docs_url', '/docs/integraciones/whatsapp-api'),
         ]);
+    }
+
+    private function legacyGreenEnabled(): bool
+    {
+        return filter_var(
+            \Lebytek\Framework\Kernel\EnvLoader::get('GREEN_API_ENABLED', false),
+            FILTER_VALIDATE_BOOL
+        );
+    }
+
+    private function showLegacyGreenUi(): bool
+    {
+        return $this->legacyGreenEnabled() && ! $this->apiProvisioningEnabled();
+    }
+
+    private function apiProvisioningEnabled(): bool
+    {
+        return trim((string) \Lebytek\Framework\Kernel\EnvLoader::get('LEBYTEK_API_TOKEN', '')) !== '';
     }
 }

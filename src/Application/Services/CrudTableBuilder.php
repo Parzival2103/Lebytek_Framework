@@ -75,6 +75,12 @@ final class CrudTableBuilder
                 if (array_key_exists('priority', $column) && is_numeric($column['priority'])) {
                     $built['priority'] = (int) $column['priority'];
                 }
+                if (array_key_exists('max_length', $column) && is_numeric($column['max_length'])) {
+                    $built['max_length'] = (int) $column['max_length'];
+                }
+                if (!empty($column['badge_nonempty'])) {
+                    $built['badge_nonempty'] = (string) $column['badge_nonempty'];
+                }
                 $columns[] = $built;
             }
         }
@@ -157,6 +163,17 @@ final class CrudTableBuilder
                 continue;
             }
 
+            if ($format === 'truncate' && $value !== null && $value !== '') {
+                $max = (int) ($column['max_length'] ?? 26);
+                $text = (string) $value;
+                if (mb_strlen($text) > $max) {
+                    $row['_formatted'][$name] = mb_substr($text, 0, $max - 1).'…';
+                } else {
+                    $row['_formatted'][$name] = $text;
+                }
+                continue;
+            }
+
             if ($format === 'money' && $value !== null && $value !== '') {
                 $row['_formatted'][$name] = '$' . number_format((float) $value, 2, '.', ',');
                 continue;
@@ -171,6 +188,10 @@ final class CrudTableBuilder
                 $badgeValue = strtolower(trim((string) $value));
                 $cssClass = (string) ($badgeConfig[$badgeValue] ?? $badgeConfig[(string) $value] ?? 'secondary');
                 $row['_badge'][$name] = $cssClass;
+            }
+
+            if (!empty($column['badge_nonempty']) && $value !== null && trim((string) $value) !== '') {
+                $row['_badge'][$name] = (string) $column['badge_nonempty'];
             }
 
             $row['_formatted'][$name] = $value;

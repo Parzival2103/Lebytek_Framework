@@ -4,6 +4,8 @@ use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 /** @var \Lebytek\Framework\Domain\Integrations\IntegrationAccount|null $instancia */
 /** @var bool $partnerActivo */
+/** @var bool $showLegacyGreenUi */
+/** @var bool $apiProvisioning */
 /** @var list<array<string,mixed>> $logs */
 ?>
 <div class="ct-page">
@@ -16,6 +18,7 @@ use Lebytek\Framework\Kernel\Helpers\ViewHelper;
         <?php endif; ?>
     </div>
 
+    <?php if (!empty($showLegacyGreenUi)): ?>
     <div class="card ct-card mb-4">
         <div class="ct-card-header">
             <span class="ct-card-title">Instancia interna (WhatsApp)</span>
@@ -41,6 +44,17 @@ use Lebytek\Framework\Kernel\Helpers\ViewHelper;
             <div id="testResult" class="small mt-2 text-muted"></div>
         </div>
     </div>
+    <?php elseif (!empty($apiProvisioning)): ?>
+    <div class="alert alert-info mb-4">
+        Provisión de demos vía <strong>api.lebytek.com</strong>. Usa el botón
+        <em>Provisionar demo (api)</em> en Leads. El camino legacy Green está desactivado.
+    </div>
+    <?php else: ?>
+    <div class="alert alert-warning mb-4">
+        Configura <code>LEBYTEK_API_TOKEN</code> para provisioning vía api, o
+        <code>GREEN_API_ENABLED=true</code> solo en entornos de desarrollo legacy.
+    </div>
+    <?php endif; ?>
 
     <div class="card ct-card mb-4">
         <div class="ct-card-header">

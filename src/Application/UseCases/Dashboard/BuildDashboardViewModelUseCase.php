@@ -7,9 +7,12 @@ namespace Lebytek\Framework\Application\UseCases\Dashboard;
 use Lebytek\Framework\Application\DTO\Dashboard\DashboardViewModel;
 use Lebytek\Framework\Domain\Dashboard\DashboardBuildContext;
 use Lebytek\Framework\Domain\Interfaces\DashboardContributionProviderInterface;
+use Lebytek\Framework\Kernel\Logging\AppLogger;
+use Throwable;
 
 /**
  * Fusiona contribuciones de proveedores en el orden de registro (config/dashboard.php).
+ * Un proveedor incompleto o con fallo no debe tumbar el dashboard ni el post-login.
  */
 final class BuildDashboardViewModelUseCase
 {
@@ -31,12 +34,27 @@ final class BuildDashboardViewModelUseCase
         $widgets = [];
 
         /** @var list<DashboardContributionProviderInterface> $sorted */
-        $sorted = [...$this->providers];
+        $sorted = [];
+        foreach ($this->providers as $provider) {
+            if ($provider instanceof DashboardContributionProviderInterface) {
+                $sorted[] = $provider;
+            }
+        }
         usort($sorted, static fn(DashboardContributionProviderInterface $a, DashboardContributionProviderInterface $b): int =>
             $a->priority() <=> $b->priority());
 
         foreach ($sorted as $provider) {
-            $c = $provider->contribute($context);
+            try {
+                $c = $provider->contribute($context);
+            } catch (Throwable $e) {
+                AppLogger::error('Dashboard: provider contribution failed; skipping', [
+                    'provider' => $provider::class,
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+                continue;
+            }
 
             foreach ($c->kpis as $row) {
                 $kpis[] = $row;

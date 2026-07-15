@@ -1,49 +1,59 @@
-# Lebytek Framework
+# Lebytek Framework + Back-office
 
-Paquete Composer `lebytek/framework` — plataforma PHP para sistemas administrativos (RBAC, CRUD Engine, dashboard, módulos genéricos).
+Monorepo desplegable en **lebytek.com** (hosting con document root en `public/`).
 
-El código ejecutable de una aplicación vive en `skeleton/` (semilla para Repo 2). Este repositorio es el **paquete**, no una app desplegable por sí sola.
+| Ruta | Contenido |
+|------|-----------|
+| `src/` | Framework (`Lebytek\Framework\`) — paquete Composer `lebytek/framework` |
+| `app/` | Dominio de la app (`App\`) — marketing, leads, integración api |
+| `config/`, `routes/`, `public/`, `storage/` | Capa aplicación |
+| `database/schema/` | Schema del framework |
+| `database/migrations/`, `database/seeds/` | Migraciones y seeds de la app |
+| `tests/` | Tests del framework + dominio (Marketing, Integrations) |
+| `docs/integration/` | Contrato api ↔ back-office (espejo de WhatsApiLebytek) |
 
-## Desarrollo local (monorepo)
+## Setup local
 
 ```bash
+cp .env.example .env
 composer install
-php tests/run.php          # tests del paquete (framework)
-php skeleton/tests/run.php # tests de dominio (Marketing, etc.)
-```
-
-Para probar la app en el monorepo:
-
-```bash
-cd skeleton
-composer config repositories.local path ../
-composer require lebytek/framework:@dev --no-interaction
+php scripts/install.php    # primera vez
+php scripts/seed.php
 php -S localhost:8000 -t public
+php tests/run.php          # arnés completo
 ```
 
-## Consumo como paquete (privado)
+## Composer (repo privado en GitHub)
 
-Un proyecto lo consume con Composer vía repositorio VCS privado:
+**No hace falta Packagist** para un paquete privado. Composer resuelve el repo vía VCS:
 
 ```json
 "repositories": [
     { "type": "vcs", "url": "https://github.com/Parzival2103/Lebytek_Framework" }
 ],
-"require": { "lebytek/framework": "^1.0" }
+"require": {
+    "lebytek/framework": "^1.0"
+}
 ```
 
-En el VPS, Composer necesita auth para el repo privado: configurar una **deploy key**
-SSH (o un token de GitHub en `auth.json`). El deploy hace `composer install`.
-El antiguo soporte de "hosting compartido sin Composer" queda DESCARTADO: el VPS
-ya usa Composer (dompdf/phpmailer se instalan así).
+Requisitos:
 
-## Estructura
+1. **Tag de versión** en GitHub (`v1.0.0`, `v1.1.0`, …) — Composer usa tags para `^1.0`.
+2. **Auth** para repo privado: deploy key SSH o token en `auth.json` / `COMPOSER_AUTH`.
+3. Ver guía completa: [`docs/composer-setup.md`](composer-setup.md).
 
-| Ruta | Contenido |
-|------|-----------|
-| `src/` | Código del framework (`Lebytek\Framework\`) |
-| `database/schema/` | Schema baseline del paquete |
-| `tests/` | Arnés de tests del framework |
-| `skeleton/` | Esqueleto de aplicación (config, rutas, dominio Marketing) |
+Este repo se despliega **como aplicación** (clone + `composer install` en la raíz). Otros proyectos pueden consumir solo `lebytek/framework` vía Composer; el autoload del paquete carga `src/`, no `app/`.
 
-Ver `docs/core/arquitectura.md` y `CLAUDE.md` para más detalle.
+## Integración api.lebytek.com
+
+- Contrato: `docs/integration/waapi-api-contract.md`
+- Guía de implementación: `docs/integration/waapi-implementation-real.md`
+- Variables: `LEBYTEK_API_URL`, `LEBYTEK_API_TOKEN` en `.env`
+- Desarrollo en branch `feature/backoffice-api-integration` (no mergear a `main` hasta cerrar Fase 2)
+
+## Branches
+
+| Branch | Uso |
+|--------|-----|
+| `main` | Estable; VPS auto-pull cuando esté listo |
+| `feature/backoffice-api-integration` | Skeleton en raíz + cliente HTTP api + provisioning leads |

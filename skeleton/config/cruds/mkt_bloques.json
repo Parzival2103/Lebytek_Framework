@@ -1,0 +1,35 @@
+{
+  "resource": {
+    "key": "mkt_bloques",
+    "title": "Bloques de contenido",
+    "table": "dom_mkt_bloques",
+    "primary_key": "id",
+    "permission_prefix": "marketing"
+  },
+  "security": { "allow_core_table": false, "mode": "restricted" },
+  "list": {
+    "columns": [
+      { "name": "id", "label": "ID", "sortable": true },
+      { "name": "pagina", "label": "Página", "searchable": true, "sortable": true },
+      { "name": "clave", "label": "Clave", "searchable": true, "sortable": true },
+      { "name": "orden", "label": "Orden", "sortable": true },
+      { "name": "activo", "label": "Activo", "badge": { "1": "success", "0": "secondary" } }
+    ],
+    "filters": [ { "field": "pagina", "label": "Página" } ],
+    "actions": ["show", "edit", "delete"]
+  },
+  "form": {
+    "fields": [
+      { "name": "pagina", "label": "Página", "type": "text", "required": true, "default": "home", "col": "col-md-6" },
+      { "name": "clave", "label": "Clave", "type": "text", "required": true, "col": "col-md-6" },
+      { "name": "contenido", "label": "Contenido (JSON)", "type": "textarea", "col": "col-12" },
+      { "name": "orden", "label": "Orden", "type": "number", "default": "0", "col": "col-md-6" },
+      { "name": "activo", "label": "Activo", "type": "select", "options": { "1": "Sí", "0": "No" }, "default": "1", "col": "col-md-6" }
+    ],
+    "validators": []
+  },
+  "actions": { "row": [ { "name": "show", "type": "builtin" }, { "name": "edit", "type": "builtin" }, { "name": "delete", "type": "builtin" } ], "bulk": [] },
+  "detail": { "tabs": [ { "key": "general", "label": "Datos", "type": "fields", "columns": ["pagina","clave","contenido","orden","activo"] } ] },
+  "uploads": { "enabled": false, "public_path": "uploads/cruds/mkt_bloques" },
+  "hooks": { "handler": null }
+}

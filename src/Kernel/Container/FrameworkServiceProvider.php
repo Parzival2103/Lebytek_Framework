@@ -322,9 +322,28 @@ final class FrameworkServiceProvider
                 $cfg       = require Paths::appRoot() . '/config/dashboard.php';
                 $providers = [];
                 foreach ($cfg['providers'] as $fqcn) {
-                    /** @var DashboardContributionProviderInterface $p */
-                    $p            = $c->get($fqcn);
-                    $providers[]  = $p;
+                    try {
+                        $p = $c->get($fqcn);
+                    } catch (\Throwable $e) {
+                        \Lebytek\Framework\Kernel\Logging\AppLogger::error(
+                            'Dashboard: provider could not be resolved; skipping',
+                            [
+                                'provider' => (string) $fqcn,
+                                'error' => $e->getMessage(),
+                                'file' => $e->getFile(),
+                                'line' => $e->getLine(),
+                            ]
+                        );
+                        continue;
+                    }
+                    if (!$p instanceof DashboardContributionProviderInterface) {
+                        \Lebytek\Framework\Kernel\Logging\AppLogger::warning(
+                            'Dashboard: provider ignored (invalid contract)',
+                            ['provider' => (string) $fqcn]
+                        );
+                        continue;
+                    }
+                    $providers[] = $p;
                 }
         
                 return new BuildDashboardViewModelUseCase($providers);

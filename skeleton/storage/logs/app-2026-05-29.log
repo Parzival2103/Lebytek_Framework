@@ -1,0 +1,14 @@
+[2026-05-29 02:44:19] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-05-29 02:44:19] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-05-29 02:44:28] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-05-29 02:44:28] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-05-29 02:45:13] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-05-29 02:45:13] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-05-29 02:46:09] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-05-29 02:46:09] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-05-29 02:46:48] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-05-29 02:46:48] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-05-29 02:46:55] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-05-29 02:46:55] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}
+[2026-05-29 02:47:23] [WARNING] CRUD hook: handler no registrado en whitelist {"resource":"clientes","handlerKey":"ghost","hook":"beforeCreate"}
+[2026-05-29 02:47:23] [ERROR] CRUD hook: excepción en ejecución {"resource":"clientes","handlerKey":"boom","hook":"beforeUpdate","error":"abort from hook"}

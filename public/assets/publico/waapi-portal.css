@@ -1,0 +1,50 @@
+/* Portal cliente waapi.lebytek.com — login + métricas de uso */
+.waapi-portal {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ct-pub-surface, #f8fafc);
+}
+
+.waapi-portal__main {
+  flex: 1;
+}
+
+.waapi-portal__header .navbar-brand,
+.waapi-portal__header span.fw-bold {
+  font-family: var(--ct-pub-font-head, 'Plus Jakarta Sans', sans-serif);
+}
+
+.waapi-metric-card {
+  border: 0;
+  border-radius: var(--ct-pub-radius, 1rem);
+  box-shadow: var(--ct-pub-shadow, 0 4px 24px rgba(15, 23, 42, .08));
+  background: #fff;
+  height: 100%;
+}
+
+.waapi-metric-card .metric-value {
+  font-family: var(--ct-pub-font-head, 'Plus Jakarta Sans', sans-serif);
+  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  line-height: 1.1;
+  color: var(--ct-pub-ink, #0f172a);
+}
+
+.waapi-metric-card .metric-label {
+  color: var(--ct-pub-muted, #64748b);
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.waapi-token-field {
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 5.5rem;
+}
+
+.waapi-token-hint {
+  font-size: 0.8125rem;
+  color: var(--ct-pub-muted, #64748b);
+}

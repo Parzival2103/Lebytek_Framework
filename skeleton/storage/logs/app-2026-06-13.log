@@ -1,0 +1,13 @@
+[2026-06-13 00:11:31] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-13 00:11:31] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-13 00:13:02] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-13 00:14:47] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-13 00:14:47] [ERROR] [mail] Fallo al enviar correo de auth {"para":"persona@test.local","asunto":"Confirma tu correo","error":"SMTP connect() failed con credenciales x"}
+[2026-06-13 00:14:47] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-13 00:14:47] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-13 00:14:47] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-13 20:00:04] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-13 20:00:04] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}
+[2026-06-13 20:00:05] [WARNING] Login bloqueado por rate limit {"ip":"10.0.0.1"}
+[2026-06-13 20:00:28] [WARNING] Login bloqueado por rate limit {"ip":"9.9.9.9"}
+[2026-06-13 20:00:28] [WARNING] Login bloqueado por rate limit {"ip":"3.0.0.3"}

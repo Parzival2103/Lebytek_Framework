@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+use Lebytek\Framework\Presentation\Controllers\Admin\IntegrationsController;
+use Lebytek\Framework\Presentation\Middlewares\CsrfMiddleware;
+use Lebytek\Framework\Presentation\Middlewares\RbacMiddleware;
+
+/** @var \Lebytek\Framework\Kernel\Http\Router $router */
+
+$rbacVer = [new RbacMiddleware('integrations.ver')];
+$rbacConfig = [new RbacMiddleware('integrations.configurar')];
+$rbacEnviar = [new RbacMiddleware('integrations.enviar')];
+
+$router->get('/integraciones', [IntegrationsController::class, 'index'], $rbacVer);
+$router->post('/integraciones/config/internal', [IntegrationsController::class, 'saveInternal'], array_merge($rbacConfig, [CsrfMiddleware::class]));
+$router->post('/integraciones/test', [IntegrationsController::class, 'testConnection'], array_merge($rbacConfig, [CsrfMiddleware::class]));
+$router->get('/integraciones/provision', [IntegrationsController::class, 'provisionForm'], $rbacEnviar);
+$router->post('/integraciones/provision', [IntegrationsController::class, 'provision'], array_merge($rbacEnviar, [CsrfMiddleware::class]));
