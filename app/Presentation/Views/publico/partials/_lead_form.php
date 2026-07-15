@@ -8,7 +8,7 @@ use Lebytek\Framework\Kernel\Security\Session;
 $flash = $flashAll ?? Session::flashAll();
 $flash = is_array($flash) ? $flash : [];
 ?>
-<section class="ct-demo" id="demo">
+<section class="ct-demo" id="demo" data-section="lead_form">
   <div class="container">
     <div class="text-center mb-4">
       <h2 class="ct-section__title">Solicita una demo</h2>
@@ -24,6 +24,8 @@ $flash = is_array($flash) ? $flash : [];
       <?php endforeach; ?>
       <form method="POST" action="/lead">
         <?= ViewHelper::csrfField() ?>
+        <input type="hidden" name="landing_variant" value="<?= ViewHelper::e((string)($landingVariant ?? '')) ?>">
+        <input type="hidden" name="visitor_id" value="<?= ViewHelper::e((string)($visitorId ?? '')) ?>">
         <div class="mb-3"><input type="text" name="nombre" class="form-control form-control-lg" placeholder="Nombre" required></div>
         <div class="mb-3"><input type="email" name="email" class="form-control form-control-lg" placeholder="Correo" required></div>
         <div class="mb-3"><input type="text" name="telefono" class="form-control form-control-lg" placeholder="Teléfono (opcional)"></div>

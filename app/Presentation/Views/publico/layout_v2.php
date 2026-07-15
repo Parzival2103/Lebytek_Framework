@@ -35,7 +35,7 @@ $empresaLogo   = $empresaLogo ?? '';
       <a href="#faq" class="lb-nav-link" style="font-size:14px; color:rgba(245,247,250,0.75);">FAQ</a>
       <a href="#demo" class="lb-nav-link" style="font-size:14px; color:rgba(245,247,250,0.75);">Demo</a>
       <a href="/login" class="lb-nav-link" style="font-size:14px; color:rgba(245,247,250,0.75); margin-right:6px;">Acceder</a>
-      <a href="#demo" style="background:linear-gradient(135deg,#25D366,#00E6A0); color:#05070F; font-weight:600; font-size:14px; padding:10px 18px; border-radius:8px;">Solicitar demo</a>
+      <a href="#demo" data-lb-cta="nav" style="background:linear-gradient(135deg,#25D366,#00E6A0); color:#05070F; font-weight:600; font-size:14px; padding:10px 18px; border-radius:8px;">Solicitar demo</a>
     </header>
 
     <main><?= $content ?? '' ?></main>
@@ -66,5 +66,14 @@ $empresaLogo   = $empresaLogo ?? '';
     </footer>
 
     <script src="/assets/publico/landing_v2.js" defer></script>
+    <script>
+window.__LB_METRICS__ = {
+  variant: <?= json_encode($landingVariant ?? '', JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,
+  visitorId: <?= json_encode($visitorId ?? '', JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,
+  isPreview: <?= !empty($isPreview) ? 'true' : 'false' ?>,
+  endpoint: '/marketing/collect'
+};
+    </script>
+    <script src="/assets/publico/landing_metrics.js" defer></script>
 </body>
 </html>

@@ -20,40 +20,44 @@ final class PdoLeadRepository implements LeadRepositoryInterface
         if ($emailVerification !== null) {
             $stmt = $pdo->prepare(
                 'INSERT INTO dom_mkt_leads
-                    (nombre, email, telefono, mensaje, estado, email_verify_token, email_verify_code_hash, email_verify_expires_at, utm_source, utm_medium, utm_campaign)
+                    (nombre, email, telefono, mensaje, estado, email_verify_token, email_verify_code_hash, email_verify_expires_at, utm_source, utm_medium, utm_campaign, landing_variant, visitor_id)
                  VALUES
-                    (:nombre, :email, :telefono, :mensaje, :estado, :token, :code_hash, :expires_at, :s, :m, :c)'
+                    (:nombre, :email, :telefono, :mensaje, :estado, :token, :code_hash, :expires_at, :s, :m, :c, :landing_variant, :visitor_id)'
             );
             $stmt->execute([
-                'nombre'     => $draft->nombre(),
-                'email'      => $draft->email(),
-                'telefono'   => $draft->telefono(),
-                'mensaje'    => $draft->mensaje(),
-                'estado'     => 'pendiente',
-                'token'      => $emailVerification['token'],
-                'code_hash'  => $emailVerification['code_hash'],
-                'expires_at' => $emailVerification['expires_at'],
-                's'          => $utm['utm_source']   ?? null,
-                'm'          => $utm['utm_medium']   ?? null,
-                'c'          => $utm['utm_campaign'] ?? null,
+                'nombre'          => $draft->nombre(),
+                'email'           => $draft->email(),
+                'telefono'        => $draft->telefono(),
+                'mensaje'         => $draft->mensaje(),
+                'estado'          => 'pendiente',
+                'token'           => $emailVerification['token'],
+                'code_hash'       => $emailVerification['code_hash'],
+                'expires_at'      => $emailVerification['expires_at'],
+                's'               => $utm['utm_source']   ?? null,
+                'm'               => $utm['utm_medium']   ?? null,
+                'c'               => $utm['utm_campaign'] ?? null,
+                'landing_variant' => $draft->landingVariant(),
+                'visitor_id'      => $draft->visitorId(),
             ]);
 
             return (int) $pdo->lastInsertId();
         }
 
         $stmt = $pdo->prepare(
-            'INSERT INTO dom_mkt_leads (nombre, email, telefono, mensaje, estado, utm_source, utm_medium, utm_campaign)
-             VALUES (:nombre, :email, :telefono, :mensaje, :estado, :s, :m, :c)'
+            'INSERT INTO dom_mkt_leads (nombre, email, telefono, mensaje, estado, utm_source, utm_medium, utm_campaign, landing_variant, visitor_id)
+             VALUES (:nombre, :email, :telefono, :mensaje, :estado, :s, :m, :c, :landing_variant, :visitor_id)'
         );
         $stmt->execute([
-            'nombre'   => $draft->nombre(),
-            'email'    => $draft->email(),
-            'telefono' => $draft->telefono(),
-            'mensaje'  => $draft->mensaje(),
-            'estado'   => 'pendiente',
-            's'        => $utm['utm_source']   ?? null,
-            'm'        => $utm['utm_medium']   ?? null,
-            'c'        => $utm['utm_campaign'] ?? null,
+            'nombre'          => $draft->nombre(),
+            'email'           => $draft->email(),
+            'telefono'        => $draft->telefono(),
+            'mensaje'         => $draft->mensaje(),
+            'estado'          => 'pendiente',
+            's'               => $utm['utm_source']   ?? null,
+            'm'               => $utm['utm_medium']   ?? null,
+            'c'               => $utm['utm_campaign'] ?? null,
+            'landing_variant' => $draft->landingVariant(),
+            'visitor_id'      => $draft->visitorId(),
         ]);
 
         return (int) $pdo->lastInsertId();

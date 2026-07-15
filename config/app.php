@@ -12,5 +12,6 @@ return [
     'timezone' => EnvLoader::get('APP_TIMEZONE', 'America/Mexico_City'),
     'locale'   => EnvLoader::get('APP_LOCALE',   'es'),
     'asset_version' => EnvLoader::get('APP_ASSET_VERSION', '1'),
+    // Seed hint for initial experiment weights (bootstrap). Does NOT select traffic per request.
     'landing_variant' => EnvLoader::get('LANDING_VARIANT', 'v1'),
 ];

@@ -13,7 +13,7 @@ if ($items === []) {
     return;
 }
 ?>
-<section class="ct-features" id="funciones">
+<section class="ct-features" id="funciones" data-section="features">
   <div class="container">
     <div class="text-center mb-5">
       <h2 class="ct-section__title"><?= ViewHelper::e($titulo) ?></h2>
