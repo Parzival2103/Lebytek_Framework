@@ -114,9 +114,9 @@ final class LebytekApiClient
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
-    public function activatePlan(string $tenantPublicId, array $payload): array
+    public function activatePlan(string $tenantPublicId, array $payload, ?string $idempotencyKey = null): array
     {
-        return $this->request('POST', '/tenants/'.$tenantPublicId.'/activate-plan', $payload);
+        return $this->request('POST', '/tenants/'.$tenantPublicId.'/activate-plan', $payload, [], $idempotencyKey);
     }
 
     /**
@@ -142,6 +142,7 @@ final class LebytekApiClient
         string $path,
         ?array $body = null,
         array $headers = [],
+        ?string $idempotencyKey = null,
     ): array {
         if ($this->token === '') {
             throw new LebytekApiException('LEBYTEK_API_TOKEN is not configured.');
@@ -160,7 +161,7 @@ final class LebytekApiClient
         }
 
         if ($write) {
-            $baseHeaders[] = 'Idempotency-Key: '.$this->newUuid();
+            $baseHeaders[] = 'Idempotency-Key: '.($idempotencyKey ?? $this->newUuid());
         }
 
         $allHeaders = array_merge($baseHeaders, $headers);

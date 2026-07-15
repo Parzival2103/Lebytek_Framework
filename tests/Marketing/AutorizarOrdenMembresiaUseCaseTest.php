@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Application\Marketing\AutorizarOrdenMembresiaUseCase;
+use App\Application\Marketing\ActivateMembershipFromOrderService;
 use App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiClient;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiTransport;
@@ -105,7 +106,10 @@ test('AutorizarOrdenMembresiaUseCase happy path activa plan y envía correo', fu
     ];
 
     $mailer = new SpyMembershipMailer();
-    $uc = new AutorizarOrdenMembresiaUseCase($orders, $api, $mailer);
+    $uc = new AutorizarOrdenMembresiaUseCase(
+        $orders,
+        new ActivateMembershipFromOrderService($orders, $api, $mailer),
+    );
     $uc->ejecutar(1, 7);
 
     assert_same(1, count($transport->calls));
@@ -138,7 +142,10 @@ test('AutorizarOrdenMembresiaUseCase deja orden desbloqueada si activate-plan fa
         'api_tenant_public_id' => '01JTENANT0000000000000001',
     ];
 
-    $uc = new AutorizarOrdenMembresiaUseCase($orders, $api, new SpyMembershipMailer());
+    $uc = new AutorizarOrdenMembresiaUseCase(
+        $orders,
+        new ActivateMembershipFromOrderService($orders, $api, new SpyMembershipMailer()),
+    );
 
     assert_throws(\App\Infrastructure\Integrations\LebytekApi\LebytekApiException::class, fn () => $uc->ejecutar(3, 7));
     assert_true($orders->paid === false);
@@ -161,8 +168,11 @@ test('AutorizarOrdenMembresiaUseCase falla sin tenant asociado', function (): vo
 
     $uc = new AutorizarOrdenMembresiaUseCase(
         $orders,
-        new LebytekApiClient('https://api.test/v1', 'tok', 5, 1, new AuthorizeRecordingTransport()),
-        new SpyMembershipMailer(),
+        new ActivateMembershipFromOrderService(
+            $orders,
+            new LebytekApiClient('https://api.test/v1', 'tok', 5, 1, new AuthorizeRecordingTransport()),
+            new SpyMembershipMailer(),
+        ),
     );
 
     assert_throws(\InvalidArgumentException::class, fn () => $uc->ejecutar(2, 1));
@@ -193,7 +203,10 @@ test('AutorizarOrdenMembresiaUseCase marca paid sin correo si api reusa activate
     ];
 
     $mailer = new SpyMembershipMailer();
-    $uc = new AutorizarOrdenMembresiaUseCase($orders, $api, $mailer);
+    $uc = new AutorizarOrdenMembresiaUseCase(
+        $orders,
+        new ActivateMembershipFromOrderService($orders, $api, $mailer),
+    );
     $uc->ejecutar(4, 7);
 
     assert_true($orders->paid);
@@ -226,7 +239,10 @@ test('AutorizarOrdenMembresiaUseCase rechaza slug demo sin llamar api', function
     ];
 
     $mailer = new SpyMembershipMailer();
-    $uc = new AutorizarOrdenMembresiaUseCase($orders, $api, $mailer);
+    $uc = new AutorizarOrdenMembresiaUseCase(
+        $orders,
+        new ActivateMembershipFromOrderService($orders, $api, $mailer),
+    );
 
     $thrown = false;
     try {

@@ -211,10 +211,15 @@ return static function (Container $container): void {
             $c->get(\App\Domain\Marketing\Contracts\PurchaseTeamAlertNotifierInterface::class),
         ));
 
-        $container->singleton(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class, fn (Container $c) => new \App\Application\Marketing\AutorizarOrdenMembresiaUseCase(
+        $container->singleton(\App\Application\Marketing\ActivateMembershipFromOrderService::class, fn (Container $c) => new \App\Application\Marketing\ActivateMembershipFromOrderService(
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
             $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
             $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
+        ));
+
+        $container->singleton(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class, fn (Container $c) => new \App\Application\Marketing\AutorizarOrdenMembresiaUseCase(
+            $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+            $c->get(\App\Application\Marketing\ActivateMembershipFromOrderService::class),
         ));
 
         $container->bind(\App\Presentation\Controllers\Publico\CompraController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\CompraController(
