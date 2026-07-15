@@ -211,6 +211,11 @@ return static function (Container $container): void {
             $c->get(\App\Domain\Marketing\Contracts\PurchaseTeamAlertNotifierInterface::class),
         ));
 
+        $container->singleton(\App\Application\Marketing\IniciarPagoStripeUseCase::class, fn (Container $c) => new \App\Application\Marketing\IniciarPagoStripeUseCase(
+            $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+            $c->get(\Lebytek\Framework\Application\Payments\PaymentGatewayRegistry::class),
+        ));
+
         $container->singleton(\App\Application\Marketing\ActivateMembershipFromOrderService::class, fn (Container $c) => new \App\Application\Marketing\ActivateMembershipFromOrderService(
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
             $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
@@ -227,6 +232,7 @@ return static function (Container $container): void {
             $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class),
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
             $c->get(\App\Application\Marketing\CrearOrdenMembresiaUseCase::class),
+            $c->get(\App\Application\Marketing\IniciarPagoStripeUseCase::class),
         ));
 
         $container->bind(\App\Presentation\Controllers\Admin\MarketingOrdenesController::class, fn (Container $c) => new \App\Presentation\Controllers\Admin\MarketingOrdenesController(

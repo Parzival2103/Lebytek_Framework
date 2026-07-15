@@ -55,13 +55,20 @@ use Lebytek\Framework\Kernel\Security\Session;
           </div>
         </div>
 
-        <div class="mt-4 p-3 bg-light rounded text-muted small">
-          <!-- Espacio reservado: pasarela Mercado Pago / Stripe / PayPal -->
-          Próximamente podrás pagar con tarjeta o Mercado Pago en este mismo formulario.
-        </div>
+        <fieldset class="mt-4">
+          <legend class="h6">Método de pago</legend>
+          <div class="form-check">
+            <input class="form-check-input" id="metodo_pago_stripe" name="metodo_pago" type="radio" value="stripe">
+            <label class="form-check-label" for="metodo_pago_stripe">Tarjeta</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" id="metodo_pago_transfer" name="metodo_pago" type="radio" value="transfer" checked>
+            <label class="form-check-label" for="metodo_pago_transfer">Transferencia bancaria</label>
+          </div>
+        </fieldset>
 
         <div class="d-flex gap-2 mt-4">
-          <button type="submit" class="btn btn-primary">Continuar a transferencia</button>
+          <button type="submit" class="btn btn-primary">Continuar al pago</button>
           <a class="btn btn-outline-secondary" href="/?compras=1#paquetes">Volver a paquetes</a>
         </div>
       </div>

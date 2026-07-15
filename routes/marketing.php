@@ -28,3 +28,5 @@ $router->get('/portal', [PortalClienteController::class, 'entrar']);
 $router->get('/comprar/{slug}', [CompraController::class, 'show']);
 $router->post('/comprar/{slug}', [CompraController::class, 'submit'], [CsrfMiddleware::class]);
 $router->get('/comprar/orden/{publicId}/transferencia', [CompraController::class, 'transferencia']);
+$router->get('/comprar/orden/{publicId}/pago/exito', [CompraController::class, 'pagoExito']);
+$router->get('/comprar/orden/{publicId}/pago/cancelado', [CompraController::class, 'pagoCancelado']);
