@@ -26,8 +26,8 @@ final class LandingController extends BaseController
         $nombre = $this->configuracionService->empresaNombre();
 
         return $this->view('publico/landing', [
-            'pageTitle'           => $nombre . ' — WhatsApp Business',
-            'metaDescription'     => 'Automatiza WhatsApp para tu negocio: campañas masivas, demo en minutos y panel multi-usuario con Lebytek.',
+            'pageTitle'           => 'API WhatsApp Business Lebytek | Automatiza Mensajes y Campañas',
+            'metaDescription'     => 'Automatiza WhatsApp para tu negocio con Lebytek. Envía campañas, notificaciones y respuestas automáticas en minutos. Planes desde $2,199/mes. Demo inmediata.',
             'empresaNombre'       => $nombre,
             'empresaLogo'         => $this->configuracionService->empresaLogo(),
             'bloques'             => $vm['bloques'],
