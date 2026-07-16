@@ -1,7 +1,7 @@
 # Membresía recurrente, dunning 48h, conversión y churn
 
 **Fecha:** 2026-07-15  
-**Estado:** Diseño pendiente de revisión humana  
+**Estado:** Diseño actualizado (plantillas + control de deuda) — pendiente de re-aprobación humana  
 **Repo:** Lebytek_Framework (Portal / lebytek.com) + impacto en WhatsApiLebytek (api)  
 **Rama de trabajo sugerida:** `feature/membership-recurring-dunning` (sobre `feature/backoffice-api-integration`)  
 **Predecesor:** `docs/superpowers/specs/2026-07-15-payments-gateway-design.md` (pago único Stripe Checkout — **fase 1, ya implementada**)  
@@ -13,6 +13,7 @@
 1. Tras activar un plan paid, el lead sigue mostrando `plan_slug = demo` y el botón **Dar de baja demo** sigue aplicando a clientes ya convertidos.
 2. El dashboard de “churn” mezcla embudo demo con retención de pagadores; las columnas `converted_at` / `cancelled_at` y el KPI `demo_conversion_pct` ya existen pero no están cableados al flujo de activación.
 3. La pasarela v1 cobra **una sola vez**. El producto comercial es **membresía recurrente**; hace falta renovación, gracia ante fallo de pago, correos de reintento y baja solo después de la gracia — sin marcar churn en el momento del decline.
+4. El CRUD **Plantillas de correo** (`mkt_plantillas` → `dom_mkt_plantillas`) está vacío / desconectado: ops no puede editar copy, y los correos transaccionales viven solo en vistas PHP. Añadir dunning (#1/#2) sin cablear plantillas **duplica deuda**.
 
 ## Objetivo
 
@@ -20,6 +21,7 @@
 2. **Métricas:** conversión = demo → paid; churn = pagadores que llegan a baja comercial (no demos, no `past_due`).
 3. **Recurrencia Stripe:** suscripciones (ciclo mensual/anual) encima del puerto de pagos ya abierto.
 4. **Dunning 48h:** fallo de pago → correo #1 + link de reintento con vigencia 48h → sin pago → baja + correo #2 con link permanente de reactivación.
+5. **Plantillas de correo operables:** un solo camino de render desde `dom_mkt_plantillas` (CRUD editable); seed del catálogo completo; dunning y membresía usan claves, no HTML hardcodeado nuevo.
 
 ## Non-goals (v1 de esta spec)
 
@@ -28,6 +30,8 @@
 - Borrar instancia Green al cancelar por no pago (reactivación debe reusar el mismo tenant).
 - Merge a `main` del Framework.
 - Rediseñar el puerto `PaymentGatewayInterface` desde cero (extender; no reemplazar).
+- Editor WYSIWYG avanzado / versionado de plantillas / A/B de asuntos (el CRUD textarea + `{{vars}}` basta).
+- Migrar correos de **auth del framework** (`verificacion`, `recuperacion` en `src/`) a `dom_mkt_plantillas` (siguen siendo plataforma, no marketing).
 
 ## Decisiones (brainstorming)
 
@@ -42,6 +46,8 @@
 | Baja demo vs baja paid | **Dar de baja demo** solo si no convertido. Baja paid = flujo dunning/ops, no deprovision demo. |
 | Baja API post-gracia | **Soft cancel:** revocar tokens / marcar commercial cancelled o equivalente; **conservar** tenant + instancia Green para reactivar. |
 | Churn event | `(c)` ambos caminos: `cancelled_at` por dunning timeout **o** baja ops explícita. Decline solo no marca churn. |
+| Correos marketing | **Fuente de verdad = `dom_mkt_plantillas`**. Un `MarketingMailRenderer` (o equivalente) carga por `clave`, sustituye `{{var}}`, envía vía `MailerInterface`. Vistas PHP actuales = seed/fallback de migración, no camino paralelo permanente. |
+| Dunning vs plantillas | **No** implementar correos #1/#2 como nuevas vistas PHP sueltas. Primero catálogo + renderer; luego dunning consume claves. |
 
 ---
 
@@ -150,17 +156,102 @@ invoice.payment_failed (u evento equivalente)
 
 ### Correos
 
-| # | Trigger | Copy (intención) | Link |
-|---|---------|------------------|------|
-| 1 | Pago declinado | Aviso de decline; urgencia para mantener la cuenta | Reintento **48h** |
-| 2 | Timeout gracia | Cuenta cancelada; puede reactivar pagando | Reintento **permanente** de esa membresía |
+| # | Trigger | Copy (intención) | Link | Clave plantilla (propuesta) |
+|---|---------|------------------|------|------------------------------|
+| 1 | Pago declinado | Aviso de decline; urgencia para mantener la cuenta | Reintento **48h** | `membership_payment_failed` |
+| 2 | Timeout gracia | Cuenta cancelada; puede reactivar pagando | Reintento **permanente** | `membership_cancelled_reactivate` |
 
-Copywriting final en implementación (plantillas); el spec fija intención y datos del link.
+Copywriting editable en **Plantillas de correo** (`dom_mkt_plantillas`), no en commits de vistas PHP nuevas. Variables mínimas: `{{nombre}}`, `{{plan}}`, `{{ciclo}}`, `{{retry_url}}`, `{{grace_hours}}`, `{{cuenta}}` / marca.
 
 ### Tokens de link
 
 - **Retry 48h:** un solo uso preferible; invalidar al pagar o al expirar; no renovar por click.
 - **Reactivación permanente:** atado a `membresia_id` (o subscription id); rotar si se compromete; al pagar → reactive + nuevo periodo.
+
+---
+
+## Plantillas de correo (`mkt_plantillas`) — diagnóstico y habilitación
+
+### Por qué el CRUD aparece vacío / inútil hoy
+
+| Hecho | Implicación |
+|-------|-------------|
+| Tabla `dom_mkt_plantillas` y CRUD `mkt_plantillas.json` **existen** (menú “Plantillas correo”). | No falta “crear el módulo”; falta **contenido + consumidores**. |
+| Seed en `marketing.sql` inserta **una sola** fila stub `lead_autoresponder` **solo si la tabla está vacía** (`WHERE NOT EXISTS (SELECT 1 FROM dom_mkt_plantillas)`). | Si el install falló a medias, o la fila se borró, o el entorno nunca corrió ese INSERT → listado vacío. |
+| `marketing_demo.sql` solo hace `UPDATE` de esa clave (asunto/cuerpo plano). | No siembra el catálogo de membresía / credenciales. |
+| Envíos reales usan **`ViewHelper::render('emails/…')`** en PHP: `lead_welcome`, `lead_api_credentials`, `membership_activated`. | El CRUD **no alimenta** el mailer. Editar “Plantillas” no cambia nada en producción. |
+| El stub `cuerpo` ni siquiera es el HTML real (apunta al path del archivo PHP). | Doble fuente de verdad ya rota. |
+
+**Conclusión:** habilitar “correctamente” = (1) seed idempotente del catálogo, (2) renderer único por `clave`, (3) migrar consumidores existentes, (4) dunning solo vía claves nuevas.
+
+### Diseño del renderer (Portal)
+
+```
+MarketingMailRenderer::send(clave, toEmail, toName, vars[])
+  → repo findByClave(clave) WHERE activo=1 AND deleted=0
+  → si no hay fila: fallback opcional a vista PHP mapeada (solo durante migración) + log warning
+  → sustituir {{var}} en asunto y cuerpo (escape HTML en vars de usuario)
+  → MailerInterface::enviar(MensajeCorreo)
+```
+
+- **Sin** motor Twig/Blade nuevo: reemplazo `{{clave}}` simple (ya anticipado en el form del CRUD).
+- HTML rico: el `cuerpo` puede ser HTML completo (ops edita en textarea); seed inicial puede copiar el markup de las vistas actuales.
+- Claves **inmutables** en código; asunto/cuerpo editables. Prohibido borrar claves del sistema o marcar `activo=0` sin fallback documentado (guard CRUD o soft-protect).
+
+### Catálogo mínimo a sembrar (migración `*mkt_plantillas_seed*`)
+
+| Clave | Uso actual / futuro |
+|-------|---------------------|
+| `lead_welcome` | Autoresponder lead (hoy `emails/lead_welcome`) — alinear o reemplazar stub `lead_autoresponder` |
+| `lead_api_credentials` | Credenciales demo post-provision |
+| `membership_activated` | Membresía + token (email #3 actual) |
+| `membership_payment_failed` | Dunning correo #1 (nuevo) |
+| `membership_cancelled_reactivate` | Dunning correo #2 (nuevo) |
+
+Seed: `INSERT … ON DUPLICATE KEY` / `WHERE NOT EXISTS` **por clave**, no “tabla vacía”. Tras seed, el listado CRUD deja de estar vacío en VPS.
+
+Opcional corto plazo: columna `descripcion` o `variables_help` (texto) para documentar `{{vars}}` en el form — reduce errores de ops; no bloqueante.
+
+### Consumidores a migrar (antes o junto con dunning)
+
+1. `AutoresponderHandler` → `lead_welcome` (o renombrar stub → misma clave).
+2. `LeadApiProvisioningService` → `lead_api_credentials`.
+3. `ActivateMembershipFromOrderService::sendMembershipEmail` → `membership_activated`.
+4. Dunning (nuevo) → solo claves `membership_payment_failed` / `membership_cancelled_reactivate`.
+
+Auth framework (`src/…/emails/verificacion|recuperacion`) **fuera** de este catálogo.
+
+---
+
+## Control de deuda técnica
+
+### Evitar
+
+| Anti-patrón | Por qué duele |
+|-------------|----------------|
+| Nuevas vistas PHP + plantillas BD en paralelo “para después” | N correos × 2 sitios; ops edita el CRUD y no ve cambios. |
+| Tabla `dom_mkt_membresias` + reimplementar todo el estado en el lead | Tres verdades (lead / orden / membresía) sin dueño claro. |
+| Copiar lógica dunning dentro de `StripeGateway` | Contamina el puerto genérico; bloquea el split. |
+| Soft-cancel = deprovision Green | Impide reactivación; contradice activate-plan “same instance”. |
+| Churn = demos expiradas | Ensucia KPIs y decisiones de producto. |
+| Gracia “flexible” por click | Estados impredecibles; soporte no sabe cuándo baja. |
+
+### Preferir (bajo acoplamiento)
+
+| Práctica | Cómo |
+|----------|------|
+| Reusar columnas lead ya migradas | `plan_slug`, `converted_at`, `cancelled_at` — no inventar flags nuevos sin necesidad. |
+| Un renderer + claves | Todo correo marketing pasa por ahí. |
+| Entrega por capas | Conversión lead → plantillas → snapshots → subscriptions → dunning → reactivate. Cada capa shippable. |
+| Membresía = estado vivo; orden = cobro | Una fila de suscripción; N órdenes/invoices. |
+| Extender webhooks / `pay_events` | No segundo ledger. |
+| Api soft-cancel mínimo | Un endpoint (o reuso) documentado en companion; Portal no habla SQL a api. |
+
+### Deuda aceptada a corto plazo (explícita)
+
+- Fallback PHP → plantilla durante la migración de los 3 correos existentes (con log; borrar fallback en el mismo epic cuando los 3 pasen tests).
+- Lead `estado` aún `demo_enviada` tras convertir hasta que se añada `convertido` (UI usa `plan_slug`/`converted_at`).
+- Transferencia sin subscription automática (ops manual) hasta un follow-up.
 
 ---
 
@@ -204,9 +295,11 @@ Independiente de churn.
 | Pieza | Lado |
 |-------|------|
 | Extensiones Stripe Subscription en `StripeGateway` / eventos webhook | Framework (`src/`) si el puerto lo generaliza; parsing de invoice events |
-| Membresía, dunning jobs, correos #1/#2, tokens, lead conversion | Portal (`app/`) |
+| Membresía, dunning jobs, tokens, lead conversion | Portal (`app/`) |
+| `dom_mkt_plantillas` + CRUD + `MarketingMailRenderer` + seeds | Portal (`app/`, `config/cruds`, migraciones `*mkt*`) |
 | Soft-cancel / reactivate tenant | Api (WhatsApiLebytek) |
 | Snapshots `rep_churn_monthly` | Portal reportes |
+| Correos auth (`verificacion` / `recuperacion`) | Framework (`src/`) — no mezclar |
 
 Alineado al split: no meter reglas de membresía Lebytek dentro del puerto genérico.
 
@@ -215,30 +308,35 @@ Alineado al split: no meter reglas de membresía Lebytek dentro del puerto gené
 ## Secuencia de entrega sugerida
 
 1. **Conversión lead + CRUD** (plan badge, `converted_at`, hide deprovision, demos activas) — valor inmediato sobre el flujo paid ya en prod.
-2. **Recálculo / job de snapshots** con definiciones de esta spec (aunque recurrencia aún no exista: churn paid empezará a tener sentido con `cancelled_at` ops).
-3. **Subscriptions Stripe** + webhooks invoice.
-4. **Dunning 48h** + correos + job de timeout + soft-cancel api.
-5. **Reactivación** con link permanente.
+2. **Plantillas de correo:** seed catálogo por clave + `MarketingMailRenderer` + migrar los 3 envíos existentes; verificar listado CRUD no vacío en VPS.
+3. **Recálculo / job de snapshots** con definiciones de esta spec (churn paid + conversión).
+4. **Subscriptions Stripe** + webhooks invoice.
+5. **Dunning 48h** + job timeout + soft-cancel api — correos **solo** vía plantillas `membership_payment_failed` / `membership_cancelled_reactivate`.
+6. **Reactivación** con link permanente (misma plantilla #2 / flujo de pago).
 
-No bloquear (1) por (3–5).
+No bloquear (1)–(2) por (4)–(6). **Sí** bloquear (5) hasta que (2) esté verde (evitar HTML hardcodeado de dunning).
 
 ---
 
 ## Riesgos y guardrails
 
 - **Doble fuente de verdad:** membresía vs orden vs lead — la membresía manda el ciclo; el lead refleja conversión/cancelación; la orden es auditoría de cobros.
+- **Doble fuente de correo:** plantilla BD vs vista PHP — tolerada solo en la ventana de migración; criterio de done de (2) = consumidores marketing sin `ViewHelper::render('emails/…')` (salvo auth framework).
 - **Idempotencia webhooks:** reusar `pay_events` / claim atómico del gateway actual.
 - **PHP 8.1 FPM en VPS:** evitar sintaxis 8.2+ en código que corre en lebytek.com.
 - **No merge** `feature/backoffice-api-integration` → `main` sin orden explícita.
 - Transferencia recurrente: fuera de dunning automático hasta definir proceso manual.
+- Ops puede romper HTML en `cuerpo`; mitigar con preview opcional o plantilla `activo=0` + fallback — no bloquear v1.
 
 ## Criterios de aceptación (alto nivel)
 
 - [ ] Activate-plan exitoso deja lead con `plan_slug` paid y `converted_at`; sin botón baja demo.
 - [ ] Dashboard “demos activas” no cuenta convertidos.
 - [ ] Snapshot: conversión usa `converted_at`; churn solo `cancelled_at` de convertidos.
-- [ ] `invoice.payment_failed` → `past_due` + correo #1; **sin** `cancelled_at`.
-- [ ] A las 48h sin pago → soft-cancel + `cancelled_at` + correo #2 + churn.
+- [ ] CRUD `/admin/crud/mkt_plantillas` lista al menos el catálogo sembrado; editar asunto/cuerpo de una clave afecta el próximo envío.
+- [ ] Autoresponder, credenciales demo y membresía activada envían vía renderer + clave (no vistas PHP sueltas).
+- [ ] `invoice.payment_failed` → `past_due` + correo #1 desde plantilla; **sin** `cancelled_at`.
+- [ ] A las 48h sin pago → soft-cancel + `cancelled_at` + correo #2 desde plantilla + churn.
 - [ ] Link permanente reactiva tenant + membresía `active` tras pago OK.
 
 ---
@@ -249,4 +347,6 @@ No bloquear (1) por (3–5).
 - Snapshots: `database/migrations/20260706120200_rep_churn_metrics.sql`
 - Provider UI: `app/Infrastructure/Marketing/MarketingChurnDashboardProvider.php`
 - Activación actual: `ActivateMembershipFromOrderService`, CRUD `mkt_ordenes` / `mkt_leads`
+- Plantillas: `config/cruds/mkt_plantillas.json`, `dom_mkt_plantillas` en `database/schema/modules/marketing.sql` (seed stub)
+- Vistas PHP a migrar: `app/Presentation/Views/emails/{lead_welcome,lead_api_credentials,membership_activated}.php`
 - Pagos fase 1: `2026-07-15-payments-gateway-design.md` (“suscripción = fase 2”)
