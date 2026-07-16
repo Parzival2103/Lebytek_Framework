@@ -55,7 +55,7 @@ GET /
   → page emits metrics via POST /marketing/collect
 ```
 
-Preview: `?variant=<slug>` fuerza render, setea cookie para QA, y **excluye** esa sesión/eventos del ranking/score.
+Preview: `?variant=<slug>` fuerza render **sin** pisar cookie sticky `lb_var`, setea cookie corta HttpOnly `lb_preview=<slug>`, y **excluye** esa sesión/eventos del ranking/score (`is_preview` se deriva de `lb_preview` en el collector — el body no es fuente de verdad). Asignación no-preview borra `lb_preview`.
 
 Compat flag legacy: en producción el assigner es la única fuente de verdad. `?landing=v1|v2` se trata como alias de `?variant=v1|v2`. `LANDING_VARIANT` deja de seleccionar tráfico; si existe en `.env`, solo se usa como **hint de seed** de `weight_default` en el bootstrap inicial (documentado en el plan), no en cada request.
 
@@ -88,7 +88,7 @@ Añadir una variante nueva = clonar manifiesto + overrides + deploy. El manifies
 | Tabla | Rol |
 |-------|-----|
 | `dom_mkt_variant_weights` | `slug`, `weight`, `updated_at` — pesos runtime; elegibilidad = manifiesto `status=active` **y** `weight > 0` |
-| `dom_mkt_variant_proposals` | ranking/scores/pesos sugeridos, `status` (`pending\|accepted\|rejected`), `created_at`, payload JSON |
+| `dom_mkt_variant_proposals` | ranking/scores/pesos sugeridos, `status` (`pending\|accepted\|rejected\|superseded`), `created_at`, payload JSON |
 | `dom_mkt_landing_sessions` | `visitor_id`, `variant_slug`, timestamps, `duration_ms`, `max_scroll_pct`, `exit_section` |
 | `dom_mkt_landing_events` | eventos: `pageview`, `scroll_depth`, `section_view`, `heartbeat`, `exit`, `cta_click`, `lead_submit` (+ meta JSON mínima) |
 
@@ -102,23 +102,24 @@ Migraciones bajo `database/migrations/` + mirror en `database/schema/modules/mar
 2. Si `lb_var` presente y la variante está `active` con `weight > 0` → reusar.
 3. Si no → weighted random sobre armas elegibles; set `lb_var` **TTL 30 días**.
 4. Reasignar si cookie inválida, variante pausada/archivada, o peso 0.
-5. `?variant=` force + set cookie opcional (solo para QA; no cuenta score).
+5. `?variant=` force **sin** escribir `lb_var` (solo QA de esa request; no cuenta score). El sticky previo permanece intacto. Se setea `lb_preview` (TTL corto); el collector usa esa cookie — no el flag del body — para `is_preview`.
 
 No requiere login ni fingerprinting. Complejidad baja.
 
 ## Telemetría cliente → servidor
 
 - Asset: `public/assets/publico/landing_metrics.js` incluido desde ambos layouts.
-- Endpoint: `POST /marketing/collect` (ruta marketing, rate-limited, payload máximo, sin PII).
-- Eventos:
+- Endpoint: `POST /marketing/collect` (ruta marketing, rate-limited vía `sys_kv` — no Session PHP, payload máximo, sin PII, CSRF-exempt + hardenings: UUID v4, allowlists, cookies preferidas sobre body).
+- Eventos cliente:
   - `pageview` al load
   - `scroll_depth` buckets 25 / 50 / 75 / 100
-  - `section_view` vía IntersectionObserver (`data-reveal-id` / `data-section`)
-  - `heartbeat` ~15s (tiempo activo)
+  - `section_view` vía IntersectionObserver (`data-reveal-id` / `data-section` — **v1 debe tener `data-section`**)
+  - `heartbeat` ~15s (tiempo activo) — **server:** actualiza sesión; no flood de filas `landing_events`
   - `exit` / `visibilitychange` → actualiza sesión (max_scroll, exit_section, duration)
   - `cta_click` (selector data-attribute)
-  - lead: formulario incluye hidden `landing_variant` / cookie leída server-side; evento `lead_submit` + columna en lead
+- Lead: formulario incluye hidden `landing_variant`; cookie `lb_var` preferida server-side; **no atribuir** bajo `lb_preview`. Evento `lead_submit` **solo server-side** tras captura exitosa (el JS no lo emite).
 - Transporte: `navigator.sendBeacon` / `fetch` keepalive; fallos silenciosos en cliente.
+- Plan de implementación (guardrails Anti-deuda A–Y): `docs/superpowers/plans/2026-07-15-landing-experiments-metrics.md`.
 
 ## Score híbrido y propuestas
 
@@ -165,19 +166,23 @@ Sin editor de copy en esta fase.
 | Caso | Comportamiento |
 |------|----------------|
 | Collect falla | Cliente ignora; no afecta UX |
-| Sin filas weights | Usar `weight_default` del manifiesto |
+| Sin filas weights | Usar `weight_default` del manifiesto / `seed_weight_defaults()` |
 | Cookie variante desconocida | Reasignar |
 | Todas peso 0 | Fallback fijo a slug `v2` si está `active` en manifiesto; si no, primera `active` por orden del archivo |
-| Preview | Excluido del score |
+| Preview | Excluido del score (`lb_preview` → `is_preview=1`; body no cuenta) |
+| Heartbeat | Actualiza sesión; **no** inserta fila event por tick (anti-crecimiento) |
+| Spoof body slug/vid/preview | Preferir cookies HttpOnly; UUID v4 strict; meta allowlist |
+| Accept concurrente / stale | UPDATE atómico `WHERE status=pending` + snapshot pesos; transacción |
 
 ## Testing
 
-- Assigner: sticky, weights, reassignment on paused, `?variant=`.
+- Assigner: sticky, weights, reassignment on paused, `?variant=` **sin** escribir `lb_var`, set `lb_preview`.
 - Merge: section order/hide, SEO fields, copy override shallow merge.
-- Collect: valid/invalid payloads, rate limit.
-- Proposal accept/reject mutates weights only on accept.
-- Lead persists `landing_variant`.
-- Smoke: `/` sets cookies; metrics script presente; admin proposal flow.
+- Collect: valid/invalid payloads, rate limit, cookie preference (vid/var/preview), heartbeat sin event flood, reject `lead_submit` client.
+- Proposal accept/reject mutates weights only on accept; doble accept falla; stale snapshot.
+- Lead persists `landing_variant` (no bajo `lb_preview`).
+- Views: `LandingV2ViewTest` sigue verde con fallback si falta `$sectionsHtml`.
+- Smoke: `/` sets cookies; metrics script presente; admin proposal flow; purge CLI.
 
 ## Archivos / módulos tocados (orientativo)
 
@@ -201,3 +206,11 @@ Sin editor de copy en esta fase.
 ## Relación con landing v2
 
 La coexistencia flag-based de v2 permanece como **implementación de shells**. Este diseño **eleva** v1/v2 a armas del experimento y añade pipeline de métricas que el spec v2 dejó explícitamente fuera de alcance.
+
+## Privacidad y cookies (§I)
+
+Las cookies `lb_vid`, `lb_var` y `lb_preview` son **funcionales first-party** del experimento (asignación sticky, preview QA y telemetría agregada). No almacenan PII en el cliente. Un banner de consentimiento / CMP legal queda **fuera de alcance** de esta versión; si el negocio lo exige más adelante, no sustituye por sí solo la necesidad de aviso de privacidad en sitio.
+
+---
+
+**Implemented via plan:** `docs/superpowers/plans/2026-07-15-landing-experiments-metrics.md` (Tasks 1–11, 2026-07-15).

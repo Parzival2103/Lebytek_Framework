@@ -83,6 +83,14 @@ return static function (Container $container): void {
 
     // ── Módulo Marketing (bindings condicionales al toggle; ver config/modules/marketing.php) ──
     if ((bool) Config::get('vertical.modules.marketing', false)) {
+        // Registro puro de variantes de landing — único `require` del manifiesto (Anti-deuda §A).
+        $container->singleton(\App\Domain\Marketing\LandingVariantRegistry::class, function () {
+            /** @var array{catalog:list<string>,reveal_id_map:array<string,string>,variants:array<string,array<string,mixed>>} $cfg */
+            $cfg = require __DIR__ . '/marketing/landing_variants.php';
+
+            return new \App\Domain\Marketing\LandingVariantRegistry($cfg);
+        });
+
         $container->singleton(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class,
             fn() => new \App\Infrastructure\Marketing\PdoMarketingContentRepository());
 
@@ -99,10 +107,55 @@ return static function (Container $container): void {
                 $c->get(\App\Domain\Marketing\Contracts\LandingContentProviderInterface::class),
                 $c->get(\App\Domain\Marketing\Contracts\CommercialPackageSourceInterface::class)));
 
+        $container->singleton(\App\Domain\Marketing\Contracts\VariantWeightRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Marketing\PdoVariantWeightRepository());
+
+        $container->singleton(\App\Application\Marketing\LandingExperimentAssigner::class,
+            fn(Container $c) => new \App\Application\Marketing\LandingExperimentAssigner(
+                $c->get(\App\Domain\Marketing\LandingVariantRegistry::class),
+                $c->get(\App\Domain\Marketing\Contracts\VariantWeightRepositoryInterface::class),
+                require __DIR__ . '/marketing/landing_experiments.php'));
+
+        $container->singleton(\App\Application\Marketing\MergeLandingVariantUseCase::class,
+            fn(Container $c) => new \App\Application\Marketing\MergeLandingVariantUseCase(
+                $c->get(\App\Domain\Marketing\LandingVariantRegistry::class)));
+
+        $container->singleton(\App\Domain\Marketing\Contracts\LandingMetricsRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Marketing\PdoLandingMetricsRepository());
+
+        // Colector de métricas (Task 6) — rate limit sys_kv en Infrastructure,
+        // interfaz en Domain (Anti-deuda §L/O). Nunca Session/CompraController::allowPost.
+        $container->singleton(\App\Domain\Marketing\Contracts\CollectRateLimiterInterface::class, function () {
+            $exp = require __DIR__ . '/marketing/landing_experiments.php';
+
+            return new \App\Infrastructure\Marketing\SysKvCollectRateLimiter(
+                (int) ($exp['collect_max_per_hour'] ?? 120),
+                3600,
+            );
+        });
+
+        $container->singleton(\App\Application\Marketing\CollectLandingMetricsUseCase::class,
+            fn(Container $c) => new \App\Application\Marketing\CollectLandingMetricsUseCase(
+                $c->get(\App\Domain\Marketing\Contracts\LandingMetricsRepositoryInterface::class),
+                $c->get(\App\Domain\Marketing\LandingVariantRegistry::class),
+                $c->get(\App\Domain\Marketing\Contracts\CollectRateLimiterInterface::class),
+                require __DIR__ . '/marketing/landing_experiments.php'));
+
+        $container->bind(\App\Presentation\Controllers\Publico\LandingMetricsController::class,
+            fn(Container $c) => new \App\Presentation\Controllers\Publico\LandingMetricsController(
+                $c->get(\App\Application\Marketing\CollectLandingMetricsUseCase::class),
+                require __DIR__ . '/marketing/landing_experiments.php'));
+
+        $container->singleton(\App\Presentation\Marketing\LandingSectionRenderer::class,
+            fn() => new \App\Presentation\Marketing\LandingSectionRenderer());
+
         $container->bind(\App\Presentation\Controllers\Publico\LandingController::class,
             fn(Container $c) => new \App\Presentation\Controllers\Publico\LandingController(
                 $c->get(ConfiguracionService::class),
-                $c->get(\App\Application\Marketing\RenderLandingUseCase::class)));
+                $c->get(\App\Application\Marketing\RenderLandingUseCase::class),
+                $c->get(\App\Application\Marketing\LandingExperimentAssigner::class),
+                $c->get(\App\Application\Marketing\MergeLandingVariantUseCase::class),
+                $c->get(\App\Presentation\Marketing\LandingSectionRenderer::class)));
 
         $container->singleton(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class,
             fn() => new \App\Infrastructure\Marketing\PdoLeadRepository());
@@ -130,7 +183,9 @@ return static function (Container $container): void {
 
         $container->bind(\App\Presentation\Controllers\Publico\LeadController::class,
             fn(Container $c) => new \App\Presentation\Controllers\Publico\LeadController(
-                $c->get(\App\Application\Marketing\CapturarLeadUseCase::class)));
+                $c->get(\App\Application\Marketing\CapturarLeadUseCase::class),
+                $c->get(\App\Domain\Marketing\LandingVariantRegistry::class),
+                $c->get(\App\Domain\Marketing\Contracts\LandingMetricsRepositoryInterface::class)));
 
         $container->bind(\App\Presentation\Controllers\Publico\PortalClienteController::class,
             fn(Container $c) => new \App\Presentation\Controllers\Publico\PortalClienteController(
@@ -263,6 +318,30 @@ return static function (Container $container): void {
                 $c->get(\App\Application\Marketing\ConfirmarPagoStripeUseCase::class),
             ));
         }
+
+        // ── Task 9: Ops UI accept/reject de propuestas de reponderación ──
+        $container->singleton(\App\Domain\Marketing\Contracts\VariantProposalRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Marketing\PdoVariantProposalRepository());
+
+        $container->singleton(\App\Application\Marketing\AcceptVariantProposalUseCase::class, fn (Container $c) => new \App\Application\Marketing\AcceptVariantProposalUseCase(
+            $c->get(\App\Domain\Marketing\Contracts\VariantProposalRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\VariantWeightRepositoryInterface::class),
+        ));
+
+        $container->singleton(\App\Application\Marketing\RejectVariantProposalUseCase::class, fn (Container $c) => new \App\Application\Marketing\RejectVariantProposalUseCase(
+            $c->get(\App\Domain\Marketing\Contracts\VariantProposalRepositoryInterface::class),
+        ));
+
+        $container->bind(\App\Presentation\Controllers\Admin\MarketingExperimentsController::class, fn (Container $c) => new \App\Presentation\Controllers\Admin\MarketingExperimentsController(
+            $c->get(ConfiguracionService::class),
+            $c->get(AdminNavigationMenuService::class),
+            $c->get(\App\Domain\Marketing\Contracts\LandingMetricsRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\VariantWeightRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\VariantProposalRepositoryInterface::class),
+            $c->get(\App\Application\Marketing\AcceptVariantProposalUseCase::class),
+            $c->get(\App\Application\Marketing\RejectVariantProposalUseCase::class),
+            require __DIR__ . '/marketing/landing_experiments.php',
+        ));
     }
 
     // Portal waapi (vhost dedicado: marketing off + WAAPI_PORTAL_ENABLED=true)

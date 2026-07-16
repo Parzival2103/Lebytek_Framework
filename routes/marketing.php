@@ -5,6 +5,7 @@
 // solo cuando vertical.modules.marketing === true. Tiene $router en scope.
 
 use App\Presentation\Controllers\Publico\LandingController;
+use App\Presentation\Controllers\Publico\LandingMetricsController;
 use App\Presentation\Controllers\Publico\LeadController;
 use App\Presentation\Controllers\Publico\LeadEmailVerificationController;
 use App\Presentation\Controllers\Publico\PortalClienteController;
@@ -15,6 +16,11 @@ use Lebytek\Framework\Presentation\Middlewares\CsrfMiddleware;
 
 // Raíz pública: con el módulo activo, "/" sirve la landing (no el login).
 $router->get('/', [LandingController::class, 'index']);
+
+// Colector first-party de métricas de landing. SIN CsrfMiddleware: primer POST
+// público abierto del proyecto (endurecido con rate limit sys_kv + validación
+// de payload en el propio use case — Anti-deuda §C).
+$router->post('/marketing/collect', [LandingMetricsController::class, 'collect']);
 
 // Captación de leads (POST público con CSRF).
 $router->post('/lead', [LeadController::class, 'capturar'], [CsrfMiddleware::class]);

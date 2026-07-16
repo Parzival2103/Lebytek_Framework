@@ -9,7 +9,7 @@ if ($items === []) {
     return;
 }
 ?>
-<section class="ct-testimonios" id="resenas">
+<section class="ct-testimonios" id="resenas" data-section="testimonios">
   <div class="container">
     <div class="text-center mb-4">
       <h2 class="ct-section__title">Lo que dicen nuestros clientes</h2>

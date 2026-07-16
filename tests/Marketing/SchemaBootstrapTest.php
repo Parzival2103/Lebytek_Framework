@@ -9,6 +9,8 @@ test('marketing.sql crea todas las tablas dom_mkt_* de forma idempotente', funct
         'dom_mkt_leads', 'dom_mkt_provisiones', 'dom_mkt_paquetes',
         'dom_mkt_bloques', 'dom_mkt_plantillas', 'dom_mkt_secuencias', 'dom_mkt_paginas',
         'dom_mkt_ordenes',
+        'dom_mkt_variant_weights', 'dom_mkt_variant_proposals',
+        'dom_mkt_landing_sessions', 'dom_mkt_landing_events',
     ] as $tabla) {
         assert_true(str_contains($sql, "CREATE TABLE IF NOT EXISTS `{$tabla}`"), "crea {$tabla}");
     }

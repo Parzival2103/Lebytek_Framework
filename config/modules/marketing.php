@@ -24,6 +24,7 @@ return [
         '20260714210000_mkt_landing_copy_seo.sql',
         '20260715100000_mkt_ordenes_permission_slug.sql',
         '20260715120000_mkt_ordenes_stripe.sql',
+        '20260715120000_mkt_landing_experiments.sql',
     ],
     'seeds'         => [],
     'bootstrap_sql' => 'database/schema/modules/marketing.sql',
@@ -31,6 +32,7 @@ return [
     'permisos'      => [
         'marketing.ver', 'marketing.crear', 'marketing.editar', 'marketing.eliminar',
         'marketing.gestionar', 'marketing.leads', 'marketing.publicar', 'marketing.ordenes',
+        'marketing.experimentos',
     ],
     'menu'          => [],
     'providers'     => [],
