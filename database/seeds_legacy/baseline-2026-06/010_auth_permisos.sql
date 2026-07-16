@@ -8,4 +8,5 @@ INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`) VALUES
   ('Ver clientes', 'clientes.ver', 'clientes'),
   ('Crear clientes', 'clientes.crear', 'clientes'),
   ('Editar clientes', 'clientes.editar', 'clientes'),
-  ('Eliminar clientes', 'clientes.eliminar', 'clientes');
+  ('Eliminar clientes', 'clientes.eliminar', 'clientes'),
+  ('Ver estado del sistema', 'sistema.ver', 'sistema');

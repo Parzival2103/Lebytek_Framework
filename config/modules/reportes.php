@@ -14,7 +14,9 @@ return [
     'version'       => '1.0.0',
     'obligatorio'   => false,
     'requiere'      => ['core', 'crud-engine', 'pdf-kit'],
-    'migraciones'   => [],
+    'migraciones'   => [
+        '20260706120200_rep_churn_metrics.sql',
+    ],
     'seeds'         => [],
     'bootstrap_sql' => 'database/schema/modules/reportes.sql',
     'cruds'         => [],

@@ -13,7 +13,10 @@ return [
     'obligatorio' => true,
     'requiere'    => [],
     'migraciones' => [
+        '20260611120000_empresa_nombre_default_framework_lebytek.sql',
         '20260612120000_auth_registro_recuperacion.sql',
+        '20260612120000_empresa_mostrar_nombre.sql',
+        '20260612130000_auth_login_intentos.sql',
     ],
     'seeds'       => [],
     'cruds'       => [],

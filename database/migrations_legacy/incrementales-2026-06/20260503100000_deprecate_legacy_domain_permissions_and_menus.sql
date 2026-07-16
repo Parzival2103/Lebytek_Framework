@@ -112,40 +112,24 @@ WHERE slug IN (
     'demo_productos.ver',
     'demo_productos.crear',
     'demo_productos.editar',
-    'demo_productos.eliminar'
+    'demo_productos.eliminar',
+
+    'demo_categorias.ver',
+    'demo_categorias.crear',
+    'demo_categorias.editar',
+    'demo_categorias.eliminar',
+
+    'demo_pedidos.ver',
+    'demo_pedidos.crear',
+    'demo_pedidos.editar',
+    'demo_pedidos.eliminar',
+    'demo_pedidos.pagar',
+    'demo_pedidos.cancelar'
 );
 
 COMMIT;
 
 -- =========================================================
--- 6. Consultas de verificación
--- Ejecutar después de la migración.
+-- 6. Consultas de verificación (solo manual, no ejecutar en instalador)
+-- Ver docs/modules/ o ejecutar en cliente SQL tras revisar la migración.
 -- =========================================================
-
-SELECT
-    modulo,
-    activo,
-    COUNT(*) AS total
-FROM auth_permisos
-GROUP BY modulo, activo
-ORDER BY modulo, activo DESC;
-
-SELECT
-    id,
-    nombre,
-    slug,
-    modulo,
-    activo,
-    deprecated_at,
-    deprecated_reason
-FROM auth_permisos
-ORDER BY activo ASC, modulo ASC, slug ASC;
-
-SELECT
-    ap.slug,
-    COUNT(arp.rol_id) AS asignaciones
-FROM auth_permisos ap
-LEFT JOIN auth_roles_permisos arp ON arp.permiso_id = ap.id
-WHERE ap.activo = 0
-GROUP BY ap.slug
-ORDER BY ap.slug;

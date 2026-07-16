@@ -16,7 +16,7 @@ use Lebytek\Framework\Kernel\Security\Session;
 
 final class ConfiguracionService
 {
-    private static ?array $cache = null;
+    private ?array $cache = null;
 
     public function __construct(
         private readonly ConfiguracionRepositoryInterface $configuracionRepo
@@ -24,37 +24,37 @@ final class ConfiguracionService
 
     public function get(string $clave, mixed $default = null): mixed
     {
-        if (self::$cache === null) {
+        if ($this->cache === null) {
             $this->cargarCache();
         }
-        return self::$cache[$clave] ?? $default;
+        return $this->cache[$clave] ?? $default;
     }
 
     public function set(string $clave, mixed $valor): void
     {
         $this->configuracionRepo->set($clave, $valor);
-        self::$cache[$clave] = $valor;
+        $this->cache[$clave] = $valor;
     }
 
     public function setMultiple(array $datos): void
     {
         $this->configuracionRepo->setMultiple($datos);
         foreach ($datos as $clave => $valor) {
-            self::$cache[$clave] = $valor;
+            $this->cache[$clave] = $valor;
         }
     }
 
     public function all(): array
     {
-        if (self::$cache === null) {
+        if ($this->cache === null) {
             $this->cargarCache();
         }
-        return self::$cache;
+        return $this->cache;
     }
 
     private function cargarCache(): void
     {
-        self::$cache = $this->configuracionRepo->all();
+        $this->cache = $this->configuracionRepo->all();
     }
 
     // ── Accesores semánticos ──────────────────────────────────────────────────
