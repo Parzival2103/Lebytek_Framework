@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS `dom_mkt_plantillas` (
   `deleted_at`  DATETIME        DEFAULT NULL,
   `deleted_by`  BIGINT UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_mkt_plantillas_clave` (`clave`)
+  UNIQUE KEY `uq_mkt_plantillas_clave` (`clave`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `dom_mkt_secuencias` (

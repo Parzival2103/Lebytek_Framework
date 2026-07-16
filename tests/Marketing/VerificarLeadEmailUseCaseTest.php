@@ -88,6 +88,9 @@ final class InMemoryLeadRepository implements LeadRepositoryInterface
     public function findPendingDeprovisions(): array { return []; }
     public function findDemoPackageBySlug(string $slug): ?array { return null; }
     public function findLatestByEmail(string $email): ?array { return null; }
+    public function markConverted(int $leadId, string $planSlug, ?int $paqueteId = null): void {}
+    public function markCancelled(int $leadId): void {}
+    public function clearCancelled(int $leadId): void {}
 }
 
 final class SpyLeadTeamAlertNotifier implements LeadTeamAlertNotifierInterface

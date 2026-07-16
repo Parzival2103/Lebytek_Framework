@@ -1,0 +1,17 @@
+{
+  "id": "evt_invoice_paid_123",
+  "type": "invoice.paid",
+  "data": {
+    "object": {
+      "id": "in_test_paid",
+      "subscription": "sub_test_abc123",
+      "customer": "cus_test_xyz",
+      "amount_paid": 219900,
+      "currency": "mxn",
+      "status": "paid",
+      "metadata": {
+        "order_public_id": "01JORDPAY00000000000000001"
+      }
+    }
+  }
+}

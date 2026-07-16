@@ -160,6 +160,12 @@ return static function (Container $container): void {
         $container->singleton(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class,
             fn() => new \App\Infrastructure\Marketing\PdoLeadRepository());
 
+        $container->singleton(\App\Domain\Marketing\Contracts\PlantillaRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Marketing\PdoPlantillaRepository());
+
+        $container->singleton(\App\Domain\Marketing\Contracts\MembershipRepositoryInterface::class,
+            fn() => new \App\Infrastructure\Marketing\PdoMembershipRepository());
+
         $container->singleton(\App\Domain\Marketing\Contracts\ChurnMetricsRepositoryInterface::class,
             fn() => new \App\Infrastructure\Marketing\PdoChurnMetricsRepository());
 
@@ -167,6 +173,38 @@ return static function (Container $container): void {
             fn(Container $c) => new \App\Infrastructure\Marketing\MarketingChurnDashboardProvider(
                 $c->get(\App\Domain\Marketing\Contracts\ChurnMetricsRepositoryInterface::class),
             ));
+
+        $container->singleton(\App\Application\Marketing\MarketingMailRenderer::class, fn (Container $c) => new \App\Application\Marketing\MarketingMailRenderer(
+            $c->get(\App\Domain\Marketing\Contracts\PlantillaRepositoryInterface::class),
+            $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
+        ));
+
+        $container->singleton(\App\Application\Marketing\StartMembershipGraceService::class, fn (Container $c) => new \App\Application\Marketing\StartMembershipGraceService(
+            $c->get(\App\Domain\Marketing\Contracts\MembershipRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\ChurnMetricsRepositoryInterface::class),
+            $c->get(\App\Application\Marketing\MarketingMailRenderer::class),
+        ));
+
+        $container->singleton(\App\Application\Marketing\RecoverMembershipPaymentService::class, fn (Container $c) => new \App\Application\Marketing\RecoverMembershipPaymentService(
+            $c->get(\App\Domain\Marketing\Contracts\MembershipRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\ChurnMetricsRepositoryInterface::class),
+            $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
+            $c->get(\Lebytek\Framework\Application\Payments\PaymentGatewayRegistry::class),
+        ));
+
+        $container->singleton(\App\Application\Marketing\ExpireMembershipGraceService::class, fn (Container $c) => new \App\Application\Marketing\ExpireMembershipGraceService(
+            $c->get(\App\Domain\Marketing\Contracts\MembershipRepositoryInterface::class),
+            $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
+            $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
+            $c->get(\App\Domain\Marketing\Contracts\ChurnMetricsRepositoryInterface::class),
+            $c->get(\App\Application\Marketing\MarketingMailRenderer::class),
+        ));
+
+        $container->bind(\App\Presentation\Controllers\Publico\MembresiaPagoController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\MembresiaPagoController(
+            $c->get(\App\Application\Marketing\RecoverMembershipPaymentService::class),
+        ));
 
         $container->singleton(\App\Application\Marketing\CapturarLeadUseCase::class, function (Container $c) {
             $destinoInterno = (string) $c->get(ConfiguracionService::class)->get('mkt_mail_from', '');
@@ -177,7 +215,7 @@ return static function (Container $container): void {
                     $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
                     $destinoInterno),
                 new \App\Infrastructure\Marketing\LeadCapture\AutoresponderHandler(
-                    $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class)),
+                    $c->get(\App\Application\Marketing\MarketingMailRenderer::class)),
             ]);
         });
 
@@ -201,7 +239,7 @@ return static function (Container $container): void {
         $container->singleton(\App\Application\Marketing\LeadApiProvisioningService::class, fn (Container $c) => new \App\Application\Marketing\LeadApiProvisioningService(
             $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
             $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
-            $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
+            $c->get(\App\Application\Marketing\MarketingMailRenderer::class),
         ));
 
         $container->singleton(\App\Application\Marketing\LeadApiDeprovisioningService::class, fn (Container $c) => new \App\Application\Marketing\LeadApiDeprovisioningService(
@@ -269,7 +307,8 @@ return static function (Container $container): void {
         $container->singleton(\App\Application\Marketing\ActivateMembershipFromOrderService::class, fn (Container $c) => new \App\Application\Marketing\ActivateMembershipFromOrderService(
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
             $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
-            $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
+            $c->get(\App\Application\Marketing\MarketingMailRenderer::class),
+            $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class),
         ));
 
         $container->singleton(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class, fn (Container $c) => new \App\Application\Marketing\AutorizarOrdenMembresiaUseCase(
@@ -317,6 +356,9 @@ return static function (Container $container): void {
                 $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
                 $c->get(\Lebytek\Framework\Domain\Payments\PaymentEventLogRepositoryInterface::class),
                 $c->get(\App\Application\Marketing\ActivateMembershipFromOrderService::class),
+                $c->get(\App\Domain\Marketing\Contracts\MembershipRepositoryInterface::class),
+                $c->get(\App\Application\Marketing\StartMembershipGraceService::class),
+                $c->get(\App\Application\Marketing\RecoverMembershipPaymentService::class),
             ));
 
             $container->bind(\App\Presentation\Controllers\Publico\StripeWebhookController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\StripeWebhookController(

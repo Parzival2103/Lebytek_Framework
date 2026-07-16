@@ -18,4 +18,15 @@ return [
         ],
     ],
     'default' => EnvLoader::get('PAYMENTS_DEFAULT_GATEWAY', 'stripe'),
+    'subscription_checkout' => (bool) EnvLoader::get('PAYMENTS_SUBSCRIPTION_CHECKOUT', false),
+    'stripe_prices' => [
+        'starter' => [
+            'monthly' => EnvLoader::get('STRIPE_PRICE_STARTER_MONTHLY', ''),
+            'annual' => EnvLoader::get('STRIPE_PRICE_STARTER_ANNUAL', ''),
+        ],
+        'business' => [
+            'monthly' => EnvLoader::get('STRIPE_PRICE_BUSINESS_MONTHLY', ''),
+            'annual' => EnvLoader::get('STRIPE_PRICE_BUSINESS_ANNUAL', ''),
+        ],
+    ],
 ];

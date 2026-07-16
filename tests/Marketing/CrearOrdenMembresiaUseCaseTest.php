@@ -140,6 +140,10 @@ final class MemLeadInMemoryRepo implements LeadRepositoryInterface
 
         return null;
     }
+
+    public function markConverted(int $leadId, string $planSlug, ?int $paqueteId = null): void {}
+    public function markCancelled(int $leadId): void {}
+    public function clearCancelled(int $leadId): void {}
 }
 
 final class SpyPurchaseNotifier implements PurchaseTeamAlertNotifierInterface

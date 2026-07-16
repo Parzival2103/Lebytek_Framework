@@ -7,17 +7,14 @@ namespace App\Application\Marketing;
 use App\Domain\Marketing\Contracts\LeadRepositoryInterface;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiClient;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiException;
-use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
-use Lebytek\Framework\Domain\Interfaces\MailerInterface;
 use Lebytek\Framework\Kernel\EnvLoader;
-use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 final class LeadApiProvisioningService
 {
     public function __construct(
         private readonly LebytekApiClient $api,
         private readonly LeadRepositoryInterface $leads,
-        private readonly MailerInterface $mailer,
+        private readonly MarketingMailRenderer $mailRenderer,
     ) {}
 
     /**
@@ -120,24 +117,14 @@ final class LeadApiProvisioningService
         $docsUrl = rtrim((string) EnvLoader::get('MKT_EMAIL_DOCS_URL', 'https://docs.lebytek.com'), '/');
         $dashboardUrl = rtrim((string) EnvLoader::get('MKT_EMAIL_DASHBOARD_URL', ''), '/');
 
-        $html = ViewHelper::render('emails/lead_api_credentials', [
-            'nombre'            => $nombre,
-            'token'             => $token,
-            'apiBaseUrl'        => $apiBaseUrl,
-            'docsUrl'           => $docsUrl,
-            'showDocsCta'       => $docsUrl !== '',
-            'dashboardUrl'      => $dashboardUrl,
-            'showDashboardCta'  => $dashboardUrl !== '',
-            'packagesUrl'       => $this->packagesUrl(),
-            'showPackagesCta'   => $this->packagesUrl() !== '',
-        ], '');
-
-        $this->mailer->enviar(new MensajeCorreo(
-            $email,
-            $nombre,
-            'Tu acceso a la API está listo — Lebytek',
-            $html,
-        ));
+        $this->mailRenderer->send('lead_api_credentials', $email, $nombre, [
+            'nombre' => $nombre,
+            'token' => $token,
+            'api_base_url' => $apiBaseUrl,
+            'docs_url' => $docsUrl,
+            'dashboard_url' => $dashboardUrl,
+            'packages_url' => $this->packagesUrl(),
+        ]);
     }
 
     private function slugFromName(string $name, int $leadId): string

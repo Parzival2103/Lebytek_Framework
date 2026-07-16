@@ -33,6 +33,9 @@ test('PersistLeadHandler guarda y rellena leadId', function (): void {
         public function findPendingDeprovisions(): array { return []; }
         public function findDemoPackageBySlug(string $slug): ?array { return null; }
         public function findLatestByEmail(string $email): ?array { return null; }
+        public function markConverted(int $leadId, string $planSlug, ?int $paqueteId = null): void {}
+        public function markCancelled(int $leadId): void {}
+        public function clearCancelled(int $leadId): void {}
     };
     $h = new PersistLeadHandler($repo);
     $res = $h->handle(new LeadDraft('Ana', 'ana@x.com'), new LeadResult(true));
