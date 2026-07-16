@@ -16,6 +16,14 @@ test('marketing.sql crea todas las tablas dom_mkt_* de forma idempotente', funct
     }
 });
 
+test('marketing.sql incluye columnas de pago Stripe en dom_mkt_ordenes', function (): void {
+    $sql = (string) file_get_contents(ROOT_PATH . '/database/schema/modules/marketing.sql');
+    assert_true(str_contains($sql, '`metodo_pago`'), 'columna metodo_pago');
+    assert_true(str_contains($sql, '`payment_provider`'), 'columna payment_provider');
+    assert_true(str_contains($sql, '`payment_ref`'), 'columna payment_ref');
+    assert_true(str_contains($sql, '`idx_mkt_ordenes_payment_ref`'), 'índice payment_ref');
+});
+
 test('marketing.sql inserta permisos y menú con INSERT IGNORE', function (): void {
     $sql = file_get_contents(ROOT_PATH . '/database/schema/modules/marketing.sql');
     assert_true(str_contains($sql, "'marketing.ver'"), 'permiso ver');
