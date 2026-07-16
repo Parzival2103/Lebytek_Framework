@@ -28,8 +28,9 @@ final class CompraController extends BaseController
         private readonly ?IniciarPagoStripeUseCase $iniciarPago = null,
     ) {}
 
-    public function show(Request $request, string $slug): Response
+    public function show(Request $request): Response
     {
+        $slug = (string) $request->param('slug', '');
         $paquete = $this->resolvePurchasablePackage($slug);
         if ($paquete === null) {
             Session::flash('error', 'Paquete no disponible para compra.');
@@ -51,9 +52,10 @@ final class CompraController extends BaseController
         ], 'publico/layout');
     }
 
-    public function submit(Request $request, string $slug): Response
+    public function submit(Request $request): Response
     {
         $this->verifyCsrf($request);
+        $slug = (string) $request->param('slug', '');
 
         if (! $this->allowPost()) {
             Session::flash('error', 'Demasiados intentos. Espera un momento e inténtalo de nuevo.');
@@ -117,8 +119,9 @@ final class CompraController extends BaseController
         return $this->redirect('/comprar/orden/'.($order['public_id'] ?? '').'/transferencia');
     }
 
-    public function transferencia(Request $request, string $publicId): Response
+    public function transferencia(Request $request): Response
     {
+        $publicId = (string) $request->param('publicId', '');
         $order = $this->orders->findByPublicId($publicId);
         if ($order === null) {
             Session::flash('error', 'Orden no encontrada.');
@@ -138,8 +141,9 @@ final class CompraController extends BaseController
         ], 'publico/layout');
     }
 
-    public function pagoExito(Request $request, string $publicId): Response
+    public function pagoExito(Request $request): Response
     {
+        $publicId = (string) $request->param('publicId', '');
         $order = $this->orders->findByPublicId($publicId);
         $ui = $this->uiVars();
 
@@ -153,8 +157,9 @@ final class CompraController extends BaseController
         ], 'publico/layout');
     }
 
-    public function pagoCancelado(Request $request, string $publicId): Response
+    public function pagoCancelado(Request $request): Response
     {
+        $publicId = (string) $request->param('publicId', '');
         $ui = $this->uiVars();
 
         return $this->view('publico/compra_pago_cancelado', [

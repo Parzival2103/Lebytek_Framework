@@ -18,9 +18,11 @@ test('CompraController enforces CSRF, rate limit, and purchasable slugs', functi
     assert_true(str_contains($src, '/transferencia'), 'transfer path suffix');
 });
 
-test('compra routes wire CompraController submit and transferencia', function (): void {
-    $routes = (string) file_get_contents(ROOT_PATH.'/routes/marketing.php');
-    assert_true(str_contains($routes, "CompraController"), 'controller bound');
-    assert_true(str_contains($routes, '/comprar/{slug}'), 'checkout path');
-    assert_true(str_contains($routes, '/comprar/orden/{publicId}/transferencia'), 'transfer path');
+test('CompraController reads route params from Request (Router injects Request only)', function (): void {
+    $src = (string) file_get_contents(ROOT_PATH.'/app/Presentation/Controllers/Publico/CompraController.php');
+
+    assert_true(str_contains($src, "\$request->param('slug'"), 'show/submit must read slug via Request::param');
+    assert_true(str_contains($src, "\$request->param('publicId'"), 'order views must read publicId via Request::param');
+    assert_true(! preg_match('/function show\(Request \$request, string/', $src), 'show must not take string $slug arg');
+    assert_true(! preg_match('/function submit\(Request \$request, string/', $src), 'submit must not take string $slug arg');
 });
