@@ -3,12 +3,13 @@ declare(strict_types=1);
 
 namespace Lebytek\Framework\Domain\Payments\ValueObjects;
 
-final readonly class Money
+/** PHP 8.1: no `readonly class` (8.2+); use promoted `readonly` props. */
+final class Money
 {
-    private string $currency;
+    private readonly string $currency;
 
     public function __construct(
-        private int $amountMinor,
+        private readonly int $amountMinor,
         string $currency,
     ) {
         $normalized = strtolower($currency);

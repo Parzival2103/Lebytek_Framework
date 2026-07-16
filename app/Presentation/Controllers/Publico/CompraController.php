@@ -100,6 +100,17 @@ final class CompraController extends BaseController
             try {
                 return $this->redirect($this->iniciarPago->ejecutar((int) ($order['id'] ?? 0)));
             } catch (\Throwable $e) {
+                $logLine = sprintf(
+                    "[%s] order_id=%s %s: %s @%s:%d\n%s\n\n",
+                    date('c'),
+                    (string) ($order['id'] ?? ''),
+                    $e::class,
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine(),
+                    $e->getTraceAsString(),
+                );
+                @file_put_contents(STORAGE_PATH.'/logs/stripe_iniciar.log', $logLine, FILE_APPEND | LOCK_EX);
                 Session::flash(
                     'error',
                     'No pudimos iniciar el pago con tarjeta. Tu orden quedó registrada; inténtalo de nuevo o usa transferencia.',

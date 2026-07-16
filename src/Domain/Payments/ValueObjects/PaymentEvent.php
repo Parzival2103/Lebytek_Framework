@@ -5,14 +5,15 @@ namespace Lebytek\Framework\Domain\Payments\ValueObjects;
 
 use Lebytek\Framework\Domain\Payments\PaymentEventType;
 
-final readonly class PaymentEvent
+/** PHP 8.1: no `readonly class` (8.2+); use promoted `readonly` props. */
+final class PaymentEvent
 {
     public function __construct(
-        private PaymentEventType $type,
-        private string $providerEventId,
-        private string $externalRef,
-        private Money $money,
-        private string $rawStatus,
+        private readonly PaymentEventType $type,
+        private readonly string $providerEventId,
+        private readonly string $externalRef,
+        private readonly Money $money,
+        private readonly string $rawStatus,
     ) {}
 
     public function type(): PaymentEventType { return $this->type; }
