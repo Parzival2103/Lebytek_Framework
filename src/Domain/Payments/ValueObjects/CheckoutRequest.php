@@ -3,18 +3,19 @@ declare(strict_types=1);
 
 namespace Lebytek\Framework\Domain\Payments\ValueObjects;
 
-final readonly class CheckoutRequest
+/** PHP 8.1: no `readonly class` (8.2+); use promoted `readonly` props. */
+final class CheckoutRequest
 {
     /** @param array<string, string> $metadata */
     public function __construct(
-        private Money $money,
-        private string $description,
-        private string $customerEmail,
-        private string $successUrl,
-        private string $cancelUrl,
-        private string $externalRef,
-        private array $metadata,
-        private string $mode,
+        private readonly Money $money,
+        private readonly string $description,
+        private readonly string $customerEmail,
+        private readonly string $successUrl,
+        private readonly string $cancelUrl,
+        private readonly string $externalRef,
+        private readonly array $metadata,
+        private readonly string $mode,
     ) {
         if (! in_array($mode, ['payment', 'subscription'], true)) {
             throw new \InvalidArgumentException('mode must be payment or subscription');
