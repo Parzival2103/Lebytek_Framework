@@ -48,6 +48,7 @@ final class MemOrderInMemoryRepo implements MembershipOrderRepositoryInterface
     }
 
     public function setApiActivationError(int $orderId, string $error): void {}
+    public function clearApiActivationError(int $orderId): void {}
     public function markPaid(int $orderId, int $authorizedBy): void {}
     public function updateTenantPublicId(int $orderId, string $tenantPublicId): void {}
     public function markPaymentPending(int $orderId, array $patch): void {}

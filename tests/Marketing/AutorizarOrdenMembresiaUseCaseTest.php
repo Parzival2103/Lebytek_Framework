@@ -59,6 +59,14 @@ final class AuthorizeMemOrderRepo implements MembershipOrderRepositoryInterface
         }
     }
 
+    public function clearApiActivationError(int $orderId): void
+    {
+        $this->lastError = null;
+        if (isset($this->rows[$orderId])) {
+            $this->rows[$orderId]['api_activation_error'] = null;
+        }
+    }
+
     public function markPaid(int $orderId, int $authorizedBy): void
     {
         $this->paid = true;

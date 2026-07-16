@@ -21,6 +21,8 @@ $router->post('/marketing/leads/deprovision-api', [MarketingLeadsController::cla
 
 $router->get('/marketing/ordenes/autorizar', [MarketingOrdenesController::class, 'authorizeForm'], $rbacOrdenes);
 $router->post('/marketing/ordenes/autorizar', [MarketingOrdenesController::class, 'authorize'], array_merge($rbacOrdenes, [CsrfMiddleware::class]));
+$router->get('/marketing/ordenes/activar-plan', [MarketingOrdenesController::class, 'activatePlanForm'], $rbacOrdenes);
+$router->post('/marketing/ordenes/activar-plan', [MarketingOrdenesController::class, 'activatePlan'], array_merge($rbacOrdenes, [CsrfMiddleware::class]));
 
 $router->get('/marketing/experimentos', [MarketingExperimentsController::class, 'index'], $rbacExperimentos);
 $router->post('/marketing/experimentos/accept', [MarketingExperimentsController::class, 'accept'], array_merge($rbacExperimentos, [CsrfMiddleware::class]));

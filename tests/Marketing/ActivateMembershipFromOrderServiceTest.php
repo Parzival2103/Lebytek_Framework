@@ -41,6 +41,12 @@ final class ActMemOrders implements MembershipOrderRepositoryInterface
             $this->rows[$orderId]['api_activation_error'] = $error;
         }
     }
+    public function clearApiActivationError(int $orderId): void
+    {
+        if (isset($this->rows[$orderId])) {
+            $this->rows[$orderId]['api_activation_error'] = null;
+        }
+    }
     public function markPaid(int $orderId, int $authorizedBy): void
     {
         $this->paid = true;
@@ -146,4 +152,32 @@ test('fromManualAuthorize no marca paid si api falla', function (): void {
         fn () => $svc->fromManualAuthorize($orders->rows[1], 7),
     );
     assert_true(! $orders->paid);
+});
+
+test('fromPaidRetry activa plan sin volver a marcar paid', function (): void {
+    $transport = new ActRecTransport();
+    $transport->responses[] = ['status' => 200, 'body' => '{"token":"88|retry-token"}', 'error' => ''];
+    $api = new LebytekApiClient('https://api.test/v1', 'tok', 5, 1, $transport);
+    $orders = new ActMemOrders();
+    $orders->rows[1] = [
+        'id' => 1,
+        'public_id' => '01JORD00000000000000000001',
+        'paquete_slug' => 'starter',
+        'ciclo' => 'monthly',
+        'precio_snapshot' => 2199,
+        'nombre' => 'Buyer',
+        'email' => 'buyer@test.com',
+        'status' => 'paid',
+        'authorized_by' => 0,
+        'api_tenant_public_id' => '01JTENANT0000000000000001',
+        'api_activation_error' => 'Tenant no asociado; activación manual pendiente.',
+    ];
+    $svc = new ActivateMembershipFromOrderService($orders, $api, new ActSpyMailer());
+
+    $svc->fromPaidRetry($orders->rows[1], 9);
+
+    assert_true(! $orders->paid);
+    assert_same('paid', $orders->rows[1]['status']);
+    assert_null($orders->rows[1]['api_activation_error']);
+    assert_same(0, $orders->rows[1]['authorized_by']);
 });

@@ -64,6 +64,14 @@ final class ConfirmOrders implements MembershipOrderRepositoryInterface
             }
         }
     }
+    public function clearApiActivationError(int $orderId): void
+    {
+        foreach ($this->byPublic as $k => $row) {
+            if ((int) ($row['id'] ?? 0) === $orderId) {
+                $this->byPublic[$k]['api_activation_error'] = null;
+            }
+        }
+    }
     public function markPaid(int $orderId, int $authorizedBy): void
     {
         $this->paid = true;

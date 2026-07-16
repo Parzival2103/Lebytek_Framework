@@ -277,6 +277,11 @@ return static function (Container $container): void {
             $c->get(\App\Application\Marketing\ActivateMembershipFromOrderService::class),
         ));
 
+        $container->singleton(\App\Application\Marketing\ActivarPlanOrdenPagadaUseCase::class, fn (Container $c) => new \App\Application\Marketing\ActivarPlanOrdenPagadaUseCase(
+            $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+            $c->get(\App\Application\Marketing\ActivateMembershipFromOrderService::class),
+        ));
+
         // Stripe es opcional: si el módulo payments está OFF (transfer-only), no se
         // resuelve IniciarPagoStripeUseCase (que exige PaymentGatewayRegistry, sólo
         // vinculado con payments ON) para no romper el flujo de transferencia.
@@ -299,6 +304,7 @@ return static function (Container $container): void {
             $c->get(AdminNavigationMenuService::class),
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
             $c->get(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class),
+            $c->get(\App\Application\Marketing\ActivarPlanOrdenPagadaUseCase::class),
         ));
 
         if ((bool) Config::get('vertical.modules.payments', false)) {

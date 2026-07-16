@@ -84,6 +84,17 @@ final class PdoMembershipOrderRepository implements MembershipOrderRepositoryInt
         $stmt->execute(['id' => $orderId, 'error' => $error]);
     }
 
+    public function clearApiActivationError(int $orderId): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_ordenes
+             SET api_activation_error = NULL, updated_at = NOW()
+             WHERE id = :id AND deleted = 0'
+        );
+        $stmt->execute(['id' => $orderId]);
+    }
+
     public function markPaid(int $orderId, int $authorizedBy): void
     {
         $pdo = Connection::getInstance();
