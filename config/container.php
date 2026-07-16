@@ -211,11 +211,6 @@ return static function (Container $container): void {
             $c->get(\App\Domain\Marketing\Contracts\PurchaseTeamAlertNotifierInterface::class),
         ));
 
-        $container->singleton(\App\Application\Marketing\IniciarPagoStripeUseCase::class, fn (Container $c) => new \App\Application\Marketing\IniciarPagoStripeUseCase(
-            $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
-            $c->get(\Lebytek\Framework\Application\Payments\PaymentGatewayRegistry::class),
-        ));
-
         $container->singleton(\App\Application\Marketing\ActivateMembershipFromOrderService::class, fn (Container $c) => new \App\Application\Marketing\ActivateMembershipFromOrderService(
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
             $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
@@ -227,13 +222,22 @@ return static function (Container $container): void {
             $c->get(\App\Application\Marketing\ActivateMembershipFromOrderService::class),
         ));
 
-        $container->bind(\App\Presentation\Controllers\Publico\CompraController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\CompraController(
-            $c->get(ConfiguracionService::class),
-            $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class),
-            $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
-            $c->get(\App\Application\Marketing\CrearOrdenMembresiaUseCase::class),
-            $c->get(\App\Application\Marketing\IniciarPagoStripeUseCase::class),
-        ));
+        // Stripe es opcional: si el módulo payments está OFF (transfer-only), no se
+        // resuelve IniciarPagoStripeUseCase (que exige PaymentGatewayRegistry, sólo
+        // vinculado con payments ON) para no romper el flujo de transferencia.
+        $container->bind(\App\Presentation\Controllers\Publico\CompraController::class, function (Container $c) {
+            $iniciarPago = ((bool) Config::get('vertical.modules.payments', false))
+                ? $c->get(\App\Application\Marketing\IniciarPagoStripeUseCase::class)
+                : null;
+
+            return new \App\Presentation\Controllers\Publico\CompraController(
+                $c->get(ConfiguracionService::class),
+                $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class),
+                $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+                $c->get(\App\Application\Marketing\CrearOrdenMembresiaUseCase::class),
+                $iniciarPago,
+            );
+        });
 
         $container->bind(\App\Presentation\Controllers\Admin\MarketingOrdenesController::class, fn (Container $c) => new \App\Presentation\Controllers\Admin\MarketingOrdenesController(
             $c->get(ConfiguracionService::class),
@@ -243,6 +247,11 @@ return static function (Container $container): void {
         ));
 
         if ((bool) Config::get('vertical.modules.payments', false)) {
+            $container->singleton(\App\Application\Marketing\IniciarPagoStripeUseCase::class, fn (Container $c) => new \App\Application\Marketing\IniciarPagoStripeUseCase(
+                $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+                $c->get(\Lebytek\Framework\Application\Payments\PaymentGatewayRegistry::class),
+            ));
+
             $container->singleton(\App\Application\Marketing\ConfirmarPagoStripeUseCase::class, fn (Container $c) => new \App\Application\Marketing\ConfirmarPagoStripeUseCase(
                 $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
                 $c->get(\Lebytek\Framework\Domain\Payments\PaymentEventLogRepositoryInterface::class),

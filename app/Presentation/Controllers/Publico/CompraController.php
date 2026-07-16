@@ -25,7 +25,7 @@ final class CompraController extends BaseController
         private readonly MarketingContentRepositoryInterface $content,
         private readonly MembershipOrderRepositoryInterface $orders,
         private readonly CrearOrdenMembresiaUseCase $crearOrden,
-        private readonly IniciarPagoStripeUseCase $iniciarPago,
+        private readonly ?IniciarPagoStripeUseCase $iniciarPago = null,
     ) {}
 
     public function show(Request $request, string $slug): Response
@@ -90,7 +90,20 @@ final class CompraController extends BaseController
 
         $order = $result['order'];
         if ($metodo === 'stripe') {
-            return $this->redirect($this->iniciarPago->ejecutar((int) ($order['id'] ?? 0)));
+            if ($this->iniciarPago === null) {
+                Session::flash('error', 'Pago con tarjeta no disponible en este momento. Usa transferencia bancaria.');
+                return $this->redirect('/comprar/'.$slug.'?ciclo='.$ciclo);
+            }
+
+            try {
+                return $this->redirect($this->iniciarPago->ejecutar((int) ($order['id'] ?? 0)));
+            } catch (\Throwable $e) {
+                Session::flash(
+                    'error',
+                    'No pudimos iniciar el pago con tarjeta. Tu orden quedó registrada; inténtalo de nuevo o usa transferencia.',
+                );
+                return $this->redirect('/comprar/'.$slug.'?ciclo='.$ciclo);
+            }
         }
 
         if (empty($result['alert_sent'])) {

@@ -116,7 +116,22 @@ final class ConfirmarPagoStripeUseCase
             $this->activator->fromConfirmedPayment($order, MembershipOrderActors::SYSTEM_WEBHOOK, $key);
         } catch (LebytekApiException $e) {
             // markPaid already done inside fromConfirmedPayment; keep 200 to Stripe.
+            // ActivateMembershipFromOrderService already called setApiActivationError
+            // for this exception type; just log here for observability.
             AppLogger::error('[ConfirmarPagoStripe] activation failed after paid', [
+                'order_id' => $order['id'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        } catch (\Throwable $e) {
+            // Non-HTTP failure (e.g. JSON encode, unexpected runtime error) after
+            // markPaid; ActivateMembershipFromOrderService only records
+            // setApiActivationError for LebytekApiException, so surface visibility
+            // here too — the order must not stay "paid" with no error trail.
+            $this->orders->setApiActivationError(
+                (int) ($order['id'] ?? 0),
+                'Activación falló tras el pago: '.$e->getMessage(),
+            );
+            AppLogger::error('[ConfirmarPagoStripe] activation failed after paid (non-api error)', [
                 'order_id' => $order['id'] ?? null,
                 'error' => $e->getMessage(),
             ]);
