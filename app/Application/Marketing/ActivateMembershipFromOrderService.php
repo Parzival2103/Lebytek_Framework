@@ -60,6 +60,64 @@ final class ActivateMembershipFromOrderService
     }
 
     /**
+     * Orden ya pagada (Stripe u ops): reintentar activate-plan sin cambiar status.
+     *
+     * @param array<string, mixed> $order
+     * @return array<string, mixed>
+     */
+    public function fromPaidRetry(array $order, int $actorId): array
+    {
+        if ((string) ($order['status'] ?? '') !== 'paid') {
+            throw new \InvalidArgumentException('Solo órdenes pagadas pueden activarse.');
+        }
+
+        $orderId = (int) ($order['id'] ?? 0);
+        $tenantPublicId = trim((string) ($order['api_tenant_public_id'] ?? ''));
+        if ($tenantPublicId === '') {
+            throw new \InvalidArgumentException('Asocia el tenant demo en la orden antes de activar.');
+        }
+
+        $slug = (string) ($order['paquete_slug'] ?? '');
+        if (! in_array($slug, ['starter', 'business', 'empresa'], true)) {
+            throw new \InvalidArgumentException(
+                'El paquete de la orden no es autorizable vía activate-plan (use starter, business o empresa).'
+            );
+        }
+
+        $payload = [
+            'planSlug' => $slug,
+            'billingCycle' => (string) ($order['ciclo'] ?? 'monthly'),
+            'orderExternalRef' => (string) ($order['public_id'] ?? ''),
+            'tokenName' => 'membresia-'.$slug,
+        ];
+        if ($slug === 'empresa' && isset($order['mensajes_mes_limite_snapshot']) && $order['mensajes_mes_limite_snapshot'] !== null) {
+            $payload['messagesMonthlyLimit'] = (int) $order['mensajes_mes_limite_snapshot'];
+        }
+
+        $idempotencyKey = self::stableActivateIdempotencyKey((string) ($order['public_id'] ?? ''));
+
+        try {
+            $response = $this->api->activatePlan($tenantPublicId, $payload, $idempotencyKey);
+        } catch (LebytekApiException $e) {
+            $this->orders->setApiActivationError($orderId, $e->getMessage());
+            throw $e;
+        }
+
+        $this->orders->clearApiActivationError($orderId);
+
+        $plainToken = trim((string) ($response['token'] ?? ''));
+        if ($plainToken !== '') {
+            try {
+                $this->sendMembershipEmail($order, $plainToken);
+            } catch (\Throwable $mailError) {
+                $this->orders->setApiActivationError($orderId, 'Correo: '.$mailError->getMessage());
+            }
+        }
+
+        return $this->orders->findById($orderId) ?? $order;
+    }
+
+    /**
      * @param array<string, mixed> $order
      * @return array<string, mixed>
      */

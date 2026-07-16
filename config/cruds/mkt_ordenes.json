@@ -7,29 +7,54 @@
     "permission_prefix": "marketing"
   },
   "security": { "allow_core_table": false, "mode": "restricted" },
+  "states": {
+    "column": "status",
+    "values": {
+      "pending_payment": { "label": "Pago pendiente", "badge": "warning" },
+      "pending_transfer": { "label": "Transferencia pendiente", "badge": "warning" },
+      "awaiting_review": { "label": "En revisión", "badge": "info" },
+      "paid": { "label": "Pagada", "badge": "success" },
+      "rejected": { "label": "Rechazada", "badge": "danger" },
+      "cancelled": { "label": "Cancelada", "badge": "secondary" }
+    },
+    "transitions": {
+      "pending_payment": ["rejected", "cancelled"],
+      "pending_transfer": ["awaiting_review", "rejected", "cancelled"],
+      "awaiting_review": ["rejected", "cancelled"],
+      "paid": [],
+      "rejected": [],
+      "cancelled": []
+    }
+  },
   "list": {
+    "table_compact": true,
     "columns": [
-      { "name": "public_id", "label": "Referencia", "searchable": true, "sortable": true },
-      { "name": "paquete_slug", "label": "Plan", "sortable": true },
-      { "name": "ciclo", "label": "Ciclo", "badge": { "monthly": "info", "annual": "primary" } },
-      { "name": "nombre", "label": "Nombre", "searchable": true },
-      { "name": "email", "label": "Correo", "searchable": true },
-      { "name": "status", "label": "Estado", "badge": {
-        "pending_transfer": "warning", "awaiting_review": "info", "paid": "success",
-        "rejected": "danger", "cancelled": "secondary"
+      { "name": "email", "label": "Correo", "searchable": true, "priority": 1 },
+      { "name": "status", "label": "Estado", "priority": 1, "badge": {
+        "pending_payment": "warning", "pending_transfer": "warning", "awaiting_review": "info",
+        "paid": "success", "rejected": "danger", "cancelled": "secondary"
       } },
-      { "name": "api_tenant_public_id", "label": "Tenant API", "format": "truncate", "max_length": 26 },
-      { "name": "created_at", "label": "Creada", "format": "datetime", "sortable": true }
+      { "name": "public_id", "label": "Referencia", "searchable": true, "sortable": true, "priority": 3 },
+      { "name": "paquete_slug", "label": "Plan", "sortable": true, "priority": 4 },
+      { "name": "ciclo", "label": "Ciclo", "priority": 5, "badge": { "monthly": "info", "annual": "primary" } },
+      { "name": "nombre", "label": "Nombre", "searchable": true, "priority": 5 },
+      { "name": "api_tenant_public_id", "label": "Tenant API", "format": "truncate", "max_length": 26, "priority": 4 },
+      { "name": "api_activation_error", "label": "Error activación", "badge_nonempty": "danger", "priority": 4 },
+      { "name": "created_at", "label": "Creada", "format": "datetime", "sortable": true, "priority": 5 }
     ],
     "filters": [ { "field": "status", "label": "Estado" } ],
+    "exclude": [
+      { "field": "status", "values": ["rejected", "cancelled"] }
+    ],
     "actions": ["show", "edit"]
   },
   "form": {
     "fields": [
       { "name": "api_tenant_public_id", "label": "Tenant API (public id)", "type": "text", "col": "col-md-6",
-        "help": "Asociar tenant demo del lead antes de autorizar pago." },
+        "help": "Copia el public id del tenant demo (tabla Leads). Transferencia: guarda y usa Autorizar pago. Stripe pagada: guarda y usa Activar plan." },
       { "name": "status", "label": "Estado", "type": "select", "col": "col-md-6",
         "options": {
+          "pending_payment": "Pago pendiente (Stripe)",
           "pending_transfer": "Transferencia pendiente",
           "awaiting_review": "En revisión",
           "paid": "Pagada",
@@ -44,10 +69,18 @@
       { "name": "edit", "type": "builtin" },
       { "name": "autorizar_pago", "type": "link", "label": "Autorizar pago", "icon": "bi-check-circle",
         "route": "/admin/marketing/ordenes/autorizar?orden_id={id}", "permission": "marketing.ordenes",
-        "visible_when": { "status": ["pending_transfer", "awaiting_review"] } }
+        "visible_when": { "status": ["pending_transfer", "awaiting_review"] } },
+      { "name": "activar_plan", "type": "link", "label": "Activar plan", "icon": "bi-lightning-charge",
+        "route": "/admin/marketing/ordenes/activar-plan?orden_id={id}", "permission": "marketing.ordenes",
+        "visible_when": { "status": "paid" } },
+      { "name": "rechazar", "type": "transition", "to": "rejected",
+        "label": "Rechazar", "icon": "bi-x-circle", "method": "POST",
+        "permission": "ordenes", "confirm": "¿Rechazar esta orden?",
+        "visible_when": { "status": ["pending_payment", "pending_transfer", "awaiting_review"] } }
     ], "bulk": [] },
   "detail": { "tabs": [ { "key": "general", "label": "Datos", "type": "fields", "columns": [
       "public_id", "paquete_slug", "ciclo", "precio_snapshot", "mensajes_mes_limite_snapshot",
+      "metodo_pago", "payment_provider", "payment_ref",
       "nombre", "email", "telefono", "empresa", "direccion", "rfc", "lead_id",
       "api_tenant_public_id", "status", "transfer_notified_at", "authorized_at", "authorized_by",
       "api_activation_error", "created_at"

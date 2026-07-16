@@ -24,6 +24,7 @@ final class IniciarPagoStripeOrders implements MembershipOrderRepositoryInterfac
     public function findByPublicId(string $publicId): ?array { return null; }
     public function markTransferNotified(int $orderId): void {}
     public function setApiActivationError(int $orderId, string $error): void {}
+    public function clearApiActivationError(int $orderId): void {}
     public function markPaid(int $orderId, int $authorizedBy): void {}
     public function updateTenantPublicId(int $orderId, string $tenantPublicId): void {}
     public function markPaymentPending(int $orderId, array $patch): void {}
