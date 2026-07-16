@@ -105,4 +105,61 @@ final class PdoMembershipOrderRepository implements MembershipOrderRepositoryInt
         );
         $stmt->execute(['id' => $orderId, 'tid' => $tenantPublicId]);
     }
+
+    public function markPaymentPending(int $orderId, array $patch): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_ordenes
+             SET metodo_pago = :metodo_pago,
+                 payment_provider = :payment_provider,
+                 payment_ref = :payment_ref,
+                 status = :status,
+                 updated_at = NOW()
+             WHERE id = :id AND deleted = 0'
+        );
+        $stmt->execute([
+            'id' => $orderId,
+            'metodo_pago' => $patch['metodo_pago'],
+            'payment_provider' => $patch['payment_provider'],
+            'payment_ref' => $patch['payment_ref'],
+            'status' => $patch['status'],
+        ]);
+    }
+
+    public function savePaymentRef(int $orderId, string $provider, string $paymentRef): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_ordenes
+             SET payment_provider = :provider,
+                 payment_ref = :payment_ref,
+                 updated_at = NOW()
+             WHERE id = :id AND deleted = 0'
+        );
+        $stmt->execute([
+            'id' => $orderId,
+            'provider' => $provider,
+            'payment_ref' => $paymentRef,
+        ]);
+    }
+
+    public function findByPaymentRef(string $provider, string $paymentRef): ?array
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM dom_mkt_ordenes
+             WHERE payment_provider = :provider
+               AND payment_ref = :payment_ref
+               AND deleted = 0
+             LIMIT 1'
+        );
+        $stmt->execute([
+            'provider' => $provider,
+            'payment_ref' => $paymentRef,
+        ]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $row : null;
+    }
 }

@@ -10,6 +10,8 @@ use App\Presentation\Controllers\Publico\LeadController;
 use App\Presentation\Controllers\Publico\LeadEmailVerificationController;
 use App\Presentation\Controllers\Publico\PortalClienteController;
 use App\Presentation\Controllers\Publico\CompraController;
+use App\Presentation\Controllers\Publico\StripeWebhookController;
+use Lebytek\Framework\Kernel\Config\Config;
 use Lebytek\Framework\Presentation\Middlewares\CsrfMiddleware;
 
 // Raíz pública: con el módulo activo, "/" sirve la landing (no el login).
@@ -34,3 +36,10 @@ $router->get('/portal', [PortalClienteController::class, 'entrar']);
 $router->get('/comprar/{slug}', [CompraController::class, 'show']);
 $router->post('/comprar/{slug}', [CompraController::class, 'submit'], [CsrfMiddleware::class]);
 $router->get('/comprar/orden/{publicId}/transferencia', [CompraController::class, 'transferencia']);
+$router->get('/comprar/orden/{publicId}/pago/exito', [CompraController::class, 'pagoExito']);
+$router->get('/comprar/orden/{publicId}/pago/cancelado', [CompraController::class, 'pagoCancelado']);
+
+// Stripe signs the raw request body; this endpoint must remain outside CSRF middleware.
+if ((bool) Config::get('vertical.modules.payments', false)) {
+    $router->post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
+}

@@ -54,3 +54,14 @@ test('LebytekApiClient activatePlan hits correct path', function () {
     assert_same('POST', $transport->calls[0]['method']);
     assert_true(str_contains($transport->calls[0]['url'], '/tenants/01JTENANT123/activate-plan'));
 });
+
+test('LebytekApiClient activatePlan usa Idempotency-Key estable si se pasa', function (): void {
+    $transport = new RecordingTransport();
+    $transport->responses[] = ['status' => 201, 'body' => '{"token":"t"}', 'error' => ''];
+    $client = new LebytekApiClient('https://api.test/v1', 'tok', 5, 1, $transport);
+
+    $client->activatePlan('01JT', ['planSlug' => 'starter'], '11111111-2222-4333-8444-555555555555');
+
+    $headers = implode("\n", $transport->calls[0]['headers']);
+    assert_true(str_contains($headers, 'Idempotency-Key: 11111111-2222-4333-8444-555555555555'));
+});

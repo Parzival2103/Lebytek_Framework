@@ -29,4 +29,12 @@ interface MembershipOrderRepositoryInterface
     public function markPaid(int $orderId, int $authorizedBy): void;
 
     public function updateTenantPublicId(int $orderId, string $tenantPublicId): void;
+
+    /** @param array{metodo_pago:string,payment_provider:?string,payment_ref:?string,status:string} $patch */
+    public function markPaymentPending(int $orderId, array $patch): void;
+
+    public function savePaymentRef(int $orderId, string $provider, string $paymentRef): void;
+
+    /** @return array<string, mixed>|null */
+    public function findByPaymentRef(string $provider, string $paymentRef): ?array;
 }

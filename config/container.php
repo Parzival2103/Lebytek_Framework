@@ -69,6 +69,18 @@ return static function (Container $container): void {
         });
     }
 
+    // ── Módulo Pagos (binding condicional al toggle; ver config/modules/payments.php) ──
+    if ((bool) Config::get('vertical.modules.payments', false)) {
+        $container->singleton(
+            \Lebytek\Framework\Application\Payments\PaymentGatewayRegistry::class,
+            static fn () => \Lebytek\Framework\Application\Payments\PaymentsFactory::registry()
+        );
+        $container->singleton(
+            \Lebytek\Framework\Domain\Payments\PaymentEventLogRepositoryInterface::class,
+            static fn () => new \Lebytek\Framework\Infrastructure\Payments\PdoPaymentEventLogRepository()
+        );
+    }
+
     // ── Módulo Marketing (bindings condicionales al toggle; ver config/modules/marketing.php) ──
     if ((bool) Config::get('vertical.modules.marketing', false)) {
         // Registro puro de variantes de landing — único `require` del manifiesto (Anti-deuda §A).
@@ -254,18 +266,33 @@ return static function (Container $container): void {
             $c->get(\App\Domain\Marketing\Contracts\PurchaseTeamAlertNotifierInterface::class),
         ));
 
-        $container->singleton(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class, fn (Container $c) => new \App\Application\Marketing\AutorizarOrdenMembresiaUseCase(
+        $container->singleton(\App\Application\Marketing\ActivateMembershipFromOrderService::class, fn (Container $c) => new \App\Application\Marketing\ActivateMembershipFromOrderService(
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
             $c->get(\App\Infrastructure\Integrations\LebytekApi\LebytekApiClient::class),
             $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
         ));
 
-        $container->bind(\App\Presentation\Controllers\Publico\CompraController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\CompraController(
-            $c->get(ConfiguracionService::class),
-            $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class),
+        $container->singleton(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class, fn (Container $c) => new \App\Application\Marketing\AutorizarOrdenMembresiaUseCase(
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
-            $c->get(\App\Application\Marketing\CrearOrdenMembresiaUseCase::class),
+            $c->get(\App\Application\Marketing\ActivateMembershipFromOrderService::class),
         ));
+
+        // Stripe es opcional: si el módulo payments está OFF (transfer-only), no se
+        // resuelve IniciarPagoStripeUseCase (que exige PaymentGatewayRegistry, sólo
+        // vinculado con payments ON) para no romper el flujo de transferencia.
+        $container->bind(\App\Presentation\Controllers\Publico\CompraController::class, function (Container $c) {
+            $iniciarPago = ((bool) Config::get('vertical.modules.payments', false))
+                ? $c->get(\App\Application\Marketing\IniciarPagoStripeUseCase::class)
+                : null;
+
+            return new \App\Presentation\Controllers\Publico\CompraController(
+                $c->get(ConfiguracionService::class),
+                $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class),
+                $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+                $c->get(\App\Application\Marketing\CrearOrdenMembresiaUseCase::class),
+                $iniciarPago,
+            );
+        });
 
         $container->bind(\App\Presentation\Controllers\Admin\MarketingOrdenesController::class, fn (Container $c) => new \App\Presentation\Controllers\Admin\MarketingOrdenesController(
             $c->get(ConfiguracionService::class),
@@ -273,6 +300,24 @@ return static function (Container $container): void {
             $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
             $c->get(\App\Application\Marketing\AutorizarOrdenMembresiaUseCase::class),
         ));
+
+        if ((bool) Config::get('vertical.modules.payments', false)) {
+            $container->singleton(\App\Application\Marketing\IniciarPagoStripeUseCase::class, fn (Container $c) => new \App\Application\Marketing\IniciarPagoStripeUseCase(
+                $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+                $c->get(\Lebytek\Framework\Application\Payments\PaymentGatewayRegistry::class),
+            ));
+
+            $container->singleton(\App\Application\Marketing\ConfirmarPagoStripeUseCase::class, fn (Container $c) => new \App\Application\Marketing\ConfirmarPagoStripeUseCase(
+                $c->get(\App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface::class),
+                $c->get(\Lebytek\Framework\Domain\Payments\PaymentEventLogRepositoryInterface::class),
+                $c->get(\App\Application\Marketing\ActivateMembershipFromOrderService::class),
+            ));
+
+            $container->bind(\App\Presentation\Controllers\Publico\StripeWebhookController::class, fn (Container $c) => new \App\Presentation\Controllers\Publico\StripeWebhookController(
+                $c->get(\Lebytek\Framework\Application\Payments\PaymentGatewayRegistry::class),
+                $c->get(\App\Application\Marketing\ConfirmarPagoStripeUseCase::class),
+            ));
+        }
 
         // ── Task 9: Ops UI accept/reject de propuestas de reponderación ──
         $container->singleton(\App\Domain\Marketing\Contracts\VariantProposalRepositoryInterface::class,

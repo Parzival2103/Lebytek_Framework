@@ -1,7 +1,7 @@
 # Pasarela de pagos con Stripe (puerto abierto en el framework)
 
 **Fecha:** 2026-07-15
-**Estado:** Diseño aprobado
+**Estado:** Diseño aprobado (corrigido post-review: claim atómico, money guard, `pay_events`, Ignored→200)
 **Rama de trabajo:** `feature/payments-gateway`
 
 ## Objetivo
@@ -58,7 +58,7 @@ tocar nada.
 | Artefacto | Lado de la frontera | Dónde se coloca hoy (monorepo) | Qué hará el split |
 |-----------|---------------------|--------------------------------|-------------------|
 | `src/Domain/Payments/**`, `src/Application/Payments/**`, `src/Infrastructure/Payments/**` | **Framework** (plataforma) | `src/` | Viaja al paquete `lebytek/framework` |
-| `database/schema/modules/payments.sql` (tabla `fw_payment_events`) | **Framework** (plataforma) | `database/schema/modules/` junto a `integrations.sql` | Va al paquete; se listará en la resolución `PackagePaths`/BOUNDARY del split como módulo plataforma |
+| `database/schema/modules/payments.sql` (tabla `pay_events`) | **Framework** (plataforma) | `database/schema/modules/` junto a `integrations.sql` | Va al paquete; se listará en la resolución `PackagePaths`/BOUNDARY del split como módulo plataforma |
 | `config/modules/payments.php` (manifiesto) | **Consumidor** (config) | `config/modules/` | El skeleton lo ship como módulo plataforma; su `bootstrap_sql` lo resolverá `PackagePaths::resolveDataFile` (paquete primero) |
 | `config/payments.php` (mapa de gateways) | **Consumidor** (config) | `config/` junto a `config/integrations.php` | Skeleton ship default (OFF); Portal con valores reales |
 | `vertical.modules.payments` | **Consumidor** (config) | `config/vertical.php` | Skeleton **OFF**; Portal **ON** |
@@ -93,9 +93,9 @@ tocar nada.
     alojada; devuelve URL de redirección + id de sesión del proveedor.
   - `parseWebhook(string $payload, string $signature): PaymentEvent` — **verifica la
     firma** y normaliza el evento a un VO agnóstico del proveedor.
-- `SupportsSubscriptions` (sub-interfaz, **fase 2**): `createSubscription()`,
-  `cancelSubscription()`. Mantiene los gateways de pago único libres de métodos de
-  suscripción. No se implementa en v1 (YAGNI), pero el puerto queda abierto para ambos.
+- `SupportsSubscriptions` — **marker vacío en v1** (YAGNI). No declarar firmas fake de
+  `createSubscription`/`cancelSubscription` hasta fase 2; basta con el marker para que un
+  gateway futuro pueda `implements SupportsSubscriptions` sin contaminar el puerto de pago único.
 - Value Objects normalizados (agnósticos del proveedor):
   - `CheckoutRequest` — monto, moneda, descripción, email del cliente,
     `success_url`/`cancel_url`, referencia externa (order public_id), metadata,
@@ -103,10 +103,13 @@ tocar nada.
   - `CheckoutSession` — id de sesión del proveedor + URL de redirección.
   - `PaymentEvent` — `type` (enum), `providerEventId` (idempotencia), `externalRef`,
     monto, moneda, estado crudo del proveedor.
-  - `PaymentEventType` (enum) — `CheckoutCompleted`, `PaymentFailed`, … (extensible).
-  - `Money` — monto en unidades menores + moneda.
-- `PaymentEventLogRepositoryInterface` — persistencia de `provider_event_id` únicos
-  (idempotencia + auditoría de webhooks).
+  - `PaymentEventType` (enum) — `CheckoutCompleted`, `PaymentFailed`, `Ignored`
+    (eventos Stripe no suscritos se normalizan a `Ignored`, **nunca** lanzan → HTTP 200).
+  - `Money` — monto en unidades menores + moneda. **v1 acotado a `mxn`** (2 decimales;
+    zero-decimal/3-decimal quedan fuera de alcance).
+- `PaymentEventLogRepositoryInterface` — ledger atómico de `provider`+`event_id` UNIQUE.
+  El puerto expone `tryClaim(...) : bool` (INSERT; duplicate → `false`), **no** el patrón
+  check-then-act `hasProcessed` → work → `markProcessed`.
 
 ### Aplicación — `src/Application/Payments/`
 - `PaymentGatewayRegistry` — clon de `ChannelRegistry`: `has()`, `get()`, `driver()`,
@@ -125,10 +128,11 @@ tocar nada.
   `\Stripe\Webhook::constructEvent` (payload + firma + `webhook_secret`) y mapea a
   `PaymentEvent`. **Ningún código fuera de este archivo importa el SDK de Stripe.**
 - `PdoPaymentEventLogRepository implements PaymentEventLogRepositoryInterface` — sobre
-  la tabla `fw_payment_events` (**tabla de plataforma**; su prefijo debe seguir la
-  convención de las tablas de plataforma existentes —revisar las de `integrations`— en vez
-  de asumir `fw_`). El schema es un **módulo de plataforma**
+  la tabla **`pay_events`** (prefijo `pay_`, paralelo a `int_*` de integrations; **no**
+  `fw_payment_events`). Schema = módulo de plataforma
   (`database/schema/modules/payments.sql`), no negocio.
+- `StripeGateway::createCheckout` pasa `idempotency_key` de sesión Stripe =
+  `order_public_id` (evita sesiones duplicadas si el cliente reintenta el POST).
 
 **Invariante clave:** el framework sabe *cobrar y confirmar un pago*, pero no conoce
 membresías Lebytek. La semántica "pago confirmado → activar plan" vive íntegra en `app/`.
@@ -145,11 +149,13 @@ Cliente en /comprar/{slug}
    │                         → IniciarPagoStripe → CheckoutSession → redirect a Stripe
    │                         → Stripe cobra → redirect a /pago/exito (pantalla "confirmando…")
    │                         → [async] webhook POST /webhooks/stripe
-   │                              → StripeGateway.parseWebhook (verifica firma)
+   │                              → StripeGateway.parseWebhook (firma; Ignored→200)
    │                              → ConfirmarPagoStripe (idempotente)
-   │                                   → markPaid
-   │                                   → si tenant asociado: activar plan + email (auto)
-   │                                   → si no: queda "paid", avisa al equipo (activación manual)
+   │                                   → tryClaim(event_id) atómico; duplicate → return
+   │                                   → validar amount/currency vs precio_snapshot
+   │                                   → markPaid PRIMERO (dinero ya cobrado)
+   │                                   → si tenant: activatePlan con Idempotency-Key estable
+   │                                   → si no tenant / fallo API: paid + error ops (no throw)
    └─ elige "Transferencia" → flujo actual intacto (pending_transfer + alerta WA + autorización manual)
 ```
 
@@ -157,18 +163,29 @@ Cliente en /comprar/{slug}
 - `IniciarPagoStripeUseCase` — construye `CheckoutRequest` (monto = `precio_snapshot`,
   moneda, `success_url`/`cancel_url`, `metadata.order_public_id`), llama
   `registry->get('stripe')->createCheckout()`, guarda `payment_ref`, devuelve la URL.
-- `ConfirmarPagoStripeUseCase` — recibe el `PaymentEvent` normalizado del webhook.
-  Comprueba idempotencia contra `fw_payment_events`; localiza la orden por metadata;
-  en `CheckoutCompleted`: `markPaid` → intenta activación (best-effort).
+- `ConfirmarPagoStripeUseCase` — recibe el `PaymentEvent` del webhook. Orden obligatorio:
+  1. `Ignored` / claim duplicate → return (HTTP 200, sin side-effects).
+  2. `tryClaim(provider, event_id)` atómico; si `false` → ya procesado.
+  3. Localizar orden por `externalRef` (`order_public_id`).
+  4. Validar `amount_total`/`currency` vs `precio_snapshot` + `PAYMENTS_CURRENCY` (mxn).
+  5. `PaymentFailed` → registrar en ledger (ya claimed); dejar `pending_payment` (reintento
+     de checkout permitido); **no** throw.
+  6. `CheckoutCompleted` + `pending_payment` → `markPaid` **antes** de llamar api;
+     activación best-effort; **nunca throw** tras claim exitoso (Stripe no debe reintentar
+     side-effects parciales).
+  7. `Idempotency-Key` hacia api = UUID determinista derivado de
+     `activate-plan|{order_public_id}` (vía overload en `LebytekApiClient::activatePlan`).
 
 ### Reutilización de la activación
-`AutorizarOrdenMembresiaUseCase` hoy exige usuario (`authorizedBy`) y tenant asociado,
-y lanza excepción si faltan. Se **extrae su núcleo** a un método reutilizable
-`activarPlanYNotificar(order, actorId)` invocable tanto por la autorización manual del
-admin como por la confirmación por webhook, usando un **actor de sistema**
-(`authorized_by` nullable / sentinela). La auto-activación por webhook es **best-effort**:
-si el tenant no está asociado, la orden queda `paid` y ops la termina con el flujo manual
-existente. La idempotencia + las transiciones de estado evitan la doble activación.
+Nuevo `ActivateMembershipFromOrderService` (no acoplar lógica frágil a un método privado
+extraído de `AutorizarOrden`):
+- `fromManualAuthorize(order, actorId)` — activa api **antes** de `markPaid` (si api falla,
+  la orden sigue pendiente; flujo admin actual).
+- `fromConfirmedPayment(order, actorId, idempotencyKey)` — `markPaid` **antes** de api
+  (dinero ya cobrado); fallo api → `setApiActivationError`, no revierte `paid`.
+Actor webhook: `MembershipOrderActors::SYSTEM_WEBHOOK = 0` (`authorized_by` BIGINT NULL
+sin FK; en admin UI mostrar como “Sistema / Stripe”). Auto-activación best-effort si hay
+`api_tenant_public_id`; si no, `paid` + ops manual.
 
 ### Controllers y rutas — `app/`
 - `CompraController` — `show` renderiza el selector de método; `submit` bifurca
@@ -194,13 +211,11 @@ existente. La idempotencia + las transiciones de estado evitan la doble activaci
 ## Sección 3 — Datos, config/DI, git y testing
 
 ### Modelo de datos
-- **Plataforma (módulo nuevo `payments`)**: tabla de plataforma para el ledger de eventos
-  (`id`, `provider`, `event_id` UNIQUE, `order_ref`, `type`, `payload_hash`,
-  `processed_at`). Bootstrap en `database/schema/modules/payments.sql` (SQL de plataforma,
-  colocado junto a `integrations.sql`) + manifiesto `config/modules/payments.php`
-  (`obligatorio => false`). Hoy lo resuelve el `Installer` por convención de módulos; tras
-  el split el `bootstrap_sql` se resolverá `PackagePaths::resolveDataFile` (paquete
-  primero). Prefijo de tabla según la convención de plataforma (revisar `integrations`).
+- **Plataforma (módulo nuevo `payments`)**: tabla **`pay_events`**
+  (`id`, `provider`, `event_id`, UNIQUE(`provider`,`event_id`), `order_ref`, `type`,
+  `payload_hash`, `meta`, `processed_at`). Bootstrap en
+  `database/schema/modules/payments.sql` + manifiesto `config/modules/payments.php`
+  (`obligatorio => false`). Prefijo `pay_` paralelo a `int_*` (integrations).
 - **Negocio (Portal)**: migración incremental `*mkt*` que añade a `dom_mkt_ordenes` las
   columnas `metodo_pago`, `payment_provider`, `payment_ref` y admite `pending_payment`. Se
   lista en `config/modules/marketing.php` (`migraciones[]`). Única SQL de pagos de negocio.
@@ -239,13 +254,14 @@ existente. La idempotencia + las transiciones de estado evitan la doble activaci
   (porque `StripeGateway` vive en `src/`); el Portal lo hereda transitivamente.
 
 ### Testing (patrón `php tests/run.php Marketing`)
-- **Framework**: `StripeGateway::parseWebhook` (firma válida/inválida con fixtures),
-  `PaymentGatewayRegistry` (resolución/lazy), `PaymentsFactory` (`match` de driver +
-  driver no soportado lanza), VOs.
-- **App**: `ConfirmarPagoStripeUseCase` (idempotencia: evento repetido no reactiva;
-  transición de estados; auto-activación con/sin tenant), `IniciarPagoStripeUseCase`
-  (arma `CheckoutRequest` correcto), bifurcación de `CompraController`. Gateway y repos
-  mockeados.
+- **Framework**: `StripeGateway::parseWebhook` (firma válida/inválida; evento no mapeado →
+  `Ignored`), `PaymentGatewayRegistry`, `PaymentsFactory`, VOs + igualdad de `Money`,
+  `PdoPaymentEventLogRepository::tryClaim` (duplicate → false).
+- **App**: `ConfirmarPagoStripeUseCase` — claim atómico, monto/moneda mismatch, duplicate
+  event, markPaid-antes-de-activate, sin throw tras claim, activate con Idempotency-Key
+  estable; `IniciarPagoStripeUseCase` (CheckoutRequest + session idempotency);
+  `ActivateMembershipFromOrderService`; bifurcación compra; webhook 400/200 sin leak de
+  `$e->getMessage()` hacia el cliente.
 
 ### Estructura git — rama `feature/payments-gateway`, commits separados por frontera
 En el **monorepo actual** (antes del split), una rama con dos grupos de commits separados
@@ -266,17 +282,29 @@ split arrastre cada grupo sin editar nada.
 Regla de merge: esta rama **mergea antes** de abrir la rama del split. Resultado: pagos
 queda ya partido por la frontera, y el carve framework↔portal lo separa mecánicamente.
 
-## Alcance fuera de v1 (fase 2)
-- Suscripciones recurrentes de Stripe (auto-renovación, fallos de cobro, portal del
-  cliente) vía `SupportsSubscriptions`.
-- Adaptadores PayPal / Mercado Pago (sólo requieren implementar el puerto + registrar
-  driver en `config/payments.php`, sin tocar `app/`).
-- Reembolsos y conciliación.
+## Alcance fuera de v1 (fase 2) — deuda nombrada (no bloquear ship)
+| Deuda | Severidad | Acción mínima post-v1 |
+|-------|-----------|------------------------|
+| Cola async para webhook (activatePlan + email síncronos hoy) | Media | Job/cola cuando exista en monorepo |
+| Purge / retención de `pay_events` | Baja | Script purge + nota ops |
+| TTL / limpieza `pending_payment` huérfanas | Media | Query manual ops; job TTL opcional |
+| Poll status / Session retrieve en página éxito | Media | Poll `findByPublicId` o retrieve session |
+| Monedas zero-decimal / 3-decimal | Baja | Solo `mxn` en v1; ampliar `Money` después |
+| Reembolsos y conciliación | Media | Fase 2 |
+| `SupportsSubscriptions` con firmas reales | Baja | Fase 2 |
+| `PaymentsFactory::$cached` reset en tests paralelos | Baja | `resetCached()` en harness si hace falta |
 
 ## Riesgos / notas
-- **Seguridad del webhook**: la verificación de firma es obligatoria; la ruta se excluye
-  de CSRF pero valida `Stripe-Signature`. Idempotencia por `fw_payment_events.event_id`.
-- **Activación sin tenant**: la auto-activación por webhook depende de que el tenant esté
-  asociado a la orden; si no, se degrada limpiamente al flujo manual de ops (sin bloquear
-  la confirmación del pago).
+- **Seguridad del webhook**: firma obligatoria; ruta sin CSRF (middleware opt-in). Claim
+  atómico en `pay_events` (`UNIQUE(provider,event_id)`). Eventos no suscritos → 200
+  `Ignored` (nunca 400 por tipo). Respuestas 400 **sin** filtrar `$e->getMessage()` al
+  cliente (mensaje genérico).
+- **Invariante de dinero**: rechazar `CheckoutCompleted` si
+  `amount_total`/`currency` ≠ snapshot de la orden (tras claim: registrar y no activar).
+- **Idempotencia api**: `Idempotency-Key` estable (no UUID fresco) en el path Stripe;
+  admin transfer puede seguir con UUID fresco (replay semántico api ya cubierto).
+- **Activación sin tenant**: best-effort; orden `paid` + ops manual.
+- **Raw body**: `Request` del framework no consume `php://input` hoy; documentar + test
+  de contrato en el controller webhook.
 - **Secretos**: `.env` nunca se commitea; sólo `.env.example` con placeholders.
+- **Actor `SYSTEM_WEBHOOK=0`**: semántica documentada en admin UI (“Sistema / Stripe”).

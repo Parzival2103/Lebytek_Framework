@@ -50,6 +50,9 @@ final class MemOrderInMemoryRepo implements MembershipOrderRepositoryInterface
     public function setApiActivationError(int $orderId, string $error): void {}
     public function markPaid(int $orderId, int $authorizedBy): void {}
     public function updateTenantPublicId(int $orderId, string $tenantPublicId): void {}
+    public function markPaymentPending(int $orderId, array $patch): void {}
+    public function savePaymentRef(int $orderId, string $provider, string $paymentRef): void {}
+    public function findByPaymentRef(string $provider, string $paymentRef): ?array { return null; }
 }
 
 final class MemContentInMemoryRepo implements MarketingContentRepositoryInterface
@@ -207,6 +210,35 @@ test('CrearOrdenMembresiaUseCase no marca transfer_notified_at si el aviso falla
 
     assert_true($result['alert_sent'] === false);
     assert_same('pending_transfer', $result['order']['status']);
+    assert_true(($result['order']['transfer_notified_at'] ?? null) === null);
+});
+
+test('CrearOrden con metodo stripe no envía alerta transferencia', function (): void {
+    $orders = new MemOrderInMemoryRepo();
+    $content = new MemContentInMemoryRepo([
+        'id' => 2, 'slug' => 'starter', 'nombre' => 'Starter',
+        'precio_mensual' => '2199', 'precio_anual' => '21990', 'mensajes_mes_limite' => 5000,
+    ]);
+    $leads = new MemLeadInMemoryRepo([
+        'id' => 5, 'email' => 'buyer@test.com', 'api_tenant_public_id' => '01JTENANT0000000000000001',
+    ]);
+    $notifier = new SpyPurchaseNotifier(true);
+    $uc = new CrearOrdenMembresiaUseCase($content, $orders, $leads, $notifier);
+
+    $result = $uc->ejecutar('starter', [
+        'nombre' => 'Buyer Test',
+        'email' => 'buyer@test.com',
+        'telefono' => '5512345678',
+        'empresa' => 'ACME',
+        'direccion' => 'Calle 1',
+        'ciclo' => 'monthly',
+        'metodo_pago' => 'stripe',
+    ]);
+
+    assert_same('pending_payment', $result['order']['status']);
+    assert_same('stripe', $result['order']['metodo_pago'] ?? null);
+    assert_true($result['alert_sent'] === false);
+    assert_same(0, count($notifier->calls));
     assert_true(($result['order']['transfer_notified_at'] ?? null) === null);
 });
 

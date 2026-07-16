@@ -23,7 +23,7 @@ final class CrearOrdenMembresiaUseCase
     ) {}
 
     /**
-     * @param array{nombre:string,email:string,telefono:string,empresa:string,direccion:string,rfc?:?string,ciclo:string} $input
+     * @param array{nombre:string,email:string,telefono:string,empresa:string,direccion:string,rfc?:?string,ciclo:string,metodo_pago?:string} $input
      * @return array{order: array<string, mixed>, alert_sent: bool}
      */
     public function ejecutar(string $paqueteSlug, array $input): array
@@ -74,6 +74,9 @@ final class CrearOrdenMembresiaUseCase
             ? (int) $paquete['mensajes_mes_limite']
             : null;
 
+        $metodoPago = ($input['metodo_pago'] ?? 'transfer') === 'stripe' ? 'stripe' : 'transfer';
+        $status = $metodoPago === 'stripe' ? 'pending_payment' : 'pending_transfer';
+
         $orderId = $this->orders->create([
             'public_id' => $publicId,
             'paquete_id' => (int) $paquete['id'],
@@ -89,7 +92,8 @@ final class CrearOrdenMembresiaUseCase
             'rfc' => $rfc !== '' ? $rfc : null,
             'lead_id' => $leadId,
             'api_tenant_public_id' => $tenantPublicId,
-            'status' => 'pending_transfer',
+            'status' => $status,
+            'metodo_pago' => $metodoPago,
         ]);
 
         $order = $this->orders->findById($orderId);
@@ -98,21 +102,23 @@ final class CrearOrdenMembresiaUseCase
         }
 
         $alertSent = false;
-        try {
-            $alertSent = $this->notifier->notifyTransferPending($order);
-            if ($alertSent) {
-                $this->orders->markTransferNotified($orderId);
-                $order = $this->orders->findById($orderId) ?? $order;
-            } else {
-                AppLogger::error('[CrearOrdenMembresia] WhatsApp alert not sent (disabled or no recipients)', [
+        if ($metodoPago === 'transfer') {
+            try {
+                $alertSent = $this->notifier->notifyTransferPending($order);
+                if ($alertSent) {
+                    $this->orders->markTransferNotified($orderId);
+                    $order = $this->orders->findById($orderId) ?? $order;
+                } else {
+                    AppLogger::error('[CrearOrdenMembresia] WhatsApp alert not sent (disabled or no recipients)', [
+                        'order_id' => $orderId,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                AppLogger::error('[CrearOrdenMembresia] WhatsApp alert failed', [
                     'order_id' => $orderId,
+                    'error' => $e->getMessage(),
                 ]);
             }
-        } catch (\Throwable $e) {
-            AppLogger::error('[CrearOrdenMembresia] WhatsApp alert failed', [
-                'order_id' => $orderId,
-                'error' => $e->getMessage(),
-            ]);
         }
 
         return ['order' => $order, 'alert_sent' => $alertSent];

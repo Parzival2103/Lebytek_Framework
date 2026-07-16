@@ -6,6 +6,7 @@ namespace App\Presentation\Controllers\Publico;
 
 use App\Application\Marketing\BankTransferConfig;
 use App\Application\Marketing\CrearOrdenMembresiaUseCase;
+use App\Application\Marketing\IniciarPagoStripeUseCase;
 use App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface;
 use App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface;
 use Lebytek\Framework\Application\Services\ConfiguracionService;
@@ -24,6 +25,7 @@ final class CompraController extends BaseController
         private readonly MarketingContentRepositoryInterface $content,
         private readonly MembershipOrderRepositoryInterface $orders,
         private readonly CrearOrdenMembresiaUseCase $crearOrden,
+        private readonly ?IniciarPagoStripeUseCase $iniciarPago = null,
     ) {}
 
     public function show(Request $request, string $slug): Response
@@ -65,6 +67,7 @@ final class CompraController extends BaseController
         }
 
         $ciclo = $this->normalizeCiclo((string) $request->input('ciclo', 'monthly'));
+        $metodo = (string) $request->input('metodo_pago', 'transfer');
 
         try {
             $result = $this->crearOrden->ejecutar($slug, [
@@ -75,6 +78,7 @@ final class CompraController extends BaseController
                 'direccion' => (string) $request->input('direccion', ''),
                 'rfc' => (string) $request->input('rfc', ''),
                 'ciclo' => $ciclo,
+                'metodo_pago' => $metodo,
             ]);
         } catch (\InvalidArgumentException $e) {
             Session::flash('error', $e->getMessage());
@@ -85,6 +89,23 @@ final class CompraController extends BaseController
         }
 
         $order = $result['order'];
+        if ($metodo === 'stripe') {
+            if ($this->iniciarPago === null) {
+                Session::flash('error', 'Pago con tarjeta no disponible en este momento. Usa transferencia bancaria.');
+                return $this->redirect('/comprar/'.$slug.'?ciclo='.$ciclo);
+            }
+
+            try {
+                return $this->redirect($this->iniciarPago->ejecutar((int) ($order['id'] ?? 0)));
+            } catch (\Throwable $e) {
+                Session::flash(
+                    'error',
+                    'No pudimos iniciar el pago con tarjeta. Tu orden quedó registrada; inténtalo de nuevo o usa transferencia.',
+                );
+                return $this->redirect('/comprar/'.$slug.'?ciclo='.$ciclo);
+            }
+        }
+
         if (empty($result['alert_sent'])) {
             // Soft warning for ops: order kept; transfer_notified_at left null for CRUD follow-up.
             Session::flash(
@@ -113,6 +134,34 @@ final class CompraController extends BaseController
             'empresaLogo' => $ui['empresaLogo'],
             'order' => $order,
             'bank' => $bank,
+            ...$ui['theme'],
+        ], 'publico/layout');
+    }
+
+    public function pagoExito(Request $request, string $publicId): Response
+    {
+        $order = $this->orders->findByPublicId($publicId);
+        $ui = $this->uiVars();
+
+        return $this->view('publico/compra_pago_exito', [
+            'pageTitle' => 'Confirmación de pago — '.$ui['empresaNombre'],
+            'empresaNombre' => $ui['empresaNombre'],
+            'empresaLogo' => $ui['empresaLogo'],
+            'order' => $order,
+            'publicId' => $publicId,
+            ...$ui['theme'],
+        ], 'publico/layout');
+    }
+
+    public function pagoCancelado(Request $request, string $publicId): Response
+    {
+        $ui = $this->uiVars();
+
+        return $this->view('publico/compra_pago_cancelado', [
+            'pageTitle' => 'Pago cancelado — '.$ui['empresaNombre'],
+            'empresaNombre' => $ui['empresaNombre'],
+            'empresaLogo' => $ui['empresaLogo'],
+            'publicId' => $publicId,
             ...$ui['theme'],
         ], 'publico/layout');
     }
