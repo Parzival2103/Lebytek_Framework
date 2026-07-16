@@ -15,10 +15,10 @@ final class PdoMembershipOrderRepository implements MembershipOrderRepositoryInt
         $stmt = $pdo->prepare(
             'INSERT INTO dom_mkt_ordenes
              (public_id, paquete_id, paquete_slug, ciclo, precio_snapshot, mensajes_mes_limite_snapshot,
-              nombre, email, telefono, empresa, direccion, rfc, lead_id, api_tenant_public_id, status)
+              nombre, email, telefono, empresa, direccion, rfc, lead_id, api_tenant_public_id, status, metodo_pago)
              VALUES
              (:public_id, :paquete_id, :paquete_slug, :ciclo, :precio_snapshot, :mensajes_mes_limite_snapshot,
-              :nombre, :email, :telefono, :empresa, :direccion, :rfc, :lead_id, :api_tenant_public_id, :status)'
+              :nombre, :email, :telefono, :empresa, :direccion, :rfc, :lead_id, :api_tenant_public_id, :status, :metodo_pago)'
         );
         $stmt->execute([
             'public_id' => $data['public_id'],
@@ -36,6 +36,7 @@ final class PdoMembershipOrderRepository implements MembershipOrderRepositoryInt
             'lead_id' => $data['lead_id'],
             'api_tenant_public_id' => $data['api_tenant_public_id'],
             'status' => $data['status'],
+            'metodo_pago' => $data['metodo_pago'] ?? null,
         ]);
 
         return (int) $pdo->lastInsertId();
