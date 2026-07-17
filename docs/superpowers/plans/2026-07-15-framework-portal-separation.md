@@ -1,5 +1,11 @@
 # Framework ↔ Portal Separation Implementation Plan
 
+> **SUPERSEDED — NO EJECUTAR MONOLÍTICAMENTE**
+>
+> Este plan queda como **referencia histórica** (deuda D1–D11, file map, anti-patrones).
+> **Ejecución aprobada:** spec `docs/superpowers/specs/2026-07-17-framework-portal-separation-roadmap-design.md` y planes incrementales **`2026-07-17-fps-00` … `2026-07-17-fps-08`**.
+> No fusionar tasks de este documento en una sola sesión; seguir el roadmap en orden `00 → 08`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Separar el monorepo actual en dos repos — `Lebytek_Framework` (paquete Composer `lebytek/framework` puro) y `Lebytek_Portal` (tenant empresa) — con un `skeleton/` mínimo desde el cual construir otros sistemas, pagando la deuda que haría fallar Composer, Installer/SQL, assets y bootstrap tras el split.
