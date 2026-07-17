@@ -34,7 +34,7 @@
 ## Tests baseline en `main` (anotación)
 
 - Comando: `php tests/run.php`
-- Resultado al registrar: `615 passed, 6 failed` — rellenar con valores reales del Step 2.
+- Resultado al registrar: `615 passed, 6 failed`.
 
 ## Política operativa
 

@@ -1,4 +1,4 @@
-﻿.env.example
+.env.example
 app/Application/Marketing/AcceptVariantProposalUseCase.php
 app/Application/Marketing/ActivarPlanOrdenPagadaUseCase.php
 app/Application/Marketing/ActivateMembershipFromOrderService.php
