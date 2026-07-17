@@ -6,7 +6,7 @@ declare(strict_types=1);
 /**
  * Expires past_due membresías whose 48h grace window ended.
  *
- * Cron (VPS): */30 * * * * php /path/to/scripts/expire-membership-grace.php
+ * Cron (VPS): every 30 minutes — php scripts/expire-membership-grace.php
  */
 
 define('ROOT_PATH', dirname(__DIR__));
