@@ -4,14 +4,6 @@ declare(strict_types=1);
 use Lebytek\Framework\Domain\Payments\PaymentEventType;
 use Lebytek\Framework\Infrastructure\Payments\StripeGateway;
 
-function stripeTestSignature(string $payload, string $secret): string
-{
-    $timestamp = time();
-    $signature = hash_hmac('sha256', $timestamp . '.' . $payload, $secret);
-
-    return "t={$timestamp},v1={$signature}";
-}
-
 test('StripeGateway rechaza firma inválida', function (): void {
     $gateway = new StripeGateway([
         'secret_key' => 'sk_test_x',

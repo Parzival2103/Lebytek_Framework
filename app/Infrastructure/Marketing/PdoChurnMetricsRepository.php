@@ -16,7 +16,8 @@ final class PdoChurnMetricsRepository implements ChurnMetricsRepositoryInterface
             "SELECT COUNT(*) FROM dom_mkt_leads
              WHERE deleted = 0
                AND estado = 'demo_enviada'
-               AND api_tenant_public_id IS NOT NULL"
+               AND api_tenant_public_id IS NOT NULL
+               AND converted_at IS NULL"
         );
 
         return (int) $stmt->fetchColumn();
@@ -118,6 +119,26 @@ final class PdoChurnMetricsRepository implements ChurnMetricsRepositoryInterface
         ]);
     }
 
+    public function resolveOpenRiskSignal(?int $leadId, ?string $tenantPublicId, string $signalType): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE rep_risk_signals
+             SET resolved_at = NOW()
+             WHERE resolved_at IS NULL
+               AND signal_type = :type
+               AND (
+                 (:lead_id IS NOT NULL AND lead_id = :lead_id)
+                 OR (:tenant_id IS NOT NULL AND tenant_public_id = :tenant_id)
+               )'
+        );
+        $stmt->execute([
+            'type' => $signalType,
+            'lead_id' => $leadId,
+            'tenant_id' => $tenantPublicId,
+        ]);
+    }
+
     /** @param array<string, mixed> $data */
     public function saveChurnSnapshot(array $data): void
     {
@@ -176,5 +197,85 @@ final class PdoChurnMetricsRepository implements ChurnMetricsRepositoryInterface
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         return is_array($rows) ? $rows : [];
+    }
+
+    public function countDemosStarted(int $year, int $month): int
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM dom_mkt_leads
+             WHERE deleted = 0
+               AND COALESCE(demo_started_at, api_provisioned_at) IS NOT NULL
+               AND YEAR(COALESCE(demo_started_at, api_provisioned_at)) = :year
+               AND MONTH(COALESCE(demo_started_at, api_provisioned_at)) = :month'
+        );
+        $stmt->execute(['year' => $year, 'month' => $month]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function countDemosConverted(int $year, int $month): int
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM dom_mkt_leads
+             WHERE deleted = 0
+               AND converted_at IS NOT NULL
+               AND YEAR(converted_at) = :year
+               AND MONTH(converted_at) = :month'
+        );
+        $stmt->execute(['year' => $year, 'month' => $month]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function countClientsStart(int $year, int $month): int
+    {
+        $periodStart = sprintf('%04d-%02d-01', $year, $month);
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM dom_mkt_leads
+             WHERE deleted = 0
+               AND converted_at IS NOT NULL
+               AND converted_at < :period_start
+               AND (cancelled_at IS NULL OR cancelled_at >= :period_start)'
+        );
+        $stmt->execute(['period_start' => $periodStart]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function countClientsLost(int $year, int $month): int
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM dom_mkt_leads
+             WHERE deleted = 0
+               AND converted_at IS NOT NULL
+               AND cancelled_at IS NOT NULL
+               AND YEAR(cancelled_at) = :year
+               AND MONTH(cancelled_at) = :month'
+        );
+        $stmt->execute(['year' => $year, 'month' => $month]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function countActiveByUsage(int $year, int $month): int
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM dom_mkt_leads
+             WHERE deleted = 0
+               AND converted_at IS NOT NULL
+               AND (cancelled_at IS NULL OR YEAR(cancelled_at) > :year OR (YEAR(cancelled_at) = :year AND MONTH(cancelled_at) > :month))
+               AND (
+                 (last_activity_at IS NOT NULL AND YEAR(last_activity_at) = :year AND MONTH(last_activity_at) = :month)
+                 OR (first_message_sent_at IS NOT NULL AND YEAR(first_message_sent_at) = :year AND MONTH(first_message_sent_at) = :month)
+               )'
+        );
+        $stmt->execute(['year' => $year, 'month' => $month]);
+
+        return (int) $stmt->fetchColumn();
     }
 }

@@ -23,6 +23,8 @@ if (!defined('STORAGE_PATH')) {
 }
 
 require_once ROOT_PATH . '/vendor/autoload.php';
+require_once __DIR__ . '/marketing_mail_test.php';
+require_once __DIR__ . '/payments_test.php';
 
 use Lebytek\Framework\Kernel\Config\Config;
 use Lebytek\Framework\Kernel\Database\Connection;

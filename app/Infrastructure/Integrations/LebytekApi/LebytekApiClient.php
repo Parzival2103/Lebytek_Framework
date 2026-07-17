@@ -122,6 +122,28 @@ final class LebytekApiClient
     /**
      * @return array<string, mixed>
      */
+    public function cancelCommercial(string $tenantPublicId, ?string $idempotencyKey = null, ?string $reason = null): array
+    {
+        $body = [];
+        if ($reason !== null && $reason !== '') {
+            $body['reason'] = $reason;
+        }
+
+        return $this->request('POST', '/tenants/'.$tenantPublicId.'/cancel-commercial', $body, [], $idempotencyKey);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function reactivateCommercial(string $tenantPublicId, array $payload = [], ?string $idempotencyKey = null): array
+    {
+        return $this->request('POST', '/tenants/'.$tenantPublicId.'/reactivate-commercial', $payload, [], $idempotencyKey);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function deleteInstance(string $tenantPublicId, string $instancePublicId): array
     {
         return $this->request(

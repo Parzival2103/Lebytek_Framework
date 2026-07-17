@@ -111,6 +111,10 @@ final class DeprovisionInMemoryLeadRepo implements LeadRepositoryInterface
     {
         return null;
     }
+
+    public function markConverted(int $leadId, string $planSlug, ?int $paqueteId = null): void {}
+    public function markCancelled(int $leadId): void {}
+    public function clearCancelled(int $leadId): void {}
 }
 
 final class DeprovisionSequenceTransport implements LebytekApiTransport
@@ -163,7 +167,7 @@ test('LeadApiProvisioningService returns mail_failed when SMTP fails and does no
         ['status' => 200, 'body' => '{"status":"ok"}', 'error' => ''],
     ]);
     $api = new LebytekApiClient('https://api.test/v1', 'plat', 5, 1, $transport);
-    $svc = new LeadApiProvisioningService($api, $repo, new FailingMailer());
+    $svc = new LeadApiProvisioningService($api, $repo, marketingMailRenderer(new FailingMailer()));
     $result = $svc->provisionLead(5);
     assert_same('mail_failed', $result['status']);
     assert_same('validada', $repo->rows[5]['estado']);

@@ -23,14 +23,14 @@ test('AutoresponderHandler sends branded HTML welcome email', function (): void 
     $_ENV['APP_URL'] = 'https://lebytek.com';
 
     $mailer = new AutoresponderSpyMailer();
-    $handler = new AutoresponderHandler($mailer);
+    $handler = new AutoresponderHandler(marketingMailRenderer($mailer));
     $draft = new LeadDraft('Pedro', 'pedro@test.com');
     $result = $handler->handle($draft, new LeadResult(true, 1));
 
     assert_same(true, $result->ok());
     assert_true($mailer->last !== null);
     assert_same('pedro@test.com', $mailer->last->destinatario);
-    assert_same('Recibimos tu solicitud — WhatsApp API para tu negocio', $mailer->last->asunto);
+    assert_same('Recibimos tu solicitud — Lebytek', $mailer->last->asunto);
     assert_true(str_contains($mailer->last->html, '<!DOCTYPE html>'));
     assert_true(str_contains($mailer->last->html, 'Pedro'));
     assert_true(str_contains($mailer->last->html, '#paquetes'));

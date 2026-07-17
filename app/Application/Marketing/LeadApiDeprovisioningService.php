@@ -23,6 +23,17 @@ final class LeadApiDeprovisioningService
             throw new \InvalidArgumentException('Lead no encontrado.');
         }
 
+        if (($lead['converted_at'] ?? null) !== null && (string) $lead['converted_at'] !== '') {
+            throw new \InvalidArgumentException(
+                'Este lead ya tiene membresía convertida. Usa el flujo de baja paid / dunning, no Dar de baja demo.'
+            );
+        }
+        if ((string) ($lead['plan_slug'] ?? 'demo') !== 'demo') {
+            throw new \InvalidArgumentException(
+                'Solo se puede dar de baja demo cuando plan_slug es demo.'
+            );
+        }
+
         $tenantPublicId = (string) ($lead['api_tenant_public_id'] ?? '');
         if ($tenantPublicId === '') {
             throw new \InvalidArgumentException('Este lead no tiene demo activa en la API.');

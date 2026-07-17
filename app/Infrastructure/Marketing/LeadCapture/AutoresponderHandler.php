@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Marketing\LeadCapture;
 
+use App\Application\Marketing\MarketingMailRenderer;
 use App\Domain\Marketing\Contracts\LeadCaptureHandlerInterface;
 use App\Domain\Marketing\ValueObjects\LeadDraft;
 use App\Domain\Marketing\ValueObjects\LeadResult;
-use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
-use Lebytek\Framework\Domain\Interfaces\MailerInterface;
 use Lebytek\Framework\Kernel\EnvLoader;
-use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 final class AutoresponderHandler implements LeadCaptureHandlerInterface
 {
-    public function __construct(private readonly MailerInterface $mailer) {}
+    public function __construct(private readonly MarketingMailRenderer $mailRenderer) {}
 
     public function handle(LeadDraft $draft, LeadResult $resultadoPrevio): LeadResult
     {
@@ -23,20 +21,12 @@ final class AutoresponderHandler implements LeadCaptureHandlerInterface
         $code  = (string) ($resultadoPrevio->emailVerifyCode() ?? '');
         $verifyUrl = $token !== '' ? $base . '/verificar-demo/' . rawurlencode($token) : $base;
 
-        $html = ViewHelper::render('emails/lead_welcome', [
-            'nombre'        => $draft->nombre(),
-            'landingUrl'    => $base,
-            'empresaNombre' => null,
-            'codigo'        => $code,
-            'verifyUrl'     => $verifyUrl,
-        ], '');
-
-        $this->mailer->enviar(new MensajeCorreo(
-            $draft->email(),
-            $draft->nombre(),
-            'Recibimos tu solicitud — WhatsApp API para tu negocio',
-            $html,
-        ));
+        $this->mailRenderer->send('lead_welcome', $draft->email(), $draft->nombre(), [
+            'nombre' => $draft->nombre(),
+            'landing_url' => $base,
+            'codigo' => $code,
+            'verify_url' => $verifyUrl,
+        ]);
 
         return $resultadoPrevio;
     }

@@ -26,9 +26,21 @@ interface ChurnMetricsRepositoryInterface
         ?array $payload = null,
     ): void;
 
+    public function resolveOpenRiskSignal(?int $leadId, ?string $tenantPublicId, string $signalType): void;
+
     /** @param array<string, mixed> $data */
     public function saveChurnSnapshot(array $data): void;
 
     /** @return list<array<string, mixed>> */
     public function findRecentlyProvisioned(int $hours = 24): array;
+
+    public function countDemosStarted(int $year, int $month): int;
+
+    public function countDemosConverted(int $year, int $month): int;
+
+    public function countClientsStart(int $year, int $month): int;
+
+    public function countClientsLost(int $year, int $month): int;
+
+    public function countActiveByUsage(int $year, int $month): int;
 }

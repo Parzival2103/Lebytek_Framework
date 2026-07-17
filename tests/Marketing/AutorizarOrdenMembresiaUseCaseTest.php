@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Application\Marketing\AutorizarOrdenMembresiaUseCase;
 use App\Application\Marketing\ActivateMembershipFromOrderService;
+use App\Domain\Marketing\Contracts\LeadRepositoryInterface;
 use App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface;
+use App\Domain\Marketing\ValueObjects\LeadDraft;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiClient;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiTransport;
 use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
@@ -94,6 +96,27 @@ final class SpyMembershipMailer implements MailerInterface
     }
 }
 
+final class AuthorizeNoOpLeadRepo implements LeadRepositoryInterface
+{
+    public function guardar(LeadDraft $draft, ?array $emailVerification = null): int { return 0; }
+    public function findById(int $id): ?array { return null; }
+    public function findByEmailVerifyToken(string $token): ?array { return null; }
+    public function incrementEmailVerifyAttempts(int $leadId): void {}
+    public function markEmailVerified(int $leadId): void {}
+    public function markApiProvisioned(int $leadId, string $tenantPublicId, string $externalRef, string $instancePublicId = '', ?int $paqueteId = null, string $planSlug = 'demo', int $demoDays = 30): void {}
+    public function markApiProvisionError(int $leadId, string $error): void {}
+    public function markApiDeprovisionInitiated(int $leadId): void {}
+    public function markApiDeprovisionCompleted(int $leadId): void {}
+    public function findDemosOlderThanDays(int $days): array { return []; }
+    public function findDemosExpired(): array { return []; }
+    public function findPendingDeprovisions(): array { return []; }
+    public function findDemoPackageBySlug(string $slug): ?array { return null; }
+    public function findLatestByEmail(string $email): ?array { return null; }
+    public function markConverted(int $leadId, string $planSlug, ?int $paqueteId = null): void {}
+    public function markCancelled(int $leadId): void {}
+    public function clearCancelled(int $leadId): void {}
+}
+
 test('AutorizarOrdenMembresiaUseCase happy path activa plan y envía correo', function (): void {
     $transport = new AuthorizeRecordingTransport();
     $transport->responses[] = ['status' => 200, 'body' => '{"token":"99|membership-token"}', 'error' => ''];
@@ -116,7 +139,7 @@ test('AutorizarOrdenMembresiaUseCase happy path activa plan y envía correo', fu
     $mailer = new SpyMembershipMailer();
     $uc = new AutorizarOrdenMembresiaUseCase(
         $orders,
-        new ActivateMembershipFromOrderService($orders, $api, $mailer),
+        new ActivateMembershipFromOrderService($orders, $api, marketingMailRenderer($mailer), new AuthorizeNoOpLeadRepo()),
     );
     $uc->ejecutar(1, 7);
 
@@ -152,7 +175,7 @@ test('AutorizarOrdenMembresiaUseCase deja orden desbloqueada si activate-plan fa
 
     $uc = new AutorizarOrdenMembresiaUseCase(
         $orders,
-        new ActivateMembershipFromOrderService($orders, $api, new SpyMembershipMailer()),
+        new ActivateMembershipFromOrderService($orders, $api, marketingMailRenderer(new SpyMembershipMailer()), new AuthorizeNoOpLeadRepo()),
     );
 
     assert_throws(\App\Infrastructure\Integrations\LebytekApi\LebytekApiException::class, fn () => $uc->ejecutar(3, 7));
@@ -179,7 +202,8 @@ test('AutorizarOrdenMembresiaUseCase falla sin tenant asociado', function (): vo
         new ActivateMembershipFromOrderService(
             $orders,
             new LebytekApiClient('https://api.test/v1', 'tok', 5, 1, new AuthorizeRecordingTransport()),
-            new SpyMembershipMailer(),
+            marketingMailRenderer(new SpyMembershipMailer()),
+            new AuthorizeNoOpLeadRepo(),
         ),
     );
 
@@ -213,7 +237,7 @@ test('AutorizarOrdenMembresiaUseCase marca paid sin correo si api reusa activate
     $mailer = new SpyMembershipMailer();
     $uc = new AutorizarOrdenMembresiaUseCase(
         $orders,
-        new ActivateMembershipFromOrderService($orders, $api, $mailer),
+        new ActivateMembershipFromOrderService($orders, $api, marketingMailRenderer($mailer), new AuthorizeNoOpLeadRepo()),
     );
     $uc->ejecutar(4, 7);
 
@@ -249,7 +273,7 @@ test('AutorizarOrdenMembresiaUseCase rechaza slug demo sin llamar api', function
     $mailer = new SpyMembershipMailer();
     $uc = new AutorizarOrdenMembresiaUseCase(
         $orders,
-        new ActivateMembershipFromOrderService($orders, $api, $mailer),
+        new ActivateMembershipFromOrderService($orders, $api, marketingMailRenderer($mailer), new AuthorizeNoOpLeadRepo()),
     );
 
     $thrown = false;

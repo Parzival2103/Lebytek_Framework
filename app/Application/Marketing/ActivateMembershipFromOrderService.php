@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace App\Application\Marketing;
 
+use App\Domain\Marketing\Contracts\LeadRepositoryInterface;
 use App\Domain\Marketing\Contracts\MembershipOrderRepositoryInterface;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiClient;
 use App\Infrastructure\Integrations\LebytekApi\LebytekApiException;
-use Lebytek\Framework\Application\DTO\Mail\MensajeCorreo;
-use Lebytek\Framework\Domain\Interfaces\MailerInterface;
 use Lebytek\Framework\Kernel\EnvLoader;
-use Lebytek\Framework\Kernel\Helpers\ViewHelper;
 
 final class ActivateMembershipFromOrderService
 {
     public function __construct(
         private readonly MembershipOrderRepositoryInterface $orders,
         private readonly LebytekApiClient $api,
-        private readonly MailerInterface $mailer,
+        private readonly MarketingMailRenderer $mailRenderer,
+        private readonly LeadRepositoryInterface $leads,
     ) {}
 
     /** Deterministic UUIDv5-shaped key from order public_id (activate-plan once per order). */
@@ -105,6 +104,8 @@ final class ActivateMembershipFromOrderService
 
         $this->orders->clearApiActivationError($orderId);
 
+        $this->markLeadConvertedIfPresent($order, $slug);
+
         $plainToken = trim((string) ($response['token'] ?? ''));
         if ($plainToken !== '') {
             try {
@@ -166,6 +167,8 @@ final class ActivateMembershipFromOrderService
             $this->orders->markPaid($orderId, $actorId);
         }
 
+        $this->markLeadConvertedIfPresent($order, $slug);
+
         if ($plainToken !== '') {
             try {
                 $this->sendMembershipEmail($order, $plainToken);
@@ -178,25 +181,28 @@ final class ActivateMembershipFromOrderService
     }
 
     /** @param array<string, mixed> $order */
+    private function markLeadConvertedIfPresent(array $order, string $planSlug): void
+    {
+        $leadId = (int) ($order['lead_id'] ?? 0);
+        if ($leadId > 0) {
+            $this->leads->markConverted($leadId, $planSlug);
+        }
+    }
+
+    /** @param array<string, mixed> $order */
     private function sendMembershipEmail(array $order, string $token): void
     {
         $apiBaseUrl = rtrim((string) EnvLoader::get('LEBYTEK_API_URL', 'https://api.lebytek.com/api/v1'), '/');
         $cicloLabel = ($order['ciclo'] ?? '') === 'annual' ? 'Anual' : 'Mensual';
         $planLabel = ucfirst((string) ($order['paquete_slug'] ?? ''));
-        $html = ViewHelper::render('emails/membership_activated', [
+
+        $this->mailRenderer->send('membership_activated', (string) ($order['email'] ?? ''), (string) ($order['nombre'] ?? ''), [
             'nombre' => (string) ($order['nombre'] ?? ''),
-            'planNombre' => $planLabel,
+            'plan' => $planLabel,
             'ciclo' => $cicloLabel,
             'cuota' => number_format((float) ($order['precio_snapshot'] ?? 0), 2, '.', ','),
-            'apiBaseUrl' => $apiBaseUrl,
+            'api_base_url' => $apiBaseUrl,
             'token' => $token,
-        ], '');
-
-        $this->mailer->enviar(new MensajeCorreo(
-            (string) ($order['email'] ?? ''),
-            (string) ($order['nombre'] ?? ''),
-            'Tu membresía Lebytek está activa',
-            $html,
-        ));
+        ]);
     }
 }

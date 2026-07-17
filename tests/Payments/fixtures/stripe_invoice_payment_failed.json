@@ -1,0 +1,17 @@
+{
+  "id": "evt_invoice_failed_123",
+  "type": "invoice.payment_failed",
+  "data": {
+    "object": {
+      "id": "in_test_failed",
+      "subscription": "sub_test_abc123",
+      "customer": "cus_test_xyz",
+      "amount_due": 219900,
+      "currency": "mxn",
+      "status": "open",
+      "metadata": {
+        "order_public_id": "01JORDPAY00000000000000001"
+      }
+    }
+  }
+}

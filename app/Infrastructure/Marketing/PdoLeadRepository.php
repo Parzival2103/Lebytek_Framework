@@ -293,4 +293,43 @@ final class PdoLeadRepository implements LeadRepositoryInterface
 
         return is_array($row) ? $row : null;
     }
+
+    public function markConverted(int $leadId, string $planSlug, ?int $paqueteId = null): void
+    {
+        $pdo = Connection::getInstance();
+        $sql = 'UPDATE dom_mkt_leads SET
+                    plan_slug = :plan_slug,
+                    demo_expires_at = NULL,
+                    converted_at = COALESCE(converted_at, NOW())';
+        if ($paqueteId !== null) {
+            $sql .= ', paquete_id = :paquete_id';
+        }
+        $sql .= ' WHERE id = :id AND deleted = 0';
+        $stmt = $pdo->prepare($sql);
+        $params = ['plan_slug' => $planSlug, 'id' => $leadId];
+        if ($paqueteId !== null) {
+            $params['paquete_id'] = $paqueteId;
+        }
+        $stmt->execute($params);
+    }
+
+    public function markCancelled(int $leadId): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_leads SET cancelled_at = COALESCE(cancelled_at, NOW())
+             WHERE id = :id AND deleted = 0'
+        );
+        $stmt->execute(['id' => $leadId]);
+    }
+
+    public function clearCancelled(int $leadId): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE dom_mkt_leads SET cancelled_at = NULL
+             WHERE id = :id AND deleted = 0'
+        );
+        $stmt->execute(['id' => $leadId]);
+    }
 }

@@ -57,4 +57,10 @@ interface LeadRepositoryInterface
 
     /** @return array<string, mixed>|null */
     public function findLatestByEmail(string $email): ?array;
+
+    public function markConverted(int $leadId, string $planSlug, ?int $paqueteId = null): void;
+
+    public function markCancelled(int $leadId): void;
+
+    public function clearCancelled(int $leadId): void;
 }
