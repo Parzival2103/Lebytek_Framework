@@ -101,3 +101,40 @@ Task 3: complete (commits d995759..ff02c42, review Approved; minor: doc/test pat
 - [x] Bootstrap + wrappers + standalone smoke
 - Gate SkeletonPurity: 0 failed
 - Siguiente: Plan 05 Lebytek_Portal
+
+Task 4: complete (commits ff02c42..2771733, review Approved; smoke used string URL rewrite vs ConvertTo-Json; minor: progress.md spacing; note: skeleton/tests need local composer install in skeleton/)
+- [x] Marketing/mkt_/publico/LebytekApi removed
+- [x] Platform SQL duplication removed
+- [x] Canonical assets checklist + test
+- [x] Bootstrap + wrappers + standalone smoke
+- Gate SkeletonPurity: 13 passed, 0 failed
+- Siguiente: Plan 05 Lebytek_Portal
+
+## Plan 04 - Final review (2026-07-17)
+
+- Whole-branch: eb2612b..2771733 - Ready for Plan 05 (not merge to main)
+- Gate SkeletonPurity: 13 passed, 0 failed
+- Important deferred: skeleton/database/migrations/*.sql SoT triage (Task 2 title mentioned migrations; steps did not delete them)
+- Minors open: stale Marketing comments CLAUDE.md/settings_sections.php; redundant marketing SQL test; asset path list duplication; smoke string-rewrite; skeleton composer install operational
+- No merge to main
+- Siguiente: Plan 05 Lebytek_Portal
+
+## Plan 05 — Lebytek_Portal local (2026-07-17)
+
+Task 1: complete (commits empty..2589b43 Portal, review clean; minor: FPS-git-baseline.md missing upstream)
+
+Task 2: complete (commits 2589b43..c975261 Portal, review Approved after log hygiene fix; deferred: seed.php Marketing test until Task 3 wrappers)
+
+Task 3: complete (commits c975261..6074510 Portal, review Approved; minors: transient worktree path, dual App\\ autoload)
+
+Task 4: complete (Portal Marketing + PortalOwnership gates green)
+
+## Plan 05 — Lebytek_Portal local (2026-07-17)
+
+- [x] SHA congelado dad0590 documentado
+- [x] Árbol Portal sibling sin src/schema plataforma SoT
+- [x] composer path repo → consolidation/framework-portal-separation
+- [x] Marketing baseline 0 failed
+- [x] PortalOwnership 0 failed
+- Siguiente: Plan 06 boundary cutover
+
