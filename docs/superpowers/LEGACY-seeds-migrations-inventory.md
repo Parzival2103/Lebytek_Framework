@@ -8,6 +8,10 @@
 
 El bootstrap greenfield actual usa `database/schema/schema.sql` + módulos en `database/schema/modules/`. Los scripts incrementales de junio 2026 se consolidaron; copias de referencia permanecen en legacy.
 
+### Proveniencia (rama `consolidation/framework-portal-separation`)
+
+En esta rama (derivada de `main`), **`database/seeds_legacy/` y `database/migrations_legacy/` no están presentes** en el árbol de trabajo. Las listas de paths en `docs/superpowers/FPS-legacy-seeds-list.txt` y `FPS-legacy-migrations-list.txt` se caracterizaron desde un checkout que **sí** contiene esos directorios (`feature/backoffice-api-integration` / rama docs). **Política sin cambio:** no archivar ni eliminar hasta evidencia greenfield del Plan 03.
+
 ## seeds_legacy
 
 | Path | Rol | Usado por instalador actual |
