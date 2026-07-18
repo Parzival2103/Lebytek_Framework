@@ -1,0 +1,7 @@
+database/seeds_legacy/baseline-2026-06/010_auth_permisos.sql
+database/seeds_legacy/baseline-2026-06/015_core_menu_items.sql
+database/seeds_legacy/baseline-2026-06/020_auth_roles.sql
+database/seeds_legacy/baseline-2026-06/025_auth_roles_permisos.sql
+database/seeds_legacy/baseline-2026-06/030_auth_usuario_admin.sql
+database/seeds_legacy/baseline-2026-06/035_cfg_configuraciones.sql
+database/seeds_legacy/baseline-2026-06/README.md
