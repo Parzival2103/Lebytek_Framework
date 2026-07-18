@@ -68,7 +68,7 @@ Task 2: complete (commits 27171c4..43ebd01, review clean; minors: source-only te
 Task 3: complete (commits 43ebd01..c1710cb, review Approved with Important deferred)
   - Important deferred: resolveInstallFile BC fallback kept for install_fixture_dir temp paths
   - Important deferred: Install orphan/undeclared migrations remain (18 active files vs manifests; D2/D8 inventory from Plan 02)
-Task 4: complete (commits c1710cb..10a3de5, review clean after progress hygiene fix)
+Task 4: complete (commits c1710cb..bc142fe, review clean after progress hygiene fix; minors: inventory wording, orphan migrations remain)
   - Option A: git mv seeds 010–035 → `database/seeds_legacy/` (no deletes)
   - `InstallGreenfieldTest` + `FPS-legacy-archival-decision.md`
   - Primary gates: InstallGreenfield 4/0, PackagePaths 6/0, PlatformSqlResolve 2/0
@@ -78,6 +78,6 @@ Task 4: complete (commits c1710cb..10a3de5, review clean after progress hygiene 
 - [x] migrate.php / seed.php / install.php package-first
 - [x] Installer + bootstrap_sql via resolveDataFile
 - [x] Greenfield smoke + legacy decision doc
-- Plan 03 complete (a46949c..10a3de5); Ready for Plan 04 minimal skeleton
-- Minors open: progress.md hygiene fixed; orphan migrations documented only; broader `php tests/run.php Install` may still report ~2 failures on undeclared migrations (out of Task 4 primary gates)
+- Plan 03 complete (a46949c..bc142fe); Ready for Plan 04 minimal skeleton
+- Minors open: orphan migrations documented only; broader `php tests/run.php Install` may still report ~2 failures on undeclared migrations (out of Task 4 primary gates); inventory wording around baseline-2026-06
 - No merge to main
