@@ -29,9 +29,15 @@ test('marketing_demo.sql siembra bloques hero/trust/testimonios/footer', functio
     assert_true(str_contains($sql, '/assets/publico/hero-mock.jpg'), 'media del hero (imagen genérica)');
 });
 
-test('seed.php aplica el demo de marketing tras el flag --marketing-demo', function (): void {
+test('framework seed.php no referencia marketing_demo ni --marketing-demo', function (): void {
     $src = file_get_contents(ROOT_PATH . '/scripts/seed.php');
     assert_true($src !== false, 'seed.php existe');
-    assert_true(str_contains($src, '--marketing-demo'), 'declara el flag');
-    assert_true(str_contains($src, 'marketing_demo.sql'), 'referencia el archivo demo');
+    assert_true(
+        !str_contains($src, 'marketing_demo'),
+        'framework seed.php must not reference marketing_demo'
+    );
+    assert_true(
+        !str_contains($src, '--marketing-demo'),
+        'framework seed.php must not declare --marketing-demo'
+    );
 });
