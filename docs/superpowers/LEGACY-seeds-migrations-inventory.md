@@ -44,6 +44,10 @@ Tras instalar greenfield vía `PackagePaths` + `install.php`:
 1. Confirmar que seeds plataforma vienen del paquete (`PackagePaths::seedsDir()`).
 2. Documentar retención de legacy en `FPS-legacy-archival-decision.md` (Plan 03). **No** archivar ni eliminar físicamente en el roadmap FPS 00–08.
 
+## Decisión aplicada (Plan 03 — 2026-07-17)
+
+Ver `docs/superpowers/FPS-legacy-archival-decision.md`. Resumen: legacy **conservado**, no borrado; seeds activos `010`–`035` movidos a `database/seeds_legacy/` (Option A); greenfield confirmado vía `PackagePaths` + smoke temporal; migraciones huérfanas activas documentadas sin mass-rewrite.
+
 ## Comandos de verificación (solo lectura)
 
 ```powershell

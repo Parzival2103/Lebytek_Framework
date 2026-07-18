@@ -72,3 +72,38 @@ Task 2: complete (commits 00d0f4c..1b868f8, review clean after provenance fix; m
 - Gate Auth: 0 failed (48 passed)
 - Gate full suite (diagnostic): `638` passed, `3` failed (baseline `M_baseline=6`; D2/D8 preexisting: `Install/EstandarizacionIntegridadTest` orphan SQL ownership; `Install/SchemaBootstrapTest` loose seeds + undeclared incremental migrations — deferred to Plan 03 PackagePaths/Installer)
 - Siguiente: Plan 03 PackagePaths + Installer
+Task 3: complete (commits 1b868f8..a46949c, review clean; minors: progress hygiene, Marketing assert_false shim redundant)
+
+## Plan 02 — Platform stabilization (2026-07-17)
+
+- [x] ConfiguracionService cache fix + characterization tests
+- [x] LEGACY seeds/migrations inventory (no deletion; provenance on consolidation)
+- Gate ConfiguracionServiceCache: 0 failed (3 passed)
+- Gate Payments: 0 failed (17 passed)
+- Gate Kernel: 0 failed (15 passed)
+- Gate Auth: 0 failed (48 passed)
+- Gate full suite (diagnostic): 638 passed, 3 failed (baseline M_baseline=6; D2/D8 preexisting: Install EstandarizacionIntegridad + SchemaBootstrap x2)
+- Final review: Ready for Plan 03 (9287785..a46949c); minors deferred; no merge to main
+- Siguiente: Plan 03 PackagePaths + Installer
+
+## Plan 03 — PackagePaths + Installer (in progress)
+
+- Worktree: .worktrees/framework-portal-separation
+- Branch: consolidation/framework-portal-separation
+- Plan: docs/superpowers/plans/2026-07-17-fps-03-package-paths-installer-sql.md
+- Baseline before Task 1: a46949ccfba8a8c1fc1ecc61def2ea9de7565d56
+Task 1: complete (commits a46949c..27171c4, review clean; minors: no RuntimeException test, monorepo fallback probe limitation)
+Task 2: complete (commits 27171c4..43ebd01, review clean; minors: source-only tests, preamble duplication)
+Task 3: complete (commits 43ebd01..c1710cb, review Approved with Important deferred)
+  - Important deferred: resolveInstallFile BC fallback kept for install_fixture_dir temp paths
+  - Important deferred: Install suite 3 failed (loose seeds 010-035 + orphan/undeclared migrations) — Task 4 must clear greenfield / document; same D2/D8 inventory from Plan 02
+
+## Plan 03 — PackagePaths + Installer (2026-07-17)
+
+- [x] PackagePaths + tests
+- [x] migrate.php / seed.php / install.php package-first
+- [x] Installer + bootstrap_sql via resolveDataFile
+- [x] Greenfield smoke + legacy decision doc
+- Gate PackagePaths: 0 failed
+- Gate PlatformSqlResolve: 0 failed
+- Siguiente: Plan 04 minimal skeleton
