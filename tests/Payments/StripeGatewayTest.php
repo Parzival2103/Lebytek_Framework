@@ -1,0 +1,56 @@
+<?php
+declare(strict_types=1);
+
+use Lebytek\Framework\Domain\Payments\PaymentEventType;
+use Lebytek\Framework\Infrastructure\Payments\StripeGateway;
+
+function stripeTestSignature(string $payload, string $secret): string
+{
+    $timestamp = time();
+    $signature = hash_hmac('sha256', $timestamp . '.' . $payload, $secret);
+    return "t={$timestamp},v1={$signature}";
+}
+
+test('StripeGateway rechaza firma inválida', function (): void {
+    $gateway = new StripeGateway([
+        'secret_key' => 'sk_test_x',
+        'webhook_secret' => 'whsec_test_secret',
+        'currency' => 'mxn',
+    ]);
+    assert_throws(\UnexpectedValueException::class, fn () => $gateway->parseWebhook('{}', 'bad_sig'));
+});
+
+test('StripeGateway parseWebhook acepta firma válida de fixture', function (): void {
+    $secret = 'whsec_test_secret';
+    $payload = (string) file_get_contents(ROOT_PATH . '/tests/Payments/fixtures/stripe_checkout_completed.json');
+    $signature = stripeTestSignature($payload, $secret);
+    $gateway = new StripeGateway([
+        'secret_key' => 'sk_test_x',
+        'webhook_secret' => $secret,
+        'currency' => 'mxn',
+    ]);
+    $event = $gateway->parseWebhook($payload, $signature);
+    assert_same(PaymentEventType::CheckoutCompleted, $event->type());
+    assert_true($event->externalRef() !== '');
+    assert_same(219900, $event->money()->amountMinor());
+    assert_same('mxn', $event->money()->currency());
+});
+
+test('StripeGateway evento no mapeado devuelve Ignored', function (): void {
+    $secret = 'whsec_test_secret';
+    $payload = (string) file_get_contents(ROOT_PATH . '/tests/Payments/fixtures/stripe_unmapped_event.json');
+    $signature = stripeTestSignature($payload, $secret);
+    $gateway = new StripeGateway([
+        'secret_key' => 'sk_test_x',
+        'webhook_secret' => $secret,
+        'currency' => 'mxn',
+    ]);
+    $event = $gateway->parseWebhook($payload, $signature);
+    assert_same(PaymentEventType::Ignored, $event->type());
+});
+
+test('StripeGateway createCheckout documenta idempotency_key = externalRef', function (): void {
+    $source = (string) file_get_contents(ROOT_PATH . '/src/Infrastructure/Payments/StripeGateway.php');
+    assert_true(str_contains($source, 'idempotency_key'));
+    assert_true(str_contains($source, 'externalRef()'));
+});

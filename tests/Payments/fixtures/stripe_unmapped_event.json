@@ -1,0 +1,10 @@
+{
+  "id": "evt_unmapped_123",
+  "type": "customer.created",
+  "data": {
+    "object": {
+      "id": "cus_test",
+      "metadata": {}
+    }
+  }
+}
