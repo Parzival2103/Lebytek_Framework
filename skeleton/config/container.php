@@ -15,14 +15,6 @@ return static function (Container $container): void {
     // solo si su módulo está activo (toggle inline). AjustesController lo consume.
     $container->singleton(\Lebytek\Framework\Application\Services\SettingsSectionRegistry::class, function () {
         $providers = [];
-        if ((bool) Config::get('vertical.modules.marketing', false)) {
-            $providers = [
-                new \App\Infrastructure\Marketing\Settings\MarketingCorreoSettingsProvider(),
-                new \App\Infrastructure\Marketing\Settings\MarketingPaquetesSettingsProvider(),
-                new \App\Infrastructure\Marketing\Settings\MarketingTrackingSettingsProvider(),
-                new \App\Infrastructure\Marketing\Settings\MarketingContenidoSettingsProvider(),
-            ];
-        }
         if ((bool) Config::get('vertical.modules.integrations', false)) {
             $providers[] = new \Lebytek\Framework\Infrastructure\Integrations\Settings\IntegrationsWhatsappSettingsProvider();
         }
@@ -67,53 +59,5 @@ return static function (Container $container): void {
                 new \Lebytek\Framework\Infrastructure\Integrations\Repositories\IntegrationLogRepository()
             );
         });
-    }
-
-    // ── Módulo Marketing (bindings condicionales al toggle; ver config/modules/marketing.php) ──
-    if ((bool) Config::get('vertical.modules.marketing', false)) {
-        $container->singleton(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class,
-            fn() => new \App\Infrastructure\Marketing\PdoMarketingContentRepository());
-
-        $container->singleton(\App\Domain\Marketing\Contracts\LandingContentProviderInterface::class,
-            fn(Container $c) => new \App\Infrastructure\Marketing\CrudLandingContentProvider(
-                $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class)));
-
-        $container->singleton(\App\Domain\Marketing\Contracts\CommercialPackageSourceInterface::class,
-            fn(Container $c) => new \App\Infrastructure\Marketing\CrudCommercialPackageSource(
-                $c->get(\App\Domain\Marketing\Contracts\MarketingContentRepositoryInterface::class)));
-
-        $container->singleton(\App\Application\Marketing\RenderLandingUseCase::class,
-            fn(Container $c) => new \App\Application\Marketing\RenderLandingUseCase(
-                $c->get(\App\Domain\Marketing\Contracts\LandingContentProviderInterface::class),
-                $c->get(\App\Domain\Marketing\Contracts\CommercialPackageSourceInterface::class)));
-
-        $container->bind(\App\Presentation\Controllers\Publico\LandingController::class,
-            fn(Container $c) => new \App\Presentation\Controllers\Publico\LandingController(
-                $c->get(ConfiguracionService::class),
-                $c->get(\App\Application\Marketing\RenderLandingUseCase::class)));
-
-        $container->singleton(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class,
-            fn() => new \App\Infrastructure\Marketing\PdoLeadRepository());
-
-        $container->singleton(\App\Application\Marketing\CapturarLeadUseCase::class, function (Container $c) {
-            $destinoInterno = (string) $c->get(ConfiguracionService::class)->get('mkt_mail_from', '');
-            return new \App\Application\Marketing\CapturarLeadUseCase([
-                new \App\Infrastructure\Marketing\LeadCapture\PersistLeadHandler(
-                    $c->get(\App\Domain\Marketing\Contracts\LeadRepositoryInterface::class)),
-                new \App\Infrastructure\Marketing\LeadCapture\NotifyInternalHandler(
-                    $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class),
-                    $destinoInterno),
-                new \App\Infrastructure\Marketing\LeadCapture\AutoresponderHandler(
-                    $c->get(\Lebytek\Framework\Domain\Interfaces\MailerInterface::class)),
-            ]);
-        });
-
-        $container->bind(\App\Presentation\Controllers\Publico\LeadController::class,
-            fn(Container $c) => new \App\Presentation\Controllers\Publico\LeadController(
-                $c->get(\App\Application\Marketing\CapturarLeadUseCase::class)));
-
-        $container->bind(\App\Presentation\Controllers\Publico\PortalClienteController::class,
-            fn(Container $c) => new \App\Presentation\Controllers\Publico\PortalClienteController(
-                $c->get(ConfiguracionService::class)));
     }
 };
