@@ -47,3 +47,20 @@ test('skeleton does not ship LebytekApi client or env vars', function () use ($s
     $envExample = (string) file_get_contents($skeleton . '/.env.example');
     assert_true(!str_contains($envExample, 'LEBYTEK_API_'), '.env.example must not ship LEBYTEK_API_*');
 });
+
+test('skeleton does not ship marketing SQL modules', function () use ($skeleton): void {
+    assert_true(!is_file($skeleton . '/database/schema/modules/marketing.sql'));
+    assert_true(!is_file($skeleton . '/database/schema/modules/marketing_demo.sql'));
+});
+
+test('skeleton does not ship publico landing assets', function () use ($skeleton): void {
+    assert_true(!is_dir($skeleton . '/public/assets/publico'));
+});
+
+test('skeleton does not duplicate platform seeds as SoT', function () use ($skeleton): void {
+    $seedFiles = glob($skeleton . '/database/seeds/*.sql') ?: [];
+    assert_true(
+        $seedFiles === [],
+        'skeleton database/seeds must not ship platform *.sql copies (use package seeds)'
+    );
+});
