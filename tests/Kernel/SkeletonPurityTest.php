@@ -64,3 +64,21 @@ test('skeleton does not duplicate platform seeds as SoT', function () use ($skel
         'skeleton database/seeds must not ship platform *.sql copies (use package seeds)'
     );
 });
+
+test('skeleton ships required platform UI assets', function () use ($skeleton): void {
+    $required = [
+        'public/assets/css/app.css',
+        'public/assets/css/lebytek-ui.css',
+        'public/assets/css/crud-engine.css',
+        'public/assets/js/app.js',
+        'public/assets/js/crud-engine.js',
+        'public/assets/js/calendar.js',
+        'public/assets/js/avatar-manager.js',
+        'public/assets/js/reportes-builder.js',
+        'public/assets/icons/app-icon.svg',
+        'public/assets/images/logo.png',
+    ];
+    foreach ($required as $rel) {
+        assert_true(is_readable($skeleton . '/' . $rel), "missing platform asset: {$rel}");
+    }
+});
