@@ -89,3 +89,15 @@ Task 4: complete (commits c1710cb..bc142fe, review clean after progress hygiene 
 - Full suite diagnostic: 653 passed, 3 failed (Install orphan/undeclared migrations debt)
 - Important deferred: resolveInstallFile BC fallback; Install 2 orphan-migration failures
 - Siguiente: Plan 04 minimal consumer skeleton
+Task 1: complete (commits eb2612b..555872c, review Approved; publico/ deferred to Task 2; minor: stale Marketing comments in CLAUDE.md/settings_sections.php)
+Task 2: complete (commits 555872c..d995759, review Approved; minor: redundant marketing SQL test plan-mandated; migrations README stale out of scope)
+Task 3: complete (commits d995759..ff02c42, review Approved; minor: doc/test path list duplication plan-mandated)
+
+## Plan 04 — Minimal skeleton (2026-07-17)
+
+- [x] Marketing/mkt_/publico/LebytekApi removed
+- [x] Platform SQL duplication removed
+- [x] Canonical assets checklist + test
+- [x] Bootstrap + wrappers + standalone smoke
+- Gate SkeletonPurity: 0 failed
+- Siguiente: Plan 05 Lebytek_Portal
