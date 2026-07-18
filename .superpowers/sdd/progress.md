@@ -81,3 +81,11 @@ Task 4: complete (commits c1710cb..bc142fe, review clean after progress hygiene 
 - Plan 03 complete (a46949c..bc142fe); Ready for Plan 04 minimal skeleton
 - Minors open: orphan migrations documented only; broader `php tests/run.php Install` may still report ~2 failures on undeclared migrations (out of Task 4 primary gates); inventory wording around baseline-2026-06
 - No merge to main
+
+## Plan 03 — Final review (2026-07-17)
+
+- Whole-branch: a46949c..57741a5 — Ready for Plan 04 (not merge to main)
+- Gates: PackagePaths 6/0, PlatformSqlResolve 2/0, PlatformMigratePaths 3/0, InstallGreenfield 4/0
+- Full suite diagnostic: 653 passed, 3 failed (Install orphan/undeclared migrations debt)
+- Important deferred: resolveInstallFile BC fallback; Install 2 orphan-migration failures
+- Siguiente: Plan 04 minimal consumer skeleton
