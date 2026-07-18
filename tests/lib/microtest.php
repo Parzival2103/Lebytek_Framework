@@ -24,6 +24,11 @@ function assert_true(bool $cond, string $msg = 'expected true'): void
     }
 }
 
+function assert_false(bool $cond, string $msg = 'expected false'): void
+{
+    assert_true(!$cond, $msg);
+}
+
 function assert_same(mixed $expected, mixed $actual, string $msg = ''): void
 {
     if ($expected !== $actual) {
