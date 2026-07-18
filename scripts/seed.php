@@ -4,23 +4,47 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| seed.php — Bootstrap SQL (schema + módulos opcionales)
+| seed.php — Bootstrap SQL del PAQUETE
 |--------------------------------------------------------------------------
 | Uso:
 |   php scripts/seed.php
 |   php scripts/seed.php --crud-engine
+|   php vendor/lebytek/framework/scripts/seed.php
 */
 
-define('ROOT_PATH', dirname(__DIR__));
-define('APP_PATH', ROOT_PATH . '/app');
-define('STORAGE_PATH', ROOT_PATH . '/storage');
+$packageScriptsDir = __DIR__;
+$packageRoot = dirname($packageScriptsDir);
 
-require_once ROOT_PATH . '/vendor/autoload.php';
+if (!defined('ROOT_PATH')) {
+    $candidateConsumer = dirname($packageRoot, 3);
+    if (
+        is_readable($candidateConsumer . '/composer.json')
+        && is_dir($packageRoot . '/src')
+        && str_contains((string) file_get_contents($candidateConsumer . '/composer.json'), '"type": "project"')
+    ) {
+        define('ROOT_PATH', $candidateConsumer);
+    } else {
+        define('ROOT_PATH', $packageRoot);
+    }
+}
+if (!defined('APP_PATH')) {
+    define('APP_PATH', ROOT_PATH . '/app');
+}
+if (!defined('STORAGE_PATH')) {
+    define('STORAGE_PATH', ROOT_PATH . '/storage');
+}
+
+$autoload = ROOT_PATH . '/vendor/autoload.php';
+if (!is_readable($autoload)) {
+    $autoload = $packageRoot . '/vendor/autoload.php';
+}
+require_once $autoload;
 
 use Lebytek\Framework\Infrastructure\Install\SqlFileRunner;
 use Lebytek\Framework\Kernel\EnvLoader;
 use Lebytek\Framework\Kernel\Config\Config;
 use Lebytek\Framework\Kernel\Database\Connection;
+use Lebytek\Framework\Kernel\PackagePaths;
 
 EnvLoader::load(ROOT_PATH . '/.env');
 Config::init(ROOT_PATH . '/config');
@@ -36,24 +60,19 @@ Connection::configure([
 
 $runner = new SqlFileRunner();
 $incluirCrudEngine = in_array('--crud-engine', $argv ?? [], true);
-$incluirMktDemo = in_array('--marketing-demo', $argv ?? [], true);
 
 $archivos = [
-    ROOT_PATH . '/database/schema/schema.sql',
+    PackagePaths::schema('schema.sql'),
 ];
 
 if ($incluirCrudEngine) {
-    $archivos[] = ROOT_PATH . '/database/schema/modules/crud-engine.sql';
-}
-
-if ($incluirMktDemo) {
-    $archivos[] = ROOT_PATH . '/database/schema/modules/marketing_demo.sql';
+    $archivos[] = PackagePaths::moduleSchema('crud-engine.sql');
 }
 
 echo '=== Bootstrap SQL — ' . count($archivos) . " archivo(s) ===\n\n";
 
 foreach ($archivos as $path) {
-    $name = str_replace(ROOT_PATH . '/', '', $path);
+    $name = str_replace(str_replace('\\', '/', PackagePaths::root()) . '/', '', str_replace('\\', '/', $path));
     echo "→ {$name}\n";
     $runner->ejecutar($path);
     echo "   ✓ OK\n";
