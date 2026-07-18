@@ -11,18 +11,45 @@ declare(strict_types=1);
 |   php scripts/install.php --modules=core,crud-engine
 |   php scripts/install.php --dry-run             (muestra el plan, no ejecuta)
 |   php scripts/install.php --baseline            (adopta deploy legacy sin re-ejecutar)
+|   php vendor/lebytek/framework/scripts/install.php
+|
+| ROOT_PATH = proyecto consumidor (.env, config)
+| PackagePaths = SQL de plataforma
 */
 
-define('ROOT_PATH', dirname(__DIR__));
-define('APP_PATH', ROOT_PATH . '/app');
-define('STORAGE_PATH', ROOT_PATH . '/storage');
+$packageScriptsDir = __DIR__;
+$packageRoot = dirname($packageScriptsDir);
 
-require_once ROOT_PATH . '/vendor/autoload.php';
+if (!defined('ROOT_PATH')) {
+    $candidateConsumer = dirname($packageRoot, 3);
+    if (
+        is_readable($candidateConsumer . '/composer.json')
+        && is_dir($packageRoot . '/src')
+        && str_contains((string) file_get_contents($candidateConsumer . '/composer.json'), '"type": "project"')
+    ) {
+        define('ROOT_PATH', $candidateConsumer);
+    } else {
+        define('ROOT_PATH', $packageRoot);
+    }
+}
+if (!defined('APP_PATH')) {
+    define('APP_PATH', ROOT_PATH . '/app');
+}
+if (!defined('STORAGE_PATH')) {
+    define('STORAGE_PATH', ROOT_PATH . '/storage');
+}
+
+$autoload = ROOT_PATH . '/vendor/autoload.php';
+if (!is_readable($autoload)) {
+    $autoload = $packageRoot . '/vendor/autoload.php';
+}
+require_once $autoload;
 
 use Lebytek\Framework\Kernel\EnvLoader;
 use Lebytek\Framework\Kernel\Config\Config;
 use Lebytek\Framework\Kernel\Database\Connection;
 use Lebytek\Framework\Kernel\Container\Container;
+use Lebytek\Framework\Kernel\PackagePaths;
 use Lebytek\Framework\Application\Install\Installer;
 use Lebytek\Framework\Application\Install\ModuleRegistry;
 use Lebytek\Framework\Infrastructure\Install\SqlFileRunner;
@@ -52,7 +79,7 @@ foreach ($args as $a) {
 
 // Schema base SIEMPRE primero (crea cfg_migraciones/cfg_modulos si faltan).
 echo "=== Instalación Lebytek ===\n\n→ Schema base\n";
-(new SqlFileRunner())->ejecutar(ROOT_PATH . '/database/schema/schema.sql');
+(new SqlFileRunner())->ejecutar(PackagePaths::schema('schema.sql'));
 echo "   ✓ schema.sql\n\n";
 
 // Contenedor / motor.
@@ -71,8 +98,8 @@ foreach ($seleccion as $claveModulo) {
     if ($manifest?->bootstrapSql === null) {
         continue;
     }
-    $rutaBootstrap = ROOT_PATH . '/' . $manifest->bootstrapSql;
-    if (!is_file($rutaBootstrap)) {
+    $rutaBootstrap = PackagePaths::resolveDataFile($manifest->bootstrapSql);
+    if (!is_readable($rutaBootstrap)) {
         fwrite(STDERR, "Bootstrap SQL no encontrado: {$manifest->bootstrapSql}\n");
         exit(1);
     }

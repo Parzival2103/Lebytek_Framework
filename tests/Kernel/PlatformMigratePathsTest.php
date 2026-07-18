@@ -30,3 +30,17 @@ test('platform seed.php source uses PackagePaths for schema files', function ():
         'framework seed.php must not reference marketing_demo'
     );
 });
+
+test('platform install.php source uses PackagePaths for schema.sql', function (): void {
+    $install = dirname(__DIR__, 2) . '/scripts/install.php';
+    assert_true(is_readable($install), 'scripts/install.php must exist');
+    $src = (string) file_get_contents($install);
+    assert_true(
+        str_contains($src, 'PackagePaths'),
+        'install.php must reference PackagePaths'
+    );
+    assert_true(
+        !str_contains($src, "ROOT_PATH . '/database/schema/schema.sql'"),
+        'install.php must not read schema.sql only from ROOT_PATH'
+    );
+});
