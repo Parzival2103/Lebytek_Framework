@@ -103,12 +103,6 @@ Task 3: complete (commits d995759..ff02c42, review Approved; minor: doc/test pat
 - Siguiente: Plan 05 Lebytek_Portal
 
 Task 4: complete (commits ff02c42..2771733, review Approved; smoke used string URL rewrite vs ConvertTo-Json; minor: progress.md spacing; note: skeleton/tests need local composer install in skeleton/)
-- [x] Marketing/mkt_/publico/LebytekApi removed
-- [x] Platform SQL duplication removed
-- [x] Canonical assets checklist + test
-- [x] Bootstrap + wrappers + standalone smoke
-- Gate SkeletonPurity: 13 passed, 0 failed
-- Siguiente: Plan 05 Lebytek_Portal
 
 ## Plan 04 - Final review (2026-07-17)
 
@@ -122,14 +116,9 @@ Task 4: complete (commits ff02c42..2771733, review Approved; smoke used string U
 ## Plan 05 — Lebytek_Portal local (2026-07-17)
 
 Task 1: complete (commits empty..2589b43 Portal, review clean; minor: FPS-git-baseline.md missing upstream)
-
 Task 2: complete (commits 2589b43..c975261 Portal, review Approved after log hygiene fix; deferred: seed.php Marketing test until Task 3 wrappers)
-
 Task 3: complete (commits c975261..6074510 Portal, review Approved; minors: transient worktree path, dual App\\ autoload)
-
-Task 4: complete (Portal Marketing + PortalOwnership gates green)
-
-## Plan 05 — Lebytek_Portal local (2026-07-17)
+Task 4: complete (Portal Marketing + PortalOwnership gates green; explicit freeze delta vs dad0590 documented in Portal FPS-portal-source-sha.md)
 
 - [x] SHA congelado dad0590 documentado
 - [x] Árbol Portal sibling sin src/schema plataforma SoT
