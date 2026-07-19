@@ -1,11 +1,9 @@
 ---
-description: Guardrails para desarrollo asistido por IA en la app consumidora
+description: Guardrails para IA en el repo fuente del paquete y, cuando aplique, en apps consumidoras (Portal/skeleton)
 alwaysApply: true
 ---
 
 # Reglas para IA
-
-Al proponer o implementar cambios, la IA debe:
 
 ## Modelo post-separación FPS
 
@@ -14,29 +12,45 @@ Al proponer o implementar cambios, la IA debe:
 - Si la tarea es negocio Portal → indicar que el cambio va en `Lebytek_Portal`.
 - Payments genérico (`Lebytek\Framework\Domain\Payments\`) sí vive aquí; checkout de membresía no.
 
-- Trabajar sobre la app (`app/`, `config/`, `routes/`, `database/`, `tests/`), no sobre el
-  framework. El framework vive en `vendor/` y es de solo lectura aquí
-  (ver regla `framework-en-vendor`).
-- Respetar la arquitectura oficial de capas (`Presentation`, `Application`, `Domain`, `Infrastructure`).
-- Ubicar cada clase, modulo o archivo en su capa correspondiente.
+## En este repo (package source `Lebytek_Framework`)
+
+Al proponer o implementar cambios **aquí**, la IA debe:
+
+- Editar plataforma en `src/`, SQL de plataforma, plantilla `skeleton/` y tests del harness.
+- Respetar la arquitectura oficial de capas (`Presentation`, `Application`, `Domain`, `Infrastructure`) en `src/`.
+- Ubicar cada clase, módulo o archivo en su capa correspondiente.
 - Mantener convenciones de nombres y estructura existentes.
 - Integrar cambios al sistema actual, sin crear estructuras paralelas.
-- Reusar la plataforma del framework (auth, RBAC, CRUD Engine, dashboard) en lugar de
-  reimplementarla.
+- Reusar la plataforma existente (auth, RBAC, CRUD Engine, dashboard) en lugar de reimplementarla.
 
-## La IA no debe
+### La IA no debe (en este repo)
 
-- **Editar, crear ni borrar nada bajo `vendor/`.** Un cambio al framework se prepara como
-  spec + plan en el repo fuente `Lebytek_Framework`, nunca como parche directo a `vendor/`.
+- Implementar negocio Portal (Marketing, leads, membresías, `LebytekApiClient`) en raíz `app/` ni en `src/`.
+- Renombrar componentes estructurales existentes sin justificación.
+- Colocar lógica de negocio en `Presentation`.
+- Colocar lógica técnica de infraestructura en `Domain`.
+
+## Cuando edita apps consumidoras (Portal, skeleton desplegado)
+
+Al proponer o implementar cambios **en una app consumidora**, la IA debe:
+
+- Trabajar sobre la app (`app/`, `config/`, `routes/`, `database/`, `tests/`), no sobre el framework empaquetado.
+- El framework instalado vive en `vendor/lebytek/framework` y es de solo lectura (ver regla `framework-en-vendor`).
+- Respetar la arquitectura oficial de capas (`Presentation`, `Application`, `Domain`, `Infrastructure`).
+- Ubicar cada clase, módulo o archivo en su capa correspondiente.
+- Mantener convenciones de nombres y estructura existentes.
+- Integrar cambios al sistema actual, sin crear estructuras paralelas.
+- Reusar la plataforma del framework (auth, RBAC, CRUD Engine, dashboard) en lugar de reimplementarla.
+
+### La IA no debe (en consumidoras)
+
+- **Editar, crear ni borrar nada bajo `vendor/`.** Un cambio al framework se prepara como spec + plan en el repo fuente `Lebytek_Framework`, nunca como parche directo a `vendor/`.
 - Crear un `Kernel` local ni estructuras fuera de las capas oficiales.
-- Renombrar componentes estructurales existentes sin justificacion.
-- Colocar logica de negocio en `Presentation`.
-- Colocar logica tecnica de infraestructura en `Domain`.
+- Renombrar componentes estructurales existentes sin justificación.
+- Colocar lógica de negocio en `Presentation`.
+- Colocar lógica técnica de infraestructura en `Domain`.
 
-## En caso de inconsistencia o de fallo en el framework
+### En caso de inconsistencia o de fallo en el framework (en consumidoras)
 
-- Si detecta una inconsistencia arquitectonica, reportarla claramente antes de modificar.
-- Si la causa raíz de un bug vive en `vendor/` (el framework), seguir el protocolo de la
-  regla `framework-en-vendor`: declararlo, recordar el flujo del repo del framework,
-  ofrecer redactar el spec/plan, y solo proponer workaround del lado de la app si hay
-  urgencia — nunca editar `vendor/`.
+- Si detecta una inconsistencia arquitectónica, reportarla claramente antes de modificar.
+- Si la causa raíz de un bug vive en `vendor/` (el framework empaquetado), seguir el protocolo de la regla `framework-en-vendor`: declararlo, recordar el flujo del repo fuente, ofrecer redactar el spec/plan, y solo proponer workaround del lado de la app si hay urgencia — nunca editar `vendor/`.
