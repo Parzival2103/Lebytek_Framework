@@ -157,3 +157,28 @@ Task 4: complete (Framework gates + Portal gates green; archived orphan migratio
 - [x] Portal composer validate + Marketing 0 failed
 - Siguiente: Plan 07 documentation and agent rules
 
+
+Task 4: complete (commits b7af937..362252a, review clean; minors: archival-decision doc stale, Portal fix on local main, progress backfill)
+
+
+## Plan 06 - Final review (2026-07-19)
+
+- Whole-branch: a85cd72..362252a - Ready for Plan 07 (not merge to main)
+- Gates: Framework 546/0; Portal Marketing 251/0; composer validate OK
+- Important deferred to Plan 07: Framework VPS scripts still mkt-oriented; README/CLAUDE/rules/composer-setup package-only rewrite; archival-decision doc stale
+- Minors deferred: publico assert, uploads gitkeep, test-delete-instance, skeleton vendor noise
+- Companion Portal: 06c0b09
+- Siguiente: Plan 07 documentation and agent rules
+
+Task 1: complete (commits 362252a..84025ad, review clean)
+Task 2: complete (Portal commits 06c0b09..7ce6348, review clean; CLAUDE unchanged — solo lectura preexisting)
+Task 3: complete (commits 84025ad..81ecddb, review clean after Important fix scoping reglas-para-ia; minor: sibling alwaysApply rules still consumer-app)
+
+## Plan 07 — Documentation and agent rules (2026-07-17)
+
+- [x] ARCHITECTURE-CONSUMER, TENANTS, SCHEMA-OWNERSHIP, ASSETS-PLATFORM
+- [x] Portal schema ownership mirror
+- [x] CLAUDE + Cursor rules updated (Framework package source, Portal consumer)
+- [x] Payments → Framework; Marketing → Portal documented
+- Gate FpsDocumentation: 0 failed
+- Siguiente: Plan 08 publication readiness (docs only)
