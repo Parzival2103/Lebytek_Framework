@@ -1,6 +1,7 @@
-# Lebytek Framework + Back-office
+# Lebytek Framework
 
-Monorepo desplegable en **lebytek.com** (hosting con document root en `public/`).
+Paquete Composer `lebytek/framework`. El portal de la empresa Lebytek vive en el repo **Lebytek_Portal**.
+Los tenants nuevos parten de `skeleton/`, no del Portal. **No desplegar este repo como document root.**
 
 | Ruta | Contenido |
 |------|-----------|

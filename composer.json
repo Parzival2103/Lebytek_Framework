@@ -1,6 +1,6 @@
 {
     "name": "lebytek/framework",
-    "description": "Lebytek Framework — plataforma PHP + back-office lebytek.com (monorepo)",
+    "description": "Lebytek Framework — reusable PHP platform (Kernel, RBAC, CRUD Engine, Payments OFF by default)",
     "type": "library",
     "license": "proprietary",
     "require": {
@@ -11,8 +11,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Lebytek\\Framework\\": "src/",
-            "App\\": "app/"
+            "Lebytek\\Framework\\": "src/"
         }
     },
     "config": {

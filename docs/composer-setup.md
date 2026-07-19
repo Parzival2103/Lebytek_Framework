@@ -1,5 +1,8 @@
 # Composer — publicar y consumir `lebytek/framework`
 
+Paquete Composer **solo plataforma** (`Lebytek\Framework\` → `src/`). No incluye autoload de `App\`.
+El sitio lebytek.com se despliega desde **Lebytek_Portal**, no desde este repo como document root.
+
 El paquete **no necesita Packagist público** si el repo es privado en GitHub. Composer instala directamente desde VCS.
 
 ## 1. Publicar versiones (maintainer)
@@ -14,21 +17,20 @@ git push origin v1.0.0
 
 Composer resuelve `^1.0` contra tags semver (`v1.0.0`, `v1.0.1`, `v1.1.0`).
 
-El `composer.json` raíz declara:
+El `composer.json` del paquete declara:
 
 ```json
 "name": "lebytek/framework",
 "type": "library",
 "autoload": {
     "psr-4": {
-        "Lebytek\\Framework\\": "src/",
-        "App\\": "app/"
+        "Lebytek\\Framework\\": "src/"
     }
 }
 ```
 
-- Consumidores externos que solo quieren el framework: autoload efectivo en `src/`.
-- Este monorepo desplegable: clone completo + `composer install` en raíz.
+- Consumidores (Portal, skeleton, tenants): `composer require lebytek/framework` — autoload efectivo en `src/` vía vendor.
+- Desarrollo del paquete: clone de este repo + `composer install` en la raíz para tests de plataforma.
 
 ### ¿Packagist?
 
@@ -92,13 +94,12 @@ Permiso mínimo del token: **repo** (read).
 "url": "git@github.com:Parzival2103/Lebytek_Framework.git"
 ```
 
-## 4. Desplegar lebytek.com (este monorepo)
+## 4. Desplegar lebytek.com (Portal)
 
-No uses `composer create-project` para producción si ya tienes el repo clonado:
+Despliega el repo **Lebytek_Portal**, nunca este árbol de paquete como document root del sitio.
 
 ```bash
-git clone git@github.com:Parzival2103/Lebytek_Framework.git .
-git checkout feature/backoffice-api-integration
+git clone git@github.com:Parzival2103/Lebytek_Portal.git .
 cp .env.example .env
 composer install --no-dev
 php scripts/migrate.php
@@ -109,7 +110,15 @@ Document root del hosting: **`public/`**.
 
 Subida manual FTP: sincronizar todo el repo **excepto** `.env`, `vendor/` (regenerar con `composer install` en servidor si hay Composer), y `storage/logs/*`.
 
-## 5. Pin a branch de feature (desarrollo)
+## 5. Modelo consumidor
+
+Cada app consumidora (Portal, skeleton, tenant) define su propio autoload `App\` → `app/` en su `composer.json` raíz.
+
+- **`ROOT_PATH`**: raíz del proyecto consumidor (donde vive `app/`, `config/`, `public/`).
+- **`PackagePaths`**: rutas del framework resueltas desde `vendor/lebytek/framework` (schema SQL, vistas de plataforma).
+- **No** añadir path-autoload de `src/` del framework en el consumidor; usar siempre el paquete Composer.
+
+## 6. Pin a branch de feature (desarrollo)
 
 Mientras la integración api no esté en `main`:
 
@@ -119,12 +128,18 @@ Mientras la integración api no esté en `main`:
 }
 ```
 
-O en clone directo del monorepo: `git checkout feature/backoffice-api-integration`.
+O path repo local durante desarrollo FPS:
 
-## 6. Checklist antes de implementar contratos api
+```json
+"repositories": [
+    { "type": "path", "url": "../Lebytek_Framework/.worktrees/framework-portal-separation" }
+]
+```
+
+## 7. Checklist antes de implementar contratos api
 
 - [ ] Tag `v1.0.0` en `main` (si aún no existe en GitHub remoto)
 - [ ] `.env` con `LEBYTEK_API_URL` y `LEBYTEK_API_TOKEN` (token emitido en api VPS)
 - [ ] `composer install` OK en local
 - [ ] `php tests/run.php` verde
-- [ ] `docs/integration/waapi-api-contract.md` revisado en este repo
+- [ ] `docs/integration/waapi-api-contract.md` revisado en el repo Portal
