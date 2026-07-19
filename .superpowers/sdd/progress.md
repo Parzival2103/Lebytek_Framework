@@ -127,3 +127,33 @@ Task 4: complete (Portal Marketing + PortalOwnership gates green; explicit freez
 - [x] PortalOwnership 0 failed
 - Siguiente: Plan 06 boundary cutover
 
+Task 4: complete (Portal 6074510..513b66f after split+freeze delta docs, Framework 2771733..a85cd72, review Approved; minors: FPS delta path list incomplete, InvoicePaid deferred)
+
+
+## Plan 05 - Final review (2026-07-18)
+
+- Whole-branch: Portal 2589b43..513b66f; Framework 2771733..a85cd72 - Ready for Plan 06 (not merge to main)
+- Gates: Marketing 251/0, PortalOwnership 3/0, smoke OK
+- Composer path: worktree (controller 2A); freeze dad0590 + documented aa9954a Portal delta
+- Siguiente: Plan 06 local boundary cutover
+
+
+Task 1: complete (commits a85cd72..6efb972, review clean; minors: README monorepo table contradiction + composer-setup feature-branch pin leftover — Plan 07)
+
+
+Task 2: complete (commits 6efb972..8ac5680, review clean after fix 8ac5680; minors: VPS mkt script refs, test-delete-instance not in Portal)
+
+
+Task 3: complete (commits 8ac5680..b7af937, review clean; minors: guard doesn't assert publico/ absence, uploads/productos/.gitkeep remains)
+
+Task 4: complete (Framework gates + Portal gates green; archived orphan migrations; churn SQL ownership → Portal; SettingsSectionVista Marketing assertion removed)
+
+## Plan 06 — Boundary cutover local (2026-07-17)
+
+- [x] App\\ removed from package autoload
+- [x] Marketing/Portal business removed from Framework root
+- [x] PACKAGE-ROOT harness documented
+- [x] Framework platform suite 0 failed
+- [x] Portal composer validate + Marketing 0 failed
+- Siguiente: Plan 07 documentation and agent rules
+
