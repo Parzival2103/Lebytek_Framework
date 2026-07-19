@@ -111,8 +111,9 @@ En `main`, el hallazgo más urgente es **bootstrap/schema incompleto** vs códig
 
 | Suite | Resultado |
 |-------|-----------|
-| Entorno agent | **Sin PHP/Composer/vendor** en este run — no se pudieron ejecutar tests |
-| Cambio WhatsApp | Verificación estática + assert de test actualizado |
+| Entorno agent | PHP 8.3 + Composer instalados ad-hoc; `.env` ausente |
+| `LeadVerifiedWhatsAppNotifierTest` | **3/3 PASS** |
+| `php tests/run.php Marketing` | **114 passed, 0 failed** |
 | Lint | No hay linter CI verificado aquí |
 
 **No verificado:** deploy VPS real, BD de producción, webhooks Stripe (feature), secretos `.env`.
