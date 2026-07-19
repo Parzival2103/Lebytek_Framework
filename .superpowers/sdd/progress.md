@@ -182,3 +182,20 @@ Task 3: complete (commits 84025ad..81ecddb, review clean after Important fix sco
 - [x] Payments → Framework; Marketing → Portal documented
 - Gate FpsDocumentation: 0 failed
 - Siguiente: Plan 08 publication readiness (docs only)
+Task 4: complete (Portal 7ce6348..98d62c6; Framework 81ecddb..db514f5, review clean; minor: progress backfill)
+Plan 07 final review: With fixes → fixed in d86da1e..5ef0307 (README + sibling alwaysApply rules); Ready for Plan 08 (not merge to main)
+Framework HEAD: cf51f4d
+Portal HEAD: 98d62c6
+## Plan 08 - Publication readiness (2026-07-17)
+Task 1: complete (FW cf51f4d..2d21de4; Portal 98d62c6..833d638; review clean; expected RED CUTOVER until Task 3; minor: stale full-suite row wording)
+Task 2: complete (FW 2d21de4..56d3dcc; Portal 833d638..0ac430b, review clean)
+
+## Plan 08 — Publication readiness (2026-07-17)
+
+- [x] Framework + Portal manifest checklists
+- [x] Remote repo proposals (deferred execution)
+- [x] DEPLOY-VPS + CUTOVER-PORTAL runbooks (docs only)
+- [x] FpsPublicationReadiness 0 failed
+- [x] NO gh repo create / push / merge / deploy / SSH / DNS executed
+- FPS roadmap Plans 00–08: **documentation and local separation complete**
+- Next: explicit user order for GitHub publish + VPS cutover ops plan
