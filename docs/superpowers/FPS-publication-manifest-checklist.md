@@ -22,7 +22,8 @@
 | FrameworkRootNotPortal | 0 failed | 3 passed, 0 failed |
 | Kernel | 0 failed | 46 passed, 0 failed |
 | Payments | 0 failed | 17 passed, 0 failed |
-| Full suite | 0 failed | 550 passed, 2 failed — **2 failures are FpsPublicationReadiness (checklist absent + CUTOVER-PORTAL absent); gate filters above all green** |
+| Full suite | 0 failed | 552 passed, 0 failed (post-CUTOVER; FpsPublicationReadiness 2/0 after Task 3) |
+| FpsPublicationReadiness | 0 failed | 2 passed, 0 failed |
 
 ## Boundary
 
