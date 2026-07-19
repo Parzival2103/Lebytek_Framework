@@ -1,32 +1,49 @@
 # Lebytek Framework
 
-Paquete Composer `lebytek/framework`. El portal de la empresa Lebytek vive en el repo **Lebytek_Portal**.
-Los tenants nuevos parten de `skeleton/`, no del Portal. **No desplegar este repo como document root.**
+Composer package **`lebytek/framework`** — reusable platform (auth, RBAC, CRUD Engine, Kernel).
 
-| Ruta | Contenido |
-|------|-----------|
-| `src/` | Framework (`Lebytek\Framework\`) — paquete Composer `lebytek/framework` |
-| `app/` | Dominio de la app (`App\`) — marketing, leads, integración api |
-| `config/`, `routes/`, `public/`, `storage/` | Capa aplicación |
-| `database/schema/` | Schema del framework |
-| `database/migrations/`, `database/seeds/` | Migraciones y seeds de la app |
-| `tests/` | Tests del framework + dominio (Marketing, Integrations) |
-| `docs/integration/` | Contrato api ↔ back-office (espejo de WhatsApiLebytek) |
+**This repo is NOT the deployable lebytek.com site.** The company tenant lives in **`Lebytek_Portal`**. New customer tenants start from **`skeleton/`**, not from Portal or this repo root.
 
-## Setup local
+| Path | Role |
+|------|------|
+| `src/` | Framework package (`Lebytek\Framework\`) |
+| `skeleton/` | Minimal consumer template for new tenants |
+| `database/`, `scripts/` | Platform SQL and install scripts shipped in the package |
+| `tests/` | Platform test harness |
+| Root `config/`, `public/`, stub `app/` | **Test harness only — do not deploy** |
+
+## Documentation
+
+| Doc | Topic |
+|-----|-------|
+| [`docs/PACKAGE-ROOT.md`](docs/PACKAGE-ROOT.md) | What belongs in this repo vs consumers |
+| [`docs/ARCHITECTURE-CONSUMER.md`](docs/ARCHITECTURE-CONSUMER.md) | Framework as Composer dependency |
+| [`docs/TENANTS.md`](docs/TENANTS.md) | Framework vs Portal vs customer skeleton |
+| [`docs/database/SCHEMA-OWNERSHIP.md`](docs/database/SCHEMA-OWNERSHIP.md) | Platform vs business SQL ownership |
+| [`docs/ASSETS-PLATFORM.md`](docs/ASSETS-PLATFORM.md) | Platform assets copied to consumer `public/assets/` |
+| [`CLAUDE.md`](CLAUDE.md) | Agent quick reference |
+
+## Local setup (package maintainer harness)
 
 ```bash
 cp .env.example .env
 composer install
-php scripts/install.php    # primera vez
-php scripts/seed.php
-php -S localhost:8000 -t public
-php tests/run.php          # arnés completo
+php tests/run.php              # full harness
+php tests/run.php Kernel       # subset
+php tests/run.php FpsDocumentation
 ```
 
-## Composer (repo privado en GitHub)
+Optional smoke (harness only, not production deploy):
 
-**No hace falta Packagist** para un paquete privado. Composer resuelve el repo vía VCS:
+```bash
+php scripts/install.php
+php scripts/seed.php
+php -S localhost:8000 -t public
+```
+
+## Consuming the package
+
+Other projects install via Composer (VCS + semver tags). See [`docs/composer-setup.md`](docs/composer-setup.md).
 
 ```json
 "repositories": [
@@ -37,24 +54,15 @@ php tests/run.php          # arnés completo
 }
 ```
 
-Requisitos:
+Requirements: version tags on GitHub, auth for private repo (deploy key or `COMPOSER_AUTH`).
 
-1. **Tag de versión** en GitHub (`v1.0.0`, `v1.1.0`, …) — Composer usa tags para `^1.0`.
-2. **Auth** para repo privado: deploy key SSH o token en `auth.json` / `COMPOSER_AUTH`.
-3. Ver guía completa: [`docs/composer-setup.md`](composer-setup.md).
-
-Este repo se despliega **como aplicación** (clone + `composer install` en la raíz). Otros proyectos pueden consumir solo `lebytek/framework` vía Composer; el autoload del paquete carga `src/`, no `app/`.
-
-## Integración api.lebytek.com
-
-- Contrato: `docs/integration/waapi-api-contract.md`
-- Guía de implementación: `docs/integration/waapi-implementation-real.md`
-- Variables: `LEBYTEK_API_URL`, `LEBYTEK_API_TOKEN` en `.env`
-- Desarrollo en branch `feature/backoffice-api-integration` (no mergear a `main` hasta cerrar Fase 2)
+**Deploy:** `Lebytek_Portal` or a tenant repo from `skeleton/` + `composer install`. Never use this repo root as document root on VPS.
 
 ## Branches
 
-| Branch | Uso |
+| Branch | Use |
 |--------|-----|
-| `main` | Estable; VPS auto-pull cuando esté listo |
-| `feature/backoffice-api-integration` | Skeleton en raíz + cliente HTTP api + provisioning leads |
+| `main` | Stable package releases |
+| `consolidation/framework-portal-separation` | FPS consolidation (Framework ↔ Portal split) |
+
+Do not merge integration branches to `main` without explicit team approval.
