@@ -106,8 +106,8 @@ final class IntegrationsController extends AdminBaseController
     public function provisionForm(Request $request): Response
     {
         if (! $this->legacyGreenEnabled() || $this->apiProvisioningEnabled()) {
-            Session::flash('error', 'Provisión local desactivada: usa "Provisionar demo (api)" en Leads.');
-            return $this->redirect('/admin/crud/mkt_leads');
+            Session::flash('error', 'Provisión local desactivada. Usa el flujo de demo desde Integraciones o la API.');
+            return $this->redirect('/admin/integraciones');
         }
 
         return $this->view('admin/integraciones/provision', [
@@ -122,8 +122,8 @@ final class IntegrationsController extends AdminBaseController
         $this->verifyCsrf($request);
 
         if (! $this->legacyGreenEnabled() || $this->apiProvisioningEnabled()) {
-            Session::flash('error', 'Provisión local desactivada: usa "Provisionar demo (api)" en Leads.');
-            return $this->redirect('/admin/crud/mkt_leads');
+            Session::flash('error', 'Provisión local desactivada. Usa el flujo de demo desde Integraciones o la API.');
+            return $this->redirect('/admin/integraciones');
         }
 
         $leadId = (int) $request->input('lead_id', 0);
