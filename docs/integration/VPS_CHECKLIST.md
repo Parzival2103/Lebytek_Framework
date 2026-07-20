@@ -100,7 +100,19 @@ Branch: `feature/backoffice-api-integration` (until merge)
 ### BD
 
 - [ ] Installer or `php scripts/migrate.php` + seed
-- [ ] Marketing module + dom_mkt_leads
+- [ ] Marketing module + `dom_mkt_leads` / `dom_mkt_ordenes` / `dom_mkt_membresias`
+- [ ] Payments bootstrap `database/schema/modules/payments.sql` (`pay_events`) si `vertical.modules.payments=true`
+- [ ] Migraciones marketing recientes: Stripe columns, plantillas seed, membresías, landing experiments
+
+### Payments / membresías recurrentes (post PR #8/#13)
+
+- [ ] `vertical.modules.marketing` y `payments` ON en Portal/VPS (OFF por defecto en skeleton)
+- [ ] `.env`: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*`, `APP_URL`
+- [ ] Mantener `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` hasta cerrar bugs de activación por `invoice.paid` (auditoría 2026-07-17+)
+- [ ] Mantener `MKT_MEMBERSHIP_AUTHORIZE_ENABLED=false` hasta smoke api + ops
+- [ ] Webhook Stripe → `https://lebytek.com/webhooks/stripe` (solo con payments ON)
+- [ ] Cron dunning: `*/30 * * * * php scripts/expire-membership-grace.php`
+- [ ] Cron churn: `15 3 1 * * php scripts/compute-churn-snapshot.php`
 
 ### Smoke
 

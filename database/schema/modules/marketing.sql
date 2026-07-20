@@ -170,6 +170,9 @@ CREATE TABLE IF NOT EXISTS `dom_mkt_ordenes` (
   `lead_id`                         BIGINT UNSIGNED DEFAULT NULL,
   `api_tenant_public_id`            CHAR(26)        DEFAULT NULL,
   `status`                          VARCHAR(30)     NOT NULL DEFAULT 'pending_transfer',
+  `metodo_pago`                     VARCHAR(20)     DEFAULT NULL,
+  `payment_provider`                VARCHAR(40)     DEFAULT NULL,
+  `payment_ref`                     VARCHAR(190)    DEFAULT NULL,
   `transfer_notified_at`            DATETIME        DEFAULT NULL,
   `authorized_at`                   DATETIME        DEFAULT NULL,
   `authorized_by`                   BIGINT UNSIGNED DEFAULT NULL,
@@ -187,7 +190,33 @@ CREATE TABLE IF NOT EXISTS `dom_mkt_ordenes` (
   KEY `idx_mkt_ordenes_email` (`email`),
   KEY `idx_mkt_ordenes_deleted` (`deleted`),
   KEY `idx_mkt_ordenes_lead` (`lead_id`),
-  KEY `idx_mkt_ordenes_paquete` (`paquete_id`)
+  KEY `idx_mkt_ordenes_paquete` (`paquete_id`),
+  KEY `idx_mkt_ordenes_payment_ref` (`payment_ref`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `dom_mkt_membresias` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `lead_id` BIGINT UNSIGNED NULL,
+  `api_tenant_public_id` CHAR(26) NOT NULL,
+  `plan_slug` VARCHAR(40) NOT NULL,
+  `ciclo` ENUM('monthly','annual') NOT NULL DEFAULT 'monthly',
+  `status` ENUM('active','past_due','cancelled') NOT NULL DEFAULT 'active',
+  `stripe_customer_id` VARCHAR(64) NULL,
+  `stripe_subscription_id` VARCHAR(64) NULL,
+  `current_period_end` DATETIME NULL,
+  `grace_started_at` DATETIME NULL,
+  `grace_ends_at` DATETIME NULL,
+  `cancelled_at` DATETIME NULL,
+  `reactivation_token_hash` CHAR(64) NULL,
+  `retry_token_hash` CHAR(64) NULL,
+  `retry_expires_at` DATETIME NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_mkt_membresias_tenant` (`api_tenant_public_id`),
+  UNIQUE KEY `uq_mkt_membresias_stripe_sub` (`stripe_subscription_id`),
+  KEY `idx_mkt_membresias_grace` (`status`, `grace_ends_at`),
+  KEY `idx_mkt_membresias_lead` (`lead_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `dom_mkt_variant_weights` (
