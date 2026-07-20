@@ -55,7 +55,7 @@ test('notifier sends WhatsApp to each configured number with lead details', func
     assert_true(str_contains($channel->requests[0]->body, 'María López'));
     assert_true(str_contains($channel->requests[0]->body, 'maria@test.com'));
     assert_true(str_contains($channel->requests[0]->body, '5512345678'));
-    assert_true(str_contains($channel->requests[0]->body, 'https://lebytek.com/crud/mkt_leads/42'));
+    assert_true(str_contains($channel->requests[0]->body, 'https://lebytek.com/admin/crud/mkt_leads/42'));
     assert_same('lead_email_verified', $channel->requests[0]->meta['source']);
     assert_same(42, $channel->requests[0]->meta['record_id']);
 });

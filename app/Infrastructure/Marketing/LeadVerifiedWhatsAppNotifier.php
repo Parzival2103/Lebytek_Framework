@@ -32,7 +32,7 @@ final class LeadVerifiedWhatsAppNotifier implements LeadTeamAlertNotifierInterfa
 
         $base = rtrim((string) EnvLoader::get('APP_URL', ''), '/');
         $id = (int) ($lead['id'] ?? 0);
-        $adminUrl = $base . '/crud/mkt_leads/' . $id;
+        $adminUrl = $base . '/admin/crud/mkt_leads/' . $id;
 
         $mensaje = trim((string) ($lead['mensaje'] ?? ''));
         if (mb_strlen($mensaje) > 120) {
