@@ -8,12 +8,28 @@ test('marketing.sql crea todas las tablas dom_mkt_* de forma idempotente', funct
     foreach ([
         'dom_mkt_leads', 'dom_mkt_provisiones', 'dom_mkt_paquetes',
         'dom_mkt_bloques', 'dom_mkt_plantillas', 'dom_mkt_secuencias', 'dom_mkt_paginas',
-        'dom_mkt_ordenes',
+        'dom_mkt_ordenes', 'dom_mkt_membresias',
         'dom_mkt_variant_weights', 'dom_mkt_variant_proposals',
         'dom_mkt_landing_sessions', 'dom_mkt_landing_events',
     ] as $tabla) {
         assert_true(str_contains($sql, "CREATE TABLE IF NOT EXISTS `{$tabla}`"), "crea {$tabla}");
     }
+});
+
+test('marketing.sql incluye columnas API/churn en dom_mkt_leads', function (): void {
+    $sql = (string) file_get_contents(ROOT_PATH . '/database/schema/modules/marketing.sql');
+    assert_true(str_contains($sql, '`api_instance_public_id`'), 'columna api_instance_public_id');
+    assert_true(str_contains($sql, '`api_lifecycle_status`'), 'columna api_lifecycle_status');
+    assert_true(str_contains($sql, '`demo_expires_at`'), 'columna demo_expires_at');
+    assert_true(str_contains($sql, '`idx_mkt_leads_demo_expires`'), 'índice demo_expires');
+});
+
+test('marketing.sql incluye columnas de pago Stripe en dom_mkt_ordenes', function (): void {
+    $sql = (string) file_get_contents(ROOT_PATH . '/database/schema/modules/marketing.sql');
+    assert_true(str_contains($sql, '`metodo_pago`'), 'columna metodo_pago');
+    assert_true(str_contains($sql, '`payment_provider`'), 'columna payment_provider');
+    assert_true(str_contains($sql, '`payment_ref`'), 'columna payment_ref');
+    assert_true(str_contains($sql, '`idx_mkt_ordenes_payment_ref`'), 'índice payment_ref');
 });
 
 test('marketing.sql inserta permisos y menú con INSERT IGNORE', function (): void {
