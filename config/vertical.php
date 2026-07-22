@@ -19,6 +19,7 @@ return [
         'reportes'       => true,
         'marketing'      => false,
         'integrations'   => true,
+        'payments'       => false,
     ],
 
     'labels' => [

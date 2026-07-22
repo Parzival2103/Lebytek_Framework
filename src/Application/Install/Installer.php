@@ -8,6 +8,7 @@ use Lebytek\Framework\Domain\Interfaces\MigrationRepositoryInterface;
 use Lebytek\Framework\Domain\Interfaces\ModuleStateRepositoryInterface;
 use Lebytek\Framework\Infrastructure\Install\InstallTrace;
 use Lebytek\Framework\Infrastructure\Install\SqlFileRunner;
+use Lebytek\Framework\Kernel\PackagePaths;
 
 final class Installer
 {
@@ -108,7 +109,7 @@ final class Installer
      */
     private function clasificar(string $clave, string $archivo, string $dir, array $aplicadas, array &$pendientes, array &$modificados): void
     {
-        $ruta     = rtrim($dir, '/\\') . '/' . $archivo;
+        $ruta = $this->resolveInstallFile($archivo, $dir);
         $checksum = $this->runner->checksum($ruta);
 
         if (!isset($aplicadas[$archivo])) {
@@ -117,6 +118,30 @@ final class Installer
         }
         if ($aplicadas[$archivo] !== $checksum) {
             $modificados[] = ['modulo' => $clave, 'archivo' => $archivo];
+        }
+    }
+
+    private function resolveMigrationFile(string $archivo): string
+    {
+        return PackagePaths::resolveDataFile('database/migrations/' . ltrim($archivo, '/'));
+    }
+
+    private function resolveSeedFile(string $archivo): string
+    {
+        return PackagePaths::resolveDataFile('database/seeds/' . ltrim($archivo, '/'));
+    }
+
+    /**
+     * PackagePaths es SoT; $dir (constructor) solo como fallback BC / fixtures.
+     */
+    private function resolveInstallFile(string $archivo, string $dir): string
+    {
+        try {
+            return ($dir === $this->seedsDir || str_contains($dir, 'seeds'))
+                ? $this->resolveSeedFile($archivo)
+                : $this->resolveMigrationFile($archivo);
+        } catch (\RuntimeException) {
+            return rtrim($dir, '/\\') . '/' . $archivo;
         }
     }
 
@@ -164,10 +189,11 @@ final class Installer
         if (isset($aplicadas[$archivo])) {
             return;
         }
-        $ruta = rtrim($dir, '/\\') . '/' . $archivo;
+        $ruta = $this->resolveInstallFile($archivo, $dir);
         if (!is_file($ruta)) {
             return;
         }
         $this->migraciones->registrar($clave, $archivo, $this->runner->checksum($ruta));
     }
 }
+

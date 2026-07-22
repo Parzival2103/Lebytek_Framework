@@ -1,62 +1,50 @@
 ---
-description: Convenciones oficiales de nombres para BD, codigo, APIs y variables
+description: Convenciones oficiales de nombres (plataforma y consumidores)
 alwaysApply: true
 ---
 
 # Convenciones de nombres
 
+Aplican al paquete en `src/` y a apps consumidoras (Portal, skeleton). Mantener consistencia cross-repo.
+
 ## Reglas generales
 
-- Usar nombres descriptivos y claros.
-- No usar abreviaciones innecesarias.
-- No usar nombres genericos (`data`, `info`, `temp`, `obj`, `var`, `test`).
-- No mezclar idiomas dentro del mismo nombre.
-- Mantener un solo idioma por dominio y consistencia global.
-- No usar espacios ni caracteres especiales.
-- Los nombres deben reflejar el dominio del negocio.
-- Evitar nombres excesivamente largos.
+- Nombres descriptivos; sin abreviaciones innecesarias ni genéricos (`data`, `temp`, `obj`).
+- Un idioma por dominio; sin mezclar idiomas en un mismo identificador.
+- Sin espacios ni caracteres especiales.
 
 ## Base de datos
 
-- Tablas: `snake_case` y plural (ej. `clientes`, `eventos`, `visitas_frecuentes`).
+- Tablas: `snake_case` plural (ej. `clientes`, `auth_usuarios`).
 - Columnas: `snake_case` (ej. `created_at`, `cliente_id`).
-- PK: `id`. FK: `tabla_id` (ej. `usuario_id`). Pivote: `tabla_tabla` (ej. `usuarios_roles`).
-- Prefijos de plataforma reservados por el framework: `auth_`, `cfg_`, `log_`, `core_`,
-  `int_`, `rep_`, `tmp_`, `sys_`. Los módulos de negocio de la app usan `dom_*`.
+- PK: `id`. FK: `tabla_id`. Pivote: `tabla_tabla`.
+- Prefijos plataforma (framework): `auth_`, `cfg_`, `log_`, `core_`, `int_`, `rep_`, `tmp_`, `sys_`.
+- Módulos de negocio del consumidor: `dom_*` (Portal), no en schema plataforma de este repo.
 
-## PHP y codigo
+## PHP y código
 
-- Clases: `PascalCase` (ej. `ClienteService`).
-- Metodos: `camelCase` (ej. `obtenerUsuarios()`).
-- Variables: `camelCase` (ej. `$clienteNombre`).
-- Constantes: `UPPER_SNAKE_CASE` (ej. `MAX_UPLOAD_SIZE`).
-- Namespace de la app: `App\` (PSR-4 sobre `app/`). El framework usa `Lebytek\Framework\`.
+- Clases: `PascalCase`. Métodos y variables: `camelCase`. Constantes: `UPPER_SNAKE_CASE`.
+- Plataforma: namespace `Lebytek\Framework\` sobre `src/`.
+- Consumidor: namespace `App\` sobre `app/` del **Portal o tenant**, no el stub harness de este repo.
 
 ## Archivos y carpetas
 
-- Archivos de clases: `PascalCase.php`.
-- Vistas y rutas: `snake_case.php`.
-- Capas: `PascalCase` (`Presentation`, `Application`, `Domain`, `Infrastructure`).
-- Modulos: `snake_case`.
+- Clases: `PascalCase.php`. Vistas/rutas: `snake_case.php`.
+- Capas: `Presentation`, `Application`, `Domain`, `Infrastructure`.
+- Módulos: `snake_case` o PascalCase de dominio según convención existente del repo.
 
 ## APIs, JSON y entorno
 
 - Rutas API: `/api/recurso`, `/api/recurso/{id}`, `/api/recurso/{id}/accion`.
-- JSON: llaves en `camelCase`.
-- Permisos RBAC: slug `modulo.accion` (ej. `clientes.ver`).
-- Variables de entorno: `UPPER_SNAKE_CASE` (ej. `DB_HOST`, `JWT_SECRET`).
+- JSON: llaves `camelCase`. RBAC: slug `modulo.accion`. Env: `UPPER_SNAKE_CASE`.
 
 ## Consistencia obligatoria
 
-- El mismo concepto usa el mismo nombre en todo el sistema.
-- Si la tabla es `clientes`, la FK es `cliente_id`; si la clase es `Cliente`, el archivo es `Cliente.php`.
-- Si existe `/api/clientes`, no crear variantes inconsistentes como `/api/client`.
-- No renombrar elementos existentes sin justificacion.
+- Mismo concepto → mismo nombre en BD, código y API.
+- No renombrar elementos existentes sin justificación.
+- Referencia canónica plataforma: `docs/core/convenciones_nombres.md` en este repo (no copiar desde `vendor/` en consumidores).
 
 ## Guardrails para IA
 
-- Respetar estas convenciones en todo cambio propuesto o implementado.
-- No inventar nuevos estilos de nombres ni crear sinonimos para la misma entidad.
-- Mantener consistencia entre base de datos, codigo y API.
-- Seguir las convenciones del framework; la referencia canónica vive en el repo del
-  framework (`docs/core/convenciones_nombres.md`), no en `vendor/`.
+- En **este repo**: convenciones sobre `src/`, SQL plataforma, `skeleton/`.
+- En **Portal/skeleton**: convenciones sobre `App\` y SQL de negocio; plataforma read-only en vendor.

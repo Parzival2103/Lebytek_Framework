@@ -1,49 +1,44 @@
 ---
-description: Estructura oficial de carpetas de la app consumidora
+description: Estructura del repo fuente del paquete y contrato con consumidores
 alwaysApply: true
 ---
 
-# Estructura oficial de la app
+# Estructura del package source
 
-Todo cambio debe respetar esta estructura base de la app consumidora:
+Todo cambio **en este repo** debe respetar el layout del paquete, no el de una app desplegada.
 
-- `/app` con capas: `Presentation`, `Application`, `Domain`, `Infrastructure`
-  (el `Kernel` lo aporta el framework en `vendor/`, no se crea aquí).
-- `/config`
-- `/database`
-- `/public`
-- `/routes`
-- `/storage`
-- `/tests`
-- `/vendor` — dependencias de Composer, incluido `lebytek/framework`. **Solo lectura**
-  (ver regla `framework-en-vendor`).
+## Árbol principal (`Lebytek_Framework`)
 
-## Reglas por capa en `/app`
+| Ruta | Uso |
+|------|-----|
+| `src/` | Código del paquete — capas `Presentation`, `Application`, `Domain`, `Infrastructure` |
+| `skeleton/` | Plantilla mínima para nuevos tenants |
+| `database/` | Schema y migraciones **de plataforma** |
+| `scripts/` | Install/migrate/seed de plataforma |
+| `tests/` | Harness de tests plataforma |
+| `docs/` | Contratos, ownership, guías FPS |
+| `config/`, `public/`, stub `app/` | **Harness local del mantenedor — no deploy** |
 
-- `Presentation`: `Controllers`, `Views`, `Middlewares`, `Requests`, `Responses`, `Api`, `Web`.
-- `Application`: `UseCases`, `Services`, `DTO`, `Commands`, `Queries`, `Validators`, `Mappers`.
-- `Domain`: `Entities`, `ValueObjects`, `Interfaces`, `Rules`, `Policies`, `Events`, `Exceptions`.
-- `Infrastructure`: `Persistence`, `Repositories`, `Database`, `ExternalServices`, `Storage`, `Mail`, `Cache`, `Logging`, `Integrations`, `Queue`.
+## Reglas por capa en `src/`
 
-Los módulos de negocio se organizan por dominio dentro de cada capa (p. ej.
-`app/Domain/Marketing`, `app/Application/Marketing`, `app/Infrastructure/Marketing`).
+- `Presentation`: controladores/vistas base, middlewares plataforma.
+- `Application`: servicios plataforma, CRUD engine, dashboard builders.
+- `Domain`: entidades, políticas e interfaces de plataforma.
+- `Infrastructure`: repos PDO, mail, logging del paquete.
 
-## Reglas por carpeta raiz
+## Apps consumidoras (fuera de este repo)
 
-- `config`: configuraciones del sistema (incluye bindings de DI en `container.php`,
-  módulos en `vertical.php`, CRUDs en `cruds/`).
-- `database`: `migrations`, `seeds`, `factories`, `schema`, `backups`.
-- `public`: `index.php` y recursos publicos (`assets`, `css`, `js`, `images`, `uploads`).
-- `routes`: definicion de rutas (`web.php`, `api.php` y modulares por dominio).
-- `storage`: archivos generados (`logs`, `uploads`, `temp`, `cache`, `exports`, `imports`).
-- `tests`: pruebas (`Unit`, `Feature`, `Integration`, `Performance`).
+Portal y tenants desplegados siguen la misma capas en **`app/`** (`App\`):
+
+- `Presentation`, `Application`, `Domain`, `Infrastructure` por módulo de negocio.
+- `config/`, `routes/`, `public/`, `database/` (SQL de negocio), `storage/`, `tests/`.
+- `vendor/lebytek/framework` — **solo lectura** (ver `framework-en-vendor`).
+
+Ejemplo negocio Portal: `app/Domain/Marketing` — **no** en la raíz de este repo.
 
 ## Guardrails obligatorios
 
-- No editar `vendor/`. Plataforma que falta o falla se resuelve en el repo del framework.
-- No crear un `Kernel` local ni carpetas fuera de esta estructura sin documentarlo.
-- Cada archivo debe pertenecer a una capa o carpeta raiz correcta.
-- `Controllers` solo en `Presentation`; casos de uso solo en `Application`; entidades solo
-  en `Domain`; repositorios solo en `Infrastructure`.
-- Configuracion solo en `config`; migraciones solo en `database/migrations`; archivos
-  publicos solo en `public`; scripts solo donde corresponda; tests solo en `tests`.
+- Plataforma nueva o corrección → `src/`, SQL plataforma, `skeleton/`.
+- Negocio Lebytek (Marketing, leads, api client) → **`Lebytek_Portal`**.
+- No editar `vendor/` en consumidores; no usar root `app/` aquí como app de producción.
+- No crear `Kernel` local ni carpetas paralelas fuera de `src/` / `skeleton/` / harness documentado.

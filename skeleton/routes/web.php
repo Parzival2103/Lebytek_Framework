@@ -27,11 +27,6 @@ use Lebytek\Framework\Presentation\Middlewares\RbacMiddleware;
 
 $router->get('/manifest.webmanifest', [PwaController::class, 'manifest']);
 
-$marketingActivo = (bool) \Lebytek\Framework\Kernel\Config\Config::get('vertical.modules.marketing', false);
-if ($marketingActivo) {
-    require ROOT_PATH . '/routes/marketing.php';
-}
-
 $integrationsActivo = (bool) \Lebytek\Framework\Kernel\Config\Config::get('vertical.modules.integrations', false);
 if ($integrationsActivo) {
     $router->get('/wa/activar/{token}', [\Lebytek\Framework\Presentation\Controllers\Admin\IntegrationsController::class, 'activar']);
@@ -39,9 +34,7 @@ if ($integrationsActivo) {
 }
 
 $router->get('/login',  [AuthController::class, 'showLogin']);
-if (!$marketingActivo) {
-    $router->get('/', [AuthController::class, 'showLogin']);
-}
+$router->get('/', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login'], [CsrfMiddleware::class]);
 $router->post('/logout', [AuthController::class, 'logout'], [AuthMiddleware::class]);
 

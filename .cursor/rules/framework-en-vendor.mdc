@@ -1,0 +1,18 @@
+---
+description: Package source — framework en src/, Portal consumidor aparte. Dónde editar cada capa.
+alwaysApply: true
+---
+
+# Monorepo → package source
+
+Este repo **publica** el paquete `lebytek/framework` (`src/`). **No** es el sitio desplegable.
+
+| Código | Ruta | Namespace |
+|-----|---|-----|
+| Framework (plataforma) | `src/` | `Lebytek\Framework\` |
+| App consumidora | **fuera** — `Lebytek_Portal/` o `skeleton/` | `App\` |
+
+- Cambios de plataforma → **`src/`**, SQL plataforma, `skeleton/`
+- Cambios de negocio Lebytek → repo **`Lebytek_Portal`**
+- Root `app/` es stub/harness — no añadir Marketing aquí
+- **NUNCA** editar `vendor/` en consumidores desde este flujo de trabajo

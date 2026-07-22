@@ -1,16 +1,27 @@
 {
     "name": "lebytek/skeleton",
-    "description": "Esqueleto de aplicacion Lebytek (consume lebytek/framework)",
+    "description": "Esqueleto minimo de aplicacion Lebytek (consume lebytek/framework)",
     "type": "project",
+    "license": "proprietary",
     "require": {
         "php": ">=8.1",
-        "lebytek/framework": "^1.0"
+        "lebytek/framework": "*@dev"
     },
     "repositories": [
-        { "type": "vcs", "url": "https://github.com/Parzival2103/Lebytek_Framework" }
+        {
+            "type": "path",
+            "url": "..",
+            "options": { "symlink": true }
+        }
     ],
     "autoload": {
-        "psr-4": { "App\\": "app/" }
+        "psr-4": {
+            "App\\": "app/"
+        }
     },
-    "config": { "sort-packages": true }
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

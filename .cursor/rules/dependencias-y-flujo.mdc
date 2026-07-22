@@ -1,36 +1,35 @@
 ---
-description: Reglas de dependencia entre capas y flujo estandar de solicitudes
+description: Dependencias entre capas del paquete y flujo de solicitud en consumidores
 alwaysApply: true
 ---
 
 # Dependencias y flujo
 
-## Reglas de dependencia obligatorias
+## Reglas de dependencia (capas en `src/` y en `App\` consumidor)
 
 - `Presentation` puede depender de `Application`.
 - `Application` puede depender de `Domain`.
 - `Infrastructure` puede depender de `Domain` o `Application` para implementar contratos.
 - `Domain` no depende de `Presentation` ni de `Infrastructure`.
-- Toda capa puede usar el `Kernel` y las clases base del framework (desde `vendor/`),
-  pero nunca editarlas ahí.
-- Las dependencias deben apuntar hacia el dominio, no hacia presentacion.
+- Capas consumidoras usan `Kernel` y clases base desde `vendor/lebytek/framework` — **nunca editarlas ahí**.
+- Las dependencias apuntan hacia el dominio, no hacia presentación.
 
-## Flujo estandar de una solicitud
+## Flujo estándar de una solicitud (consumidor desplegado)
 
-1. Entra por ruta (resuelta por el router del framework).
-2. Pasa por los middlewares (Auth, CSRF, RBAC del framework) y llega al controlador en `Presentation`.
-3. El controlador procesa entrada y delega en `Application`.
-4. `Application` coordina el caso de uso.
-5. `Domain` aplica reglas de negocio.
-6. `Infrastructure` resuelve persistencia o servicios externos.
-7. `Application` recibe resultados y `Presentation` responde.
+1. Entra por ruta en el consumidor (`public/index.php`).
+2. `Kernel` del paquete (vendor) bootstrapea router, DI, sesión.
+3. Middlewares plataforma (Auth, CSRF, RBAC) y controlador en `App\Presentation`.
+4. Controlador delega en `Application` del consumidor o plataforma.
+5. `Domain` aplica reglas; `Infrastructure` persiste o llama servicios externos.
+6. `Presentation` responde HTTP/JSON.
 
-## Crecimiento y refactorizacion
+En este repo, tests del harness ejercitan el mismo flujo contra stub `app/` — no confundir con Portal.
 
-- Integrar nuevas funcionalidades en capas existentes de `app/`.
-- No crear estructuras paralelas ni duplicar logica que el framework ya provee.
-- No mover negocio fuera de `Domain`/`Application` sin justificacion.
+## Crecimiento y refactorización
+
+- Cambios de plataforma → `src/`, `database/` plataforma, `skeleton/`, tests aquí.
+- Cambios de negocio tenant → repo consumidor (`Lebytek_Portal` o tenant desde skeleton).
+- No duplicar lógica que el paquete ya provee.
 - No saltar capas para acelerar entregas.
-- Si una funcionalidad requiere cambiar el framework, prepararla como spec + plan en el
-  repo `Lebytek_Framework`; no parchear `vendor/`.
-- Documentar cambios arquitectonicos importantes e impacto entre capas.
+- Bug de plataforma visto en consumidor → spec/plan en `Lebytek_Framework`; no parche en `vendor/`.
+- Documentar cambios arquitectónicos en `docs/ARCHITECTURE-CONSUMER.md` cuando afecten contrato consumidor.

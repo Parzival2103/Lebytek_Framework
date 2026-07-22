@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-// Skeleton app test harness (domain tests under skeleton/tests/).
 if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', dirname(__DIR__, 2));
 }
@@ -16,7 +15,7 @@ if (!defined('STORAGE_PATH')) {
     define('STORAGE_PATH', ROOT_PATH . '/storage');
 }
 
-require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
+require_once ROOT_PATH . '/vendor/autoload.php';
 
 use Lebytek\Framework\Kernel\Config\Config;
 use Lebytek\Framework\Kernel\Database\Connection;
