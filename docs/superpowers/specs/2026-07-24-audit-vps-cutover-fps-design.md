@@ -4,6 +4,7 @@
 **Repo:** `Lebytek_Framework` (package source)  
 **Estado:** diseño — sin implementación  
 **Auditoría fuente:** [PR #27](https://github.com/Parzival2103/Lebytek_Framework/pull/27) — `docs/audits/2026-07-24-auditoria-tecnica-main.md`  
+**Pases aplicados:** deuda técnica (D1–D6) + compatibilidad / UX / responsive (K1–K6, U1–U7, R1–R6)  
 **Rama base de trabajo:** `feature/backoffice-api-integration` (referencia VPS actual)  
 **Contexto FPS:** `main` @ `607a3c6` (merge PR #26) — paquete sin Marketing/Portal
 
@@ -175,6 +176,207 @@ Items pendientes relevantes al cutover (§ E2E Fase 0 y lebytek.com):
 
 ---
 
+## Compatibilidad (pase UX — PHP, navegadores, admin, móvil)
+
+Inventario derivado de revisión estática de `feature/backoffice-api-integration` @ `4789f95`, `docs/core/ui_ux.md`, install wizard y flujos públicos Marketing. **Solo requisitos de diseño** — sin implementación en este pipeline.
+
+### K1 — Runtime PHP y dependencias Composer
+
+| Ítem | Evidencia | Requisito |
+|------|-----------|-----------|
+| PHP mínimo | `composer.json`: `"php": ">=8.1"` | VPS y staging Portal deben ejecutar **PHP ≥ 8.1** antes del cutover; verificar en smoke post-deploy |
+| VOs Payments | PR #10: `readonly class` en domain Payments | Hosting con PHP 8.0 o inferior **no compatible** — bloqueante para cutover |
+| Extensiones | Install wizard + PDO repos | `pdo_mysql`, `mbstring`, `json`, `openssl` requeridas; documentar en checklist ops |
+
+### K2 — Navegadores soportados (admin vs público)
+
+| Superficie | Stack | Compatibilidad esperada |
+|------------|-------|-------------------------|
+| Admin / CRUD | Bootstrap 5.3 + jQuery + DataTables Responsive (CDN) | Chrome/Firefox/Safari/Edge **últimas 2 versiones**; sin soporte IE11 |
+| Landing v1 | Bootstrap 5.3 (`publico/layout.php`) | Misma baseline admin |
+| Landing v2 | CSS/JS standalone (`landing_v2.css/js`) — **sin Bootstrap** | Requiere `IntersectionObserver`, CSS `clamp()`, `prefers-reduced-motion`; Safari iOS ≥ 15 recomendado |
+| Install wizard | Bootstrap 5.3, layout 720px | Funcional en móvil; token 403 es texto plano (ver U3) |
+
+**Requisito cutover:** smoke manual en **Safari iOS + Chrome Android** para landing activa (v1/v2 según `LANDING_VARIANT`) y login admin.
+
+### K3 — Divergencia de stacks público vs admin post-FPS
+
+Tras cutover, lebytek.com consumirá **Portal + vendor framework**. El package `main` ya no incluye Marketing; la compatibilidad de rutas públicas (`/`, `/lead`, `/comprar/*`, `/verificar-demo/*`, `/webhooks/stripe`) debe validarse **en Portal**, no en harness Framework.
+
+| Ruta pública | Middleware / deps | Riesgo compat |
+|--------------|-------------------|---------------|
+| `POST /marketing/collect` | Sin CSRF (by design); rate limit en use case | Bloqueo por WAF/CDN si body JSON mal formado |
+| `POST /webhooks/stripe` | Fuera CSRF; firma Stripe | Content-Type y body raw intactos en proxy nginx |
+| `GET /portal` | Magic-link | Links rotos si `APP_URL` desalineado post-cutover DNS |
+
+### K4 — Schema drift → errores 500 en admin y API (no navegador)
+
+Hallazgo D1: columnas lifecycle/churn ausentes en bootstrap provocan SQL exceptions en `PdoLeadRepository` y reportes churn. Desde UX de compatibilidad, **cualquier navegador** verá pantalla de error 500 en CRUD leads u órdenes tras greenfield install incompleto — no es bug de cliente sino de schema.
+
+**Requisito:** gate cutover incluye query de columnas (`api_instance_public_id`, `demo_expires_at`, etc.) antes de exponer admin a operadores.
+
+### K5 — Stripe Checkout y return URLs móvil
+
+Flujos `IniciarPagoStripeUseCase` → redirect Stripe → `/comprar/orden/{publicId}/pago/exito|cancelado` y rutas `/membresia/reintentar-pago`, `/membresia/reactivar`.
+
+| Condición | Impacto compat/UX |
+|-----------|-------------------|
+| `PAYMENTS_SUBSCRIPTION_CHECKOUT=true` (#21) | Checkout subscription no activa orden — usuario vuelve a "exito" pero membresía pendiente |
+| Webhook 200 con fallo silencioso (C4) | Página éxito muestra copy optimista independiente del estado real |
+| `RecoverMembershipPaymentService` (C3) | Nuevo Checkout en lugar de Billing Portal — sesiones duplicadas en Stripe mobile |
+
+**Gate:** mantener checkout recurrente OFF; smoke return URL en viewport móvil 375px.
+
+### K6 — Install wizard y entornos productivos
+
+| Ítem | Evidencia | Requisito |
+|------|-----------|-----------|
+| `INSTALL_TOKEN` | `public/install/index.php` L54–61: `hash_equals` en prod | Documentado en PR #27; merge o equivalente antes cutover |
+| Respuesta 403 | Texto plano sin layout HTML | Ops debe conocer formato `?token=` — ver U3 |
+| `storage/install.lock` | Bloquea reinstalación | Copy en `ya_instalado.php` debe ser claro post-cutover Portal |
+
+---
+
+## UX (pase UX — flujos, copy, estados error/vacío)
+
+### U1 — CRUD `mkt_ordenes`: bypass de flujo de pago (M1)
+
+`config/cruds/mkt_ordenes.json` expone `status` como `select` editable incluyendo `paid`, mientras las acciones de fila `autorizar_pago` y `activar_plan` dependen de estados específicos.
+
+| Problema UX | Impacto |
+|-------------|---------|
+| Operador marca `paid` manualmente | Usuario cree activado; `api_activation_error` puede quedar vacío o confuso |
+| Transiciones JSON no impiden select directo | Inconsistencia entre badge "Pagada" y tenant API sin provisionar |
+| Help text en `api_tenant_public_id` mezcla flujos transferencia/Stripe | Riesgo de error operativo en móvil (campo largo, truncate en lista) |
+
+**Requisito Portal:** `status` **read-only** en formulario o restringido a transiciones RBAC; acciones primarias visibles y accesibles sin editar select.
+
+### U2 — Confirmación de pago Stripe: copy optimista vs realidad (#21)
+
+Vista `publico/compra_pago_exito.php`:
+
+```text
+"Estamos confirmando tu pago. Te avisaremos cuando se active tu membresía."
+```
+
+No distingue: pago one-shot confirmado, subscription pendiente de webhook, ni fallo de activación API. Con C1/C4 abiertos, el usuario recibe mensaje de éxito aunque la orden permanezca `pending_payment`.
+
+**Requisito:** estados diferenciados en página de retorno según `order.status` + `metodo_pago` + presencia de `api_activation_error`; enlace a soporte si activación falla tras  N minutos.
+
+### U3 — Install wizard: error de token sin guía visual
+
+`public/install/index.php` L59–60 responde 403 con string plano:
+
+```text
+Instalador protegido. Proporcione ?token=INSTALL_TOKEN (definido en .env).
+```
+
+Sin layout, sin enlace a `docs/core/despliegue-y-versionado.md`, sin indicación de contacto ops. Operador en móvil ve página en blanco con texto crudo.
+
+**Requisito:** página 403 con layout wizard mínimo + instrucciones copy-paste URL con token (Portal o Framework según repo).
+
+### U4 — Pago cancelado: recuperación de intención débil
+
+`publico/compra_pago_cancelado.php` solo enlaza a `/?compras=1#paquetes` — pierde contexto de orden (`publicId`), plan y ciclo seleccionados.
+
+**Requisito:** CTA secundario "Reintentar pago" hacia checkout/transferencia de la misma orden cuando `status` lo permita; copy que confirme que no hubo cargo.
+
+### U5 — Verificación demo: estados terminales sin CTA de retorno
+
+`verificar_demo.php` maneja bien `wrong_code`, `ok`, `already_verified`, `expired`, `locked`, `invalid` con alerts Bootstrap.
+
+| Estado | Gap UX |
+|--------|--------|
+| `expired`, `locked`, `invalid` | Sin botón "Solicitar demo de nuevo" → `/#demo` o landing v2 `#demo` |
+| `ok` | Copy genérico "te contactaremos" — no indica tiempo esperado ni siguiente paso |
+
+**Requisito Portal:** enlace consistente al formulario demo en todos los estados de error; anchor `#demo` funcional en v1 y v2.
+
+### U6 — Flujo transferencia bancaria vs Stripe en admin
+
+Acciones CRUD condicionadas por `visible_when.status`:
+
+- `autorizar_pago` → `pending_transfer`, `awaiting_review`
+- `activar_plan` → `paid`
+
+Si operador no ve acciones (estado incorrecto o ocultas en móvil), no hay empty-state que explique el siguiente paso. Columna `api_activation_error` con badge danger ayuda pero depende de schema (D1).
+
+**Requisito:** empty-state o banner en detalle de orden con checklist del flujo según `metodo_pago`; mensaje si falta columna/error de activación por schema incompleto.
+
+### U7 — Recuperación de membresía / dunning (#21 C3, C5)
+
+Rutas `/membresia/reintentar-pago`, `/membresia/reactivar` + páginas éxito/cancelado duplicadas.
+
+| Problema | UX |
+|----------|-----|
+| Recover crea nuevo Checkout (C3) | Usuario ve múltiples cargos potenciales; confusión en email de Stripe |
+| `markActive` local con API caída (C5) | Portal cliente muestra activo; producto no funciona |
+
+**Requisito:** unificar copy de reactivación; fail-closed con mensaje claro si API comercial no responde; no mostrar "activo" hasta confirmación.
+
+---
+
+## Responsive (pase UX — breakpoints, layout admin/público)
+
+Referencia canónica admin: `docs/core/ui_ux.md` §8 y §542 — **breakpoint único 992px (`lg`)** para navegación panel. Landing v2 usa breakpoints propios (decisión consciente del diseño público).
+
+### R1 — Admin: navegación y layout (992px)
+
+| Componente | Comportamiento | Verificación cutover |
+|------------|----------------|----------------------|
+| Sidebar / offcanvas | `< 992px` offcanvas; `≥ 992px` fijo | Login admin + navegar a Marketing → Órdenes en 375px y 1280px |
+| Bottombar móvil | `d-lg-none` en layout bottom | Acciones CRUD no quedan bajo barra inferior |
+| Contenido CRUD | `table-responsive` + DataTables Responsive | Ver R2 |
+
+### R2 — CRUD `mkt_ordenes`: densidad columnas en móvil
+
+Lista con **9 columnas** priorizadas (`priority` 1–5) incluyendo `api_tenant_public_id` (truncate 26) y `api_activation_error`.
+
+| Columna | priority | Riesgo móvil |
+|---------|----------|--------------|
+| email, status | 1 | Siempre visibles — OK |
+| public_id, paquete_slug, api_* | 3–4 | Colapsan en expand row — OK si DataTables init |
+| Acciones fila (4 acciones max) | — | **Autorizar pago / Activar plan** no deben quedar solo en hover desktop |
+
+**Requisito:** smoke en 375px — expandir fila `pending_transfer` y confirmar tap en `Autorizar pago`; `table_compact: true` no debe reducir área táctil bajo 44px.
+
+### R3 — Landing v2: breakpoints distintos al admin (860px / 560px)
+
+`landing_v2.css` usa `@media (max-width: 860px)` y `(max-width: 560px)` — **no** 992px. Pricing grid, nav sticky glass y hero deben probarse en:
+
+- 860px (tablet landscape)
+- 560px (móvil grande)
+- 320px (móvil pequeño)
+
+Lead form v2: padding sección `80px 28px` — en 320px verificar que inputs no desborden (`box-sizing: border-box` presente en inline styles).
+
+### R4 — Landing v1 y páginas compra/verificación (Bootstrap)
+
+| Vista | Patrón responsive | Notas |
+|-------|-------------------|-------|
+| `compra_form.php`, transferencia | `container` + grid Bootstrap | Validar formulario compra en móvil con teclado email abierto |
+| `verificar_demo.php` | `col-md-8 col-lg-5` centrado | Input código 6 chars — `text-center`, `autocomplete=one-time-code` OK para iOS |
+| `compra_pago_*` | `max-width: 720px` | Botones full-width opcional en `< sm` |
+
+### R5 — Install wizard responsive
+
+`_layout.php`: `viewport` meta + `container max-width: 720px` + card — usable en móvil. Pasos multi-campo (`paso_bd`, `paso_admin`) deben apilar campos; verificar teclado no oculta botón submit en iOS Safari.
+
+### R6 — Smoke responsive obligatorio en cutover (staging)
+
+Checklist mínimo antes switch prod (`docs/CUTOVER-PORTAL.md` staging smoke ampliado):
+
+| # | Viewport | Flujo |
+|---|----------|-------|
+| 1 | 375×812 | Landing → demo form → flash success/error |
+| 2 | 375×812 | `/comprar/starter` → selección ciclo → submit |
+| 3 | 375×812 | Admin login → CRUD `mkt_ordenes` → expand row → acción |
+| 4 | 1280×800 | Mismo flujo admin con sidebar fijo |
+| 5 | 860px | Landing v2 pricing toggle mensual/anual |
+| 6 | prefers-reduced-motion | Landing v2 sin animaciones obligatorias |
+
+---
+
 ## Enfoques propuestos
 
 ### Enfoque A — Cutover Portal completo (recomendado)
@@ -327,6 +529,17 @@ flowchart TD
 - [ ] Archivos Stripe (#21) y deploy script (`vps-deploy-lebytek-com.sh` L56–70) referenciados con líneas concretas.
 - [ ] Gap de tests `SchemaBootstrapTest` documentado como requisito Portal.
 
+### Compatibilidad / UX / Responsive (pase UX — este spec)
+
+- [ ] Secciones **Compatibilidad** (K1–K6), **UX** (U1–U7) y **Responsive** (R1–R6) revisadas por maintainer.
+- [ ] Smoke pre-cutover incluye PHP ≥ 8.1 verificado en VPS/staging y Safari iOS + Chrome Android (K2).
+- [ ] CRUD `mkt_ordenes`: campo `status` no editable a `paid` manualmente; acciones fila accesibles en móvil (U1, R2).
+- [ ] Página retorno Stripe distingue estados reales de orden — no copy optimista único si webhook/activación pendiente (U2).
+- [ ] Install wizard 403 con layout/guía ops o documentación equivalente mergeada (U3, K6).
+- [ ] Pago cancelado ofrece reintento contextual por orden cuando aplique (U4).
+- [ ] Verificación demo: CTA "Solicitar demo" en estados `expired`/`locked`/`invalid` (U5).
+- [ ] Checklist responsive R6 ejecutado en staging antes switch prod.
+
 ### Cutover completo (Enfoque A)
 
 - [ ] lebytek.com document root desplegado desde `Lebytek_Portal`, no desde clone directo de Framework feature branch.
@@ -374,6 +587,7 @@ flowchart TD
 | PR auditoría feature (draft) | #25 — archivar tras revisión |
 | FPS boundary | `docs/superpowers/BOUNDARY-framework-vs-portal-fps.md` (main) |
 | Plan cutover readiness | `docs/superpowers/plans/2026-07-17-fps-08-publication-cutover-readiness.md` (main) |
+| UI/UX canónico admin | `docs/core/ui_ux.md` (breakpoint 992px, CRUD responsive) |
 
 ---
 
