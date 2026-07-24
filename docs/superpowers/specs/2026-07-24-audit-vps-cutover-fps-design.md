@@ -63,14 +63,18 @@ Si el cutover completo no puede ejecutarse de inmediato:
 - Actualización documental de deploy (Framework maintainer view + Portal DEPLOY-VPS).
 - Re-etiquetado/actualización de issues #21 y #23 al contexto FPS.
 
-### Fuera de alcance
+### Fuera de alcance (no-alcance)
 
-- Implementación de código en `app/` o `src/` de este repo.
+- Implementación de código en `app/` o `src/` de este repo (incl. fixes #21, #23, CRUD `mkt_ordenes`).
 - Merge `feature/backoffice-api-integration` → `main` (prohibido sin orden explícita).
-- Deploy, SSH, DNS, migraciones de producción, ni edición de `.env`/secretos.
+- Deploy, SSH, DNS, migraciones de producción, ni edición de `.env`/secretos en VPS.
 - Fix automático de criticals Stripe (#21) — requiere diseño e implementación en Portal.
 - Creación del repo remoto `Lebytek_Portal` (requiere orden explícita del usuario).
 - Ejecución de tests runtime en agente cloud (sin PHP/Composer en entorno de auditoría).
+- Parche directo de `vendor/lebytek/framework` en consumidores.
+- Desactivar RBAC, CSRF, rate limits, Horizon, firmas webhook Stripe, ni tests de seguridad.
+- Cierre automático de PRs #25, #16, #27 — requiere revisión humana.
+- Confirmación operativa de crontab/cron health VPS — fuera de alcance agente; solo documentar en checklist.
 
 ---
 
@@ -96,6 +100,78 @@ Si el cutover completo no puede ejecutarse de inmediato:
 - No queda ambigüedad sobre qué repo despliega lebytek.com.
 - Bootstrap greenfield no falla por columnas faltantes en leads/churn.
 - Stripe recurrente permanece OFF hasta evidencia de cierre #21.
+
+---
+
+## Deuda técnica identificada (auditoría PR #27)
+
+Inventario concreto derivado de `docs/audits/2026-07-24-auditoria-tecnica-main.md` y revisión estática de `feature/backoffice-api-integration` @ `4789f95`. **No auto-fix** en este pipeline — solo requisitos del diseño.
+
+### D1 — Bootstrap / schema drift (#23)
+
+| Ítem | Evidencia | Impacto |
+|------|-----------|---------|
+| Columnas API lifecycle ausentes en bootstrap | `origin/feature/.../database/schema/modules/marketing.sql` define `api_tenant_public_id` pero **no** `api_instance_public_id` ni `api_lifecycle_status` (migraciones `20260701160000_*`, `20260701170000_*` sí existen en `database/migrations/`) | `PdoLeadRepository` (`app/Infrastructure/Marketing/PdoLeadRepository.php` L127–216) ejecuta `UPDATE` con columnas inexistentes en greenfield |
+| Columnas churn ausentes en bootstrap | `marketing.sql` sin `demo_started_at`, `demo_expires_at`, `paquete_id`, `plan_slug`, `converted_at`, `cancelled_at`, `last_activity_at`, `first_authorized_at`, `first_message_sent_at` (migración `20260706120000_mkt_leads_churn_columns.sql`) | Reportes churn (`ComputeChurnSnapshotService`) y jobs de expiración demo fallan tras `install.php` sin `migrate.php` completo |
+| Manifiesto vs bootstrap desalineados | `config/modules/marketing.php` lista **15** migraciones `202606*`/`202607*`; bootstrap no las incorpora | Instalador modular aplica SQL base incompleto; dependencia de migraciones ad-hoc en deploy |
+| Reportes churn no registrado (main) | En `main`, `config/modules/reportes.php` → `migraciones: []`; en feature existe `20260706120200_rep_churn_metrics.sql` | Fresh install con módulo reportes no crea métricas churn aunque el SQL exista en disco |
+| Deploy enmascara fallos de migración | `scripts/vps-deploy-lebytek-com.sh` L56: `migrate.php 2>/dev/null \|\| true`; L60–70: `apply-sql-migration.php ... \|\| echo "migration skipped"` | Prod puede quedar con schema parcial sin alerta ops |
+| Test no detecta drift de columnas | `tests/Marketing/SchemaBootstrapTest.php` valida tablas/permisos/seed pero **no** paridad bootstrap ↔ manifiesto de migraciones | Regresión C2 puede reintroducirse sin fallo en CI feature |
+
+**Remediación requerida (Portal o feature pinneada):** fusionar columnas de migraciones `20260701160000`, `20260701170000`, `20260706120000` en bootstrap; registrar `20260706120200` en manifiesto reportes; añadir test `SchemaBootstrapTest` que falle si faltan columnas referenciadas por repos; eliminar `|| true` silencioso en script deploy (o sustituir script en cutover A).
+
+### D2 — Stripe subscriptions (#21) — seis criticals abiertos
+
+Issue #21 documenta gaps de activación/recover. Archivos afectados en rama VPS (contexto Portal post-cutover):
+
+| Critical | Archivo | Síntoma |
+|----------|---------|---------|
+| C1 first-activation | `app/Application/Marketing/ConfirmarPagoStripeUseCase.php` L81–84 | Checkout subscription → no-op; orden `pending_payment` permanente |
+| C2 invoice metadata | `src/Infrastructure/Payments/StripeGateway.php` (`extractExternalRef`) | `invoice.paid` sin `metadata.order_public_id` → no activa membresía |
+| C3 recover desync | `app/Application/Marketing/RecoverMembershipPaymentService.php` | Retry crea nuevo Checkout en lugar de Billing Portal acordado |
+| C4 post-claim swallow | `ConfirmarPagoStripeUseCase::ejecutar` | catch + log; webhook 200 → Stripe no reintenta |
+| C5 cancelled desync | `RecoverMembershipPaymentService` | `markActive` local aunque API falle |
+| C6 amount bypass | `StripeGateway` + `ConfirmarPagoStripeUseCase` | `amount=0` si currency ≠ `mxn` salta validación de monto |
+
+**Gate obligatorio:** `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` y `config/payments.php` sin habilitar checkout recurrente hasta tests Portal verdes (`ConfirmarPagoStripeUseCaseTest`, `StripeWebhookControllerTest`, `CompraStripeFlowTest`).
+
+### D3 — Capas y RBAC (rama VPS)
+
+| Ítem | Evidencia | Deuda |
+|------|-----------|-------|
+| CRUD `mkt_ordenes` bypass | `config/cruds/mkt_ordenes.json` — campo `status` tipo `select` incluye `paid` editable (L55–60) | Bypass de `AutorizarOrdenMembresiaUseCase` / flujo Stripe |
+| RBAC CRUD implícito | `routes/web.php` — rutas `/admin/crud/*` sin entrada en `config/rbac_route_permissions.php`; permiso vía `CrudResourceService` + `permission_prefix` JSON | Patrón válido pero trazabilidad RBAC incompleta (M5 auditoría) |
+| Marketing en package source (feature) | `app/Domain|Application|Infrastructure/Marketing/`, `routes/marketing.php`, 40+ tests `tests/Marketing/` | Violación FPS resuelta en `main` @ `607a3c6`; persiste solo en rama VPS — refuerza necesidad cutover |
+
+### D4 — Docs ↔ código / ops
+
+| Ítem | Doc | Realidad |
+|------|-----|----------|
+| Rama de deploy | `docs/core/seguridad_secretos_deploy.md` L6: “auto-pull de `main`” | `scripts/vps-deploy-lebytek-com.sh` L6: `BRANCH=feature/backoffice-api-integration` |
+| Cutover policy | `docs/CUTOVER-PORTAL.md` (main): VPS cutover **deferred** | Auto-deploy feature contradice gates FPS |
+| VPS checklist obsoleto | `docs/integration/VPS_CHECKLIST.md` — deploy ≥ `c2d51cd` (2026-07-01) | HEAD feature @ `4789f95`; cron health L16/L118 sin confirmar |
+| `.env.example` package | Root `.env.example` L54–100: `MKT_*`, `LEBYTEK_API_*` | Post-FPS deben vivir en Portal; `skeleton/.env.example` sí está limpio (main) |
+| `INSTALL_TOKEN` | `public/install/index.php` exige token en prod | Fix en PR #27 (draft) — **no mergeado** a `main` al cierre de auditoría |
+| PRs draft abiertos | #25 (auditoría 2026-07-21), #16 (docs FPS) | Riesgo de confusión sobre qué está en `main` vs feature |
+
+### D5 — Tests faltantes / no ejecutados
+
+| Suite | Estado en auditoría | Acción requerida |
+|-------|---------------------|------------------|
+| `php tests/run.php` (platform) | No corrida — entorno sin PHP/Composer | Ejecutar gates FPS en CI local antes cutover: `SkeletonPurity`, `FrameworkRootNotPortal`, `PackageAutoloadBoundary`, `PlatformSqlResolve` |
+| Marketing suite (`tests/Marketing/*`) | 40+ archivos en feature; **eliminada de `main`** | Migrar a Portal; incluir test bootstrap↔migraciones |
+| Stripe/Payments | `tests/Payments/StripeGateway*.php`, `tests/Marketing/ConfirmarPagoStripeUseCaseTest.php` | Deben pasar antes de #21 close; no habilitar prod |
+| VPS smoke runtime | `lebytek-api-health.php`, `email-render-smoke.php` en deploy script L79–86 | Re-ejecutar post-cutover; registrar RC en checklist ops |
+
+### D6 — Checklist VPS incompleto (`docs/integration/VPS_CHECKLIST.md`)
+
+Items pendientes relevantes al cutover (§ E2E Fase 0 y lebytek.com):
+
+- [ ] Cron health cada 5 min — script en repo; **crontab operador no confirmado** (L16, L118)
+- [ ] Clone/pull feature branch — debe migrar a Portal + Composer pin post-cutover (L89–93)
+- [ ] Installer / `migrate.php` + seed — sin verificación de columnas lifecycle/churn post-install (L102–103)
+- [ ] DNS lebytek.com — “Do not point DNS here until E2E green” (L122) — estado prod real no verificado en auditoría
+- [ ] waapi.lebytek.com — integración diferida; no bloquea cutover A pero genera deuda panel (L126–142)
 
 ---
 
@@ -205,59 +281,83 @@ flowchart TD
 
 ### Stripe (#21)
 
-| Riesgo | Mitigación |
-|--------|------------|
-| Activación subscription incorrecta | `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` hasta cierre issue |
-| Webhook 200 con fallo silencioso | Diseño Portal: cola/reintento; no habilitar prod |
-| Amount bypass multi-moneda | Fix en Portal `StripeGateway` + tests antes de ON |
-| Billing Portal vs new checkout desync | Unificar flujo recover en diseño #21 |
+| Riesgo | Evidencia | Mitigación |
+|--------|-----------|------------|
+| Activación subscription incorrecta | `ConfirmarPagoStripeUseCase` no-op en `subscriptionId !== null` | `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` hasta cierre issue |
+| Primer pago invoice sin metadata | `StripeGateway::extractExternalRef` depende de `metadata.order_public_id` en Invoice | Diseño Portal: propagar metadata o resolver por `subscriptionId` |
+| Webhook 200 con fallo silencioso | catch `\Throwable` + log en `ConfirmarPagoStripeUseCase::ejecutar` | Cola/reintento o respuesta 5xx transitoria; no habilitar prod |
+| Recover crea suscripción duplicada | `RecoverMembershipPaymentService::checkoutUrlForMembresia` | Unificar flujo Billing Portal (diseño #21) |
+| Membresía `active` local con API caída | `reactivateCommercial` en catch vacío + `markActive` | Fail-closed + alerta ops |
+| Amount bypass multi-moneda | `StripeGateway` `amount=0` si currency ≠ `mxn` | Fix + test `StripeGatewayTest` / `ConfirmarPagoStripeUseCaseTest` antes de ON |
+| Habilitación accidental en deploy | `.env` prod puede tener flags ON aunque script no los toque | Checklist pre-deploy: verificar `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` |
 
 ### Bootstrap / migraciones (#23)
 
-| Riesgo | Mitigación |
-|--------|------------|
-| Greenfield install sin columnas API lifecycle | Alinear `marketing.sql` + manifiesto en Portal |
-| `migrate.php` parcial en deploy VPS | Eliminar fallos silenciosos; log explícito |
-| Issue #23 scoped a `main` incorrectamente | Re-etiquetar; fixes van a Portal o feature pinneada |
+| Riesgo | Evidencia | Mitigación |
+|--------|-----------|------------|
+| Greenfield install sin columnas API lifecycle | `marketing.sql` vs migraciones `20260701160000`, `20260701170000` | Alinear bootstrap + manifiesto en Portal |
+| Greenfield sin columnas churn | `20260706120000_mkt_leads_churn_columns.sql` no reflejada en bootstrap | Idem; incluir en test `SchemaBootstrapTest` ampliado |
+| Reportes churn huérfano | `20260706120200_rep_churn_metrics.sql` sin entrada en `config/modules/reportes.php` (main) | Registrar en manifiesto Portal |
+| `migrate.php` parcial en deploy VPS | `vps-deploy-lebytek-com.sh` L56 `2>/dev/null \|\| true` | Log explícito + fail-fast o checklist manual post-deploy |
+| Migraciones SQL manuales con skip | L60–70: `echo "migration skipped"` sin abortar deploy | Tratar como error en Enfoque B; eliminar en Enfoque A |
+| Issue #23 scoped a `main` incorrectamente | Issue body referencia `main` @ `2c71d3f` | Re-etiquetar scope Portal/VPS feature pinneada |
+| Regresión silenciosa | `SchemaBootstrapTest` no valida columnas | Añadir test paridad como gate Portal |
 
 ### VPS / operaciones
 
-| Riesgo | Mitigación |
-|--------|------------|
-| Deploy rama incorrecta post-FPS | Cutover A o congelamiento B |
-| Marketing forzado ON vía `sed` en deploy | Reemplazar por config Portal explícita |
-| Docs ops desactualizadas | Actualizar en PR pequeño Framework + Portal DEPLOY |
-| Sin verificación SSH/cron en auditoría | Checklist ops manual pre-switch |
-| Rollback no probado | Drill en staging obligatorio |
+| Riesgo | Evidencia | Mitigación |
+|--------|-----------|------------|
+| Deploy rama incorrecta post-FPS | `vps-deploy-lebytek-com.sh` L6 + `--depth 1` sin SHA pinneado | Cutover A o congelamiento B con `DEPLOY_SHA` |
+| Marketing forzado ON vía `sed` en deploy | L22–23: `sed` en `config/vertical.php` | Reemplazar por config Portal explícita |
+| Docs ops desactualizadas | `seguridad_secretos_deploy.md` L6 vs script real | PR doc-only Framework + Portal `DEPLOY-VPS.md` |
+| Checklist VPS stale | `VPS_CHECKLIST.md` referencia `c2d51cd`; HEAD `4789f95` | Actualizar SHA/commit y pendientes cron/DNS |
+| Install wizard expuesto | `INSTALL_TOKEN` no en `.env.example` mergeado | Merge PR #27 o doc ops manual |
+| Sin verificación SSH/cron en auditoría | Auditoría estática únicamente | Checklist ops manual pre-switch (D6) |
+| Rollback no probado | `CUTOVER-PORTAL.md` rollback triggers sin drill | Drill staging obligatorio antes prod switch |
+| PRs draft confunden estado | #25, #16 abiertos | Archivar/cerrar tras diff vs `main` |
 
 ---
 
 ## Criterios de aceptación
+
+### Deuda técnica documentada (este spec)
+
+- [ ] Sección **Deuda técnica** (D1–D6) revisada por maintainer; issues #21 y #23 re-etiquetados con scope Portal/VPS.
+- [ ] Columnas faltantes en bootstrap listadas explícitamente: `api_instance_public_id`, `api_lifecycle_status`, churn (`demo_expires_at`, etc.).
+- [ ] Archivos Stripe (#21) y deploy script (`vps-deploy-lebytek-com.sh` L56–70) referenciados con líneas concretas.
+- [ ] Gap de tests `SchemaBootstrapTest` documentado como requisito Portal.
 
 ### Cutover completo (Enfoque A)
 
 - [ ] lebytek.com document root desplegado desde `Lebytek_Portal`, no desde clone directo de Framework feature branch.
 - [ ] `vendor/lebytek/framework` presente; versión coincide con `composer.lock` Portal.
 - [ ] Gates `docs/CUTOVER-PORTAL.md` firmados (Maintainer + Ops).
-- [ ] Greenfield install Portal crea `dom_mkt_leads` con columnas API lifecycle y churn sin error SQL.
+- [ ] Greenfield install Portal crea `dom_mkt_leads` con columnas API lifecycle (`api_instance_public_id`, `api_lifecycle_status`) y churn (`demo_expires_at`, `plan_slug`, etc.) sin error SQL.
+- [ ] Manifiesto `config/modules/marketing.php` Portal: bootstrap SQL incluye todas las columnas de migraciones listadas (sin depender de `|| true` en deploy).
+- [ ] `config/modules/reportes.php` Portal registra `20260706120200_rep_churn_metrics.sql` si módulo reportes activo.
 - [ ] Script/cron legacy `vps-deploy-lebytek-com.sh` deshabilitado o reemplazado; documentación coherente.
-- [ ] `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` en prod hasta cierre #21 con evidencia de tests Portal.
+- [ ] `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` en prod hasta cierre #21 con evidencia de tests Portal (`ConfirmarPagoStripeUseCaseTest`, `CompraStripeFlowTest`).
+- [ ] CRUD `mkt_ordenes`: campo `status` no editable a `paid` manualmente (transiciones RBAC únicamente).
 - [ ] Rollback probado en staging: restore web root + DB backup en ventana acordada.
+- [ ] `docs/integration/VPS_CHECKLIST.md` actualizado: SHA deploy, cron health confirmado, DNS/cutover FPS.
 
 ### Puente congelado (Enfoque B)
 
-- [ ] SHA de deploy documentado y fijado; no deploy desde HEAD flotante de feature.
-- [ ] Issue #23 actualizado con scope Portal/VPS; checklist migraciones aplicado en prod.
+- [ ] SHA de deploy documentado y fijado (`4789f95` o posterior acordado); no deploy desde HEAD flotante de feature.
+- [ ] Issue #23 actualizado con scope Portal/VPS; checklist migraciones aplicado en prod (verificar columnas lifecycle/churn en BD).
+- [ ] Post-deploy: query de verificación `SHOW COLUMNS FROM dom_mkt_leads LIKE 'api_%'` y `'demo_%'` sin NULL schema.
 - [ ] `docs/core/seguridad_secretos_deploy.md` refleja rama/SHA real o marca legacy explícita.
 - [ ] PR #25 revisado y archivado/cerrado para evitar drift documental.
 - [ ] Fecha límite registrada para iniciar cutover A.
-- [ ] Stripe checkout recurrente permanece OFF (#21).
+- [ ] Stripe checkout recurrente permanece OFF (#21); verificar `.env` prod.
+- [ ] Deploy script: migraciones fallidas registradas en log ops (no silenciar con `|| true` sin revisión).
 
 ### Framework package (independiente de cutover)
 
-- [ ] `main` permanece libre de Marketing/Portal (gates `SkeletonPurity`, `FrameworkRootNotPortal` verdes).
-- [ ] `.env.example` package documenta `INSTALL_TOKEN` (PR #27).
+- [ ] `main` permanece libre de Marketing/Portal (gates `SkeletonPurity`, `FrameworkRootNotPortal`, `PackageAutoloadBoundary`, `PlatformSqlResolve` verdes).
+- [ ] `.env.example` package documenta `INSTALL_TOKEN` (PR #27 mergeado o equivalente).
 - [ ] Limpieza opcional `MKT_*` / `LEBYTEK_API_*` del `.env.example` harness (Q4 auditoría) — PR pequeño separado.
+- [ ] `docs/CUTOVER-PORTAL.md` accesible en `main`; VPS cutover permanece deferred hasta sign-off explícito.
 
 ---
 
