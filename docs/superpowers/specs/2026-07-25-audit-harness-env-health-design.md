@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-25  
 **Repo:** `Lebytek_Framework` (package source `lebytek/framework`)  
-**Estado:** diseño — sin implementación (pasada de deuda técnica 2026-07-25)  
+**Estado:** diseño — sin implementación (pasadas deuda técnica D1–D7 + compatibilidad / UX / responsive K1–K6, U1–U8, R1–R6)  
 **Auditoría fuente:** [PR #29](https://github.com/Parzival2103/Lebytek_Framework/pull/29) — `docs/audits/2026-07-25-auditoria-tecnica-diaria.md` (**unmerged** al 2026-07-25; reporte solo en rama PR #29)  
 **Rama base de trabajo:** `feature/backoffice-api-integration` (referencia VPS) / `main` @ `607a3c6` (package FPS)  
 **Rama spec:** `automation/audit-spec-2026-07-25` (deriva de feature, no de `main`)  
@@ -295,6 +295,208 @@ Gaps persistentes en rama VPS (first-activation subscription, metadata invoice, 
 
 ---
 
+## Compatibilidad (pase UX — PHP, navegadores, admin, móvil)
+
+Inventario derivado de revisión estática en rama `automation/audit-spec-2026-07-25` (base feature): install wizard (`public/install/`, `skeleton/public/install/`), `routes/api.php`, `AuthMiddleware`, `.env.example` harness vs skeleton, y `docs/core/ui_ux.md`. **Solo requisitos de diseño** — sin implementación en este pipeline.
+
+### K1 — Runtime PHP y extensiones (install + health)
+
+| Ítem | Evidencia | Requisito |
+|------|-----------|-----------|
+| PHP mínimo | `composer.json`: `"php": ">=8.1"` | Staging/prod del paquete y tenants skeleton deben ejecutar **PHP ≥ 8.1** antes de Fase 2 |
+| Extensiones install | `paso_requisitos.php` valida `pdo_mysql`, `mbstring`, `json`, `openssl`, `fileinfo` | Documentar en checklist ops; fallo en requisitos debe bloquear wizard (comportamiento actual OK) |
+| JSON health | `HealthController::ping` → `$this->json([...])` | `GET /api/health` debe responder `Content-Type: application/json; charset=utf-8` sin sesión |
+
+### K2 — Navegadores soportados (install wizard vs admin)
+
+| Superficie | Stack | Compatibilidad esperada |
+|------------|-------|-------------------------|
+| Install wizard | Bootstrap 5.3 local (`/assets/css/bootstrap.min.css`) + `lebytek-ui.css`; layout 720px | Chrome/Firefox/Safari/Edge **últimas 2 versiones**; usable en iOS Safari ≥ 15 |
+| Admin post-install | Bootstrap 5.3 + jQuery + DataTables Responsive (CDN en `base.php`) | Misma baseline; ver `docs/core/ui_ux.md` §542 |
+| Health API | JSON puro — sin HTML | Compatible con curl, UptimeRobot, nginx `proxy_pass`, AWS ALB; **no** debe devolver redirect HTML |
+
+**Gap K2a — iconos Bootstrap Icons ausentes en install:** `_layout.php` del wizard referencia clases `bi-*` (`paso_requisitos`, `paso_error`, `ya_instalado`, `paso_resultado`) pero **no** carga `bootstrap-icons.css` (el admin sí lo carga vía CDN en `src/Presentation/Views/layouts/base.php` L32). En install, los checks OK/error pueden mostrarse sin icono visual.
+
+**Requisito Fase 1.5 (opcional, bajo riesgo):** añadir `bootstrap-icons` al layout install (local o CDN coherente con admin) en `public/install/views/_layout.php` y `skeleton/public/install/views/_layout.php`.
+
+### K3 — `/api/ping` autenticado: redirect HTML vs contrato LB (M3)
+
+Estado actual: `AuthMiddleware` (`src/Presentation/Middlewares/AuthMiddleware.php` L21–24) redirige a `/login` con **302 HTML** cuando no hay sesión — no devuelve `401` JSON.
+
+| Cliente | Comportamiento actual `/api/ping` | Riesgo compat |
+|---------|-----------------------------------|---------------|
+| Load balancer HTTP | 302 → `/login` (200 HTML login) | LB puede marcar **healthy** incorrectamente si sigue redirect |
+| `curl -f` / monitoring | Falla o interpreta redirect como éxito según flags | Smoke post-deploy inconsistente |
+| Fetch/XHR API futura | Recibe HTML en lugar de JSON | Clientes API rotos si reutilizan grupo auth sin ajuste |
+
+**Requisito Fase 2:** ruta canónica `GET /api/health` **fuera** de `AuthMiddleware`; respuesta 200 JSON sin redirect. Documentar que `/api/ping` bajo auth **no** es contrato de liveness.
+
+### K4 — Compatibilidad móvil ops (install en producción)
+
+Ops puede abrir `public/install/?token=...` desde móvil durante deploy inicial o recovery.
+
+| Condición | Impacto |
+|-----------|---------|
+| 403 token inválido — texto plano (`index.php` L59–60) | Sin viewport meta, sin layout; Safari iOS muestra página cruda |
+| CSRF 419 — texto plano (`index.php` L73–74) | Misma degradación |
+| `paso_admin` — inputs email/password | Funcional con teclado virtual; verificar botón submit visible (R2) |
+| Token en URL query | Historial del navegador móvil conserva token — riesgo ops; documentar uso one-shot |
+
+**Requisito:** páginas de error install (403/419) con layout wizard mínimo; copy que indique rotar token si se filtró vía historial compartido.
+
+### K5 — `.env.example` y compatibilidad de copy Portal vs harness (M1)
+
+Root `.env.example` L7–10, L53–55, L69–118 mezcla CTAs de lebytek.com/waapi y vars `MKT_*`/`LEBYTEK_API_*` como si fueran del paquete. Mantenedores en PHP 8.1+ hosting genérico copian vars irrelevantes → confusión en install wizard (`.env` mal configurado → paso BD falla).
+
+**Requisito Q2:** podar vars Portal del harness; referencia cruzada a spec cutover 2026-07-24 para vars Marketing en `Lebytek_Portal`.
+
+### K6 — Distinción health local vs health externo VPS
+
+| Check | Mecanismo | Compatibilidad |
+|-------|-----------|----------------|
+| M3 liveness | `GET /api/health` HTTP local | Estándar LB; sin auth |
+| Deploy smoke VPS | `scripts/lebytek-api-health.php` → `LebytekApiClient` + `LEBYTEK_API_*` | Health **externo** Portal; vars ausentes en skeleton post-Q2 |
+
+**Requisito:** checklist ops distingue ambos; no usar exit code de `lebytek-api-health.php` como sustituto de M3 en tenant skeleton genérico.
+
+---
+
+## UX (pase UX — flujos, copy, estados error/vacío)
+
+### U1 — Install wizard: error de token sin guía visual (M2)
+
+`public/install/index.php` L59–60 responde 403 con string plano:
+
+```text
+Instalador protegido. Proporcione ?token=INSTALL_TOKEN (definido en .env).
+```
+
+Sin layout Bootstrap, sin enlace a `docs/core/despliegue-y-versionado.md`, sin ejemplo de URL completa `https://dominio.com/install/?token=...`.
+
+| Problema UX | Impacto |
+|-------------|---------|
+| Página en blanco con texto crudo | Ops en móvil no distingue error de config vs 404 nginx |
+| Placeholder `INSTALL_TOKEN` literal en mensaje | Confusión si ops copia literal en lugar del valor `.env` |
+| Sin CTA de retorno | Usuario no sabe si debe contactar hosting o editar `.env` |
+
+**Requisito:** vista `install_token_denied.php` con `_layout.php`, instrucciones numeradas (1. definir `INSTALL_TOKEN` en `.env`, 2. recargar con `?token=valor`), enlace a doc despliegue. Aplicar en harness + skeleton.
+
+### U2 — Install wizard: CSRF 419 sin layout
+
+`index.php` L73–74: `Token CSRF inválido. Recargue el asistente.` — mismo patrón plano que U1.
+
+**Requisito:** reutilizar layout wizard con alert Bootstrap danger + botón "Recargar asistente" (`href="?paso=requisitos"` preservando `token` query si prod).
+
+### U3 — `.env.example` harness: copy orientado a Portal (M1)
+
+Comentarios activos referencian flujos inexistentes en package FPS:
+
+- L10: CTA correo `/?compras=1#paquetes` (Marketing Portal)
+- L53–55: URLs `docs.lebytek.com`, `waapi.lebytek.com/portal/acceso`
+- L117–118: `LANDING_VARIANT` con rollback v1/v2
+
+**Requisito UX documental:** comentarios genéricos en harness (`APP_URL` = URL del tenant); bloque Portal comentado con encabezado `# ── Solo Lebytek_Portal ──` o archivo `docs/integration/portal-env-reference.md`.
+
+### U4 — `ya_instalado.php`: lock file crudo sin contexto
+
+Muestra `<pre>` con contenido de `storage/install.lock` sin explicar si es entorno staging vs prod ni cómo proceder si reinstalación es intencional.
+
+**Requisito:** copy que distinga "instalación completada correctamente" vs "lock corrupto"; advertencia explícita de no borrar lock en prod sin runbook; CTA primario "Ir al login" (existente) + enlace secundario a doc despliegue § reinstall.
+
+### U5 — `paso_error.php`: recuperación acoplada a phpMyAdmin
+
+Copy L14–15 asume phpMyAdmin y vaciado manual de BD — no universal en VPS CLI ni hosting managed.
+
+**Requisito:** instrucciones alternativas (CLI `mysql`, panel del hosting); distinguir error de migración vs credenciales BD; mantener referencia a `install-wizard.log`.
+
+### U6 — `paso_requisitos.php`: checks fallidos sin enlace a documentación
+
+Alert warning genérico "Corrige los requisitos en rojo" — no indica cómo habilitar extensión PHP en hosting compartido.
+
+**Requisito:** por cada check fallido (`pdo_mysql`, etc.), texto de ayuda expandible o enlace ancla a `docs/core/despliegue-y-versionado.md` / hosting doc.
+
+### U7 — `paso_revision.php`: listas largas sin estado vacío amigable
+
+Migraciones/seeds pendientes en `<ul class="small">` sin contenedor scroll en móvil — listas de 15+ ítems (feature branch) empujan botón "Instalar ahora" fuera de viewport inicial.
+
+**Requisito responsive:** `max-height` + scroll en listas de revisión; contador visible "N migraciones pendientes"; confirmación explícita antes de submit en prod (`APP_ENV=production`).
+
+### U8 — Health API: contrato ops y mensajes de error
+
+Respuesta actual `{ "status": "ok", "timestamp": "..." }` es adecuada para liveness. Documentar en ops:
+
+- **200** = proceso PHP vivo (no implica BD ni mail OK)
+- **404** en `/api/ping` autenticado sin sesión → redirect login (comportamiento legacy confuso); migrar docs a `/api/health`
+- No incluir `version`, `env`, ni stack trace en v1 (seguridad)
+
+**Requisito:** actualizar `docs/core/despliegue-y-versionado.md` y smoke checklist con ejemplo curl; v2 opcional `/api/health?deep=1` con probe BD — fuera de alcance v1.
+
+---
+
+## Responsive (pase UX — breakpoints, layout admin/público)
+
+Referencia admin: `docs/core/ui_ux.md` §542 — breakpoint único **992px (`lg`)** para navegación panel. Install wizard usa contenedor **720px** fijo — decisión consciente distinta al admin.
+
+### R1 — Install wizard: layout base (720px)
+
+| Componente | Comportamiento | Verificación |
+|------------|----------------|--------------|
+| `_layout.php` | `viewport` meta + `container max-width: 720px` + card | Usable 320px–1280px |
+| Card padding `p-4` | OK en móvil | Sin horizontal scroll en 320px |
+| Bootstrap CSS local | Sin dependencia CDN en wizard | Funciona air-gapped |
+
+### R2 — Install: formularios y CTAs en móvil (375px)
+
+| Paso | Patrón | Riesgo móvil |
+|------|--------|--------------|
+| `paso_admin` | Stack vertical email + password | Teclado iOS puede ocultar botón "Continuar" — verificar scroll o `padding-bottom` en card |
+| `paso_modulos` | Checkboxes con descripción larga | Labels multi-línea OK; badges no deben desbordar |
+| `paso_revision` | Botón success full-width opcional | Área táctil ≥ 44px |
+| CTAs error/403 | Botones outline en `paso_error` | Full-width en `< sm` recomendado |
+
+**Requisito smoke:** completar wizard en viewport **375×812** (Safari iOS simulado) con token prod simulado en staging.
+
+### R3 — `paso_requisitos.php`: filas flex en pantalla estrecha
+
+Items `d-flex align-items-center` con clave + detalle en una línea — en 320px el detalle largo puede comprimir clave.
+
+**Requisito:** en `< sm`, apilar clave sobre detalle (`flex-column flex-sm-row`) o truncar detalle con `title` tooltip.
+
+### R4 — Post-install admin: breakpoint 992px
+
+Tras "Ir al login", panel admin sigue reglas `ui_ux.md`:
+
+| Componente | < 992px | ≥ 992px |
+|------------|---------|---------|
+| Sidebar | Offcanvas | Fijo |
+| Bottombar | Visible | Oculto |
+| Dashboard post-install smoke | Navegar tras wizard | Mismo flujo 1280px |
+
+**Requisito cutover Fase 2:** smoke admin login post-install en 375px y 1280px — independiente de Marketing Portal.
+
+### R5 — Health endpoint: sin UI — verificación cross-device
+
+`/api/health` no tiene vista responsive; verificación es por herramienta. Incluir en checklist:
+
+- curl desde VPS (CLI)
+- Request desde panel LB (sin User-Agent móvil especial)
+- Verificar que redirect 302 de `/api/ping` legacy **no** se use en monitoring móvil ops (apps curl iOS/Android)
+
+### R6 — Smoke responsive obligatorio (staging harness)
+
+Checklist mínimo antes merge Fase 1–2 a `main`:
+
+| # | Viewport | Flujo |
+|---|----------|-------|
+| 1 | 375×812 | Install requisitos → BD (mock fail OK) → token 403 page con layout (post U1) |
+| 2 | 375×812 | Install paso admin → submit → revisión scroll listas |
+| 3 | 1280×800 | Wizard completo staging |
+| 4 | cualquiera | `curl -sS /api/health` → 200 JSON (post Fase 2) |
+| 5 | 375×812 | Login admin post-install → dashboard carga CSS |
+| 6 | prefers-reduced-motion | Admin base layout — sin animaciones obligatorias para completar login |
+
+---
+
 ## Riesgos
 
 ### Stripe (#21) — contexto, no alcance
@@ -382,6 +584,33 @@ Limpieza de `.env.example` **no** corrige schema drift.
 - [ ] No merge feature → main sin orden explícita.
 - [ ] Issues #21 y #23 permanecen abiertos con scope Portal/VPS hasta implementación dedicada.
 - [ ] `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` mantenido hasta cierre #21.
+
+### Compatibilidad (pase UX — K1–K6)
+
+- [ ] PHP ≥ 8.1 verificado en checklist ops pre Fase 2.
+- [ ] `GET /api/health` responde JSON con `Content-Type: application/json` sin sesión (K1, K3).
+- [ ] `/api/ping` bajo auth documentado como **no** liveness; sin redirect 302 en ruta canónica health.
+- [ ] Install wizard carga iconos `bi-*` correctamente (K2a) — local o CDN coherente con admin.
+- [ ] Checklist ops distingue M3 liveness local vs `lebytek-api-health.php` externo (K6).
+- [ ] Root `.env.example` post-Q2 sin vars Portal activas que confundan install (K5).
+
+### UX (pase UX — U1–U8)
+
+- [ ] Error 403 install usa layout wizard + instrucciones token + enlace doc (U1).
+- [ ] Error 419 CSRF usa layout wizard + botón recargar preservando token (U2).
+- [ ] `ya_instalado.php` explica lock y runbook reinstalación (U4).
+- [ ] `paso_error.php` incluye alternativas a phpMyAdmin (U5).
+- [ ] `paso_requisitos.php` enlaza ayuda por extensión fallida (U6).
+- [ ] `paso_revision.php` listas scrollables + confirmación prod (U7).
+- [ ] Docs despliegue documentan contrato `/api/health` y ejemplo curl (U8).
+
+### Responsive (pase UX — R1–R6)
+
+- [ ] Wizard install usable en 320px sin scroll horizontal (R1).
+- [ ] `paso_admin` submit accesible con teclado virtual iOS 375px (R2).
+- [ ] `paso_requisitos` apila clave/detalle en móvil estrecho (R3).
+- [ ] Smoke post-install admin en 375px y 1280px (R4).
+- [ ] Checklist R6 ejecutado en staging antes merge Fase 2.
 
 ### Consolidación auditorías (humano)
 
