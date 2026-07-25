@@ -2,10 +2,11 @@
 
 **Fecha:** 2026-07-25  
 **Repo:** `Lebytek_Framework` (package source `lebytek/framework`)  
-**Estado:** diseño — sin implementación  
-**Auditoría fuente:** [PR #29](https://github.com/Parzival2103/Lebytek_Framework/pull/29) — `docs/audits/2026-07-25-auditoria-tecnica-diaria.md`  
+**Estado:** diseño — sin implementación (pasada de deuda técnica 2026-07-25)  
+**Auditoría fuente:** [PR #29](https://github.com/Parzival2103/Lebytek_Framework/pull/29) — `docs/audits/2026-07-25-auditoria-tecnica-diaria.md` (**unmerged** al 2026-07-25; reporte solo en rama PR #29)  
 **Rama base de trabajo:** `feature/backoffice-api-integration` (referencia VPS) / `main` @ `607a3c6` (package FPS)  
-**Spec relacionado (cutover VPS):** `docs/superpowers/specs/2026-07-24-audit-vps-cutover-fps-design.md`
+**Rama spec:** `automation/audit-spec-2026-07-25` (deriva de feature, no de `main`)  
+**Spec relacionado (cutover VPS):** `docs/superpowers/specs/2026-07-24-audit-vps-cutover-fps-design.md` (rama `automation/audit-spec-2026-07-24`; **ausente en feature branch**)
 
 ---
 
@@ -19,7 +20,10 @@ Sin embargo, el **harness local del mantenedor** y la **superficie operativa mí
 |----|----------|-----------|---------|
 | **M2** | `INSTALL_TOKEN` no documentado en `.env.example` | `public/install/index.php` exige token en `APP_ENV=production`; `docs/core/despliegue-y-versionado.md` lo describe; ningún `.env.example` lo listaba | Instalador web bloqueado en producción sin guía clara para ops |
 | **M1** | Root `.env.example` mezcla vars Portal/Marketing | `MKT_*`, `LEBYTEK_API_*`, URLs waapi, copy de membresías; `skeleton/.env.example` está limpio | Mantenedores del paquete copian vars obsoletas; confunde FPS vs Portal |
-| **M3** | `/api/ping` detrás de `AuthMiddleware` | `routes/api.php:14-17` — grupo `/api` exige sesión | Load balancers, cron health y smoke post-deploy requieren cookie de sesión |
+| **M3** | `/api/ping` detrás de `AuthMiddleware` | `routes/api.php:14-24` — grupo `/api` exige sesión; `ping` en línea 23 | Load balancers, cron health y smoke post-deploy requieren cookie de sesión |
+| **M4** | Slug `permisos.gestionar` inexistente | `routes/web.php:73-76` — comentario explícito; usa `administracion.ver` | Granularidad RBAC débil para gestión de permisos (fuera de alcance inmediato) |
+| **M5** | PRs draft auditoría sin consolidar | #25, #27, #28 en DRAFT | Reportes y fixes duplicados; confusión pipeline specs |
+| **M6** | Migración `auth_login_intentos` en rama feature | En feature: `database/migrations/20260612130000_auth_login_intentos.sql` activa; en `main`: archivada en `migrations_legacy/` | Drift feature↔main; greenfield en `main` OK vía `schema.sql` |
 
 Hallazgos críticos **persistentes** (VPS, Stripe #21, bootstrap #23) **no se resuelven en este spec** — permanecen en el spec de cutover del 2026-07-24 y en issues abiertos. Este diseño cubre solo la higiene implementable en el **repo Framework** sin tocar negocio Portal.
 
@@ -58,12 +62,16 @@ Hallazgos críticos **persistentes** (VPS, Stripe #21, bootstrap #23) **no se re
 
 - Implementación de código en `app/` o `src/` en esta automatización (solo spec).
 - Cutover VPS, deploy, SSH, DNS, migraciones prod, `.env` real en servidores.
-- Fixes Stripe (#21), bootstrap leads (#23), CRUD `mkt_ordenes.status` (#23 medio).
+- Fixes Stripe (#21), bootstrap leads (#23), CRUD `mkt_ordenes.status` (C4 / issue Portal).
 - Merge `feature/backoffice-api-integration` → `main`.
 - Creación repo remoto `Lebytek_Portal`.
 - Desactivar RBAC, CSRF, rate limits, firmas webhook, Horizon ni tests de seguridad.
 - Cierre de PRs draft #25/#27/#28 — revisión humana posterior.
 - Health check con probe de BD/Redis (v2 opcional; v1 solo liveness).
+- Fix RBAC slug `permisos.gestionar` (M4) — issue separado, no bloqueante para harness.
+- Reconciliar `database/migrations/` feature (19 archivos incl. `mkt_*`) con `main` (3 plataforma) — scope cutover spec 2026-07-24, no este spec.
+- Sustituir `scripts/lebytek-api-health.php` (health **externo** `api.lebytek.com` vía `App\Infrastructure\Integrations\LebytekApi\LebytekApiClient`) — es deuda Portal/VPS, distinta de M3 liveness HTTP local.
+- Ejecutar `php tests/run.php` en agente cloud (sin PHP/composer en cron) — verificación queda en CI/humano.
 
 ---
 
@@ -156,7 +164,8 @@ Comportamiento existente en `public/install/index.php`: si `APP_ENV=production` 
 
 - `MKT_EMAIL_*`, `MKT_ALERT_*`, `MKT_PURCHASE_*`, `MKT_BANK_*`, `MKT_MEMBERSHIP_*`
 - `LEBYTEK_API_*`, `WAAPI_PORTAL_ENABLED`
-- Copy de CTAs waapi/lebytek.com en comentarios de `APP_URL`
+- `LANDING_VARIANT`, `INTEGRATIONS_API_DOCS_URL` (experiments/landing — negocio Portal)
+- Copy de CTAs waapi/lebytek.com en comentarios de `APP_URL` (líneas 7–10, 53–55)
 
 **Conservar en harness/skeleton (plataforma genérica):**
 
@@ -222,6 +231,68 @@ flowchart LR
     Auth -->|OK| API[Controladores API]
 ```
 
+> **No confundir con M3:** `scripts/lebytek-api-health.php` (líneas 77–80 de `vps-deploy-lebytek-com.sh`) valida salud de **api.lebytek.com** vía `LebytekApiClient` y vars `LEBYTEK_API_*`. Es health **externo/Portal**, no sustituto de `GET /api/health` liveness local.
+
+---
+
+## Deuda técnica
+
+Inventario verificado en rama `automation/audit-spec-2026-07-25` (base feature) contra auditoría PR #29 y delta con `main` @ `607a3c6`. **Ningún ítem se auto-fixea en esta automatización.**
+
+### D1 — Drift rama spec ↔ `main` FPS
+
+| Evidencia | Impacto | Acción requerida |
+|-----------|---------|------------------|
+| Rama spec deriva de `feature/backoffice-api-integration` (~54 commits feature-only vs ~46 `main`-only) | Gates y docs FPS no presentes en la rama donde vive el harness monolito | Implementar Fase 1–2 contra **`main`**, no contra feature; cherry-pick spec a rama FPS si hace falta |
+| `docs/CUTOVER-PORTAL.md`, spec `2026-07-24-audit-vps-cutover-fps-design.md` existen en `main` / `automation/audit-spec-2026-07-24`, **no** en feature | Checklist cutover referenciado en criterios de aceptación es ilegible desde rama VPS | Merge o fetch docs desde rama audit 2026-07-24 antes de cutover |
+| Tests `FrameworkRootNotPortalTest`, `SkeletonPurityTest`, `FpsPublicationReadinessTest` en `main`; **ausentes** en feature | Sin gate automático de pureza package en rama desplegada | CI en `main`; no confundir verde feature con FPS |
+
+### D2 — Bootstrap / schema drift (#23)
+
+| Evidencia | Impacto | Acción requerida |
+|-----------|---------|------------------|
+| `database/schema/modules/marketing.sql` — tabla `dom_mkt_leads` **sin** columnas lifecycle/churn/`api_instance_public_id` que añaden migraciones `20260701160000+`, `20260706120000+` | Greenfield / `install.php` parcial → SQL error en repos churn/leads | Portal o parche feature; issue #23 |
+| Feature: **19** migraciones en `database/migrations/` (incl. `mkt_*`); `main`: **3** plataforma | Manifiesto migrate desalineado post-FPS | Cutover spec 2026-07-24 D1; no mezclar en harness package |
+| `scripts/vps-deploy-lebytek-com.sh:56` — `php migrate.php 2>/dev/null \|\| true` | Errores de migración silenciados en prod | Fail-fast o checklist manual pre-cutover |
+| Mismo script: bucle `202606*.sql` / `202607*.sql` con `\|\| echo "migration skipped"` (líneas 58–71) | Drift schema persistente sin fallo de deploy | Verificar tablas/columnas en VPS antes de cutover |
+
+### D3 — `.env.example` / docs ops (M1, M2)
+
+| Evidencia | Impacto | Acción requerida |
+|-----------|---------|------------------|
+| Root `.env.example` — vars Portal activas (`MKT_*`, `LEBYTEK_API_*`, `LANDING_VARIANT` L118) | Mantenedores copian vars obsoletas al harness | Q2 PR doc-only (Enfoque A/B) |
+| `INSTALL_TOKEN` documentado en `docs/core/despliegue-y-versionado.md:238` y exigido en `public/install/index.php:56`, pero **ausente** en ambos `.env.example` en rama actual | Instalador prod bloqueado sin guía en template | Merge PR #29 (Q1) |
+| `docs/core/seguridad_secretos_deploy.md:6` — “auto-pull de `main`” vs `vps-deploy-lebytek-com.sh:6` — `BRANCH=feature/backoffice-api-integration` | Ops sigue instrucciones incorrectas | PR doc follow-up post-cutover |
+| `docs/core/despliegue-y-versionado.md` T1 aún lista `app/` como core inmutable (pre-FPS harness) | Confunde package source (`src/`) vs app consumidora | Actualizar tier table en PR docs (fuera de alcance código) |
+
+### D4 — Health / API (M3)
+
+| Evidencia | Impacto | Acción requerida |
+|-----------|---------|------------------|
+| `routes/api.php` + `skeleton/routes/api.php` — `/api/ping` dentro de grupo `AuthMiddleware` (L14–24) | LB/cron no pueden liveness HTTP sin sesión | Fase 2 Enfoque B |
+| `HealthController::ping` en `src/Presentation/Controllers/Api/HealthController.php` — capa correcta, sin lógica de negocio | — | Reutilizar en `/api/health`; no mover a Domain |
+| Sin tests `HealthEndpointIsPublicTest` ni grep `INSTALL_TOKEN` en `tests/` | Regresión M2/M3 no detectada en CI | Añadir en Fase 2 + test opcional Fase 1 |
+| Deploy VPS usa `scripts/lebytek-api-health.php` (cliente API externo), no ruta HTTP local | Smoke deploy ≠ contrato M3 | Documentar ambos checks en checklist cutover |
+
+### D5 — RBAC y CRUD (feature / Portal)
+
+| Evidencia | Impacto | Acción requerida |
+|-----------|---------|------------------|
+| `routes/web.php:73-76` — `permisos.gestionar` no existe; fallback `administracion.ver` (M4) | Permisos admin menos granulares | Issue alineación; doc `docs/audits/correccion_alineacion_modulos_v0.1.md` |
+| CRUD `mkt_ordenes.status` editable en feature (C4 auditoría) | Bypass `AutorizarOrdenMembresiaUseCase` | Portal; fuera de alcance harness |
+
+### D6 — Pipeline specs / PRs
+
+| Evidencia | Impacto | Acción requerida |
+|-----------|---------|------------------|
+| PR #29 **open** — audit report + `INSTALL_TOKEN` en `.env.example` | Spec asume Q1 mergeado; rama actual sin fix | Merge humano PR #29 antes de cerrar Fase 1 |
+| Drafts #25, #27, #28 sin consolidar (M5) | Duplicación reportes auditoría | Revisión humana merge/archivo |
+| Auditoría 2026-07-25: `php tests/run.php` **no ejecutado** (cloud sin PHP) | Gates 552 tests @ 2026-07-19 solo referencia | CI local o runner con PHP antes de merge plataforma |
+
+### D7 — Stripe (#21) — requisito documentado, no implementación
+
+Gaps persistentes en rama VPS (first-activation subscription, metadata invoice, recover/reactivate). **Gate ops:** `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` en `.env.example` L110 y prod hasta cierre #21. Este spec **no** toca `src/Domain/Payments/` ni use cases Portal.
+
 ---
 
 ## Riesgos
@@ -239,8 +310,9 @@ Este spec **no** modifica `ConfirmarPagoStripeUseCase` ni `StripeGateway`.
 
 | Riesgo | Mitigación |
 |--------|------------|
-| Greenfield sin columnas lifecycle/churn en leads | Resolver en Portal; ver spec 2026-07-24 D1 |
-| `migrate.php \|\| true` en deploy VPS | Fail-fast o checklist manual pre-cutover |
+| Greenfield sin columnas lifecycle/churn en leads (`marketing.sql` vs migraciones `202607*`) | Resolver en Portal; ver spec 2026-07-24 D1 y deuda D2 |
+| `migrate.php \|\| true` en deploy VPS (`vps-deploy-lebytek-com.sh:56`) | Fail-fast o checklist manual pre-cutover |
+| 19 migraciones `mkt_*` en feature vs 3 plataforma en `main` | No aplicar manifiesto feature al package post-FPS |
 
 Limpieza de `.env.example` **no** corrige schema drift.
 
@@ -248,17 +320,30 @@ Limpieza de `.env.example` **no** corrige schema drift.
 
 | Riesgo | Relación con este spec |
 |--------|------------------------|
-| Deploy en feature branch | Health público ayuda smoke staging Portal; no sustituye cutover |
-| `INSTALL_TOKEN` ausente en prod | Mitigado por Q1; ops debe setear valor fuerte en `.env` |
-| Docs ops desactualizadas (`seguridad_secretos_deploy.md`) | PR doc follow-up alinear con FPS |
+| Deploy en feature branch (`vps-deploy-lebytek-com.sh:6`, `sed` marketing ON L23) | Health público ayuda smoke staging Portal; no sustituye cutover |
+| `INSTALL_TOKEN` ausente en `.env.example` hasta merge PR #29 | Mitigado por Q1 post-merge; ops debe setear valor fuerte en `.env` prod |
+| Docs ops desactualizadas (`seguridad_secretos_deploy.md:6` vs script VPS) | PR doc follow-up alinear con FPS |
 | PRs draft #25/#27/#28 sin consolidar | Humano merge/archivo tras specs |
+| Spec/docs FPS solo en `main` — ilegibles desde rama VPS | Fetch `docs/CUTOVER-PORTAL.md` desde `main` para ops (deuda D1) |
 
 ### Regresión harness
 
 | Riesgo | Mitigación |
 |--------|------------|
-| Podar vars que el harness stub aún lee | Grep `EnvLoader::get` / `getenv` antes de eliminar; stub `app/` no debe depender de `MKT_*` |
+| Podar vars que el harness stub aún lee | Grep `EnvLoader::get` / `getenv` en `app/` y `config/` antes de eliminar; stub `app/` no debe depender de `MKT_*` en `main` |
 | Health expone información | v1 solo timestamp; no incluir `APP_DEBUG`, DB status ni secrets |
+| Implementar Fase 2 en rama feature por error | Target branch **`main`**; feature conserva monolito hasta cutover |
+
+### Checklist VPS (incompleto en rama feature)
+
+| Ítem cutover | Estado en rama spec (feature base) | Gate |
+|--------------|-----------------------------------|------|
+| `docs/CUTOVER-PORTAL.md` presente | **Ausente** — solo en `main` | Bloqueante cutover |
+| Staging smoke `GET /api/health` | **No implementado** (M3 pendiente) | Bloqueante post Fase 2 |
+| `INSTALL_TOKEN` en `.env.example` | **Pendiente** merge PR #29 | Bloqueante Fase 1 |
+| `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` | Documentado en `.env.example` L110 | Gate #21 |
+| Verificación migraciones leads/churn | Manual — bootstrap #23 | Bloqueante Portal |
+| `php tests/run.php` verde | No verificado en agente 2026-07-25 | CI/humano pre-merge |
 
 ---
 
@@ -266,30 +351,44 @@ Limpieza de `.env.example` **no** corrige schema drift.
 
 ### Documentación (Fase 1 — PR #29 + Q2)
 
+- [ ] PR #29 mergeado a `main` (prerrequisito — actualmente **open**).
 - [ ] `INSTALL_TOKEN=` presente en root `.env.example` y `skeleton/.env.example` con comentario operativo.
-- [ ] Root `.env.example` no lista `MKT_*` ni `LEBYTEK_API_*` como vars activas del paquete (eliminadas o bloque comentado “Portal only”).
+- [ ] Root `.env.example` no lista `MKT_*`, `LEBYTEK_API_*`, `LANDING_VARIANT` ni `INTEGRATIONS_API_DOCS_URL` como vars activas del paquete (eliminadas o bloque comentado “Portal only”).
 - [ ] `skeleton/.env.example` sigue sin vars Marketing.
 - [ ] `docs/core/despliegue-y-versionado.md` referencia `INSTALL_TOKEN` de forma consistente con `.env.example`.
+- [ ] `docs/core/seguridad_secretos_deploy.md` alineado con rama real de deploy VPS (feature → Portal post-cutover).
 
 ### Health API (Fase 2 — M3)
 
 - [ ] `GET /api/health` responde 200 JSON sin sesión ni token.
+- [ ] `/api/ping` autenticado deprecado o documentado como alias legacy (no canónico).
 - [ ] Rutas API futuras bajo `/api` con `AuthMiddleware` permanecen protegidas.
 - [ ] `skeleton/routes/api.php` refleja el mismo contrato.
-- [ ] Test harness confirma health público.
-- [ ] Checklist `docs/CUTOVER-PORTAL.md` / staging smoke puede usar `/api/health`.
+- [ ] Test `HealthEndpointIsPublicTest` en `tests/` confirma health público.
+- [ ] Checklist `docs/CUTOVER-PORTAL.md` (en `main`) / staging smoke puede usar `/api/health`.
+- [ ] Checklist distingue M3 liveness local vs `scripts/lebytek-api-health.php` (API externa).
+
+### Deuda técnica — verificación post-implementación
+
+- [ ] Deuda D1: cambios mergeados a `main`, no solo a feature.
+- [ ] Deuda D2: sin acción en harness package; #23 tracked en Portal.
+- [ ] Deuda D3: grep confirma cero refs `MKT_*` activas en root `.env.example` post-Q2.
+- [ ] Deuda D4: test harness verde para health + opcional grep `INSTALL_TOKEN`.
+- [ ] Deuda D6: reporte `docs/audits/2026-07-25-auditoria-tecnica-diaria.md` en `main` tras merge PR #29.
 
 ### Gates FPS (independientes)
 
 - [ ] `main` permanece sin Marketing (`FrameworkRootNotPortal`, `SkeletonPurity` verdes).
 - [ ] No merge feature → main sin orden explícita.
 - [ ] Issues #21 y #23 permanecen abiertos con scope Portal/VPS hasta implementación dedicada.
+- [ ] `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` mantenido hasta cierre #21.
 
 ### Consolidación auditorías (humano)
 
-- [ ] PR #29 mergeado (reporte + INSTALL_TOKEN).
-- [ ] Spec 2026-07-24 (cutover VPS) sigue siendo referencia para C1–C3.
-- [ ] Drafts #25/#27 revisados vs estado actual post-#29.
+- [ ] PR #29 mergeado (reporte + `INSTALL_TOKEN`).
+- [ ] Spec 2026-07-24 (cutover VPS) accesible desde `main`; C1–C3 cross-referenced.
+- [ ] Drafts #25/#27/#28 revisados vs estado actual post-#29.
+- [ ] `php tests/run.php` ejecutado en entorno con PHP antes de publicar paquete Fase 2.
 
 ---
 
@@ -298,15 +397,22 @@ Limpieza de `.env.example` **no** corrige schema drift.
 | Recurso | Ubicación |
 |---------|-----------|
 | PR auditoría fuente | https://github.com/Parzival2103/Lebytek_Framework/pull/29 |
-| Reporte auditoría | `docs/audits/2026-07-25-auditoria-tecnica-diaria.md` (rama PR #29) |
-| Spec cutover VPS | `docs/superpowers/specs/2026-07-24-audit-vps-cutover-fps-design.md` |
-| Cutover checklist | `docs/CUTOVER-PORTAL.md` |
-| Instalador web | `public/install/index.php` |
+| Reporte auditoría | `docs/audits/2026-07-25-auditoria-tecnica-diaria.md` (rama PR #29; **no** en `main` hasta merge) |
+| Spec cutover VPS | `docs/superpowers/specs/2026-07-24-audit-vps-cutover-fps-design.md` (rama `automation/audit-spec-2026-07-24` / `main`) |
+| Cutover checklist | `docs/CUTOVER-PORTAL.md` (`main` only) |
+| Instalador web | `public/install/index.php`, `skeleton/public/install/index.php` |
 | Health controller | `src/Presentation/Controllers/Api/HealthController.php` |
+| Health externo VPS | `scripts/lebytek-api-health.php` (Portal — `LebytekApiClient`) |
 | Rutas API harness | `routes/api.php`, `skeleton/routes/api.php` |
+| Deploy VPS | `scripts/vps-deploy-lebytek-com.sh` |
+| Migraciones plataforma (`main`) | `database/migrations/` (3 archivos) |
+| Migraciones feature (monolito) | `database/migrations/202606*.sql`, `202607*.sql` (19 archivos en feature) |
+| Bootstrap Marketing | `database/schema/modules/marketing.sql` |
 | Issue Stripe criticals | #21 |
 | Issue bootstrap leads | #23 |
 | Despliegue / versionado | `docs/core/despliegue-y-versionado.md` |
+| Seguridad deploy VPS | `docs/core/seguridad_secretos_deploy.md` |
+| RBAC permisos admin | `routes/web.php:73-76` |
 
 ---
 
