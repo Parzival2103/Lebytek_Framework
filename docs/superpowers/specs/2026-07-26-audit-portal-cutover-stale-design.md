@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-26  
 **Repo:** `Lebytek_Framework` (package source `lebytek/framework`)  
-**Estado:** diseño — sin implementación (pasada deuda técnica D1–D12 + criterios ops/hardening)  
+**Estado:** diseño — sin implementación (pasadas deuda técnica D1–D12 + compatibilidad K1–K7 + UX U1–U9 + responsive R1–R7)  
 **Auditoría fuente:** [PR #31](https://github.com/Parzival2103/Lebytek_Framework/pull/31) — `docs/audits/2026-07-26-auditoria-tecnica-diaria.md` (draft, base `main`)  
 **Rama base de trabajo:** `feature/backoffice-api-integration` (referencia VPS @ `4789f95`) / `main` @ `607a3c6` (package FPS)  
 **Rama spec:** `automation/audit-spec-2026-07-26` (deriva de feature, no de `main`)  
@@ -90,7 +90,7 @@ Mientras el cutover siga **deferred**:
 - Renumerar migración `20260715120000_*` duplicada ni registrar `20260706120200_rep_churn_metrics.sql` en manifiesto — Portal/feature.
 - Merge `feature/backoffice-api-integration` → `main`.
 - Creación repo remoto `Lebytek_Portal` (orden explícita requerida).
-- Cierre de PR #31 ni otros drafts de auditoría — automation posterior.
+- Cierre de PR #31 — lo ejecuta el pase UX (este pipeline), no el pase deuda técnica previo.
 - Creación de `.github/workflows/` CI — issue/PR separado; solo documentado en deuda D9.
 - Slug RBAC `permisos.gestionar` (M7/D5) — issue alineación, no bloqueante cutover.
 - Purga vars `MKT_*` del harness `.env.example` — spec 2026-07-25 Fase 1 Q2.
@@ -339,9 +339,207 @@ Gaps persistentes en rama VPS (6 criticals en issue **#21**): first-activation n
 
 | Evidencia | Impacto | Acción requerida |
 |-----------|---------|------------------|
-| PR #31 **draft** — informe 2026-07-26 + `INSTALL_TOKEN` en `.env.example` | Spec asume auditoría fuente accesible; fix Q1 no en `main` | Merge humano PR #31 |
+| PR #31 **draft** — informe 2026-07-26 + `INSTALL_TOKEN` en `.env.example` | Spec asume auditoría fuente accesible; fix Q1 no en `main` | Cerrar PR #31 en pase UX; merge humano contenido `.env.example` |
 | PR #29 (2026-07-25) **cerrado**; PR #30 spec harness **cerrado** | Progreso parcial harness; Fase 2 health API sigue pendiente | Continuar spec 2026-07-25 en PR Framework |
 | Specs audit `2026-07-24`, `2026-07-25` en ramas `automation/audit-spec-*`; **no** en feature branch desplegada | Gates cutover/harness ilegibles desde VPS | Fetch docs desde ramas audit o `main` |
+
+---
+
+## Compatibilidad (pase UX — PHP, navegadores, admin, móvil)
+
+Inventario derivado de revisión estática en rama `automation/audit-spec-2026-07-26` (base `feature/backoffice-api-integration` @ `4789f95`), delta `main` @ `607a3c6`, auditoría [PR #31](https://github.com/Parzival2103/Lebytek_Framework/pull/31), `docs/core/ui_ux.md`, install wizard, flujos Marketing en feature/VPS y hardening Framework `main`. **Solo requisitos de diseño** — sin implementación en este pipeline.
+
+**Contexto estancamiento:** la semana sin commits en `main` no cambia la superficie UX en VPS (sigue monolito feature); los requisitos K/U/R siguen aplicando al **estado interino pinneado** y al **cutover objetivo Portal**.
+
+### K1 — Runtime PHP y dependencias Composer
+
+| Ítem | Evidencia | Requisito |
+|------|-----------|-----------|
+| PHP mínimo | `composer.json`: `"php": ">=8.1"` | VPS, staging Portal y harness deben ejecutar **PHP ≥ 8.1** antes de cutover o pin interino |
+| VOs Payments | PR #10: `readonly class` en domain Payments | Hosting PHP 8.0 o inferior **no compatible** — bloqueante |
+| Extensiones install | `paso_requisitos.php` + PDO repos | `pdo_mysql`, `mbstring`, `json`, `openssl`, `fileinfo` requeridas; documentar en `VPS_CHECKLIST.md` |
+| Cloud agent sin PHP | Auditoría 2026-07-26; D9 | Compatibilidad runtime **no verificada** esta semana — gate humano/CI antes de confiar en smoke |
+
+### K2 — Navegadores soportados (admin vs público vs install)
+
+| Superficie | Stack | Compatibilidad esperada |
+|------------|-------|-------------------------|
+| Admin / CRUD | Bootstrap 5.3 + jQuery + DataTables Responsive (CDN) | Chrome/Firefox/Safari/Edge **últimas 2 versiones**; sin IE11 |
+| Landing v1 | Bootstrap 5.3 (`publico/layout.php`) | Misma baseline admin |
+| Landing v2 | CSS/JS standalone (`landing_v2.css/js`) — **sin Bootstrap** | `IntersectionObserver`, CSS `clamp()`, `prefers-reduced-motion`; Safari iOS ≥ 15 |
+| Install wizard | Bootstrap 5.3 local; layout 720px | Funcional móvil; token 403/419 texto plano (ver U1, K6) |
+| Health API (Fase 2 pendiente) | JSON puro | curl/LB/UptimeRobot; **no** redirect HTML (ver K5) |
+
+**Gap K2a — iconos Bootstrap Icons ausentes en install:** `_layout.php` del wizard referencia `bi-*` sin cargar `bootstrap-icons.css` (admin sí lo carga en `base.php`). Checks OK/error pueden mostrarse sin icono — ver spec 2026-07-25 K2a.
+
+**Requisito cutover/interino:** smoke manual **Safari iOS + Chrome Android** para landing activa (`LANDING_VARIANT`) y login admin; repetir tras cada deploy pinneado si cambia SHA feature.
+
+### K3 — Divergencia stacks y rutas post-FPS (Portal vs monolito VPS)
+
+Tras cutover, lebytek.com consumirá **Portal + vendor framework**. Mientras C1 persista, compatibilidad de rutas públicas se valida en **feature @ SHA pinneado**, no en `main` harness.
+
+| Ruta pública | Middleware / deps | Riesgo compat |
+|--------------|-------------------|---------------|
+| `POST /marketing/collect` | Sin CSRF (by design); rate limit | WAF/CDN si body JSON mal formado |
+| `POST /webhooks/stripe` | Fuera CSRF; firma Stripe | Body raw intacto en nginx |
+| `GET /portal` | Magic-link | Links rotos si `APP_URL` desalineado post-DNS |
+| waapi sin migrate (M6) | Tablas ausentes | **500 HTML** en cualquier navegador — no bug cliente |
+
+### K4 — Schema drift → errores 500 en admin y API (D2, M5)
+
+Columnas lifecycle/churn/Stripe ausentes en bootstrap + migraciones silenciadas (`|| true`) provocan SQL exceptions en `PdoLeadRepository`, reportes churn y CRUD leads/órdenes. **Cualquier navegador** ve pantalla de error 500 — no es bug de cliente.
+
+**Requisito interino:** post-deploy query `SHOW COLUMNS FROM dom_mkt_leads LIKE 'api_%'` y `'demo_%'` antes de exponer admin; fail-fast scripts (D3) para evitar schema parcial silencioso.
+
+### K5 — Stripe Checkout, health API y redirects móvil
+
+| Condición | Evidencia | Impacto compat/UX |
+|-----------|-----------|-------------------|
+| `PAYMENTS_SUBSCRIPTION_CHECKOUT=true` (#21) | D11 | Checkout subscription no activa orden — retorno "éxito" engañoso |
+| Webhook 200 con fallo silencioso (C4) | Issue #21 | Página éxito desacoplada del estado real |
+| `/api/ping` bajo auth | `AuthMiddleware` → 302 HTML login | LB puede marcar healthy incorrectamente — ver spec 2026-07-25 K3 |
+| `GET /api/health` (Fase 2) | Pendiente en `main` | Contrato liveness sin sesión — no reutilizar `/api/ping` autenticado |
+
+**Gate:** checkout recurrente OFF; smoke return URL Stripe en viewport **375px**; monitoring VPS debe usar endpoint JSON público post-Fase 2.
+
+### K6 — Install wizard, token y entornos
+
+| Ítem | Evidencia | Requisito |
+|------|-----------|-----------|
+| `INSTALL_TOKEN` | PR #31 documenta en `.env.example` — **draft, no mergeado** | Merge humano PR #31 o equivalente antes cutover |
+| Respuesta 403/419 | `public/install/index.php` — texto plano | Layout wizard mínimo + copy ops (U1, U2) |
+| Wizard abierto staging | M3: token solo en `APP_ENV=production` | Documentar riesgo staging expuesto; no confundir con prod |
+| Token en query móvil | Historial navegador | Runbook: rotar token si URL compartida |
+
+### K7 — Superficie admin: path traversal config y sesión desactivada (M1, M2)
+
+| Ítem | Evidencia | Requisito |
+|------|-----------|-----------|
+| Config loaders sin allowlist | D4: `CrudConfigLoader`, `CalendarConfigLoader`, `ReporteConfigLoader` | Usuario autenticado en **cualquier navegador** puede explotar lectura paths — fix Framework M1 |
+| Sesión usuario desactivado | M2: `AuthMiddleware` no revalida `activo` | Admin desactivado mantiene sesión hasta expiry — v1.1 opcional documentada |
+| Upload SVG (D10) | `UploadValidator` + CRUD `type: file` | XSS vía SVG en admin si config lo habilita — revisar CRUDs con SVG; fuera cutover inmediato |
+
+---
+
+## UX (pase UX — flujos, copy, estados error/vacío)
+
+Requisitos para **VPS interino pinneado** (feature) y **estado objetivo Portal**. La semana estancada (D1) no exime de corregir flujos que siguen en producción.
+
+### U1 — CRUD `mkt_ordenes`: bypass de flujo de pago (C3, D8)
+
+`config/cruds/mkt_ordenes.json` expone `status` como `select` editable incluyendo `"paid"`; transiciones JSON no aplican al guardado directo del formulario.
+
+| Problema UX | Impacto |
+|-------------|---------|
+| Operador marca `paid` manualmente | Usuario cree activado; `api_activation_error` vacío o confuso |
+| Badge "Pagada" vs tenant sin provisionar | Soporte recibe tickets; inconsistencia API comercial |
+| Help text `api_tenant_public_id` mezcla transferencia/Stripe | Error operativo en móvil (campo largo, truncate en lista) |
+
+**Requisito Portal/feature pinneada:** `status` **read-only** o restringido a transiciones RBAC; acciones fila primarias sin editar select.
+
+### U2 — Confirmación pago Stripe: copy optimista vs realidad (#21, D11)
+
+Vista `publico/compra_pago_exito.php` — copy genérico "Estamos confirmando tu pago..." no distingue one-shot confirmado, subscription pendiente webhook, ni fallo activación API.
+
+**Requisito:** estados diferenciados según `order.status` + `metodo_pago` + `api_activation_error`; enlace soporte si activación falla tras N minutos; **no** habilitar subscription checkout hasta cierre #21.
+
+### U3 — Install wizard: errores token/CSRF sin guía visual (M3, PR #31)
+
+403 y 419 responden texto plano sin layout Bootstrap ni enlace a documentación despliegue.
+
+**Requisito:** vistas con `_layout.php`, instrucciones numeradas (`INSTALL_TOKEN` en `.env` + `?token=valor`), enlace `docs/core/despliegue-y-versionado.md`; aplicar harness + skeleton (spec 2026-07-25 U1–U2).
+
+### U4 — Pago cancelado: recuperación de intención débil
+
+`publico/compra_pago_cancelado.php` enlaza a `/?compras=1#paquetes` — pierde contexto orden/plan/ciclo.
+
+**Requisito:** CTA "Reintentar pago" hacia misma orden cuando `status` lo permita; copy que confirme ausencia de cargo.
+
+### U5 — Verificación demo: estados terminales sin CTA retorno
+
+`verificar_demo.php` — estados `expired`, `locked`, `invalid` sin botón "Solicitar demo de nuevo" (`/#demo` o v2 `#demo`).
+
+**Requisito Portal:** enlace consistente al formulario demo en todos los estados error; anchor `#demo` funcional v1/v2.
+
+### U6 — Flujo transferencia vs Stripe en admin: empty-state operador
+
+Acciones CRUD condicionadas por `visible_when.status`; si ocultas en móvil o estado incorrecto, operador no ve siguiente paso. Columna `api_activation_error` depende de schema (D2).
+
+**Requisito:** banner o empty-state en detalle orden con checklist según `metodo_pago`; mensaje explícito si schema incompleto impide mostrar errores activación.
+
+### U7 — Recuperación membresía / dunning (#21)
+
+Rutas `/membresia/reintentar-pago`, `/membresia/reactivar` — recover crea nuevo Checkout (C3); `markActive` local con API caída (C5).
+
+**Requisito:** copy unificado reactivación; fail-closed si API comercial no responde; no mostrar "activo" hasta confirmación.
+
+### U8 — Harness `.env.example` y copy ops confuso (M4, D6)
+
+Root `.env.example` mezcla CTAs lebytek.com/waapi y vars `MKT_*`/`LEBYTEK_API_*` como si fueran del paquete FPS; `skeleton/.env.example` limpio.
+
+**Requisito documental:** podar vars Portal del harness (spec 2026-07-25 Q2); bloque `# ── Solo Lebytek_Portal ──` o doc referencia; evitar que operador copie CTAs Marketing al instalar tenant genérico.
+
+### U9 — Estancamiento cutover: señales UX para ops y mantenedores (D1, D12)
+
+| Problema | Impacto UX ops |
+|----------|----------------|
+| `VPS_CHECKLIST.md` "until merge" sin fecha | Ops cree que feature es target final |
+| PR #31 draft + specs en ramas `automation/*` | Informe y gates ilegibles desde VPS |
+| 0 commits `main` 24h | Falsa sensación de estabilidad mientras prod diverge |
+
+**Requisito:** banner/checklist **deferred con fecha revisión** y SHA pinneado visible; enlace a spec final (PR UX) desde checklist; PR auditoría #31 cerrado con referencia al spec mergeable.
+
+---
+
+## Responsive (pase UX — breakpoints, layout admin/público)
+
+Referencia admin: `docs/core/ui_ux.md` §542 — **breakpoint único 992px (`lg`)**. Landing v2 usa 860px / 560px (decisión consciente). Install wizard: contenedor **720px**.
+
+### R1 — Admin: navegación y layout (992px)
+
+| Componente | Comportamiento | Verificación |
+|------------|----------------|--------------|
+| Sidebar / offcanvas | `< 992px` offcanvas; `≥ 992px` fijo | Marketing → Órdenes en 375px y 1280px |
+| Bottombar móvil | `d-lg-none` | Acciones CRUD no bajo barra inferior |
+| RBAC permisos (M7) | Misma shell | Smoke gestión permisos en 375px — acceso amplio no debe ocultar acciones críticas |
+
+### R2 — CRUD `mkt_ordenes`: densidad columnas móvil (C3)
+
+Lista **9 columnas** con `priority` 1–5; acciones fila `autorizar_pago`, `activar_plan`, etc.
+
+**Requisito:** smoke 375px — expandir fila `pending_transfer`, tap `Autorizar pago`; área táctil ≥ 44px; `table_compact: true` no reduce target bajo mínimo.
+
+### R3 — Landing v2: breakpoints 860px / 560px
+
+Probar pricing grid, nav sticky, hero en 860px, 560px, **320px**. Lead form: inputs sin desborde (`box-sizing: border-box`).
+
+### R4 — Landing v1, compra, verificación demo (Bootstrap)
+
+| Vista | Verificación móvil |
+|-------|-------------------|
+| `compra_form.php`, transferencia | Formulario con teclado email abierto |
+| `verificar_demo.php` | Input 6 chars, `autocomplete=one-time-code` iOS |
+| `compra_pago_*` | `max-width: 720px`; botones full-width opcional `< sm` |
+
+### R5 — Install wizard responsive (720px)
+
+Pasos `paso_bd`, `paso_admin`, `paso_revision` — listas largas migraciones con scroll (`max-height`) para no empujar "Instalar ahora" fuera de viewport (spec 2026-07-25 U7, R2–R3). Requisitos flex en `paso_requisitos` para 320px.
+
+### R6 — Smoke responsive cutover / interino (staging o VPS pinneado)
+
+| # | Viewport | Flujo |
+|---|----------|-------|
+| 1 | 375×812 | Landing → demo form → flash success/error |
+| 2 | 375×812 | `/comprar/starter` → ciclo → submit |
+| 3 | 375×812 | Admin login → CRUD `mkt_ordenes` → expand row → acción |
+| 4 | 1280×800 | Admin sidebar fijo — mismo flujo |
+| 5 | 860px | Landing v2 pricing toggle mensual/anual |
+| 6 | prefers-reduced-motion | Landing v2 sin animaciones obligatorias |
+| 7 | 375×812 | Install token 403 **con layout** (post U3) |
+
+### R7 — waapi y health: verificación sin UI dedicada
+
+waapi sin migrate (M6) — verificar que rutas admin/API no devuelvan 500 por tablas ausentes tras deploy. Health: curl CLI + panel LB; no usar `/api/ping` autenticado en monitoring móvil ops.
 
 ---
 
@@ -365,8 +563,21 @@ Gaps persistentes en rama VPS (6 criticals en issue **#21**): first-activation n
 
 ### Auditoría / pipeline
 
-- [ ] PR #31 referenciado en spec; no cerrado por esta automation.
+- [ ] PR #31 referenciado en spec; **cerrado** por pase UX con enlace al PR spec final.
 - [ ] Spec committeado en `automation/audit-spec-2026-07-26` sin cambios en `app/` ni `src/`.
+
+### Compatibilidad / UX / Responsive (pase UX — este spec)
+
+- [ ] Secciones **Compatibilidad** (K1–K7), **UX** (U1–U9) y **Responsive** (R1–R7) revisadas por maintainer.
+- [ ] Smoke pre-cutover/interino incluye PHP ≥ 8.1 en VPS/staging y Safari iOS + Chrome Android (K2).
+- [ ] CRUD `mkt_ordenes`: campo `status` no editable a `paid` manualmente; acciones fila accesibles en móvil (U1, R2).
+- [ ] Página retorno Stripe distingue estados reales de orden — no copy optimista único si webhook/activación pendiente (U2).
+- [ ] Install wizard 403/419 con layout/guía ops o documentación equivalente mergeada (U3, K6).
+- [ ] Pago cancelado ofrece reintento contextual por orden cuando aplique (U4).
+- [ ] Verificación demo: CTA "Solicitar demo" en estados `expired`/`locked`/`invalid` (U5).
+- [ ] Harness `.env.example` sin copy Portal activo confuso (U8); `INSTALL_TOKEN` mergeado desde PR #31 (K6).
+- [ ] Checklist responsive R6 + R7 ejecutado en staging/VPS pinneado antes switch prod o declaración explícita deferred.
+- [ ] Path traversal config (K7/D4) y health API pública (K5) documentados como gates Framework separados del cutover.
 
 ### Deuda técnica — verificación post-implementación
 
@@ -380,7 +591,7 @@ Gaps persistentes en rama VPS (6 criticals en issue **#21**): first-activation n
 - [ ] **D8:** Issue Portal CRUD `mkt_ordenes.status` o fix en feature pinneada.
 - [ ] **D9:** Workflow CI con `php tests/run.php` en `main` (fuera de alcance spec-only).
 - [ ] **D11:** Checkout subscription OFF en prod; evidencia issue #21 antes de habilitar.
-- [ ] **D12:** Informe `docs/audits/2026-07-26-auditoria-tecnica-diaria.md` accesible en `main` tras merge PR #31.
+- [ ] **D12:** Informe auditoría accesible; PR #31 cerrado; spec final en PR hacia `feature/backoffice-api-integration`.
 
 ---
 
