@@ -227,8 +227,16 @@ En **ambos** repos (`Lebytek_Framework` y `Lebytek_Portal`):
 | `scripts/vps-deploy-skeleton.sh` (sólo Framework) | eliminar | Sustituido por `publish-skeleton.sh` + `create-project` |
 
 Se eliminan en vez de reescribirse: el despliegue real hoy es `git pull` + `composer install`
-sobre un clone del Portal, que no necesita script. `Lebytek_Portal/docs/DEPLOY-VPS.md`
-documenta ese procedimiento y se actualiza para dejarlo explícito.
+sobre un clone del Portal, que no necesita script.
+
+`Lebytek_Portal/docs/DEPLOY-VPS.md` requiere tres correcciones, no sólo añadir el
+procedimiento:
+
+| Sección | Estado actual | Corrección |
+|---|---|---|
+| "Composer switch (staging first)" | Documenta el pin a `dev-consolidation/framework-portal-separation` | Reemplazar por `^1.1` (Portal) y remitir a este spec para staging |
+| "Deploy sequence (human executes on VPS)" | Describe el clone inicial del cutover | Reemplazar por el ciclo real: `git pull` + `composer install --no-dev` + smoke |
+| "Forbidden without explicit user order" | Prohíbe mergear `feature/backoffice-api-integration` a `main` | Eliminar la línea: la rama deja de existir |
 
 Los scripts `vps-finalize-lebytek.sh`, `vps-fix-lebytek-db.sh`, `vps-setup-lebytek-db.sh`,
 `vps-fix-lebytek-ssl.sh` y `vps-restore-lebytek-nginx-ssl.sh` no referencian la rama y
