@@ -1343,7 +1343,20 @@ gh api repos/Parzival2103/Lebytek_Framework/tags --jq '[.[].name]'
 ```
 Expected: el tag aparece junto a `v1.0.0`, `v1.1.0`, `pre-split-backup`.
 
-- [ ] **Step 4: Eliminar la rama en Framework**
+- [ ] **Step 4: Comprobar que el preflight de las automatizaciones resuelve el tag**
+
+Con el tag ya publicado y la rama **todavía viva**, el preflight de `docs/automation/` debe resolver ya por su primer candidato (`refs/tags/archive/…`). Si esto no está en verde, **no continuar**: en cuanto se borre la rama, `git rev-list origin/main..<LEGACY_REF>` abortaría con `invalid object name` en el primer paso y las tres automatizaciones morirían antes de llegar a sus comprobaciones útiles.
+
+```bash
+cd Lebytek_Framework
+git fetch origin --prune --tags
+git rev-parse --verify --quiet 'refs/tags/archive/backoffice-api-integration^{commit}'
+php tests/run.php Docs/AutomationPreflightRef
+```
+
+Expected: el `rev-parse` imprime el SHA anotado en el Step 2, y el test `4 passed, 0 failed`. La guarda permanente vive en `tests/Docs/AutomationPreflightRefTest.php`.
+
+- [ ] **Step 5: Eliminar la rama en Framework**
 
 ```bash
 cd Lebytek_Framework
@@ -1351,7 +1364,7 @@ git push origin --delete feature/backoffice-api-integration
 git branch -D feature/backoffice-api-integration
 ```
 
-- [ ] **Step 5: Comprobar Portal (no-op esperado)**
+- [ ] **Step 6: Comprobar Portal (no-op esperado)**
 
 ```bash
 cd Lebytek_Portal
@@ -1359,9 +1372,9 @@ git fetch origin --prune
 gh api repos/Parzival2103/Lebytek_Portal/branches --jq '[.[].name]'
 git branch --list feature/backoffice-api-integration
 ```
-Expected: la lista de ramas remotas no incluye `feature/backoffice-api-integration` y `git branch --list` no devuelve nada. Si apareciera, borrarla con los mismos dos comandos del Step 4.
+Expected: la lista de ramas remotas no incluye `feature/backoffice-api-integration` y `git branch --list` no devuelve nada. Si apareciera, borrarla con los mismos dos comandos del Step 5.
 
-- [ ] **Step 6: Verificar la eliminación en ambos repos**
+- [ ] **Step 7: Verificar la eliminación en ambos repos**
 
 ```bash
 gh api repos/Parzival2103/Lebytek_Framework/branches --jq '[.[].name] | map(select(. == "feature/backoffice-api-integration"))'
@@ -1373,7 +1386,7 @@ Expected: `[]` en ambas consultas `gh`, y `fw_local_clean` / `portal_local_clean
 
 Nota: el clone de Framework tiene además un remoto local `no-mistakes` (`C:\Users\User\.no-mistakes\repos\…`) con su propia copia de la rama. Es un espejo de herramienta local, no un origen de despliegue; queda fuera de alcance.
 
-- [ ] **Step 7: Verificación final de no-regresión**
+- [ ] **Step 8: Verificación final de no-regresión**
 
 ```bash
 curl -s -o /dev/null -w 'lebytek=%{http_code}\n' https://lebytek.com/
