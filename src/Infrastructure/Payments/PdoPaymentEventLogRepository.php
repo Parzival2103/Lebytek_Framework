@@ -50,4 +50,13 @@ final class PdoPaymentEventLogRepository implements PaymentEventLogRepositoryInt
             throw $e;
         }
     }
+
+    public function releaseClaim(string $provider, string $eventId): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'DELETE FROM pay_events WHERE provider = :provider AND event_id = :event_id'
+        );
+        $stmt->execute(['provider' => $provider, 'event_id' => $eventId]);
+    }
 }

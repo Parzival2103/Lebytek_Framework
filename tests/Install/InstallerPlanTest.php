@@ -52,3 +52,29 @@ test('Installer::plan reporta checksum modificado sin re-aplicar', function (): 
     assert_same(1, count($plan->checksumsModificados));
     assert_same('m1.sql', $plan->checksumsModificados[0]['archivo']);
 });
+
+test('Installer::plan falla con error accionable si el manifiesto declara un archivo inexistente', function (): void {
+    $migDir  = install_fixture_dir([]);
+    $seedDir = install_fixture_dir([]);
+    $installer = new Installer(
+        new ModuleRegistry(ROOT_PATH . '/tests/fixtures/modules_plan_missing'),
+        new DependencyResolver(),
+        new FakeMigrationRepository([]),
+        new FakeModuleStateRepository(),
+        new SqlFileRunner(),
+        $migDir,
+        $seedDir
+    );
+
+    $threw = false;
+    try {
+        $installer->plan(['core']);
+    } catch (\RuntimeException $e) {
+        $threw = true;
+        assert_true(
+            str_contains($e->getMessage(), 'manifiesto del módulo «core» declara migración «ghost.sql»'),
+            'mensaje accionable: ' . $e->getMessage()
+        );
+    }
+    assert_true($threw, 'se esperaba RuntimeException por migración huérfana');
+});
