@@ -30,8 +30,14 @@ php tests/run.php SkeletonPurity
 
 ## Branches
 
-- `consolidation/framework-portal-separation` — FPS consolidation work
+- `main` — canonical base for Framework audits, specs, plans, implementation and releases
+- `consolidation/framework-portal-separation` — historical FPS consolidation branch
+- `feature/backoffice-api-integration` — frozen legacy monolith reference; never use as the base for new work
 - **Do not merge** `feature/backoffice-api-integration` → `main` without explicit user order
+
+The deployed application is `Lebytek_Portal` on its `main` branch. Consumers
+receive Framework through a tagged Composer release and `composer.lock`.
+Canonical automation prompts live in `docs/automation/`.
 
 ## Docs
 
