@@ -133,6 +133,14 @@ final class Installer
 
     /**
      * PackagePaths es SoT; $dir (constructor) solo como fallback BC / fixtures.
+     *
+     * TRAMPA CONOCIDA: si el archivo no existe en ninguna parte, esto devuelve
+     * una ruta inexistente en vez de fallar, y quien revienta es
+     * SqlFileRunner::checksum() con «No se pudo leer <ruta>». Un manifiesto que
+     * declara un archivo ausente se manifiesta así como un crash de plan()
+     * —opaco, y fatal para toda selección si el módulo es obligatorio— en lugar
+     * de un error accionable que nombre el manifiesto culpable.
+     * Ver Parzival2103/Lebytek_Portal#12 para el caso real.
      */
     private function resolveInstallFile(string $archivo, string $dir): string
     {
