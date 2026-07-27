@@ -12,16 +12,26 @@ Act as the senior technical auditor for the Composer package
 
 Run this before reading previous audits or writing files:
 
-1. Fetch `origin/main` and
-   `origin/feature/backoffice-api-integration`.
+1. Run `git fetch origin --prune --tags`, then resolve the legacy history once
+   as `<LEGACY_REF>`. Take the first candidate that resolves with
+   `git rev-parse --verify --quiet '<candidate>^{commit}'`:
+   1. `refs/tags/archive/backoffice-api-integration`
+   2. `refs/remotes/origin/feature/backoffice-api-integration`
+
+   Task 10 of `docs/superpowers/plans/2026-07-26-skeleton-package-staging.md`
+   deletes the branch; the tag is what survives it. Use the fully qualified
+   names — the short form also matches a stale *local* branch and would resolve
+   for the wrong reason. If neither candidate resolves, stop and report an
+   automation misconfiguration: the fetch failed. Never continue with an
+   unverified ancestry check.
 2. Record the current branch, `HEAD`, `origin/main`, and merge base.
 3. Run `git merge-base --is-ancestor origin/main HEAD` and require exit code
    `0`. The automation working branch may have its own name, but it must have
    been created from current Framework `main`.
-4. Enumerate every commit exclusive to the legacy feature with
-   `git rev-list origin/main..origin/feature/backoffice-api-integration`.
+4. Enumerate every commit exclusive to the legacy history with
+   `git rev-list origin/main..<LEGACY_REF>`.
    Require that none of those commits is an ancestor of `HEAD`. Checking only
-   the feature tip is insufficient because a branch may inherit an earlier
+   the legacy tip is insufficient because a branch may inherit an earlier
    legacy commit.
 5. Require `git status --porcelain` to be empty before writing the report.
 6. Query open audit PRs including `baseRefName`. Only reuse a PR whose base is

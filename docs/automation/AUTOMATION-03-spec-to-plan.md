@@ -10,12 +10,23 @@ implementation plan grounded in current `main` branches.
 
 ### Mandatory branch and source preflight
 
-1. Fetch Framework `origin/main` and
-   `origin/feature/backoffice-api-integration`. Require `origin/main` to be an
-   ancestor of the current automation `HEAD`. Enumerate
-   `git rev-list origin/main..origin/feature/backoffice-api-integration` and
-   require that none of those legacy-exclusive commits is an ancestor of
-   `HEAD`. Require `git status --porcelain` to be empty.
+1. Run `git fetch origin --prune --tags` in Framework, then resolve the legacy
+   history once as `<LEGACY_REF>`. Take the first candidate that resolves with
+   `git rev-parse --verify --quiet '<candidate>^{commit}'`:
+   1. `refs/tags/archive/backoffice-api-integration`
+   2. `refs/remotes/origin/feature/backoffice-api-integration`
+
+   Task 10 of `docs/superpowers/plans/2026-07-26-skeleton-package-staging.md`
+   deletes the branch; the tag is what survives it. Use the fully qualified
+   names — the short form also matches a stale *local* branch and would resolve
+   for the wrong reason. If neither candidate resolves, stop and report an
+   automation misconfiguration: the fetch failed. Never continue with an
+   unverified ancestry check.
+
+   Then require `origin/main` to be an ancestor of the current automation
+   `HEAD`. Enumerate `git rev-list origin/main..<LEGACY_REF>` and require that
+   none of those legacy-exclusive commits is an ancestor of `HEAD`. Require
+   `git status --porcelain` to be empty.
 2. Select an open spec PR only when its title begins with `docs(spec):`, its
    base is Framework `main`, its mergeability is exactly `MERGEABLE` and its
    provenance identifies it as a Framework `main` spec; obtain its
@@ -26,7 +37,7 @@ implementation plan grounded in current `main` branches.
    with `origin/main`. Run
    `git merge-base --is-ancestor origin/main <headRefOid>` and require exit
    code `0`. Require that none of the commits from
-   `git rev-list origin/main..origin/feature/backoffice-api-integration` is an
+   `git rev-list origin/main..<LEGACY_REF>` is an
    ancestor of `<headRefOid>`, then inspect
    `git diff --name-only origin/main...<headRefOid>`.
 4. Require the complete three-dot diff to contain only the expected design
