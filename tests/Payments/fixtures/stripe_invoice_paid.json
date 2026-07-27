@@ -1,0 +1,19 @@
+{
+  "id": "evt_invoice_paid_123",
+  "type": "invoice.paid",
+  "data": {
+    "object": {
+      "id": "in_test_123",
+      "subscription": "sub_test_456",
+      "customer": "cus_test_789",
+      "amount_paid": 219900,
+      "currency": "mxn",
+      "status": "paid",
+      "subscription_details": {
+        "metadata": {
+          "order_public_id": "order_01JABCDEF"
+        }
+      }
+    }
+  }
+}

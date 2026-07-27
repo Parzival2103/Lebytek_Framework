@@ -109,7 +109,7 @@ final class Installer
      */
     private function clasificar(string $clave, string $archivo, string $dir, array $aplicadas, array &$pendientes, array &$modificados): void
     {
-        $ruta = $this->resolveInstallFile($archivo, $dir);
+        $ruta = $this->resolveInstallFile($archivo, $dir, $clave);
         $checksum = $this->runner->checksum($ruta);
 
         if (!isset($aplicadas[$archivo])) {
@@ -134,23 +134,32 @@ final class Installer
     /**
      * PackagePaths es SoT; $dir (constructor) solo como fallback BC / fixtures.
      *
-     * TRAMPA CONOCIDA: si el archivo no existe en ninguna parte, esto devuelve
-     * una ruta inexistente en vez de fallar, y quien revienta es
-     * SqlFileRunner::checksum() con «No se pudo leer <ruta>». Un manifiesto que
-     * declara un archivo ausente se manifiesta así como un crash de plan()
-     * —opaco, y fatal para toda selección si el módulo es obligatorio— en lugar
-     * de un error accionable que nombre el manifiesto culpable.
-     * Ver Parzival2103/Lebytek_Portal#12 para el caso real.
+     * Con $modulo (p. ej. en plan()), un archivo ausente lanza RuntimeException
+     * accionable que nombra módulo y entrada del manifiesto. Sin $modulo
+     * (baseline legacy) devuelve la ruta resuelta aunque no exista en disco.
      */
-    private function resolveInstallFile(string $archivo, string $dir): string
+    private function resolveInstallFile(string $archivo, string $dir, ?string $modulo = null): string
     {
+        $esSeed = $dir === $this->seedsDir || str_contains($dir, 'seeds');
+        $fallback = rtrim($dir, '/\\') . '/' . $archivo;
+
         try {
-            return ($dir === $this->seedsDir || str_contains($dir, 'seeds'))
+            $ruta = $esSeed
                 ? $this->resolveSeedFile($archivo)
                 : $this->resolveMigrationFile($archivo);
         } catch (\RuntimeException) {
-            return rtrim($dir, '/\\') . '/' . $archivo;
+            $ruta = $fallback;
         }
+
+        if ($modulo !== null && ! is_file($ruta)) {
+            $tipo = $esSeed ? 'seed' : 'migración';
+            throw new \RuntimeException(
+                "El manifiesto del módulo «{$modulo}» declara {$tipo} «{$archivo}» "
+                . "pero el archivo no existe (PackagePaths ni {$fallback})."
+            );
+        }
+
+        return $ruta;
     }
 
     public function aplicar(InstallPlan $plan): void

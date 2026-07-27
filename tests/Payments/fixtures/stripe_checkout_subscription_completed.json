@@ -1,0 +1,18 @@
+{
+  "id": "evt_checkout_sub_completed_123",
+  "type": "checkout.session.completed",
+  "data": {
+    "object": {
+      "id": "cs_test_sub_123",
+      "mode": "subscription",
+      "subscription": "sub_test_456",
+      "customer": "cus_test_789",
+      "metadata": {
+        "order_public_id": "order_01JABCDEF"
+      },
+      "amount_total": 219900,
+      "currency": "mxn",
+      "payment_status": "paid"
+    }
+  }
+}

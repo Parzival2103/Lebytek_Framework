@@ -28,6 +28,11 @@ final class InMemoryPaymentEventLog implements PaymentEventLogRepositoryInterfac
         $this->claimed[$key] = true;
         return true;
     }
+
+    public function releaseClaim(string $provider, string $eventId): void
+    {
+        unset($this->claimed[$provider."\0".$eventId]);
+    }
 }
 
 test('tryClaim es atómico para el mismo event_id', function (): void {
@@ -35,4 +40,12 @@ test('tryClaim es atómico para el mismo event_id', function (): void {
     assert_true($log->tryClaim('stripe', 'evt_1', 'ord', 'checkout.completed', 'hash'));
     assert_true(! $log->tryClaim('stripe', 'evt_1', 'ord', 'checkout.completed', 'hash'));
     assert_true($log->hasProcessed('stripe', 'evt_1'));
+});
+
+test('releaseClaim permite reclamar de nuevo tras un fallo post-claim', function (): void {
+    $log = new InMemoryPaymentEventLog();
+    assert_true($log->tryClaim('stripe', 'evt_1', 'ord', 'checkout.completed', 'hash'));
+    $log->releaseClaim('stripe', 'evt_1');
+    assert_true(! $log->hasProcessed('stripe', 'evt_1'));
+    assert_true($log->tryClaim('stripe', 'evt_1', 'ord', 'checkout.completed', 'hash'));
 });

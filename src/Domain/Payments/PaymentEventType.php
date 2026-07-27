@@ -6,6 +6,7 @@ namespace Lebytek\Framework\Domain\Payments;
 enum PaymentEventType: string
 {
     case CheckoutCompleted = 'checkout.completed';
+    case InvoicePaid = 'invoice.paid';
     case PaymentFailed = 'payment.failed';
     case Ignored = 'ignored';
 }

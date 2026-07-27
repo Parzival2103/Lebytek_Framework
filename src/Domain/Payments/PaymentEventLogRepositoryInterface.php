@@ -20,4 +20,7 @@ interface PaymentEventLogRepositoryInterface
         string $payloadHash,
         array $meta = [],
     ): bool;
+
+    /** Libera un claim fallido para permitir reintento del proveedor (issue #21 C4). */
+    public function releaseClaim(string $provider, string $eventId): void;
 }
