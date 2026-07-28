@@ -1,4 +1,6 @@
-# Skeleton Package Publication & Staging Rebuild Implementation Plan
+# Skeleton Package Publication & skeleton.lebytek.com Implementation Plan
+
+> **Contexto entornos:** [`docs/ENVIRONMENTS.md`](../../ENVIRONMENTS.md) — skeleton (este plan) vs staging Portal (futuro) vs prod.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
