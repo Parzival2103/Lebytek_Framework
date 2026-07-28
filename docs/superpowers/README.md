@@ -32,3 +32,5 @@ Documentación **vigente** para agentes. Planes/specs ejecutados:
 | [`PENDIENTE-promocion-modulos-providers.md`](PENDIENTE-promocion-modulos-providers.md) | Backlog módulos |
 
 Automatizaciones: [`../automation/`](../automation/).
+
+Entornos (skeleton vs staging vs prod): [`../ENVIRONMENTS.md`](../ENVIRONMENTS.md).

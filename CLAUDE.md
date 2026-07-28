@@ -41,6 +41,7 @@ Canonical automation prompts live in `docs/automation/`.
 
 ## Docs
 
+- `docs/ENVIRONMENTS.md` — skeleton vs staging vs prod (canónico)
 - `docs/ARCHITECTURE-CONSUMER.md`
 - `docs/PACKAGE-ROOT.md`
 - `docs/database/SCHEMA-OWNERSHIP.md`
