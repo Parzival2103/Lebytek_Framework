@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Publicar `skeleton/` como paquete Composer `lebytek/skeleton` y reconstruir `staging.lebytek.com` sobre ese paquete, con BD propia `lebytek_stg` y certificado Let's Encrypt, eliminando antes los scripts de despliegue destructivos y después la rama `feature/backoffice-api-integration`.
+**Goal:** Publicar `skeleton/` como paquete Composer `lebytek/skeleton` y desplegar **skeleton.lebytek.com** sobre ese paquete (framework puro + plantilla base para pruebas del paquete), con BD propia aislada de producción, eliminando antes los scripts de despliegue destructivos y después la rama `feature/backoffice-api-integration` (solo con orden explícita).
 
 **Architecture:** `Lebytek_Framework@main` sigue siendo la fuente de verdad: `src/` es el paquete `lebytek/framework` y `skeleton/` la plantilla genérica protegida por `SkeletonPurityTest`. Un `git subtree split --prefix=skeleton` publica esa plantilla como raíz del repo espejo `Parzival2103/Lebytek_Skeleton`, que se instala en el VPS con `composer create-project`. El skeleton deja de declarar el repositorio `path` del monorepo y pasa a declarar el repositorio VCS del framework con `^1.1`, de modo que el split sale literal y no hay que transformar archivos al publicar.
 
@@ -14,9 +14,9 @@
 - Versión del framework consumida en todas partes: **`v1.1.0`**; constraint declarada: **`^1.1`**.
 - URL VCS del framework en `skeleton/composer.json`: **`https://github.com/Parzival2103/Lebytek_Framework`**.
 - `skeleton/composer.json` versionado **nunca** declara un repositorio de tipo `path`; el modo monorepo se activa a demanda con `composer config repositories.local path ../` y no se commitea.
-- Directorio archivado de staging: **`staging.lebytek.com.portal-copy-20260726`** (renombrar, nunca borrar).
+- Directorio archivado de staging: **`skeleton.lebytek.com.portal-copy-20260726`** (renombrar, nunca borrar).
 - BD de staging: **`lebytek_stg`**; usuario y password: **los mismos de producción** (decisión del responsable del proyecto).
-- `.env` de staging: `APP_ENV=staging`, `APP_DEBUG=false`, `APP_URL=https://staging.lebytek.com`, `SESSION_SECURE=true`, `APP_KEY` nuevo de 32 caracteres.
+- `.env` de staging: `APP_ENV=staging`, `APP_DEBUG=false`, `APP_URL=https://skeleton.lebytek.com`, `SESSION_SECURE=true`, `APP_KEY` nuevo de 32 caracteres.
 - **`lebytek.com` y `waapi.lebytek.com` no se modifican en ningún paso.** La BD `lebytek` de producción no se toca.
 - **`nginx` no se toca**: el vhost de staging ya apunta a `.../public` y el pool php-fpm 8.4 (`:19001`) con usuario `lebytek-stg` ya existe.
 - Orden obligatorio: limpieza de scripts obsoletos (Task 1) **antes** de la eliminación de la rama (Task 10).
@@ -66,7 +66,7 @@ Añadido de seguridad, fuera del texto del spec pero dentro de su intención: Ta
 
 **`Parzival2103/Lebytek_Skeleton`** — repo espejo, sin edición manual: su contenido es siempre la salida del split.
 
-**VPS `srv1586067` (2.24.197.198)** — `/home/lebytek-stg/htdocs/staging.lebytek.com` (nuevo), `.../staging.lebytek.com.portal-copy-20260726` (archivo), BD `lebytek_stg`.
+**VPS `srv1586067` (2.24.197.198)** — `/home/lebytek-stg/htdocs/skeleton.lebytek.com` (nuevo), `.../skeleton.lebytek.com.portal-copy-20260726` (archivo), BD `lebytek_stg`.
 
 ---
 
@@ -226,7 +226,7 @@ Portal consumes `lebytek/framework` as a published, tagged package — never a b
 a Framework checkout with `composer config repositories.local path ../Lebytek_Framework`;
 that override is applied on demand and **never committed**.
 
-`staging.lebytek.com` is **not** a Portal deployment. It runs the generic `lebytek/skeleton`
+`skeleton.lebytek.com` is **not** a Portal deployment. It runs the generic `lebytek/skeleton`
 package — see `Lebytek_Framework/docs/superpowers/specs/2026-07-26-skeleton-package-staging-design.md`.
 ````
 
@@ -404,7 +404,7 @@ Reemplazar íntegramente `## 6. Pin a branch de feature (desarrollo)` (líneas 1
 `skeleton/composer.json` está versionado apuntando al **paquete publicado**: repositorio
 VCS de `Lebytek_Framework` y constraint `"lebytek/framework": "^1.1"`. Ese archivo es lo
 que se publica como `lebytek/skeleton` (ver `scripts/publish-skeleton.sh`) y lo que
-consume `staging.lebytek.com`, así que no puede declarar rutas del monorepo.
+consume `skeleton.lebytek.com`, así que no puede declarar rutas del monorepo.
 
 Para probar contra el skeleton un cambio del framework aún no taggeado, añade el repo
 local **a demanda y sin versionarlo**:
@@ -800,7 +800,7 @@ Expected: `DB_USERNAME=lebytek` y la password. No copiar ese valor a ningún arc
 - [ ] **Step 3: Crear la BD con `clpctl`**
 
 ```bash
-clpctl db:add --domainName=staging.lebytek.com --databaseName=lebytek_stg \
+clpctl db:add --domainName=skeleton.lebytek.com --databaseName=lebytek_stg \
   --databaseUserName=lebytek --databaseUserPassword='<password de produccion>'
 ```
 
@@ -833,10 +833,10 @@ Expected: el mismo número anotado en el Step 1.
 El directorio actual se archiva, no se borra: es el rollback completo de las Tasks 6-8. `nginx` no se toca — el vhost ya apunta a `.../public` y el pool php-fpm 8.4 (`:19001`) del usuario `lebytek-stg` ya existe, de modo que el sitio nuevo queda servido en cuanto el directorio recupera su nombre.
 
 **Files:**
-- VPS: `/home/lebytek-stg/htdocs/staging.lebytek.com` (nuevo, vía `create-project`)
-- VPS: `/home/lebytek-stg/htdocs/staging.lebytek.com.portal-copy-20260726` (archivo del actual)
+- VPS: `/home/lebytek-stg/htdocs/skeleton.lebytek.com` (nuevo, vía `create-project`)
+- VPS: `/home/lebytek-stg/htdocs/skeleton.lebytek.com.portal-copy-20260726` (archivo del actual)
 - VPS: `/home/lebytek-stg/.config/composer/auth.json` (nuevo)
-- VPS: `/home/lebytek-stg/htdocs/staging.lebytek.com/.env` (nuevo)
+- VPS: `/home/lebytek-stg/htdocs/skeleton.lebytek.com/.env` (nuevo)
 
 **Interfaces:**
 - Consumes: el espejo publicado con tag `v1.1.0` (Task 4); la BD `lebytek_stg` y su credencial (Task 5).
@@ -848,13 +848,13 @@ El directorio actual se archiva, no se borra: es el rollback completo de las Tas
 ssh root@2.24.197.198
 STG=/home/lebytek-stg/htdocs
 ls -la $STG
-curl -s -o /dev/null -w 'staging_pre=%{http_code}\n' -H 'Host: staging.lebytek.com' http://127.0.0.1:8080/
-mv $STG/staging.lebytek.com $STG/staging.lebytek.com.portal-copy-20260726
+curl -s -o /dev/null -w 'staging_pre=%{http_code}\n' -H 'Host: skeleton.lebytek.com' http://127.0.0.1:8080/
+mv $STG/skeleton.lebytek.com $STG/skeleton.lebytek.com.portal-copy-20260726
 ls -la $STG
 ```
-Expected: el directorio pasa a llamarse `staging.lebytek.com.portal-copy-20260726` y `staging.lebytek.com` deja de existir.
+Expected: el directorio pasa a llamarse `skeleton.lebytek.com.portal-copy-20260726` y `skeleton.lebytek.com` deja de existir.
 
-**Rollback de toda la tarea:** `mv $STG/staging.lebytek.com.portal-copy-20260726 $STG/staging.lebytek.com`.
+**Rollback de toda la tarea:** `mv $STG/skeleton.lebytek.com.portal-copy-20260726 $STG/skeleton.lebytek.com`.
 
 - [ ] **Step 2: Configurar la autenticación de Composer para los repos privados**
 
@@ -885,16 +885,16 @@ Expected: metadatos del paquete, con `v1.1.0` entre las versiones. Si sale 404, 
 
 ```bash
 cd /home/lebytek-stg/htdocs
-sudo -u lebytek-stg composer create-project lebytek/skeleton staging.lebytek.com \
+sudo -u lebytek-stg composer create-project lebytek/skeleton skeleton.lebytek.com \
   --repository='{"type":"vcs","url":"https://github.com/Parzival2103/Lebytek_Skeleton"}' \
   --no-dev --no-interaction
 ```
-Expected: crea `staging.lebytek.com/` y resuelve `lebytek/framework` a `vendor/` a través del repositorio VCS que el propio skeleton declara.
+Expected: crea `skeleton.lebytek.com/` y resuelve `lebytek/framework` a `vendor/` a través del repositorio VCS que el propio skeleton declara.
 
 - [ ] **Step 4: Verificar la versión del framework y la pureza del árbol**
 
 ```bash
-cd /home/lebytek-stg/htdocs/staging.lebytek.com
+cd /home/lebytek-stg/htdocs/skeleton.lebytek.com
 sudo -u lebytek-stg composer show lebytek/framework | head -5
 ls routes/
 ls public/
@@ -909,16 +909,16 @@ Expected:
 - [ ] **Step 5: Crear los directorios de `storage` y ajustar permisos**
 
 ```bash
-cd /home/lebytek-stg/htdocs/staging.lebytek.com
+cd /home/lebytek-stg/htdocs/skeleton.lebytek.com
 sudo -u lebytek-stg mkdir -p storage/logs storage/cache storage/uploads storage/temp storage/exports storage/imports
-chown -R lebytek-stg:lebytek-stg /home/lebytek-stg/htdocs/staging.lebytek.com
+chown -R lebytek-stg:lebytek-stg /home/lebytek-stg/htdocs/skeleton.lebytek.com
 chmod -R ug+rwX storage
 ```
 
 - [ ] **Step 6: Generar el `.env`**
 
 ```bash
-cd /home/lebytek-stg/htdocs/staging.lebytek.com
+cd /home/lebytek-stg/htdocs/skeleton.lebytek.com
 sudo -u lebytek-stg cp .env.example .env
 
 APP_KEY_NEW="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)"
@@ -929,7 +929,7 @@ sudo -u lebytek-stg sed -i \
   -e "s|^APP_ENV=.*|APP_ENV=staging|" \
   -e "s|^APP_DEBUG=.*|APP_DEBUG=false|" \
   -e "s|^APP_NAME=.*|APP_NAME=\"Lebytek Staging\"|" \
-  -e "s|^APP_URL=.*|APP_URL=https://staging.lebytek.com|" \
+  -e "s|^APP_URL=.*|APP_URL=https://skeleton.lebytek.com|" \
   -e "s|^APP_KEY=.*|APP_KEY=${APP_KEY_NEW}|" \
   -e "s|^SESSION_SECURE=.*|SESSION_SECURE=true|" \
   -e "s|^DB_DATABASE=.*|DB_DATABASE=lebytek_stg|" \
@@ -947,7 +947,7 @@ chown lebytek-stg:lebytek-stg .env
 - [ ] **Step 7: Verificar el `.env` — en particular que no apunta a producción**
 
 ```bash
-cd /home/lebytek-stg/htdocs/staging.lebytek.com
+cd /home/lebytek-stg/htdocs/skeleton.lebytek.com
 grep -E '^(APP_ENV|APP_DEBUG|APP_URL|SESSION_SECURE|DB_DATABASE|DB_USERNAME)=' .env
 grep -c '^APP_KEY=cambiar_por' .env
 awk -F= '/^DB_DATABASE=/ && $2 != "lebytek_stg" { print "FATAL: DB_DATABASE=" $2; exit 1 }' .env && echo "db_ok"
@@ -956,7 +956,7 @@ Expected:
 ```
 APP_ENV=staging
 APP_DEBUG=false
-APP_URL=https://staging.lebytek.com
+APP_URL=https://skeleton.lebytek.com
 SESSION_SECURE=true
 DB_DATABASE=lebytek_stg
 DB_USERNAME=lebytek
@@ -966,8 +966,8 @@ más `0` (APP_KEY ya no es el placeholder) y `db_ok`.
 - [ ] **Step 8: Comprobar que PHP arranca la aplicación**
 
 ```bash
-curl -s -o /dev/null -w 'staging_loopback=%{http_code}\n' -H 'Host: staging.lebytek.com' http://127.0.0.1:8080/login
-tail -20 /home/lebytek-stg/htdocs/staging.lebytek.com/storage/logs/*.log 2>/dev/null
+curl -s -o /dev/null -w 'staging_loopback=%{http_code}\n' -H 'Host: skeleton.lebytek.com' http://127.0.0.1:8080/login
+tail -20 /home/lebytek-stg/htdocs/skeleton.lebytek.com/storage/logs/*.log 2>/dev/null
 ```
 Expected: `staging_loopback=200` (o `302` hacia `/login`). Un `500` aquí es fallo de esta tarea: revisar logs antes de seguir; el rollback es el `mv` del Step 1.
 
@@ -983,17 +983,17 @@ Dos huecos que el instalador CLI no cubre y esta tarea sí:
 
 **Files:**
 - VPS: BD `lebytek_stg` poblada
-- VPS: `/home/lebytek-stg/htdocs/staging.lebytek.com/storage/install.lock` (nuevo)
-- VPS: `/home/lebytek-stg/htdocs/staging.lebytek.com/crear-admin-staging.php` (temporal, se borra en el Step 6)
+- VPS: `/home/lebytek-stg/htdocs/skeleton.lebytek.com/storage/install.lock` (nuevo)
+- VPS: `/home/lebytek-stg/htdocs/skeleton.lebytek.com/crear-admin-staging.php` (temporal, se borra en el Step 6)
 
 **Interfaces:**
 - Consumes: árbol y `.env` de Task 6; BD de Task 5.
-- Produces: esquema instalado, usuario `admin@staging.lebytek.com` con rol `administrador`, asistente `/install/` bloqueado. Task 8 puede exponer el sitio sin abrir un instalador público.
+- Produces: esquema instalado, usuario `admin@skeleton.lebytek.com` con rol `administrador`, asistente `/install/` bloqueado. Task 8 puede exponer el sitio sin abrir un instalador público.
 
 - [ ] **Step 1: Ver el plan del instalador antes de aplicarlo**
 
 ```bash
-cd /home/lebytek-stg/htdocs/staging.lebytek.com
+cd /home/lebytek-stg/htdocs/skeleton.lebytek.com
 sudo -u lebytek-stg php scripts/install.php --dry-run
 ```
 Expected: `Plan (instalación nueva)`, migraciones y módulos listados (`core`, `crud-engine`, `dashboard`, `calendario`, `pdf-kit`, `reportes`, `integrations`), y `(dry-run: no se ejecutó nada)`.
@@ -1001,7 +1001,7 @@ Expected: `Plan (instalación nueva)`, migraciones y módulos listados (`core`, 
 - [ ] **Step 2: Aplicar el instalador y el bootstrap SQL**
 
 ```bash
-cd /home/lebytek-stg/htdocs/staging.lebytek.com
+cd /home/lebytek-stg/htdocs/skeleton.lebytek.com
 sudo -u lebytek-stg php scripts/install.php
 sudo -u lebytek-stg php scripts/seed.php
 ```
@@ -1021,7 +1021,7 @@ Expected: tablas `auth_*`, `cfg_*`, `core_*`, `log_*` presentes; `demo_tables >=
 El script `scripts/crear_usuario.php` del paquete **no** sirve desde `vendor/`: define `ROOT_PATH` como `dirname(__DIR__)` sin guarda, de modo que apuntaría al paquete y no al consumidor. Se usa un script temporal en la raíz del proyecto, con la misma lógica:
 
 ```bash
-cd /home/lebytek-stg/htdocs/staging.lebytek.com
+cd /home/lebytek-stg/htdocs/skeleton.lebytek.com
 sudo -u lebytek-stg tee crear-admin-staging.php >/dev/null <<'PHP'
 <?php
 
@@ -1052,7 +1052,7 @@ Connection::configure([
 
 $nombre   = $argv[1] ?? 'Admin';
 $apellido = $argv[2] ?? 'Staging';
-$email    = $argv[3] ?? 'admin@staging.lebytek.com';
+$email    = $argv[3] ?? 'admin@skeleton.lebytek.com';
 $password = $argv[4] ?? null;
 
 if ($password === null || strlen($password) < 12) {
@@ -1094,7 +1094,7 @@ echo "Usuario administrador creado. ID={$id} email={$email}\n";
 PHP
 
 ADMIN_PASS="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20)"
-sudo -u lebytek-stg php crear-admin-staging.php Admin Staging admin@staging.lebytek.com "$ADMIN_PASS"
+sudo -u lebytek-stg php crear-admin-staging.php Admin Staging admin@skeleton.lebytek.com "$ADMIN_PASS"
 echo "GUARDAR ESTA PASSWORD EN EL GESTOR DE SECRETOS: $ADMIN_PASS"
 ```
 Expected: `BD destino: lebytek_stg` y `Usuario administrador creado. ID=1 …`. Guardar la password antes de cerrar la sesión.
@@ -1102,16 +1102,16 @@ Expected: `BD destino: lebytek_stg` y `Usuario administrador creado. ID=1 …`. 
 - [ ] **Step 5: Bloquear el asistente de instalación**
 
 ```bash
-cd /home/lebytek-stg/htdocs/staging.lebytek.com
+cd /home/lebytek-stg/htdocs/skeleton.lebytek.com
 sudo -u lebytek-stg sh -c 'printf "Instalado por CLI (scripts/install.php) el %s\n" "$(date -Iseconds)" > storage/install.lock'
-curl -s -H 'Host: staging.lebytek.com' http://127.0.0.1:8080/install/ | grep -c -i 'ya fue instalado'
+curl -s -H 'Host: skeleton.lebytek.com' http://127.0.0.1:8080/install/ | grep -c -i 'ya fue instalado'
 ```
 Expected: `1` — el asistente responde la vista `ya_instalado` y no permite reinstalar.
 
 - [ ] **Step 6: Borrar el script temporal**
 
 ```bash
-cd /home/lebytek-stg/htdocs/staging.lebytek.com
+cd /home/lebytek-stg/htdocs/skeleton.lebytek.com
 rm -f crear-admin-staging.php
 ls crear-admin-staging.php 2>&1 | grep -c 'No such file'
 ```
@@ -1121,7 +1121,7 @@ Expected: `1`.
 
 ```bash
 cd /tmp
-curl -s -c stg.jar -H 'Host: staging.lebytek.com' http://127.0.0.1:8080/login \
+curl -s -c stg.jar -H 'Host: skeleton.lebytek.com' http://127.0.0.1:8080/login \
   | grep -oP 'name="csrf_token" value="\K[^"]+' | head -1
 ```
 Usar el token devuelto para autenticar y recorrer un CRUD demo:
@@ -1129,12 +1129,12 @@ Usar el token devuelto para autenticar y recorrer un CRUD demo:
 ```bash
 CSRF='<token del comando anterior>'
 curl -s -b stg.jar -c stg.jar -o /dev/null -w 'login=%{http_code}\n' \
-  -H 'Host: staging.lebytek.com' \
-  -d "csrf_token=$CSRF" -d 'email=admin@staging.lebytek.com' -d "password=$ADMIN_PASS" \
+  -H 'Host: skeleton.lebytek.com' \
+  -d "csrf_token=$CSRF" -d 'email=admin@skeleton.lebytek.com' -d "password=$ADMIN_PASS" \
   http://127.0.0.1:8080/login
-curl -s -b stg.jar -o /dev/null -w 'dashboard=%{http_code}\n' -H 'Host: staging.lebytek.com' http://127.0.0.1:8080/admin/dashboard
-curl -s -b stg.jar -o /dev/null -w 'demo_clientes=%{http_code}\n' -H 'Host: staging.lebytek.com' http://127.0.0.1:8080/admin/demo_clientes
-curl -s -b stg.jar -o /dev/null -w 'demo_pedidos=%{http_code}\n' -H 'Host: staging.lebytek.com' http://127.0.0.1:8080/admin/demo_pedidos
+curl -s -b stg.jar -o /dev/null -w 'dashboard=%{http_code}\n' -H 'Host: skeleton.lebytek.com' http://127.0.0.1:8080/admin/dashboard
+curl -s -b stg.jar -o /dev/null -w 'demo_clientes=%{http_code}\n' -H 'Host: skeleton.lebytek.com' http://127.0.0.1:8080/admin/demo_clientes
+curl -s -b stg.jar -o /dev/null -w 'demo_pedidos=%{http_code}\n' -H 'Host: skeleton.lebytek.com' http://127.0.0.1:8080/admin/demo_pedidos
 rm -f stg.jar
 ```
 Expected: `login=302` (redirección post-login), `dashboard=200`, `demo_clientes=200`, `demo_pedidos=200`. Si el nombre del campo CSRF difiere, tomarlo del HTML del formulario en vez de asumirlo.
@@ -1154,50 +1154,50 @@ Expected: el mismo conteo anotado en Task 5 Step 1, y `lebytek=200`.
 Se ejecuta **después** del despliegue, para que el challenge `.well-known` lo sirva la aplicación nueva. El DNS ya resuelve al VPS y la app responde 200 en `:8080`, así que el challenge no requiere cambios de nginx. Hasta aquí staging servía un certificado autofirmado que lo dejaba inaccesible desde el navegador (HTTP 000).
 
 **Files:**
-- VPS: certificado del vhost `staging.lebytek.com` (gestionado por CloudPanel).
+- VPS: certificado del vhost `skeleton.lebytek.com` (gestionado por CloudPanel).
 
 **Interfaces:**
 - Consumes: sitio funcional y con el asistente bloqueado (Task 7).
-- Produces: `https://staging.lebytek.com` accesible con certificado válido. Task 9 lo verifica desde fuera.
+- Produces: `https://skeleton.lebytek.com` accesible con certificado válido. Task 9 lo verifica desde fuera.
 
 - [ ] **Step 1: Registrar el estado del certificado actual**
 
 ```bash
 ssh root@2.24.197.198
-echo | openssl s_client -connect staging.lebytek.com:443 -servername staging.lebytek.com 2>/dev/null \
+echo | openssl s_client -connect skeleton.lebytek.com:443 -servername skeleton.lebytek.com 2>/dev/null \
   | openssl x509 -noout -issuer -subject -dates
-curl -s -o /dev/null -w 'staging_pre_tls=%{http_code}\n' https://staging.lebytek.com/
+curl -s -o /dev/null -w 'staging_pre_tls=%{http_code}\n' https://skeleton.lebytek.com/
 ```
 Expected: issuer autofirmado y `staging_pre_tls=000`. Éste es el estado al que se vuelve si el paso falla.
 
 - [ ] **Step 2: Comprobar que el DNS resuelve al VPS**
 
 ```bash
-dig +short staging.lebytek.com
+dig +short skeleton.lebytek.com
 ```
 Expected: `2.24.197.198`.
 
 - [ ] **Step 3: Emitir el certificado**
 
 ```bash
-clpctl lets-encrypt:install:certificate --domainName=staging.lebytek.com
+clpctl lets-encrypt:install:certificate --domainName=skeleton.lebytek.com
 ```
 Expected: emisión correcta y recarga de nginx por parte de `clpctl`.
 
 - [ ] **Step 4: Verificar issuer y respuesta pública**
 
 ```bash
-echo | openssl s_client -connect staging.lebytek.com:443 -servername staging.lebytek.com 2>/dev/null \
+echo | openssl s_client -connect skeleton.lebytek.com:443 -servername skeleton.lebytek.com 2>/dev/null \
   | openssl x509 -noout -issuer -subject -dates
-curl -s -o /dev/null -w 'staging_login=%{http_code}\n' https://staging.lebytek.com/login
-curl -sI https://staging.lebytek.com/login | head -1
+curl -s -o /dev/null -w 'staging_login=%{http_code}\n' https://skeleton.lebytek.com/login
+curl -sI https://skeleton.lebytek.com/login | head -1
 ```
 Expected: `issuer=... O = Let's Encrypt ...` (no CN autofirmado), fechas vigentes, y `staging_login=200`.
 
 - [ ] **Step 5: Verificar que el asistente sigue bloqueado ya expuesto públicamente**
 
 ```bash
-curl -s https://staging.lebytek.com/install/ | grep -c -i 'ya fue instalado'
+curl -s https://skeleton.lebytek.com/install/ | grep -c -i 'ya fue instalado'
 ```
 Expected: `1`.
 
@@ -1217,18 +1217,18 @@ Barrido único con todas las comprobaciones del spec, más las que este plan añ
 - [ ] **Step 1: Verificar staging**
 
 ```bash
-curl -s -o /dev/null -w 'staging_login=%{http_code}\n' https://staging.lebytek.com/login
-echo | openssl s_client -connect staging.lebytek.com:443 -servername staging.lebytek.com 2>/dev/null \
+curl -s -o /dev/null -w 'staging_login=%{http_code}\n' https://skeleton.lebytek.com/login
+echo | openssl s_client -connect skeleton.lebytek.com:443 -servername skeleton.lebytek.com 2>/dev/null \
   | openssl x509 -noout -issuer
-ssh root@2.24.197.198 "cd /home/lebytek-stg/htdocs/staging.lebytek.com && sudo -u lebytek-stg composer show lebytek/framework | grep versions"
-ssh root@2.24.197.198 "ls /home/lebytek-stg/htdocs/staging.lebytek.com/routes"
-ssh root@2.24.197.198 "test -f /home/lebytek-stg/htdocs/staging.lebytek.com/storage/install.lock && echo lock_ok"
+ssh root@2.24.197.198 "cd /home/lebytek-stg/htdocs/skeleton.lebytek.com && sudo -u lebytek-stg composer show lebytek/framework | grep versions"
+ssh root@2.24.197.198 "ls /home/lebytek-stg/htdocs/skeleton.lebytek.com/routes"
+ssh root@2.24.197.198 "test -f /home/lebytek-stg/htdocs/skeleton.lebytek.com/storage/install.lock && echo lock_ok"
 ```
 Expected: `staging_login=200`; issuer Let's Encrypt; `versions : * v1.1.0`; `api.php integrations.php web.php` (sin `marketing.php`, `marketing_admin.php`, `waapi_portal.php`); `lock_ok`.
 
 - [ ] **Step 1b: Verificar los CRUDs demo desde el navegador**
 
-Con `admin@staging.lebytek.com` y la password guardada en Task 7 Step 4, entrar en `https://staging.lebytek.com/login` y recorrer los cuatro recursos demo:
+Con `admin@skeleton.lebytek.com` y la password guardada en Task 7 Step 4, entrar en `https://skeleton.lebytek.com/login` y recorrer los cuatro recursos demo:
 
 | Ruta | Esperado |
 |---|---|
@@ -1254,7 +1254,7 @@ Expected: ambos `200`; el clone limpio, en `main`, sincronizado con `origin/main
 - [ ] **Step 3: Verificar el directorio archivado**
 
 ```bash
-ssh root@2.24.197.198 "ls -d /home/lebytek-stg/htdocs/staging.lebytek.com.portal-copy-20260726"
+ssh root@2.24.197.198 "ls -d /home/lebytek-stg/htdocs/skeleton.lebytek.com.portal-copy-20260726"
 ```
 Expected: existe. Se conserva hasta que el responsable confirme que ya no hace falta; no se borra en este plan.
 
@@ -1391,7 +1391,7 @@ Nota: el clone de Framework tiene además un remoto local `no-mistakes` (`C:\Use
 ```bash
 curl -s -o /dev/null -w 'lebytek=%{http_code}\n' https://lebytek.com/
 curl -s -o /dev/null -w 'waapi=%{http_code}\n' https://waapi.lebytek.com/
-curl -s -o /dev/null -w 'staging=%{http_code}\n' https://staging.lebytek.com/login
+curl -s -o /dev/null -w 'staging=%{http_code}\n' https://skeleton.lebytek.com/login
 cd Lebytek_Framework && php tests/run.php | tail -3
 ```
 Expected: `200` en los tres dominios y la suite del framework en 0 failed.
