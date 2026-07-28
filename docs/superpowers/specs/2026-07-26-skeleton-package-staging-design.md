@@ -1,11 +1,11 @@
-# Publicación de `lebytek/skeleton` y reconstrucción de staging.lebytek.com
+# Publicación de `lebytek/skeleton` y despliegue de skeleton.lebytek.com
 
-Fecha: 2026-07-26
-Estado: diseño aprobado, pendiente de plan de implementación
+Fecha: 2026-07-26  
+Estado: diseño aprobado; plan de implementación en `plans/2026-07-26-skeleton-package-staging.md` (dominio objetivo: **skeleton.lebytek.com**)
 
 ## Problema
 
-`staging.lebytek.com` es hoy una copia literal de `Lebytek_Portal` sin repositorio git,
+`skeleton.lebytek.com` es hoy una copia literal de `Lebytek_Portal` sin repositorio git,
 que consume el framework desde la rama `dev-consolidation/framework-portal-separation`,
 apunta a la base de datos de producción `lebytek` con las mismas credenciales que
 `lebytek.com`, declara `APP_ENV=production`, y sirve un certificado TLS autofirmado que
@@ -25,7 +25,7 @@ CloudPanel + nginx. Patrón común: nginx 443 → proxy `127.0.0.1:8080` → ser
 |---|---|---|---|---|
 | `lebytek.com` | `lebytek` | clone de `Lebytek_Portal@main` (`2718212`), `lebytek/framework v1.1.0` | 8.1 (:16002) | 200 |
 | `waapi.lebytek.com` | `lebytek-waapi` | clone de `Lebytek_Portal@main` (`6cdb957`), `lebytek/framework v1.1.0` | 8.1 (:16001) | 200 |
-| `staging.lebytek.com` | `lebytek-stg` | copia del Portal sin git, framework `dev-consolidation/...` | 8.4 (:19001) | 000 |
+| `skeleton.lebytek.com` | `lebytek-stg` | copia del Portal sin git, framework `dev-consolidation/...` | 8.4 (:19001) | 000 |
 | `api.lebytek.com` | `lebytek-api` | Laravel WhatsApiLebytek + Horizon/worker (supervisor) | 8.5 | — |
 | `docs.lebytek.com` | `lebytek-docs` | documentación | 8.3 | — |
 
@@ -90,7 +90,7 @@ Lebytek_Skeleton (main, tags) → paquete lebytek/skeleton  ──┐
                                                             │ composer create-project
 Lebytek_Portal (main)         ──┐                           │
                                 │ git clone                 ▼
-lebytek.com          ← Portal ──┘         staging.lebytek.com ← skeleton
+lebytek.com          ← Portal ──┘         skeleton.lebytek.com ← skeleton
    + framework v1.1.0                        + framework v1.1.0
    (ya en estado objetivo)                    + BD lebytek_stg
                                               + Let's Encrypt
@@ -146,15 +146,15 @@ Creado con `gh repo create Parzival2103/Lebytek_Skeleton --private`. Es un artef
 publicación: **no se edita directamente**, siempre se regenera desde el framework. Se
 documenta esa regla en su `README.md`.
 
-### 4. Despliegue de `staging.lebytek.com`
+### 4. Despliegue de `skeleton.lebytek.com`
 
 El directorio actual se archiva, no se borra:
-`staging.lebytek.com` → `staging.lebytek.com.portal-copy-20260726`.
+`skeleton.lebytek.com` → `skeleton.lebytek.com.portal-copy-20260726`.
 
 Como usuario `lebytek-stg`:
 
 ```bash
-composer create-project lebytek/skeleton staging.lebytek.com \
+composer create-project lebytek/skeleton skeleton.lebytek.com \
   --repository='{"type":"vcs","url":"https://github.com/Parzival2103/Lebytek_Skeleton"}' \
   --no-dev
 ```
@@ -168,7 +168,7 @@ usuario `lebytek-stg` ya existe.
 ### 5. Base de datos `lebytek_stg`
 
 ```bash
-clpctl db:add --domainName=staging.lebytek.com --databaseName=lebytek_stg \
+clpctl db:add --domainName=skeleton.lebytek.com --databaseName=lebytek_stg \
   --databaseUserName=lebytek --databaseUserPassword=<misma que producción>
 ```
 
@@ -198,7 +198,7 @@ Generado desde `.env.example` con:
 
 | Clave | Valor |
 |---|---|
-| `APP_URL` | `https://staging.lebytek.com` |
+| `APP_URL` | `https://skeleton.lebytek.com` |
 | `APP_ENV` | `staging` |
 | `APP_DEBUG` | `false` |
 | `APP_KEY` | aleatorio de 32 caracteres, nuevo |
@@ -209,7 +209,7 @@ Generado desde `.env.example` con:
 ### 7. Certificado TLS
 
 ```bash
-clpctl lets-encrypt:install:certificate --domainName=staging.lebytek.com
+clpctl lets-encrypt:install:certificate --domainName=skeleton.lebytek.com
 ```
 
 Se ejecuta **después** del despliegue, para que el challenge `.well-known` lo sirva la
@@ -255,7 +255,7 @@ git branch -D feature/backoffice-api-integration
 
 Dos dependencias de orden, ambas obligatorias:
 
-- `staging.lebytek.com` consume hoy `dev-consolidation/framework-portal-separation`, y sólo
+- `skeleton.lebytek.com` consume hoy `dev-consolidation/framework-portal-separation`, y sólo
   deja de hacerlo tras el paso 6.
 - Los scripts obsoletos (§8) deben desaparecer **antes** de borrar la rama (§9), o el
   siguiente que los ejecute vacía `lebytek.com`.
@@ -281,7 +281,7 @@ Cada paso del VPS es reversible por separado:
 
 | Falla en | Rollback |
 |---|---|
-| `create-project` (pasos 5–7) | `mv staging.lebytek.com.portal-copy-20260726` de vuelta |
+| `create-project` (pasos 5–7) | `mv skeleton.lebytek.com.portal-copy-20260726` de vuelta |
 | Let's Encrypt (paso 8) | El cert autofirmado sigue en su sitio; staging queda como estaba |
 | Publicación del espejo (paso 3) | Borrar el repo espejo; el framework no cambia de estado |
 
@@ -292,9 +292,9 @@ archivado se conserva hasta que la verificación pase.
 
 | Comprobación | Resultado esperado |
 |---|---|
-| `curl -I https://staging.lebytek.com/login` | 200 con certificado válido (issuer Let's Encrypt, no CN autofirmado) |
+| `curl -I https://skeleton.lebytek.com/login` | 200 con certificado válido (issuer Let's Encrypt, no CN autofirmado) |
 | `composer show lebytek/framework` en staging | `v1.1.0` |
-| `ls staging.lebytek.com/routes` | sin `marketing.php`, `marketing_admin.php`, `waapi_portal.php` |
+| `ls skeleton.lebytek.com/routes` | sin `marketing.php`, `marketing_admin.php`, `waapi_portal.php` |
 | CRUDs demo en staging | navegables sin error |
 | `curl -o /dev/null -w '%{http_code}' https://lebytek.com/` | 200 |
 | `curl -o /dev/null -w '%{http_code}' https://waapi.lebytek.com/` | 200 |
