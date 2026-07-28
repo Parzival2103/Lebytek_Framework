@@ -11,8 +11,9 @@ apunta a la base de datos de producción `lebytek` con las mismas credenciales q
 `lebytek.com`, declara `APP_ENV=production`, y sirve un certificado TLS autofirmado que
 lo deja inaccesible desde fuera (HTTP 000; responde 200 en `127.0.0.1:8080`).
 
-El objetivo es que staging pase a ser un **skeleton genérico** que consume el framework
-como paquete Composer versionado, aislado de producción.
+El objetivo es reemplazar ese host por **skeleton.lebytek.com**: un consumidor mínimo
+(`lebytek/skeleton`) que instala el framework como paquete Composer versionado, con
+base de datos **propia** y sin código Portal.
 
 Adicionalmente se elimina la rama `feature/backoffice-api-integration` de
 `Lebytek_Framework`, que ningún despliegue consume.
