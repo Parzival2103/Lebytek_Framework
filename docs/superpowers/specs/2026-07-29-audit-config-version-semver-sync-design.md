@@ -24,6 +24,7 @@
 | PR auditoría fuente | #48 |
 | headRefOid fuente | `2eaa50ad546deaa94e9f59a56ef8e4fffb7ff4b8` |
 | Pase deuda | `deuda` @ `2026-07-29T14:02:28Z` — modo **normal** — SHA `origin/main` `0ec722bc38258b2e479d30cafd59940aa44d558e` — rama `automation/audit-spec-2026-07-29` |
+| Pase UX | `ux` @ `2026-07-29T14:35:00Z` — modo **normal** (superficie UI limitada: estado admin + install wizard) — rama `automation/audit-spec-2026-07-29` |
 
 ---
 
@@ -255,6 +256,213 @@ Un comando recibe `X.Y.Z` y actualiza composer + configs atómicamente.
 
 ---
 
+## Compatibilidad (pase UX — PHP, navegadores, admin, móvil)
+
+Inventario derivado de revisión estática en rama `automation/audit-spec-2026-07-29` (base `main` @ `0ec722b`), auditoría [PR #48](https://github.com/Parzival2103/Lebytek_Framework/pull/48), `config/app.php`, `composer.json`, `DeploymentStatus`, vistas `/admin/sistema/estado`, install wizard (`public/install/`, `skeleton/public/install/`), `routes/api.php`, `.env.example` root vs `skeleton/.env.example`, `docs/core/ui_ux.md`. **Solo requisitos de diseño** — sin implementación en este pipeline.
+
+**Modo del pase:** **normal** — el spec tiene superficie UI acotada (display de versión en admin/CLI/install); no introduce vistas Marketing nuevas. Items de health API, `.env` purge y docs ops se documentan como compat/carry-forward hacia specs hermanos (2026-07-27, backlog D7–D12).
+
+### K1 — Runtime PHP y extensiones (install + tests harness)
+
+| Ítem | Evidencia | Requisito |
+|------|-----------|-----------|
+| PHP mínimo | `composer.json`: `"php": ">=8.1"` | Harness, skeleton y consumidores Composer deben ejecutar **PHP ≥ 8.1** antes de merge Fase 1 semver |
+| Extensiones install | `public/install/views/paso_requisitos.php` — `pdo_mysql`, `mbstring`, `json`, `openssl`, `fileinfo` | Fase 1 semver **no altera** requisitos; bump config debe mantener wizard bloqueante en extensión ausente |
+| Cloud agent sin `pdo_mysql` | Auditoría 2026-07-29 — 569 pass / 7 fail | Gates `PlatformVersionSemverTest` verificables en CI/local con PHP; no bloquea merge spec-only |
+| Campo `version` Composer | `composer.json` **sin** `"version"` | Compatible con Composer 2.x; añadir campo no rompe autoload ni consumidores existentes |
+
+### K2 — Navegadores soportados (install vs admin estado)
+
+| Superficie | Stack | Compatibilidad esperada |
+|------------|-------|-------------------------|
+| Install wizard | Bootstrap 5.3 local; contenedor **720px** (`_layout.php`) | Chrome/Firefox/Safari/Edge **últimas 2 versiones**; iOS Safari ≥ 15 |
+| `/admin/sistema/estado` | Bootstrap 5.3 + DataTables Responsive (`js-dt-responsive`) | Baseline `docs/core/ui_ux.md` §542 — breakpoint **992px (`lg`)** |
+| `scripts/status.php` (CLI) | Texto plano stdout | Sin dependencia navegador; ops SSH/VPS |
+| Health API (backlog D7) | JSON — sin HTML | curl, LB; **no** usar `/api/ping` sin sesión (D7) |
+
+**Gap K2a — iconos Bootstrap Icons en install:** `_layout.php` del wizard puede no cargar `bootstrap-icons.css` (heredado spec 2026-07-27). Fase 1 semver no lo corrige; carry-forward opcional Fase 1.5.
+
+### K3 — Consistencia semver en superficies de display (M1, D1)
+
+Estado actual (`main` @ `0ec722b`): `config/app.php:7` → `'1.0.0'`; tags Git `v1.2.0`, `v1.2.1`; `composer.json` sin `"version"`.
+
+| Superficie | Fuente versión | Valor mostrado hoy | Post Fase 1 |
+|------------|----------------|-------------------|-------------|
+| `/admin/sistema/estado` | `Config::get('app.version')` via `DeploymentStatus` | `v1.0.0` | `v1.2.1` (o tag vigente) |
+| `scripts/status.php` | Idem | `Plataforma: v1.0.0` | Alineado |
+| Install `paso_resultado.php` | `Config::get('app.version')` | `v1.0.0` | Alineado |
+| Install `paso_modulos.php` | Manifiestos módulo (no plataforma) | OK — independiente | Sin cambio |
+| Portal `vendor/lebytek/framework` | `composer.lock` | v1.1.0 documentado — **no verificado** | Independiente de M1 |
+
+**Requisito compat display:** Fase 1 debe dejar **idéntico** el número en `composer.json`, `config/app.php`, `skeleton/config/app.php`, tarjeta admin, CLI y mensaje install resultado — sin prefijo `v` en config, con prefijo `v` solo en presentación (comportamiento actual vista L10).
+
+**Requisito anti-confusión:** no mostrar tag Git en UI hasta que exista checklist D13; operador compara contra `composer.json` + tag, no contra `git describe` en runtime.
+
+### K4 — `/api/ping` autenticado vs health externo (D7, carry-forward)
+
+Estado actual: `routes/api.php` L14–16 — grupo `/api` con `AuthMiddleware`; `/api/ping` requiere sesión → **302 HTML** a `/login`.
+
+| Cliente | Comportamiento actual | Riesgo |
+|---------|----------------------|--------|
+| LB HTTP health check | 302 → login | Healthy falso |
+| Ops post-deploy semver | No afecta health | Versión en estado puede ser correcta mientras LB falle |
+
+**Requisito:** Fase 1 semver **no** expone `/api/version`; documentar en checklist release que monitoreo externo sigue bloqueado hasta Fase 3 D7 (`GET /api/health` público).
+
+### K5 — Asimetría `.env.example` root vs skeleton (M2, D2 — carry-forward Fase 2)
+
+| Plantilla | Vars Portal/MKT | Test gate |
+|-----------|-----------------|-----------|
+| `skeleton/.env.example` | **Ausentes** | `SkeletonPurityTest` |
+| Root `.env.example` | **Activas** L54–102 | Sin gate en `FrameworkRootNotPortalTest` (D5) |
+
+**Requisito compat configuración:** Fase 1 semver no purga `.env`; operador que copia root obtiene vars Portal obsoletas **y** versión config desactualizada — doble confusión. Fase 2 (spec 2026-07-27) cierra M2; este spec documenta que **no mezclar** bump semver con purga env en un solo PR si el diff dificulta review móvil.
+
+### K6 — Consumidores Composer y semver package (Portal)
+
+| Consumidor | Impacto Fase 1 | Compat |
+|------------|----------------|--------|
+| Portal lock v1.1.0 | Display app Portal independiente | `composer update` separado — **no verificado** |
+| Nuevo tenant skeleton | Lee `skeleton/config/app.php` | Debe mostrar versión plataforma alineada post Fase 1 |
+| Harness path-repo local | Sin `vendor/` pre-install | Versión desde config, no `InstalledVersions` (Enfoque C rechazado) |
+
+---
+
+## UX (pase UX — flujos, copy, estados error/vacío)
+
+Requisitos para **harness/package `main`** Fase 1 (semver sync) y carry-forward hacia Fase 2 env purge y backlog docs.
+
+### U1 — Drift semver confunde soporte y ops (M1 — foco del spec)
+
+Evidencia: operador ve `v1.0.0` en `/admin/sistema/estado` mientras tag publicado es `v1.2.1` (Stripe subscription, SqlFileRunner fix).
+
+| Problema UX | Impacto |
+|-------------|---------|
+| Tarjeta "Versión de plataforma" sin contexto | Soporte reporta bug "ya en latest" cuando lock/vendor difiere |
+| Sin indicador tag Git vs config | Operador no sabe si falta bump o falta `composer update` Portal |
+| Install `paso_resultado` muestra versión obsoleta | Tenant cree instalar plataforma antigua tras fresh install |
+
+**Requisito Fase 1:** corregir valor mostrado vía sync config (Enfoque A). **Opcional Fase 1b:** subtítulo en tarjeta estado: "Declarada en config — verificar tag Git en release" + enlace `docs/core/despliegue-y-versionado.md` § Versionado.
+
+### U2 — Página estado: módulos "Actualización disponible" vs versión plataforma
+
+`DeploymentStatus` compara versión **por módulo** (declarada vs instalada en `cfg_modulos`); tarjeta superior muestra versión **plataforma** global.
+
+| Estado | Experiencia |
+|--------|-------------|
+| Plataforma `v1.0.0` + módulos al día | Falsa sensación de sistema completo |
+| Plataforma corregida + módulo desactualizado | Badge warning claro — comportamiento OK |
+
+**Requisito:** post Fase 1, smoke manual: plataforma card = `v1.2.1`; si módulo muestra actualización, copy existente ("Actualización disponible") permanece — **no** mezclar con drift semver plataforma.
+
+### U3 — Install wizard: versión en resultado sin acción si drift persiste
+
+`paso_resultado.php`: "Plataforma **v{version}** instalada." — celebratorio sin siguiente paso si versión incorrecta.
+
+**Requisito:** Fase 1 cierra copy incorrecto. **Carry-forward:** si drift reintroducido, test D4 falla antes de deploy — no requiere copy adicional en wizard.
+
+### U4 — Root `.env.example`: copy Portal activo (M2 — Fase 2, referencia UX)
+
+Evidencia root L54–102: `MKT_*`, `LEBYTEK_API_*`, `WAAPI_PORTAL_*` con CTAs lebytek.com.
+
+| Copy problemático | Por qué confunde junto a M1 |
+|-------------------|----------------------------|
+| Vars Marketing parecen requeridas | Operador cree que versión plataforma y vars Portal van en mismo `.env` |
+| Comentarios transferencia bancaria | Contexto negocio Lebytek, no tenant genérico |
+
+**Requisito:** Fase 2 (spec 2026-07-27 U3/U8) — este spec referencia sin duplicar. Fase 1 **no** elimina vars; documentar en PR implementación que ops deben revisar **dos** superficies: versión config + plantilla env.
+
+### U5 — Checklist release semver sin guía accionable (D13)
+
+`docs/core/despliegue-y-versionado.md` no lista sync de tres archivos.
+
+**Requisito UX documental Fase 1:** checklist numerado en § Versionado:
+1. Actualizar `"version"` en `composer.json`
+2. Actualizar `config/app.php` y `skeleton/config/app.php`
+3. Ejecutar `php tests/run.php PlatformVersionSemver`
+4. Crear tag `vX.Y.Z`
+5. Post-deploy: `/admin/sistema/estado` + `php scripts/status.php`
+
+### U6 — Docs integration obsoletos: ops sin señal FPS (D10–D12, D11)
+
+Runbooks referencian `feature/backoffice-api-integration` y scripts `vps-deploy-*.sh` eliminados (PR #36).
+
+**Requisito Fase 2b:** banner interino en checklist VPS; enlace `docs/ENVIRONMENTS.md`. Operador que sigue runbook obsoleto despliega versión incorrecta **independientemente** del fix M1 en package source.
+
+### U7 — CLI `status.php` para ops sin GUI
+
+`scripts/status.php` L43: `Plataforma: v{$r['plataformaVersion']}` — única superficie accesible en SSH.
+
+**Requisito:** Fase 1 debe alinear CLI con admin; ops móvil vía Termius/SSH debe ver mismo número que tarjeta web. Sin color/emoji adicional — texto plano OK.
+
+### U8 — Pipeline specs: PR auditoría draft bloquea trazabilidad
+
+PR #48 **draft** — cadena automation no marca auditoría como entregada hasta cierre con enlace al PR spec final.
+
+**Requisito:** AUTOMATION-03 cierra #48 con enlace al PR `automation/audit-spec-2026-07-29` → `main`; spec final incluye pases deuda + UX.
+
+### Carry-forward UX (próximo spec con UI más amplia)
+
+Items abiertos **no** cubiertos por Fase 1 semver — derivados de deuda D6–D8, D7, spec 2026-07-27:
+
+| ID | Item | Owner spec futuro |
+|----|------|-------------------|
+| CF1 | Install 403/419 token/CSRF con layout wizard (U1–U2 archivado 2026-07-27) | Harness install hardening |
+| CF2 | `GET /api/health` público + doc monitoreo (D7) | API health spec Fase 3 |
+| CF3 | RBAC router CRUD/Calendario (D6) | Seguridad admin |
+| CF4 | Slug `permisos.gestionar` (D8) | RBAC producto |
+| CF5 | Purga `.env.example` + copy Portal (M2/D2) | Spec 2026-07-27 Fase 1 |
+
+---
+
+## Responsive (pase UX — breakpoints, layout admin/público)
+
+Referencia admin: `docs/core/ui_ux.md` §542 — breakpoint **992px (`lg`)**. Install wizard: **720px**. Este spec no modifica layout; valida que el fix semver no rompe smoke responsive existente.
+
+### R1 — `/admin/sistema/estado` (992px)
+
+| Componente | Comportamiento | Smoke post Fase 1 |
+|------------|----------------|-------------------|
+| Tarjeta versión plataforma | `col-md-4` — full width en móvil | 375px: `v1.2.1` legible, sin truncar |
+| Tabla módulos | `table-responsive` + `js-dt-responsive` | 375px: scroll horizontal; badge "Actualización disponible" visible |
+| Migraciones / checksums | `col-md-6` stack en móvil | 320px: listas scrollables; empty-state "Ninguna." / "Ninguno." legible |
+| Health checks | Lista con iconos `bi-*` | 375px: fila no desborda; icono + detalle en wrap |
+
+### R2 — Install wizard (720px) — versión en resultado
+
+| Vista | Verificación |
+|-------|--------------|
+| `paso_resultado.php` | 375px, 768px: "Plataforma vX.Y.Z instalada" sin overflow |
+| `paso_modulos.php` badges versión módulo | Independiente de plataforma — sin regresión |
+| Paridad skeleton | Mismo smoke en `skeleton/public/install/` |
+
+### R3 — Sidebar admin post-login (992px)
+
+Acceso a `/admin/sistema/estado` vía menú Sistema.
+
+| Viewport | Flujo |
+|----------|-------|
+| 375×812 | Login → offcanvas nav → estado → tarjeta versión visible sin scroll horizontal |
+| 1280×800 | Sidebar fijo; tabla módulos ancho completo |
+
+### R4 — Diff spec / PR desde móvil (GitHub)
+
+Maintainers revisan inventario D1–D16 y tablas K/U/R desde GitHub móvil.
+
+**Requisito:** tablas de este spec con columnas ≤ 5 donde sea posible; filas evidencia/file:line en monospace corto.
+
+### R5 — Smoke responsive harness (pre-merge Fase 1 implementación)
+
+| # | Viewport | Flujo |
+|---|----------|-------|
+| 1 | 375×812 | Login admin → `/admin/sistema/estado` → versión = tag vigente |
+| 2 | 375×812 | Install completo (staging) → `paso_resultado` versión alineada |
+| 3 | 1280×800 | Mismo flujo — sidebar fijo |
+| 4 | 320px | Tarjeta versión — número semver completo visible |
+| 5 | CLI | `php scripts/status.php` — mismo número que web |
+
+---
+
 ## Riesgos
 
 | Riesgo | Severidad | Mitigación | Deuda |
@@ -327,8 +535,19 @@ Operaciones de **producción** (VPS, flags Stripe, deploy Portal) quedan **fuera
 ### Explícitamente fuera de criterios de esta corrida
 
 - Deploy staging/producción.
-- Cierre PR #48.
-- Apertura PR de implementación (AUTOMATION-03).
+- Cierre PR #48 (AUTOMATION-03 — fuera del artefacto spec, ejecutado por pipeline).
+- Apertura PR spec final (AUTOMATION-03).
+
+### Compatibilidad / UX / Responsive (pase UX — este spec)
+
+- [ ] Secciones **Compatibilidad** (K1–K6), **UX** (U1–U8) y **Responsive** (R1–R5) revisadas por maintainer.
+- [ ] Fase 1 alinea versión en `composer.json`, configs, `/admin/sistema/estado`, install `paso_resultado` y `scripts/status.php` (K3, U1, U3, U7, R1, R2, R5).
+- [ ] Checklist release § Versionado accionable con 5 pasos numerados (U5, D13).
+- [ ] Tarjeta estado distingue versión plataforma vs badges módulo — sin regresión copy módulos (U2).
+- [ ] Smoke responsive R5 ejecutado en harness staging pre-merge implementación.
+- [ ] Carry-forward CF1–CF5 documentado para specs UI subsiguientes — no bloquea Fase 1 semver.
+- [ ] PR #48 **cerrado** con enlace al PR spec final (U8).
+- [ ] Fase 2 env purge y Fase 2b docs (U4, U6, K5) — criterios en spec 2026-07-27 y § Fase 2/2b arriba; no mezclar con PR semver mínimo salvo acuerdo maintainer.
 
 ---
 
