@@ -1,9 +1,9 @@
-# AUTOMATION-02 skip — 2026-07-28
+# Inventario de deuda técnica D1–D11 — 2026-07-28
 
 **Repositorio:** `Parzival2103/Lebytek_Framework`
 **Rama base inspeccionada:** `main` @ `e728474`
-**Automation:** brainstorm audit → design spec (cron 13:35 UTC)
-**Resultado:** **SKIP** — no se generó design spec
+**Artefacto:** inventario de deuda técnica con evidencia por archivo y línea (D1–D11)
+**Contexto pipeline:** AUTOMATION-02 hizo **SKIP** el 2026-07-28 (sin PR de auditoría elegible); este documento preserva el inventario verificado
 **Agente deuda técnica:** corrida 2026-07-28T14:00Z — inventario sobre `main` @ `e728474`
 **Agente compatibilidad / UX / responsive:** corrida 2026-07-28T14:30Z — **SKIP** (sin spec del día)
 
@@ -263,7 +263,7 @@ Issue **#23** **CLOSED** 2026-07-27T19:38Z — re-scopeado a
 
 | Campo | Valor |
 |-------|-------|
-| Artifact type | `skip-report` + deuda técnica |
+| Artifact type | `deuda-tecnica-inventario` (contexto skip AUTOMATION-02 documentado arriba) |
 | Repository | `Parzival2103/Lebytek_Framework` |
 | Base branch | `main` |
 | Inspected `origin/main` SHA | `e728474226a4d39ff6bc3b43ab3ab3edb4a77220` |
