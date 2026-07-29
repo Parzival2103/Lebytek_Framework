@@ -1,45 +1,64 @@
 # Cursor Automations — Lebytek Framework
 
-These files are the canonical prompts for the Framework audit pipeline.
+Prompts canónicos de la cadena diaria de auditoría. Seis etapas, cada una a **30
+minutos** de la anterior, todas configuradas en Cursor Automations con
+repositorio `Parzival2103/Lebytek_Framework` y branch `main`.
 
-| Stage | Prompt | Required repository/base |
-|-------|--------|--------------------------|
-| Daily audit | `AUTOMATION-01-daily-audit.md` | `Lebytek_Framework/main` |
-| Audit to spec | `AUTOMATION-02-audit-to-spec.md` | `Lebytek_Framework/main` |
-| Spec to plan | `AUTOMATION-03-spec-to-plan.md` | `Lebytek_Framework/main` |
+| # | Archivo | Entrega | Rama |
+|---|---------|---------|------|
+| 00 | `AUTOMATION-00-check-code-main-framework.md` | reporte de auditoría + PR draft `docs(audit):` | `automation/audit-YYYY-MM-DD` |
+| 01 | `AUTOMATION-01-daily-spec.md` | design spec | `automation/spec-YYYY-MM-DD` |
+| 02 | `AUTOMATION-02-audit-tech-debt.md` | pase de deuda técnica sobre el spec | `automation/spec-YYYY-MM-DD` |
+| 03 | `AUTOMATION-03-audit-ux.md` | pase compat/UX + **PR de la rama diaria** + cierre del PR de auditoría | `automation/spec-YYYY-MM-DD` |
+| 04 | `AUTOMATION-04-plan-writer.md` | reconciliación del plan activo + plan del día | `automation/spec-YYYY-MM-DD` |
+| 05 | `AUTOMATION-05-wha-notify.md` | aviso WhatsApp del estado real | — |
 
-## Invariants
+## Invariantes
 
-- Configure every stage in the Cursor Automations editor with repository
-  `Parzival2103/Lebytek_Framework` and branch `main`.
-- A generated working branch must descend from the current `origin/main`.
-- No commit exclusive to the frozen legacy feature may be an ancestor of a
-  generated or source branch.
-- Source PRs must target `main`; read their diff without checking out their
-  head branch.
-- Each stage is artifact-only: audit produces one report, spec produces one
-  design spec, and plan produces one implementation plan.
-- A failed branch, ancestry, mergeability, provenance, or diff check ends the
-  run without creating an artifact. Reporting the error and continuing is not
-  allowed.
-- `feature/backoffice-api-integration` is historical migration evidence only.
-- Marketing, memberships, landing and deployable-site work belongs to
+- Dos ramas por día: `automation/audit-*` para la etapa 00, `automation/spec-*`
+  compartida por las etapas 01–04. Ambas nacen de `origin/main`.
+- Cada etapa commitea **exclusivamente su propio artefacto**, verificado con
+  `git status --porcelain` antes y después del commit.
+- La etapa 00 escribe sólo bajo `docs/audits/`. Las etapas 01–03 sólo bajo
+  `docs/superpowers/specs/`. La etapa 04 sólo bajo `docs/superpowers/plans/`.
+- **Ninguna rama con trabajo puede terminar el día sin PR.** La etapa 03 lo abre;
+  la 04 lo recupera si la 03 falló.
+- **Ninguna etapa hace «skip» silencioso.** Cada una degrada de forma explícita y
+  entrega igualmente, marcando el modo en el artefacto. La única parada dura es
+  un fallo de integridad del preflight, y entonces no se commitea nada.
+- En modo degradado está prohibido inventar hallazgos, rutas, PRs, SHAs o
+  resultados de tests. Todo se apoya en evidencia verificable del repositorio.
+- El preflight de las seis etapas exige: fetch verificado, `origin/main` ancestro
+  de `HEAD`, ningún commit exclusivo del historial legacy en la ancestry, y
+  working tree limpio.
+- Si ni el tag `archive/backoffice-api-integration` ni la rama
+  `feature/backoffice-api-integration` resuelven **y el fetch está verificado**,
+  el historial legacy ya no es alcanzable: la comprobación es vacua y la etapa
+  continúa. Esto evita que borrar la rama deje muerta la cadena entera.
+- `feature/backoffice-api-integration` es evidencia histórica de migración. Nunca
+  es base de auditoría, spec, plan, implementación ni deploy.
+- Marketing, membresías, landing y trabajo de sitio desplegable pertenecen a
   `Parzival2103/Lebytek_Portal/main`.
-- Cross-repository evidence is read through authenticated GitHub API calls.
-  Failure to retrieve current Portal evidence stops the downstream stage.
-- Framework changes reach Portal through a tagged semver release and
-  `composer.lock`.
-- Automation runs do not deploy, use SSH, merge product PRs, edit production
-  environment files, or execute production migrations.
+- La evidencia entre repositorios se lee con llamadas autenticadas a la API de
+  GitHub, sin checkout ni merge.
+- Framework llega a Portal por tag semver y `composer.lock`.
+- Las corridas no despliegan, no usan SSH, no mergean PRs de producto, no editan
+  archivos de entorno de producción ni ejecutan migraciones de producción.
+- Un comando que descubre cero tests no es un gate verde.
 
-Changing these files does not update an already-created Cursor Automation.
-Replace the pasted instructions and verify the repository/branch in the
-Automations editor whenever a canonical prompt changes.
+## Sincronización con Cursor
 
-For a lineage reset, disable the old automations or recreate them and do not
-reuse prior automation memory. Old memory may preserve obsolete branch
-instructions even after the pasted prompt changes.
+**Cambiar estos archivos no actualiza una automation ya creada.** Cada vez que un
+prompt canónico cambie, hay que reemplazar el texto pegado en el editor de
+Automations y verificar repositorio y branch.
 
-The 2026-07-24 and 2026-07-25 lineage incident and reset procedure are recorded
-in `INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md`.
+Esa desincronización fue la causa raíz del incidente del 25/07 y volvió a
+producirse en julio de 2026: el repositorio tenía tres prompts endurecidos
+mientras Cursor ejecutaba seis prompts antiguos sin preflight de ancestry.
 
+Para un reset de lineage, deshabilita las automations anteriores o recréalas y no
+reutilices su memoria de ejecución: puede conservar instrucciones de rama
+obsoletas aunque el prompt pegado haya cambiado.
+
+El incidente 2026-07-24/25 y su procedimiento de reset están en
+`INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md`.
