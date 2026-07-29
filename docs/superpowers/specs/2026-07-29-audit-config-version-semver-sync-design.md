@@ -206,7 +206,7 @@ Un comando recibe `X.Y.Z` y actualiza composer + configs atómicamente.
 - Automatización completa de tagging semver (script bump — Fase B futura).
 - Editar `vendor/` en consumidores.
 - Merge `feature/backoffice-api-integration` → `main`.
-- Cierre del PR #48 de auditoría (AUTOMATION-03).
+- Cierre del PR #48 de auditoría ni apertura PR spec final — responsabilidad AUTOMATION-03, no del artefacto spec.
 - Auto-fix de deuda D6–D8 (RBAC router, `/api/health`, `permisos.gestionar`) — backlog separado, no bloquea Fase 1 semver.
 - Auto-fix Portal D14–D15 (#21 QA, #23 bootstrap) — requisitos documentados; owner Portal.
 - Purga docs integration D10–D12 en la misma PR que Fase 1 semver — puede ser PR docs dedicado post-implementación.
