@@ -114,3 +114,23 @@ El flujo solo se considera corregido cuando:
 - ninguna de las tres ramas incluye código/configuración legacy;
 - los artefactos usan Portal `main` como autoridad de aplicación/deploy y
   Framework `main` como autoridad del package.
+
+## Addendum M7 — audit cerrado sin merge (2026-07-29 / 2026-07-30)
+
+### Evidencia
+
+- PR #48 `docs(audit): auditoría técnica diaria 2026-07-29` — `state=CLOSED`, `mergedAt=null`, `closedAt=2026-07-29T23:41:33Z`.
+- Comentario owner: «Cerrado: continúa en #50» — viola Enfoque B (cross-PR sin merge).
+- `docs/audits/2026-07-29-auditoria-tecnica-diaria.md` **ausente** en `main`.
+- Último reporte mergeado: `docs/audits/2026-07-27-auditoria-tecnica-diaria.md` (PR #37).
+
+### Procedimiento de recuperación
+
+1. **Reporte huérfano (opcional):** PR docs-only desde `origin/automation/audit-2026-07-29` cherry-pick del archivo audit → `main`.
+2. **Día en curso:** mergear PR audit abierto (#51 para 2026-07-30) con `gh pr merge <n> --squash` **antes** de cerrar.
+3. **Prevención:** prompts F2–F3 + tests `AuditArtifactFreshnessTest` / `AutomationPromptInvariantTest`.
+4. **Post-merge:** sincronizar prompts en Cursor UI (O2); verificar `php tests/run.php Docs` verde.
+
+### Causa raíz M7
+
+AUTOMATION-03 instruía «Cierra el PR draft» sin exigir merge — regresión de proceso, no de código producto.

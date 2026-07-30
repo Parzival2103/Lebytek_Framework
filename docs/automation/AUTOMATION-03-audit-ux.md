@@ -84,18 +84,28 @@ sin PR es exactamente el fallo que esta etapa existe para evitar.
 Si tras eso no hay nada que entregar, dilo en el run log con la lista de ramas
 inspeccionadas y sus SHAs.
 
-### 3. Cerrar el PR de auditoría del día
+### 3. Mergear y cerrar el PR de auditoría del día
 
-Cierra el PR draft de auditoría del día (título que empieza por `docs(audit):`,
-base `main`) con un comentario que enlace al PR de spec recién abierto o
-actualizado.
+Identifica el PR `docs(audit):` del **mismo** `YYYY-MM-DD` (base `main`).
+
+1. Verifica `mergeable=MERGEABLE` con `gh pr view <n> --json mergeable`. Si es
+   `CONFLICTING` o `UNKNOWN` (tras un re-fetch), **aborta** el cierre y reporta
+   el conflicto — no uses `gh pr close` como workaround (incidente M7).
+2. Ejecuta `gh pr merge <n> --squash` (merge commit sólo si la política del repo
+   lo exige explícitamente).
+3. Comenta en el PR audit con enlace al PR spec abierto o actualizado.
+4. El PR audit queda **merged**; no ejecutes `gh pr close` sobre un PR ya mergeado.
+
+**Prohibido:** cerrar un PR audit sin `mergedAt`. **Prohibido:** comentar
+«continúa en #N» en el PR audit como sustituto del merge hacia `main`.
 
 No cierres PRs de otra etapa, de otra base branch ni de otra fecha.
 
 ### Prohibiciones
 
 - No implementes código en `app/`, `src/`, `database/`, `skeleton/` ni `tests/`.
-- No mergees ningún PR.
+- No mergees PRs de spec/plan/implementación de producto — **excepto** el PR
+  `docs(audit):` del día, que **debes** mergear a `main` antes de cerrarlo (Enfoque B).
 - No merge de `feature/backoffice-api-integration` → `main`.
 - No deploy, SSH, `.env`, secretos, ni desactivar seguridad o tests.
 - No escribas bajo `docs/audits/`.
