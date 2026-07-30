@@ -303,6 +303,63 @@ Fuente anterior: `docs/superpowers/specs/2026-07-29-audit-config-version-semver-
 
 **No verificado esta corrida:** SHA Portal, `composer.lock` Portal, estado prod VPS, issues Portal #4/#16/#21 en GitHub, contenido post-merge de PR #51.
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: sin superficie UI
+
+Este spec trata exclusivamente de **proceso automation** (cadena de artefactos
+audit/spec/plan, prompts, tests Docs). No introduce ni modifica pantallas, rutas
+HTTP de producto, assets CSS ni flujos de login/dashboard. **Sin superficie UI
+en este spec.**
+
+Los requisitos K/U/R siguientes documentan (a) compatibilidad de proceso verificada
+hoy y (b) **carry-forward UX** — ítems concretos que el próximo spec con
+superficie UI debe cubrir, derivados de deuda abierta real (D1–D21, M1–M7).
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (F1–F6) | Evidencia / carry-forward |
+|------|-------------------|---------------------------|
+| PHP soportado | Sin impacto runtime | `composer.json` exige `>=8.1`; VPS staging documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`). Cambios F1–F6 son docs + tests harness compatibles 8.1+. |
+| Instalación vía `vendor/` | N/A | Consumidores instalan `lebytek/framework` por Composer; este spec no altera empaquetado ni autoload. |
+| Health sin cookie de sesión | Carry-forward **D7/M4** | `routes/api.php` — grupo `/api` + `AuthMiddleware`; `/api/ping` requiere sesión. Próximo spec producto o backlog API debe exigir endpoint público (`GET /api/health`) consumible por LB/cron. |
+| `.env.example` sin vars Portal | Carry-forward **D2/M2** | Root `.env.example` L54–102 conserva `MKT_*`, `LEBYTEK_API_*`, `WAAPI_PORTAL_*`; `skeleton/.env.example` limpio. Spec archivado 2026-07-27 purge — Fase 2. |
+| Navegadores objetivo | N/A en este spec | Carry-forward: Chrome, Firefox, Safari (últimas 2 versiones) + iOS Safari para admin; sin IE11. Baseline `docs/core/ui_ux_implementacion_v0.1.md`. |
+
+### UX — flujos de proceso (alcance de este spec)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | Prompt AUTOMATION-03 exige `gh pr merge` **antes** de cerrar PR audit; mensaje de error accionable si `mergeable≠MERGEABLE` («abortar cierre, reportar conflicto») | D18 |
+| **U2** | `docs/automation/README.md` documenta ciclo de vida Enfoque B en lenguaje operador («qué hacer» si 03 falla, no sólo «prohibido») | D21 |
+| **U3** | AUTOMATION-01 prohíbe cerrar PRs `docs(audit):` — evita sustituto «continúa en #N» sin merge (incidente M7 / #48) | D17, D18 |
+| **U4** | Tests F4/F5 fallan con mensajes que citen acción de recuperación (staleness M7, prompt desincronizado) — copy accionable en assert | D19, D20 |
+| **U5** | Checklist O2 post-merge: sincronizar prompts pegados en Cursor UI con repo — estado error explícito si UI ≠ `docs/automation/*` | D20 |
+
+### Carry-forward UX — próximo spec con superficie UI
+
+Ítems derivados de deuda abierta verificada; **no bloquean** F1–F6 pero deben
+entrar en el siguiente spec que toque harness, admin o API:
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF1 | Semver visible en estado/wizard | D1/M1, spec #50 | UI debe mostrar tag semver (`v1.2.1`), no `config/app.php` `1.0.0`; mensaje wizard indica cómo alinear tres archivos. |
+| CF2 | Instalación harness `.env` | D2/M2, D5 | Root `.env.example` sin prefijos Portal; copy install: «copiar `skeleton/.env.example` en tenants; root harness sólo STRIPE/PAYMENTS». |
+| CF3 | Login responsive 320–768px | `ui_ux_implementacion_v0.1` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5 | Tablas CRUD scroll horizontal | módulo CRUD, D6 | `table-responsive` obligatorio; `list.columns[].priority` oculta columnas secundarias en `<768px`; toolbar usable en móvil. |
+| CF6 | RBAC router CRUD/calendario | D6/M3 | Errores 403 accionables (slug requerido vs permiso denegado); documentar o aplicar `RbacMiddleware` en router. |
+| CF7 | Health endpoint público | D7/M4 | `GET /api/health` 200 sin cookie; body JSON mínimo `{ "status": "ok" }`; documentar en checklist VPS. |
+| CF8 | Permisos admin catálogo | D8/M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga | `ui_ux_implementacion_v0.1` §8 | Unificar empty states (usuarios → `empty_state.php`); spinners/carga en CRUD list; errores de validación con hint de corrección. |
+| CF10 | Copy errores accionables | transversal | Auth, CRUD, wizard estado: mensaje = qué falló + qué hacer (ej. «regenera APP_KEY», «contacta admin para slug X»). |
+| CF11 | Docs install/deploy legacy | D10–D12, D16 | `composer-setup.md`, `VPS_CHECKLIST.md`, runbooks integration: no apuntar a `feature/backoffice-api-integration` ni scripts eliminados. |
+
+### Responsive
+
+**N/A en este spec** (sin superficie UI). Los ítems **CF3–CF5** del carry-forward
+anterior son el backlog responsive verificado para el próximo spec con pantallas.
+
 ## Dependencias y compatibilidad
 
 | Dependencia | Estado verificado |
@@ -356,6 +413,11 @@ Fuente anterior: `docs/superpowers/specs/2026-07-29-audit-config-version-semver-
   evidencia ruta/línea; D1–D16 reconciliados (0 cierres nuevos vs 2026-07-29).
 - [ ] **AC11:** Ningún ítem de deuda heredado re-listado como abierto si ya está
   resuelto en `main` (C1, D-SqlRunner, C2 Framework, Q4 permanecen cerrados).
+- [ ] **AC12:** Sección **Compatibilidad, UX y responsive** declara modo
+  **sin superficie UI** y lista carry-forward CF1–CF11 derivado de deuda abierta.
+- [ ] **AC13:** Requisitos U1–U5 (UX de proceso) incluidos como criterios del spec.
+- [ ] **AC14:** Carry-forward documenta health sin cookie (D7), `.env.example`
+  (D2) y navegadores objetivo para el próximo spec con UI.
 
 ## Operaciones
 
@@ -384,6 +446,7 @@ Fuente anterior: `docs/superpowers/specs/2026-07-29-audit-config-version-semver-
 | Hallazgo principal | M7 — artefacto audit cerrado sin merge (#48) |
 | Requisitos no verificados | Portal SHA; Portal `composer.lock` vs v1.2.1; C2 ops Stripe QA Portal |
 | Pase deuda técnica | `2026-07-30T13:02:49Z` UTC; SHA `origin/main` `0ec722bc38258b2e479d30cafd59940aa44d558e`; modo **normal**; 19 abiertos verificados + 2 Portal no verificados; 0 heredados cerrados; 5 nuevos (D17–D21) |
+| Pase UX | `2026-07-30T13:30:00Z` UTC; modo **sin superficie UI**; carry-forward CF1–CF11; requisitos proceso U1–U5 |
 
 ---
 
