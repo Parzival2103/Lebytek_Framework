@@ -42,7 +42,7 @@ Añadido de seguridad, fuera del texto del spec pero dentro de su intención: Ta
 
 ## File Structure
 
-**`Lebytek_Framework`** (rama de trabajo: `docs/skeleton-package-staging-design`, ya activa)
+**`Lebytek_Framework`** (rama base: `main` — Task 1 Framework mergeada vía PR #36; rama `docs/skeleton-package-staging-design` eliminada post-merge 2026-07-27)
 
 | Archivo | Responsabilidad |
 |---|---|
@@ -57,7 +57,7 @@ Añadido de seguridad, fuera del texto del spec pero dentro de su intención: Ta
 | `tests/Docs/DeployScriptsRemovedTest.php` | **crear** — guarda de regresión: no vuelven los `vps-deploy-*.sh` ni pins a la rama en `scripts/` |
 | `tests/Docs/PublishSkeletonScriptTest.php` | **crear** — guarda de contrato del script de publicación y del README del skeleton |
 
-**`Lebytek_Portal`** (rama de trabajo: `chore/deploy-scripts-cleanup`, a crear desde `main`)
+**`Lebytek_Portal`** (rama de trabajo: `chore/deploy-scripts-cleanup`, a crear desde `main` — **no verificada** desde Framework; token gh sin acceso Portal M6/D3)
 
 | Archivo | Responsabilidad |
 |---|---|
@@ -90,7 +90,7 @@ Primera tarea de forma deliberada: `scripts/vps-deploy-lebytek-com.sh` hace `fin
 - Consumes: nada de tareas previas.
 - Produces: la ausencia de `scripts/vps-deploy-*.sh` en ambos repos, precondición dura de Task 10. Los tests `DeployScriptsRemovedTest` quedan como guarda permanente.
 
-- [ ] **Step 1: Escribir el test que falla en Framework**
+- [x] **Step 1: Escribir el test que falla en Framework** — evidencia: `tests/Docs/DeployScriptsRemovedTest.php` @ `origin/main`, PR #36
 
 Crear `Lebytek_Framework/tests/Docs/DeployScriptsRemovedTest.php`:
 
@@ -128,19 +128,19 @@ test('no shell script wipes a site directory before repopulating it', function (
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y confirmar que falla**
+- [x] **Step 2: Ejecutar el test y confirmar que falla** — evidencia: ciclo TDD completado pre-merge PR #36
 
 Run: `cd Lebytek_Framework && php tests/run.php Docs/DeployScriptsRemoved`
 Expected: FAIL — los tres tests fallan (`vps-deploy-lebytek-com.sh, vps-deploy-skeleton.sh, vps-deploy-waapi.sh` presentes; dos de ellos con el pin a la rama y el `rm -rf`).
 
-- [ ] **Step 3: Borrar los tres scripts en Framework**
+- [x] **Step 3: Borrar los tres scripts en Framework** — evidencia: `scripts/vps-deploy-*.sh` ausentes en `origin/main`
 
 ```bash
 cd Lebytek_Framework
 git rm scripts/vps-deploy-lebytek-com.sh scripts/vps-deploy-waapi.sh scripts/vps-deploy-skeleton.sh
 ```
 
-- [ ] **Step 4: Ejecutar el test y confirmar que pasa**
+- [x] **Step 4: Ejecutar el test y confirmar que pasa** — evidencia: PR #36 mergeado; test presente en `origin/main`
 
 Run: `cd Lebytek_Framework && php tests/run.php Docs/DeployScriptsRemoved`
 Expected: PASS — 3 tests, 0 failed.
@@ -286,7 +286,7 @@ Expected: 0 failed.
 Run: `cd Lebytek_Portal && php tests/run.php`
 Expected: 0 failed.
 
-- [ ] **Step 13: Commit en ambos repos**
+- [x] **Step 13: Commit en ambos repos** — evidencia Framework: PR #36 @ `23946f4`; Portal: **pendiente verificación**
 
 ```bash
 cd Lebytek_Framework
@@ -1408,3 +1408,19 @@ Expected: `200` en los tres dominios y la suite del framework en 0 failed.
 - Directorios de backup del corte del 21-jul (`lebytek.com.monorepo-backup-*`, `waapi.lebytek.com.monorepo-backup-*`, `waapi.lebytek.com.prev-*`).
 - Auth básica sobre staging: descartada al aislar la BD.
 - Referencias históricas a `feature/backoffice-api-integration` en `docs/superpowers/plans/`, `docs/superpowers/specs/`, `docs/superpowers/FPS-*` y `docs/CUTOVER-PORTAL.md`.
+
+---
+
+## Estado de ejecución
+
+| Campo | Valor |
+|-------|-------|
+| Reconciliación UTC | 2026-07-30T14:00:00Z |
+| SHA `origin/main` verificado | `0ec722bc38258b2e479d30cafd59940aa44d558e` |
+| Tareas completadas / totales | **0.5 / 10** (Task 1 Framework verificada; Portal y Tasks 2–10 pendientes) |
+| Siguiente tarea ejecutable | **Task 1 Steps 5–11 (Portal)** o **Task 2 (Framework)** — skeleton `composer.json` VCS |
+| Prerrequisitos Task 1 Portal | Acceso `gh`/`git` a `Parzival2103/Lebytek_Portal` (bloqueado M6/D3); rama `chore/deploy-scripts-cleanup` desde Portal `main` |
+| Prerrequisitos Task 2 | Ninguno en Framework; independiente de Portal |
+| Bloqueos | (1) Token automation sin lectura Portal — Steps 5–11 no verificables desde este repo. (2) Tasks 4–8 requieren VPS/credenciales (`Requiere operador humano`). (3) Task 10 requiere Task 9 en verde. (4) Rama `docs/skeleton-package-staging-design` ya no existe — corregida a `main`. (5) Repo espejo `Lebytek_Skeleton` no existe aún (Task 4). |
+| Evidencia Task 1 Framework | PR #36 — scripts `vps-deploy-*.sh` eliminados; `tests/Docs/DeployScriptsRemovedTest.php` presente en `origin/main` |
+| Plan activo | **Incompleto** — permanece en `docs/superpowers/plans/` |
