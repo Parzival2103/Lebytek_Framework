@@ -90,12 +90,17 @@ Tras implementar este diseño:
 ## No-alcance
 
 - Implementación de M1 (semver UI), M2 (purge `.env.example`), M3–M5 (RBAC/router/API).
+- Auto-fix deuda heredada D1–D16 (semver, harness env, RBAC backlog, docs integration,
+  Portal QA) — requisitos documentados en specs hermanos (#50, 2026-07-27); no bloquean
+  F1–F6 salvo donde el plan los agrupe explícitamente.
 - Merge de `feature/backoffice-api-integration` → `main` (legacy archivado en tag
   `archive/backoffice-api-integration` @ `4789f95` — evidencia histórica).
 - Deploy, SSH, migraciones producción, cambios `.env` en VPS.
 - Cierre del PR #51 de auditoría (reservado a AUTOMATION-03).
 - Apertura del PR de spec (reservado a AUTOMATION-03).
 - Marketing, membresías, checkout Portal (`Parzival2103/Lebytek_Portal`).
+- Configuración token `gh` Portal (D3 / O1) — ops humano.
+- Recuperación retroactiva obligatoria del reporte 2026-07-29 — opcional staging (§ Migración).
 
 ## Ownership map
 
@@ -246,6 +251,58 @@ no consume estos archivos vía Composer.
 Si en el futuro se empaquetan prompts en el artefacto Composer, sería minor bump
 documentado; **fuera de alcance** hoy.
 
+## Deuda técnica
+
+Inventario verificado contra `origin/main` @ `0ec722bc38258b2e479d30cafd59940aa44d558e`
+(2026-07-30). **Ningún ítem se auto-fixea en este pase** — queda como requisito del
+spec/PR/plan posterior (F1–F6 o specs hermanos).
+
+### Reconciliación heredada (corrida 2026-07-29 → estado en `main`)
+
+Fuente anterior: `docs/superpowers/specs/2026-07-29-audit-config-version-semver-sync-design.md`
+(rama `automation/spec-2026-07-29`, commit `93cdaf6` — pase deuda D1–D16).
+
+| ID heredado | Tema | Estado 2026-07-30 | Evidencia |
+|-------------|------|-------------------|-----------|
+| C1 (2026-07-27) | Scripts `vps-deploy-*.sh` destructivos | **Resuelto** | PR #36; `tests/Docs/DeployScriptsRemovedTest.php` PASS; `scripts/vps-deploy-*.sh` ausentes |
+| D-SqlRunner (2026-07-27) | Partición SQL en seeds con `;` en strings | **Resuelto** | PR #40 — `src/Infrastructure/Install/SqlFileRunner.php` |
+| C2 / #21 Stripe subscription | Contrato Framework C1–C6 | **Resuelto Framework** | Tag `v1.2.1` @ `fba3e03` (PR #42); gate ops `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` vigente |
+| C3 / #23 bootstrap marketing | Columnas lifecycle/churn en bootstrap | **Re-scopeado** | Portal `Lebytek_Portal#4` — **no verificado** esta corrida |
+| Q4 deprecated banner (2026-07-27) | `vps-deploy-lebytek-com.sh` | **Obsoleto** | Script eliminado PR #36; deuda migra a docs drift (D10–D12) |
+| D1–D16 (2026-07-29) | Inventario semver/harness/docs | **Abierto** | `main` sin commits nuevos desde 2026-07-29; revalidación línea a línea abajo |
+
+**Cierres desde corrida anterior:** 0 (SHA `origin/main` inmutable @ `0ec722b`).
+
+### Inventario abierto (priorizado)
+
+| ID | Hallazgo | Evidencia (`main` @ `0ec722b`) | Impacto | Capa / owner | Acción requerida |
+|----|----------|--------------------------------|---------|--------------|------------------|
+| **D17** | Artefacto audit cerrado sin merge (M7) | PR #48 `mergedAt=null`, `closedAt=2026-07-29T23:41:33Z`; `docs/audits/` en `main` **sin** `2026-07-29-auditoria-tecnica-diaria.md`; última mergeada `2026-07-27-auditoria-tecnica-diaria.md` | Cadena 01–04 pierde ancla canónica; deuda diaria no versionada en `main` | Ops / automation — Framework | Enfoque B (F1–F3): merge audit en AUTOMATION-03 **antes** de close; recuperación opcional reporte 2026-07-29 |
+| **D18** | Prompt AUTOMATION-03 cierra audit sin exigir merge | `docs/automation/AUTOMATION-03-audit-ux.md` L87–92 — «Cierra el PR draft»; L98 «No mergees ningún PR»; grep `gh pr merge` en `docs/automation/` → **0** | Repite incidente M7 (#48) | Docs automation — Framework | F3: sustituir §3 por merge-then-close (diseño § Cambios concretos) |
+| **D19** | Test gate frescura audit ausente (F4) | `tests/Docs/AuditArtifactFreshnessTest.php` **no existe**; `php tests/run.php Docs` — 4 tests, 13 assertions, **sin** gate staleness | M7 no detectable en CI local | `tests/Docs/` — Framework | F4 TDD: debe **fallar** pre-fix (merged 2026-07-27 vs PR #51 2026-07-30) |
+| **D20** | Test invariantes prompts ausente (F5) | `tests/Docs/AutomationPromptInvariantTest.php` **no existe** | Regresión prompt/UI desincronizado sin gate | `tests/Docs/` — Framework | F5 TDD: assert `gh pr merge` en 03 y prohibición cierre en 01 |
+| **D21** | README automation sin ciclo de vida Enfoque B | `docs/automation/README.md` L16–47 — invariantes generales; **sin** prohibición cierre cross-PR ni merge-before-close | Operadores no tienen política canónica fuera del spec | Docs — Framework | F1: añadir reglas invariantes diseño § Reglas invariantes |
+| **D1** | Drift semver plataforma (M1) | `config/app.php:7`, `skeleton/config/app.php:7` → `'1.0.0'`; `composer.json` sin `"version"`; tags `v1.2.1` @ `fba3e03` | UI estado/wizard muestran v1.0.0 | Harness / `config/` — Framework | Spec #50 / PR semver sync — Fase 1 |
+| **D2** | Root `.env.example` vars Portal (M2) | `.env.example` L54–102: `MKT_*`, `LEBYTEK_API_*`, `WAAPI_PORTAL_*`; `skeleton/.env.example` limpio | Confusión post-FPS en harness | Harness — Framework | Spec archivado 2026-07-27 purge — Fase 2 |
+| **D3** | Portal SHA no inspeccionable (M6) | `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404 | Automation no verifica `composer.lock` | Ops / credenciales gh | O1: scope lectura Portal al token |
+| **D4** | Test gate semver ausente | `tests/Docs/PlatformVersionSemverTest.php` **no existe** | Drift semver silencioso | `tests/Docs/` — Framework | Spec #50 Fase 1 |
+| **D5** | `FrameworkRootNotPortalTest` no cubre `.env.example` | `tests/Kernel/FrameworkRootNotPortalTest.php` — sin assert prefijos env root | Reintroducción vars Portal | `tests/Kernel/` — Framework | Fase 2 M2 |
+| **D6** | CRUD/Calendario sin `RbacMiddleware` router (M3) | `routes/web.php` L114–125 — `/admin/crud/*`, `/admin/calendario/*` solo `AuthMiddleware` del grupo | RBAC solo en servicio | `Presentation` / `routes/` — Framework | Backlog: documentar o RBAC router-level |
+| **D7** | API health no pública (M4) | `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` L23 requiere sesión | LB/cron no health-check sin cookie | `Presentation` / `routes/` — Framework | Backlog: `GET /api/health` público |
+| **D8** | Slug `permisos.gestionar` ausente (M5) | `routes/web.php` L61–65 — workaround `administracion.ver`; `database/seeds/010_auth_permisos.sql` sin slug | Catálogo permisos acoplado | `Domain` RBAC — Framework | Backlog producto |
+| **D9** | Sin pipeline CI GitHub Actions | `.github/workflows/` **ausente** | Tests solo manual/`tests/run.php` | Ops / repo — Framework | Evaluar workflow mínimo |
+| **D10** | `docs/composer-setup.md` pin legacy | L121–128: `"dev-feature/backoffice-api-integration"` | Consumidores instalan monolito pre-FPS | `docs/` — Framework | Actualizar post-cutover Composer |
+| **D11** | `docs/integration/VPS_CHECKLIST.md` obsoleto | L13 referencia `vps-deploy-lebytek-com.sh` (eliminado); L89 `feature/backoffice-api-integration (until merge)` | Ops usa feature como target | `docs/integration/` — Framework | Marcar interino; apuntar `ENVIRONMENTS.md` |
+| **D12** | Runbooks integration → feature branch | `docs/integration/lebytek-implementation-real.md` L3; `role-delegation-lebytek-api.md` L195 | Deploy guides desalineados FPS | `docs/integration/` — Framework | Reescribir target → Portal + Composer |
+| **D13** | `despliegue-y-versionado.md` sin sync semver release | `docs/core/despliegue-y-versionado.md` L180–181 — versionado módulo/plataforma; **sin** paso sync `composer.json` + configs | Release sin checklist tres archivos | `docs/core/` — Framework | Spec #50 Fase 1 |
+| **D14** | Stripe subscription QA Portal (#21) | Framework v1.2.1 publicado; gate `PAYMENTS_SUBSCRIPTION_CHECKOUT=false` | Checkout sin QA rompe prod | Portal — **no verificado** | Portal QA + lock ≥ v1.2.1 |
+| **D15** | Bootstrap marketing Portal (#23) | Re-scopeado `Lebytek_Portal#4` | Fresh install marketing | Portal `database/` — **no verificado** | Portal issue #4 |
+| **D16** | `seguridad_secretos_deploy.md` modelo monolito | L6: «El VPS hace auto-pull de `main`» — no distingue Portal Composer | Operador asume package source = deploy | `docs/core/` — Framework | Aclarar modelo consumidor |
+
+**Conteo:** **19 ítems abiertos verificados** en Framework (D17–D21 + D1–D13, D16); **2 no verificados** Portal (D14–D15). **5 ítems nuevos** esta corrida (D17–D21, ligados a M7 y F1–F5).
+
+**No verificado esta corrida:** SHA Portal, `composer.lock` Portal, estado prod VPS, issues Portal #4/#16/#21 en GitHub, contenido post-merge de PR #51.
+
 ## Dependencias y compatibilidad
 
 | Dependencia | Estado verificado |
@@ -262,13 +319,16 @@ documentado; **fuera de alcance** hoy.
 
 ## Riesgos
 
-| Riesgo | Mitigación |
-|--------|------------|
-| Operador repite cierre manual (#48) | Prompt + README + test F4 |
-| Prompts UI desincronizados del repo | O2 checklist post-merge; incidente 2026-07-25 |
-| Merge audit conflictivo | Audit es archivo único additive; bajo riesgo |
-| Falso positivo F4 en día sin corrida 00 | Skip si no hay PR audit abierto |
-| Portal inaccesible (M6) | Declarar no verificado; no bloquear F1–F6 |
+| Riesgo | Mitigación | Deuda |
+|--------|------------|-------|
+| Operador repite cierre manual (#48) | Prompt + README + test F4 | D17, D18, D19–D21 |
+| Prompts UI desincronizados del repo | O2 checklist post-merge; incidente 2026-07-25 | D20 |
+| Merge audit conflictivo | Audit es archivo único additive; bajo riesgo | — |
+| Falso positivo F4 en día sin corrida 00 | Skip si no hay PR audit abierto | D19 |
+| Portal inaccesible (M6) | Declarar no verificado; no bloquear F1–F6 | D3, D14–D15 |
+| Deuda semver/harness (M1–M2) distrae implementación F1–F6 | No-alcance explícito; specs #50 / 2026-07-27 | D1–D5, D13 |
+| Docs integration legacy confunden operadores | Backlog D10–D12, D16 — PR docs separado | D10–D12, D16 |
+| RBAC/API backlog (M3–M5) escalado como bloqueante M7 | Backlog separado; no mezclar en PR artifact chain | D6–D8 |
 
 ## Rollback
 
@@ -292,6 +352,10 @@ documentado; **fuera de alcance** hoy.
 - [ ] **AC8:** PR #51 permanece abierto hasta AUTOMATION-03 (no cerrado en esta corrida).
 - [ ] **AC9:** Requisitos Portal (C2 ops, M6) marcados **no verificados** hasta
   evidencia `gh` de Portal.
+- [ ] **AC10:** Sección **Deuda técnica** del spec lista D17–D21 verificados con
+  evidencia ruta/línea; D1–D16 reconciliados (0 cierres nuevos vs 2026-07-29).
+- [ ] **AC11:** Ningún ítem de deuda heredado re-listado como abierto si ya está
+  resuelto en `main` (C1, D-SqlRunner, C2 Framework, Q4 permanecen cerrados).
 
 ## Operaciones
 
@@ -319,6 +383,7 @@ documentado; **fuera de alcance** hoy.
 | headRefOid fuente | `dc9996eb8ab934a428dbfc2f15bff1dacf3320a5` |
 | Hallazgo principal | M7 — artefacto audit cerrado sin merge (#48) |
 | Requisitos no verificados | Portal SHA; Portal `composer.lock` vs v1.2.1; C2 ops Stripe QA Portal |
+| Pase deuda técnica | `2026-07-30T13:02:49Z` UTC; SHA `origin/main` `0ec722bc38258b2e479d30cafd59940aa44d558e`; modo **normal**; 19 abiertos verificados + 2 Portal no verificados; 0 heredados cerrados; 5 nuevos (D17–D21) |
 
 ---
 
