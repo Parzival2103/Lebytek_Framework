@@ -46,6 +46,34 @@ repositorio `Parzival2103/Lebytek_Framework` y branch `main`.
   archivos de entorno de producción ni ejecutan migraciones de producción.
 - Un comando que descubre cero tests no es un gate verde.
 
+## Ciclo de vida de artefactos (Enfoque B)
+
+Cadena objetivo audit → spec → plan:
+
+1. **AUTOMATION-00** abre PR draft `docs(audit):` desde `origin/main`. El PR abierto es fuente Nivel A para 01–02.
+2. **AUTOMATION-01–02** escriben spec en `automation/spec-*` sin heredar la rama audit.
+3. **AUTOMATION-03** abre PR `docs(spec):`, **mergea** el PR audit del mismo `YYYY-MM-DD` a `main`, luego cierra el PR audit ya mergeado.
+4. **AUTOMATION-04** entrega plan en la misma rama spec.
+
+### Reglas invariantes (M7)
+
+1. **Prohibido** cerrar un PR `docs(audit):` sin `mergedAt` salvo cancelación explícita del día documentada en el PR.
+2. **Prohibido** enlazar «continúa en #N» entre PR audit y PR spec de ramas distintas como sustituto del merge (incidente M7 / PR #48).
+3. AUTOMATION-03 **debe** ejecutar `gh pr merge <n> --squash` del audit del día **antes** de cualquier cierre.
+4. Si AUTOMATION-03 falla, AUTOMATION-04 reporta audit sin merge; `AuditArtifactFreshnessTest` queda rojo hasta recuperación.
+5. Modo degradado (Nivel D) no autoriza inventar hallazgos; sólo carry-forward verificado.
+
+### Fallback Enfoque A
+
+Si AUTOMATION-03 falla repetidamente, un operador puede mergear el PR audit inmediatamente tras AUTOMATION-00. Documentar la excepción en el PR audit.
+
+### Si AUTOMATION-03 falla
+
+1. No cerrar el PR audit manualmente.
+2. Abrir o actualizar PR spec desde `automation/spec-*`.
+3. Ejecutar `gh pr merge <audit-pr> --squash` cuando `mergeable=MERGEABLE`.
+4. Sincronizar prompts pegados en Cursor UI con este README (O2).
+
 ## Sincronización con Cursor
 
 **Cambiar estos archivos no actualiza una automation ya creada.** Cada vez que un

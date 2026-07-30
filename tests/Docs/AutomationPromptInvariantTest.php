@@ -41,3 +41,16 @@ test('AUTOMATION-01 forbids closing docs(audit) pull requests', function () use 
             . 'Add under Prohibiciones: never close docs(audit): PRs of any date.'
     );
 });
+
+test('automation README documents Enfoque B lifecycle and cross-PR close prohibition', function () use ($root): void {
+    $src = (string) file_get_contents($root . '/docs/automation/README.md');
+    assert_true(str_contains($src, 'Enfoque B'), 'README must name Enfoque B');
+    assert_true(
+        str_contains($src, 'gh pr merge'),
+        'README must document merge-before-close for audit PRs'
+    );
+    assert_true(
+        str_contains($src, 'continúa en #') || str_contains($src, 'cross-PR'),
+        'README must forbid «continúa en #N» as substitute for audit merge (M7 / PR #48)'
+    );
+});
