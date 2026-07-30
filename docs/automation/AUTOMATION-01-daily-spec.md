@@ -129,7 +129,7 @@ contexto de riesgo, no como autorización para auto-fix.
    `git diff --name-only origin/main...HEAD` debe contener exactamente el spec.
    Si algo falla, **STOP** sin commit.
 7. **No abras PR en esta etapa.** Lo hace AUTOMATION-03.
-8. **No cierres el PR de auditoría.** Lo hace AUTOMATION-03.
+8. **No cierres el PR de auditoría.** Lo hace AUTOMATION-03 tras merge a `main`.
 
 ### Prohibiciones
 
@@ -139,6 +139,8 @@ contexto de riesgo, no como autorización para auto-fix.
 - No desactives RBAC, tests, Horizon ni firmas.
 - No propongas merge de `feature/backoffice-api-integration` → `main`.
 - No escribas nada bajo `docs/audits/`: ese directorio es de AUTOMATION-00.
+- **No cierres** PRs `docs(audit):` de ninguna fecha — ni comentes cierre en ellos.
+  Eso es responsabilidad exclusiva de AUTOMATION-03 tras merge a `main`.
 
 ### Salida del run
 
