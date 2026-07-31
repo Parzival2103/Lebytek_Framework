@@ -24,6 +24,7 @@
 | headRefOid fuente | `af0c5dfa5957558940cecef4c42ec91658819448` |
 | `<LEGACY_REF>` | `refs/tags/archive/backoffice-api-integration` @ `4789f953ef746d17bae2e6b50c85504782d306e3` — 53 commits exclusivos; ninguno ancestro de HEAD ni del head de auditoría |
 | Pase deuda técnica | `2026-07-31T13:02:57Z` UTC; SHA `origin/main` `e19fa25c7c96560462f60c31b56b99c8d7eaf619`; modo **normal**; **14** abiertos verificados + **2** Portal no verificados; **5** heredados cerrados (D17–D21); **1** nuevo (D22); **5** ítems no verificables cross-repo (D3, D14–D15, Portal SHA, audit 2026-07-31 en `main`) |
+| Pase UX | `2026-07-31T13:30:01Z` UTC; modo **sin superficie UI**; carry-forward CF1–CF10; requisitos docs U1–U6 |
 
 ---
 
@@ -271,6 +272,65 @@ foreach ($operationalPaths as $rel) {
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: sin superficie UI
+
+Este spec trata exclusivamente de **documentación operativa** (runbooks integration/composer,
+test gate Docs). No introduce ni modifica pantallas, rutas HTTP de producto, assets CSS ni
+flujos de login/dashboard. **Sin superficie UI en este spec.**
+
+Los requisitos K/U/R siguientes documentan (a) compatibilidad verificada hoy para el alcance
+docs y (b) **carry-forward UX** — ítems concretos que el próximo spec con superficie UI debe
+cubrir, derivados de deuda abierta real (D1–D9, D13–D16, M1–M6).
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (D1–D5, T1) | Evidencia / carry-forward |
+|------|-------------------------|---------------------------|
+| PHP soportado | Sin impacto runtime | `composer.json` exige `>=8.1`; VPS documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`). Cambios D1–D5 + T1 son docs + tests harness compatibles 8.1+. |
+| Instalación vía `vendor/` | Alcance docs | § D1 corrige instrucción Composer: consumidores deben instalar `lebytek/framework` por semver en `vendor/`, no branch VCS del monolito. `path` repository sólo para desarrollo local del paquete. |
+| Health sin cookie de sesión | Carry-forward **D7/M4** | `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` L23 requiere sesión. Próximo spec producto o backlog API debe exigir `GET /api/health` consumible por LB/cron sin cookie. |
+| `.env.example` sin vars Portal | Carry-forward **D2/M2, D5** | Root `.env.example` L53–104 conserva **17** keys `MKT_*` / `LEBYTEK_API_*` / `WAAPI_PORTAL_*`; `skeleton/.env.example` limpio. Spec `2026-07-29` Fase 2 — fuera de alcance M8. |
+| Navegadores objetivo | N/A en este spec | Carry-forward: Chrome, Firefox, Safari (últimas 2 versiones) + iOS Safari para admin; sin IE11. Baseline `docs/core/ui_ux_implementacion_v0.1.md`. |
+
+### UX — flujos de documentación operativa (alcance de este spec)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | `docs/composer-setup.md` §6: copy accionable — comando Composer concreto (`composer require lebytek/framework:^1.2`), no sólo «no uses branch legacy» | D10 |
+| **U2** | `docs/integration/VPS_CHECKLIST.md`: pasos deploy Portal numerados con comando de verificación post-deploy (`curl -sf https://lebytek.com/up` o health documentado) | D11 |
+| **U3** | Referencias históricas (E2E 2026-07-01, script PR #36) marcadas explícitamente «histórico — no ejecutar» vs instrucciones vigentes | D11, D12 |
+| **U4** | Banner al inicio de runbooks integration: «Package source ≠ app desplegable — ver `docs/ENVIRONMENTS.md`» con enlace relativo | D12 |
+| **U5** | `OpsDocsFpsAlignmentTest` (T1): mensaje de fallo cita archivo, cadena prohibida y acción («reemplazar por semver / Portal main») | D22 |
+| **U6** | `docs/core/seguridad_secretos_deploy.md` (D5): distinguir secretos Portal VPS vs harness Framework — operador sabe dónde editar `.env` según hostname | D16 |
+
+### Carry-forward UX — próximo spec con superficie UI
+
+Ítems derivados de deuda abierta verificada; **no bloquean** D1–D5/T1 pero deben entrar en
+el siguiente spec que toque harness, admin o API. **CF11 (docs legacy) queda cubierto por
+este spec** — no se arrastra.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF1 | Semver visible en estado/wizard | D1/M1, spec 2026-07-29 | UI debe mostrar tag semver (`v1.2.1`), no `config/app.php` `1.0.0`; mensaje wizard indica cómo alinear tres archivos. |
+| CF2 | Instalación harness `.env` | D2/M2, D5 | Root `.env.example` sin prefijos Portal; copy install: «copiar `skeleton/.env.example` en tenants; root harness sólo STRIPE/PAYMENTS». |
+| CF3 | Login responsive 320–768px | `ui_ux_implementacion_v0.1` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5 | Tablas CRUD scroll horizontal | módulo CRUD, D6 | `table-responsive` obligatorio; `list.columns[].priority` oculta columnas secundarias en `<768px`; toolbar usable en móvil. |
+| CF6 | RBAC router CRUD/calendario | D6/M3 | Errores 403 accionables (slug requerido vs permiso denegado); documentar o aplicar `RbacMiddleware` en router. |
+| CF7 | Health endpoint público | D7/M4 | `GET /api/health` 200 sin cookie; body JSON mínimo `{ "status": "ok" }`; documentar en checklist VPS. |
+| CF8 | Permisos admin catálogo | D8/M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga | `ui_ux_implementacion_v0.1` §8 | Unificar empty states (usuarios → `empty_state.php`); spinners/carga en CRUD list; errores de validación con hint de corrección. |
+| CF10 | Copy errores accionables | transversal | Auth, CRUD, wizard estado: mensaje = qué falló + qué hacer (ej. «regenera APP_KEY», «contacta admin para slug X»). |
+
+### Responsive
+
+**N/A en este spec** (sin superficie UI). Los ítems **CF3–CF5** del carry-forward son el
+backlog responsive verificado para el próximo spec con pantallas.
+
+---
+
 ## Dependencias y compatibilidad
 
 | Dependencia | Estado | Notas |
@@ -408,6 +468,12 @@ Fuente anterior: `docs/superpowers/specs/2026-07-30-audit-artifact-chain-design.
 - [ ] Portal `main` SHA confirmado por operador con acceso gh/SSH.
 - [ ] `composer.lock` Portal referencia `lebytek/framework` ≥ `1.2.1`.
 - [ ] Token automation lee Portal (cierra M6).
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **sin superficie UI** y lista carry-forward CF1–CF10 derivado de deuda abierta (CF11 cubierto por D1–D5).
+- [ ] **AC-UX2:** Requisitos U1–U6 (UX de documentación operativa) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward documenta health sin cookie (D7), `.env.example` (D2) y navegadores objetivo para el próximo spec con UI.
 
 ### Deuda técnica (inventario)
 
