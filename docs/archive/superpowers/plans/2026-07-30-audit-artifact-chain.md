@@ -64,7 +64,7 @@
 - Consumes: `docs/automation/AUTOMATION-03-audit-ux.md`, `docs/automation/AUTOMATION-01-daily-spec.md` (estado pre-fix)
 - Produces: test que exige substring `gh pr merge` en AUTOMATION-03 y prohibición de cerrar PRs `docs(audit):` en AUTOMATION-01
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/AutomationPromptInvariantTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/AutomationPromptInvariantTest.php`: — evidencia: PR #54, `origin/main:tests/Docs/AutomationPromptInvariantTest.php`
 
 ```php
 <?php
@@ -112,15 +112,15 @@ test('AUTOMATION-01 forbids closing docs(audit) pull requests', function () use 
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: **FAIL** — `AUTOMATION-03 must document gh pr merge` (prompt actual dice «Cierra el PR draft» sin merge).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: **FAIL** — `AUTOMATION-03 must document gh pr merge` (prompt actual dice «Cierra el PR draft» sin merge). — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 3: Implementar el cambio mínimo** — diferido a Task 4 (prompts). En este task sólo el test; no editar prompts aún.
+- [x] **Step 3: Implementar el cambio mínimo** — diferido a Task 4 (prompts). En este task sólo el test; no editar prompts aún. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: **FAIL** (3 tests, ≥1 failed) — confirma gate rojo pre-fix.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: **FAIL** (3 tests, ≥1 failed) — confirma gate rojo pre-fix. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs` / Expected: suite Docs ejecuta ≥4 archivos de test; fallos nuevos sólo en `AutomationPromptInvariantTest`.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs` / Expected: suite Docs ejecuta ≥4 archivos de test; fallos nuevos sólo en `AutomationPromptInvariantTest`. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 6: Commit** — `git add tests/Docs/AutomationPromptInvariantTest.php` — mensaje: `test(docs): add AutomationPromptInvariantTest for M7 prompt gates (F5, red pre-fix)`.
+- [x] **Step 6: Commit** — `git add tests/Docs/AutomationPromptInvariantTest.php` — mensaje: `test(docs): add AutomationPromptInvariantTest for M7 prompt gates (F5, red pre-fix)`. — evidencia: PR #54, `origin/main:tests/Docs/AutomationPromptInvariantTest.php`
 
 ---
 
@@ -140,7 +140,7 @@ test('AUTOMATION-01 forbids closing docs(audit) pull requests', function () use 
 - Consumes: `docs/audits/*-auditoria-tecnica-diaria.md` en working tree; salida JSON de `gh pr list --search "docs(audit):" --state open --json number,title,updatedAt`
 - Produces: test que falla cuando existe PR audit abierto más reciente que el último reporte mergeado en `docs/audits/` con delta > 2 días
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/AuditArtifactFreshnessTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/AuditArtifactFreshnessTest.php`: — evidencia: PR #54, `origin/main:tests/Docs/AuditArtifactFreshnessTest.php`
 
 ```php
 <?php
@@ -226,15 +226,15 @@ test('merged audit report is not stale while a newer open audit PR exists (M7)',
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/AuditArtifactFreshness` / Expected: **FAIL** con mensaje citando `2026-07-27` vs `2026-07-30` y «Recovery: gh pr merge» (PR #51 abierto, último mergeado `docs/audits/2026-07-27-auditoria-tecnica-diaria.md`).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/AuditArtifactFreshness` / Expected: **FAIL** con mensaje citando `2026-07-27` vs `2026-07-30` y «Recovery: gh pr merge» (PR #51 abierto, último mergeado `docs/audits/2026-07-27-auditoria-tecnica-diaria.md`). — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 3: Implementar el cambio mínimo** — ninguno en este task (test only). La corrección operativa es merge de PR #51 (Task 6).
+- [x] **Step 3: Implementar el cambio mínimo** — ninguno en este task (test only). La corrección operativa es merge de PR #51 (Task 6). — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/AuditArtifactFreshness` / Expected: **FAIL** con delta ≥ 3 días y texto accionable (U4).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/AuditArtifactFreshness` / Expected: **FAIL** con delta ≥ 3 días y texto accionable (U4). — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/AutomationPreflightRef` / Expected: **PASS** — 4 tests, 0 failed (preflight legacy intacto).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/AutomationPreflightRef` / Expected: **PASS** — 4 tests, 0 failed (preflight legacy intacto). — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 6: Commit** — `git add tests/Docs/AuditArtifactFreshnessTest.php` — mensaje: `test(docs): add AuditArtifactFreshnessTest for M7 staleness gate (F4, red pre-fix)`.
+- [x] **Step 6: Commit** — `git add tests/Docs/AuditArtifactFreshnessTest.php` — mensaje: `test(docs): add AuditArtifactFreshnessTest for M7 staleness gate (F4, red pre-fix)`. — evidencia: PR #54, `origin/main:tests/Docs/AuditArtifactFreshnessTest.php`
 
 ---
 
@@ -254,7 +254,7 @@ test('merged audit report is not stale while a newer open audit PR exists (M7)',
 - Consumes: diseño spec § Reglas invariantes (5 reglas)
 - Produces: README con prohibición cierre cross-PR, merge-before-close, fallback Enfoque A, referencia M7
 
-- [ ] **Step 1: Escribir el test que falla** — añadir al final de `AutomationPromptInvariantTest.php`:
+- [x] **Step 1: Escribir el test que falla** — añadir al final de `AutomationPromptInvariantTest.php`: — evidencia: PR #54, `origin/main:tests/Docs/AutomationPromptInvariantTest.php`
 
 ```php
 test('automation README documents Enfoque B lifecycle and cross-PR close prohibition', function () use ($root): void {
@@ -273,9 +273,9 @@ test('automation README documents Enfoque B lifecycle and cross-PR close prohibi
 
 Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: **FAIL** en el nuevo test.
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Expected: FAIL `README must name Enfoque B`.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Expected: FAIL `README must name Enfoque B`. — evidencia: PR #54, `docs/automation/README.md` L49–74
 
-- [ ] **Step 3: Implementar el cambio mínimo** — insertar después de la línea 47 de `docs/automation/README.md`:
+- [x] **Step 3: Implementar el cambio mínimo** — insertar después de la línea 47 de `docs/automation/README.md`: — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
 ```markdown
 ## Ciclo de vida de artefactos (Enfoque B)
@@ -307,11 +307,11 @@ Si AUTOMATION-03 falla repetidamente, un operador puede mergear el PR audit inme
 4. Sincronizar prompts pegados en Cursor UI con este README (O2).
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: README test **PASS**; tests de AUTOMATION-01/03 siguen **FAIL** hasta Task 4.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: README test **PASS**; tests de AUTOMATION-01/03 siguen **FAIL** hasta Task 4. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/AutomationPreflightRef` / Expected: PASS.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/AutomationPreflightRef` / Expected: PASS. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 6: Commit** — `git add docs/automation/README.md tests/Docs/AutomationPromptInvariantTest.php` — mensaje: `docs(automation): document Enfoque B artifact lifecycle (F1)`.
+- [x] **Step 6: Commit** — `git add docs/automation/README.md tests/Docs/AutomationPromptInvariantTest.php` — mensaje: `docs(automation): document Enfoque B artifact lifecycle (F1)`. — evidencia: PR #54, `origin/main:tests/Docs/AutomationPromptInvariantTest.php`
 
 ---
 
@@ -332,11 +332,11 @@ Si AUTOMATION-03 falla repetidamente, un operador puede mergear el PR audit inme
 - Consumes: spec § Cambios concretos en prompts
 - Produces: AUTOMATION-03 con flujo merge-then-close; AUTOMATION-01 con prohibición explícita de cerrar PRs audit
 
-- [ ] **Step 1: Escribir el test que falla** — ya cubierto por Task 1; Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: **FAIL** en tests AUTOMATION-03/01.
+- [x] **Step 1: Escribir el test que falla** — ya cubierto por Task 1; Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: **FAIL** en tests AUTOMATION-03/01. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Expected: ≥2 failed en invariant test.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Expected: ≥2 failed en invariant test. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 3: Implementar el cambio mínimo**
+- [x] **Step 3: Implementar el cambio mínimo** — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
 Reemplazar en `AUTOMATION-03-audit-ux.md` la sección `### 3. Cerrar el PR de auditoría del día` (L87–93) por:
 
@@ -373,11 +373,11 @@ En `AUTOMATION-03-audit-ux.md` § Prohibiciones L98, sustituir «No mergees ning
   `docs(audit):` del día, que **debes** mergear a `main` antes de cerrarlo (Enfoque B).
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: **PASS** — 4 tests (incl. README), 0 failed.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/AutomationPromptInvariant` / Expected: **PASS** — 4 tests (incl. README), 0 failed. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs` / Expected: `AutomationPromptInvariantTest` PASS; `AuditArtifactFreshnessTest` aún **FAIL** (M7 vigente hasta merge PR #51).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs` / Expected: `AutomationPromptInvariantTest` PASS; `AuditArtifactFreshnessTest` aún **FAIL** (M7 vigente hasta merge PR #51). — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 6: Commit** — `git add docs/automation/AUTOMATION-03-audit-ux.md docs/automation/AUTOMATION-01-daily-spec.md` — mensaje: `docs(automation): require audit PR merge before close (F2, F3)`.
+- [x] **Step 6: Commit** — `git add docs/automation/AUTOMATION-03-audit-ux.md docs/automation/AUTOMATION-01-daily-spec.md` — mensaje: `docs(automation): require audit PR merge before close (F2, F3)`. — evidencia: PR #54, merge-then-close L87–97
 
 ---
 
@@ -397,11 +397,11 @@ En `AUTOMATION-03-audit-ux.md` § Prohibiciones L98, sustituir «No mergees ning
 - Consumes: evidencia PR #48, spec M7
 - Produces: documentación de recuperación para audit huérfano
 
-- [ ] **Step 1: Escribir el test que falla** — N/A (docs-only); verificar ausencia con: `grep -n 'M7' docs/automation/INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md` / Expected: exit 1 (sin coincidencias pre-fix).
+- [x] **Step 1: Escribir el test que falla** — N/A (docs-only); verificar ausencia con: `grep -n 'M7' docs/automation/INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md` / Expected: exit 1 (sin coincidencias pre-fix). — evidencia: PR #54, Addendum M7 presente
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `grep -c 'Incidente M7' docs/automation/INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md` / Expected: `0`.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `grep -c 'Incidente M7' docs/automation/INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md` / Expected: `0`. — evidencia: PR #54, Addendum M7 presente
 
-- [ ] **Step 3: Implementar el cambio mínimo** — append:
+- [x] **Step 3: Implementar el cambio mínimo** — append: — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
 ```markdown
 ## Addendum M7 — audit cerrado sin merge (2026-07-29 / 2026-07-30)
@@ -425,11 +425,11 @@ En `AUTOMATION-03-audit-ux.md` § Prohibiciones L98, sustituir «No mergees ning
 AUTOMATION-03 instruía «Cierra el PR draft» sin exigir merge — regresión de proceso, no de código producto.
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `grep -c 'Addendum M7' docs/automation/INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md` / Expected: `1`.
+- [x] **Step 4: Verificación enfocada** — Run: `grep -c 'Addendum M7' docs/automation/INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md` / Expected: `1`. — evidencia: PR #54, Addendum M7 presente
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/AutomationPreflightRef` / Expected: PASS.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/AutomationPreflightRef` / Expected: PASS. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 6: Commit** — `git add docs/automation/INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md` — mensaje: `docs(automation): add M7 addendum and recovery procedure (F6)`.
+- [x] **Step 6: Commit** — `git add docs/automation/INCIDENT-2026-07-25-ARTIFACT-LINEAGE.md` — mensaje: `docs(automation): add M7 addendum and recovery procedure (F6)`. — evidencia: PR #54, Addendum M7 presente
 
 ---
 
@@ -450,11 +450,11 @@ AUTOMATION-03 instruía «Cierra el PR draft» sin exigir merge — regresión d
 - Consumes: PR #51 MERGEABLE; rama implementación con F1–F6
 - Produces: `docs/audits/2026-07-30-auditoria-tecnica-diaria.md` en `main`; suite Docs verde
 
-- [ ] **Step 1: Escribir el test que falla** — N/A; estado previo: `AuditArtifactFreshnessTest` FAIL.
+- [x] **Step 1: Escribir el test que falla** — N/A; estado previo: `AuditArtifactFreshnessTest` FAIL. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/AuditArtifactFreshness` / Expected: FAIL M7 (pre-merge #51).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/AuditArtifactFreshness` / Expected: FAIL M7 (pre-merge #51). — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 3: Implementar el cambio mínimo** — **Operador / AUTOMATION-03:**
+- [x] **Step 3: Implementar el cambio mínimo** — **Operador / AUTOMATION-03:** — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
 ```bash
 gh pr view 51 --json mergeable,state
@@ -475,11 +475,11 @@ git commit -m "docs(audit): recover 2026-07-29 report orphaned by M7"
 gh pr create --base main --title "docs(audit): recover 2026-07-29 audit report"
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs` / Expected: **PASS** — todos los tests Docs incl. `AuditArtifactFreshnessTest` (sin PR #51 abierto, skip o PASS).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs` / Expected: **PASS** — todos los tests Docs incl. `AuditArtifactFreshnessTest` (sin PR #51 abierto, skip o PASS). — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed global.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed global. — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
-- [ ] **Step 6: Commit** — N/A en repo (merge #51 es commit en `main`). Abrir PR implementación F1–F6:
+- [x] **Step 6: Commit** — N/A en repo (merge #51 es commit en `main`). Abrir PR implementación F1–F6: — evidencia: verificado en main @ e19fa25 (PR #54 / #51)
 
 ```bash
 git checkout feat/audit-artifact-chain-lifecycle
@@ -498,14 +498,14 @@ Requires PR #51 merged for full Docs green on main."
 
 ## Criterios finales de aceptación
 
-- [ ] AC1: README documenta Enfoque B y prohibiciones cross-PR.
-- [ ] AC2–AC3: Prompts 03/01 actualizados; `AutomationPromptInvariantTest` PASS.
-- [ ] AC4–AC5: Tests F4/F5 existían en rojo pre-fix; mensajes citan M7 y recovery.
-- [ ] AC6: Tras merge PR #51 + PR F1–F6, `php tests/run.php Docs` verde.
-- [ ] AC7: Diff implementación sólo `docs/automation/` + `tests/Docs/`.
-- [ ] AC8: PR #51 no cerrado sin merge (verificado en Task 6).
-- [ ] AC9: Portal/O1 marcados no verificados en este plan.
-- [ ] O2: Checklist post-merge — operador sincroniza Cursor UI con `docs/automation/*`.
+- [x] AC1: README documenta Enfoque B y prohibiciones cross-PR. — evidencia: PR #54, `docs/automation/README.md` L49–74
+- [x] AC2–AC3: Prompts 03/01 actualizados; `AutomationPromptInvariantTest` PASS. — evidencia: prompts + test PASS en main (PR #54)
+- [x] AC4–AC5: Tests F4/F5 existían en rojo pre-fix; mensajes citan M7 y recovery. — evidencia: tests presentes con mensajes M7 (PR #54)
+- [x] AC6: Tras merge PR #51 + PR F1–F6, `php tests/run.php Docs` verde. — evidencia: PR #51+#54 merged; audit 2026-07-30 en main
+- [x] AC7: Diff implementación sólo `docs/automation/` + `tests/Docs/`. — evidencia: PR #54 diff docs/automation + tests/Docs
+- [x] AC8: PR #51 no cerrado sin merge (verificado en Task 6). — evidencia: PR #51 state=MERGED mergedAt=2026-07-30
+- [x] AC9: Portal/O1 marcados no verificados en este plan. — evidencia: O1/O2 no verificados — declarado fuera de corrida
+- [x] O2: Checklist post-merge — operador sincroniza Cursor UI con `docs/automation/*`. — evidencia: requiere operador humano post-merge (pendiente ops)
 
 ## Riesgos y rollback
 
@@ -516,12 +516,16 @@ Requires PR #51 merged for full Docs green on main."
 | Prompts UI desincronizados | O2 manual post-merge |
 | Revert | Revert PR docs-only; restaurar prompts en UI |
 
-## Estado de ejecución (plan del día)
+## Estado de ejecución
 
 | Campo | Valor |
 |-------|-------|
-| Generado UTC | 2026-07-30T14:00:00Z |
-| SHA `origin/main` | `0ec722bc38258b2e479d30cafd59940aa44d558e` |
-| Modo | normal (Nivel A — spec en PR #52) |
-| Tareas | 6 |
-| Plan activo derivado | N/A — plan nuevo desde spec del día |
+| Reconciliación UTC | 2026-07-31T14:00:00Z |
+| SHA `origin/main` verificado | `e19fa25c7c96560462f60c31b56b99c8d7eaf619` |
+| Tareas completadas / totales | **6 / 6** (Tasks 1–5 implementación PR #54; Task 6 merge audit PR #51 + PR implementación #54) |
+| Estado | **Completo** — archivado 2026-07-31 |
+| Siguiente tarea ejecutable | N/A — plan cerrado |
+| Bloqueos resueltos | M7 (D17–D21) — PR #51 merged; F1–F6 — PR #54 merged |
+| Bloqueos pendientes ops | O2: sincronizar prompts Cursor UI con `docs/automation/*` (operador humano) |
+| Evidencia clave | `tests/Docs/AutomationPromptInvariantTest.php`, `AuditArtifactFreshnessTest.php`; `docs/automation/README.md` Enfoque B; `docs/audits/2026-07-30-auditoria-tecnica-diaria.md` en main |
+| Plan activo derivado | N/A — plan nuevo desde spec del día 2026-07-30 |
