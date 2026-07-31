@@ -1,6 +1,8 @@
 # lebytek.com — implementación real (espejo del contrato api)
 
-Guía operativa para **Lebytek_Framework** (`lebytek.com` VPS). Repo: branch `feature/backoffice-api-integration`.
+> **Package source ≠ app desplegable.** `lebytek/framework` se consume vía Composer lock en Portal — no clonar `Lebytek_Framework` como sitio web. Mapa canónico: [`docs/ENVIRONMENTS.md`](../ENVIRONMENTS.md).
+
+Guía operativa para **`Parzival2103/Lebytek_Portal`** (`lebytek.com` VPS). Repo: `main`.
 
 Complementa el contrato abstracto en [waapi-api-contract.md](waapi-api-contract.md) y la delegación de roles en [role-delegation-lebytek-api.md](role-delegation-lebytek-api.md).
 
@@ -431,7 +433,9 @@ En back-office: aprobar lead de prueba → verificar fila con `api_tenant_public
 
 ---
 
-## 13. Prompt listo para Cursor (repo Lebytek_Framework)
+## 13. Prompt listo para Cursor (repo Lebytek_Portal)
+
+> Los namespaces `App\Application\Marketing\` y módulos `dom_mkt_*` viven en **Portal**, no en el package source Framework.
 
 ```
 Implementa la integración con api.lebytek.com siguiendo EXACTAMENTE
