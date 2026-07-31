@@ -3,7 +3,12 @@
 > **Guía operativa de despliegue:** este documento es la fuente autoritativa de secretos y rotación; el contexto de despliegue completo está en [`despliegue-y-versionado.md`](despliegue-y-versionado.md).
 
 **Regla:** En el repositorio solo vive `.env.example`. `.env` jamás se versiona.
-El VPS hace auto-pull de `main`; cualquier secreto commiteado se considera comprometido.
+El VPS de producción Portal hace auto-pull de `main` en **`Lebytek_Portal`**; cualquier secreto commiteado se considera comprometido.
+
+### Portal vs package source (post-FPS)
+
+- **lebytek.com / waapi.lebytek.com:** secretos de producción en el `.env` del VPS del checkout **`Lebytek_Portal`** (`DB_*`, `MKT_*`, `LEBYTEK_API_*`, `STRIPE_*`). Rotación y deploy siguen el runbook Portal — ver [`docs/ENVIRONMENTS.md`](../ENVIRONMENTS.md).
+- **Este repositorio (`Lebytek_Framework`):** es el **package source** publicado como `lebytek/framework`; su root `.env.example` es harness de mantenedor, **no** el `.env` de producción Portal. No desplegar este repo como sitio web.
 
 ## Rotación obligatoria si `.env` estuvo alguna vez en git
 
