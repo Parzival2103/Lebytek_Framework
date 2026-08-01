@@ -69,7 +69,13 @@ Evidencia estática: `grep -E '^(MKT_|LEBYTEK_API_|WAAPI_PORTAL_)' .env.example`
 
 ## WhatsApp
 
-Ver sección envío en run log (Idempotency-Key `audit-closure-2026-08-01-*`).
+**Skip:** `LEBYTEK_API_URL` no resuelve (valor placeholder literal, no URL). Credenciales presentes para token/instance/to pero URL inválida — envío no ejecutado.
+
+Clasificación preparada: **CIERRE COMPLETO** (mensaje listo para reintento manual con URL real).
+
+Idempotency-Key reservada: `audit-closure-2026-08-01-4e64aa24`
+
+Destinatario enmascarado: ****0102
 
 ---
 
