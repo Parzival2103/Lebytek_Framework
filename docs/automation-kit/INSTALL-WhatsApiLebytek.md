@@ -1,0 +1,77 @@
+# Instalación en WhatsApiLebytek
+
+Guía concreta para llevar el kit genérico a
+`Parzival2103/WhatsApiLebytek` (api.lebytek.com).
+
+Este repo Framework **no** puede pushear al API desde este flujo; copia los
+archivos en un checkout local del API o abre PR allí.
+
+## 1. Copiar archivos
+
+Desde un clone de Framework (este kit) y uno de WhatsApiLebytek:
+
+```bash
+KIT=path/to/Lebytek_Framework/docs/automation-kit
+API=path/to/WhatsApiLebytek
+
+mkdir -p "$API/docs/automation" \
+         "$API/docs/audits" \
+         "$API/docs/superpowers/specs" \
+         "$API/docs/superpowers/plans" \
+         "$API/docs/automation-reports" \
+         "$API/docs/archive/superpowers/plans"
+
+# Prompts 00–08 + README del kit
+cp "$KIT"/AUTOMATION-0*.md "$API/docs/automation/"
+cp "$KIT"/README.md "$API/docs/automation/KIT-README.md"
+
+# Perfil activo
+cp "$KIT/profiles/WhatsApiLebytek.md" "$API/docs/automation/REPO-PROFILE.md"
+
+# Conserva CONTEXT.md / AGENTS.md existentes del API (no los sobrescribas).
+# El AUTOMATION-01-daily-audit.md antiguo del API queda obsoleto: renómbralo o
+# bórralo para no confundir Cursor UI con dos cadenas distintas.
+```
+
+Si el API ya tiene `docs/automation/README.md`, fusiona el mapa de etapas del
+kit (no dejes el roadmap viejo de 5 etapas apuntando a prompts Framework
+renombrados).
+
+## 2. Cursor Automations (9)
+
+Crea **nueve** automations en el repo `WhatsApiLebytek`, branch `main`:
+
+| Orden | Archivo a pegar | Cron sugerido |
+|-------|-----------------|---------------|
+| 00 | `AUTOMATION-00-daily-audit.md` → bloque Prompt | inicio cadena |
+| 01 | `AUTOMATION-01-daily-spec.md` | +30 min |
+| 02 | `AUTOMATION-02-audit-tech-debt.md` | +30 min |
+| 03 | `AUTOMATION-03-audit-ux.md` | +30 min |
+| 04 | `AUTOMATION-04-plan-writer.md` | +30 min |
+| 05 | `AUTOMATION-05-wha-notify.md` | +30 min |
+| 06 | `AUTOMATION-06-plan-readiness-gate.md` | tras 05 |
+| 07 | `AUTOMATION-07-plan-executor.md` | solo si 06 READY |
+| 08 | `AUTOMATION-08-plan-closure.md` | tras 07 |
+
+Secrets (05 y 08): `LEBYTEK_API_URL`, `LEBYTEK_API_TOKEN`,
+`LEBYTEK_INSTANCE_PUBLIC_ID`, `AUDIT_PLAN_WHATSAPP_TO`.
+
+Permisos: Git write en 07–08; `gh pr merge` en 03 (audit) y 08 (cierre).
+
+## 3. Diferencias vs Framework (recordatorio)
+
+| Tema | WhatsApi |
+|------|----------|
+| Tests | `composer test` / Pest |
+| UX 03 | Contrato HTTP + OpenAPI + admin Inertia |
+| Legacy refs | vacías → comprobación vacua |
+| Deploy | prohibido en automation (SSH VPS solo sesión humana) |
+| Idempotency WhatsApp | prefijos `waapi-audit-plan` / `waapi-audit-closure` |
+
+## 4. Primera corrida
+
+1. Deshabilita o recrea la automation antigua «Daily SaaS Technical Audit» para
+   no competir con AUTOMATION-00.
+2. Corre 00 en manual; verifica PR `docs(audit):` y reporte bajo `docs/audits/`.
+3. Deja correr 01–05; valida WhatsApp.
+4. Activa 06–08 en modo verificación hasta el primer ciclo completo con plan real.

@@ -8,6 +8,11 @@ fases: creación de artefactos (00–05) y ciclo plan→implementación→cierre
 
 Repositorio: `Parzival2103/Lebytek_Framework`, branch `main`.
 
+> **Portable kit:** para instalar la misma cadena en otro repo (p. ej.
+> `WhatsApiLebytek`) usa `docs/automation-kit/` — prompts genéricos +
+> `REPO-PROFILE`. No sustituyas estos prompts de Framework por el kit en las
+> automations ya configuradas aquí.
+
 ## Fase 1 — Audit → spec → plan (00–05)
 
 | # | Archivo | Entrega | Rama |
