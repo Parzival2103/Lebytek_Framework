@@ -182,6 +182,18 @@ Cada playbook indica **objetivo → superficies que toca (por nombre del inventa
 
 Activar o actualizar un módulo **no** obliga a subir la versión de plataforma, y un release de plataforma **no** renumera los módulos.
 
+### Checklist release de plataforma (tag `vX.Y.Z`)
+
+Al publicar un release del paquete `lebytek/framework`, sincronizar **en el mismo commit** que precede al tag:
+
+1. Actualizar `"version"` en `composer.json` (semver sin prefijo `v`, p. ej. `1.2.1`).
+2. Actualizar `'version'` en `config/app.php` (harness) y `skeleton/config/app.php` (plantilla) al **mismo** valor.
+3. Ejecutar `php tests/run.php PlatformVersionSemver` — debe pasar.
+4. Crear y publicar el tag Git `vX.Y.Z` apuntando a ese commit.
+5. Post-deploy smoke: `/admin/sistema/estado` muestra `vX.Y.Z` y `php scripts/status.php` imprime `Plataforma: vX.Y.Z`.
+
+La versión mostrada en UI y CLI proviene de `config/app.php` → `Config::get('app.version')`, **no** de `git describe` ni de `InstalledVersions` en runtime.
+
 ### Disparadores semver (regla escrita)
 
 Aplica por igual a la versión de plataforma y a la de cada módulo, según qué cambió en su propio ámbito:
