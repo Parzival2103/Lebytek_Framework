@@ -31,6 +31,7 @@
 | headRefOid fuente | `ff5cd0d840a4db36c0942e4cd1c35be42f7a8ad9` |
 | `<LEGACY_REF>` | `refs/tags/archive/backoffice-api-integration` @ `4789f953ef746d17bae2e6b50c85504782d306e3` — 53 commits exclusivos; ninguno ancestro de HEAD ni del head de auditoría |
 | Pase deuda técnica | `2026-08-01T13:01:00Z` UTC; SHA `origin/main` `5b03d9e678a7021ce741420ee5c3d8a1a2f19fdc`; modo **normal**; **10** abiertos verificados + **3** no verificados (D3, D14–D15); **5** heredados cerrados (D10–D12, D16, D22 vía M8 #56/#57) |
+| Pase UX | `2026-08-01T13:31:00Z` UTC; modo **normal** (superficie UI acotada: estado admin + install wizard + copy `.env.example`) |
 
 ---
 
@@ -236,6 +237,68 @@ El tag `archive/backoffice-api-integration` @ `4789f95` documenta el monolito pr
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: normal (superficie UI acotada)
+
+Este spec cierra **M1 semver** y **M2 env purge** en harness — sin edits en `src/`,
+vistas CSS ni rutas nuevas. La superficie UI afectada es **display de versión**
+(`/admin/sistema/estado`, install `paso_resultado.php`, `scripts/status.php`) y
+**copy de plantilla** root `.env.example`. Health API pública (D7), responsive
+login/dashboard y tablas CRUD quedan como carry-forward hacia specs posteriores.
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (M1 + M2) | Evidencia / carry-forward |
+|------|---------------------|---------------------------|
+| PHP soportado | Sin impacto runtime | `composer.json` exige `>=8.1`; VPS documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`). Cambios H1–H7 compatibles 8.1+; gates M1/M2 no requieren MySQL. |
+| Instalación vía `vendor/` | Alcance harness | Consumidores instalan `lebytek/framework` por semver en `vendor/`; este PR sync config local del package source — **no** altera `composer.lock` Portal. `path` repository sólo desarrollo local. |
+| Health sin cookie de sesión | Carry-forward **D7/M4** | `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` L23 requiere sesión. Smoke post-merge: **no** usar `/api/ping` como health LB; backlog `GET /api/health` público. |
+| `.env.example` sin vars Portal | **Alcance M2 (H3)** | Root `.env.example` L54–102: **16** keys `MKT_*` / `LEBYTEK_API_*` / `WAAPI_PORTAL_*`; `skeleton/.env.example` limpio (`SkeletonPurityTest` PASS). Post-merge: root sin prefijos Portal; comentario ref `Lebytek_Portal/.env.example`. |
+| Navegadores objetivo | Superficie acotada | Install wizard Bootstrap 5.3 (**720px**); `/admin/sistema/estado` breakpoint **992px (`lg`)** — baseline `docs/core/ui_ux_implementacion_v0.1.md`. Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15; sin IE11. |
+
+### UX — flujos harness y admin (alcance de este spec)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | Tarjeta versión en `/admin/sistema/estado` muestra `v1.2.1` (no `v1.0.0`) vía sync config — operador distingue versión **plataforma** de versión **app Portal** en lock | D1/M1 |
+| **U2** | Install `paso_resultado.php`: «Plataforma **v{version}** instalada» refleja semver alineado post-merge; sin CTA adicional si test gate D4 impide drift | D1/M1 |
+| **U3** | Root `.env.example` post-purga: comentario accionable «vars Marketing/API Portal → `Lebytek_Portal/.env.example`»; operador harness no copia `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` | D2/M2, D5 |
+| **U4** | `PlatformVersionSemverTest` / `FrameworkRootNotPortalTest`: mensaje de fallo cita archivo, valor esperado y acción («sync tres archivos semver» / «eliminar prefijo Portal en root .env.example») | D4, D5 |
+| **U5** | Checklist H6 en `despliegue-y-versionado.md`: pasos numerados (composer.json → configs → test → tag → smoke `/admin/sistema/estado` + `php scripts/status.php`) | D13 |
+| **U6** | `scripts/status.php` stdout alinea con tarjeta web — ops SSH ven mismo número que admin GUI | D1/M1 |
+| **U7** | Smoke manual documentado (§ Esbozo): login → estado → versión legible; **no** confundir fix harness con bump Portal lock | D3 (no verificado) |
+
+### Responsive — smoke en superficies tocadas por M1
+
+Referencia: `docs/core/ui_ux_implementacion_v0.1.md` §542 — breakpoint admin **992px (`lg`)**; install **720px**.
+
+| Superficie | Verificación post-merge | Rango |
+|------------|-------------------------|-------|
+| Tarjeta versión plataforma (`/admin/sistema/estado`) | `v1.2.1` legible sin truncar; `col-md-4` stack full-width en móvil | **320–768px** |
+| Tabla módulos / health checks (misma página) | `table-responsive` + `js-dt-responsive` sin regresión por cambio config | **320–768px** |
+| Install `paso_resultado.php` | Texto versión dentro contenedor **720px** sin overflow horizontal | **320–768px** |
+| Root `.env.example` (copy, no layout) | N/A responsive — validación es ausencia de vars Portal | — |
+
+**Carry-forward responsive (fuera alcance M1/M2):** login `.ct-login-page` (CF3), dashboard nav/KPI (CF4), tablas CRUD scroll horizontal (CF5) — ver tabla siguiente.
+
+### Carry-forward UX — próximo spec con superficie UI más amplia
+
+Ítems derivados de deuda abierta verificada; **CF1–CF2 (semver display + env purge) quedan cubiertos por este spec** — no se arrastran.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux_implementacion_v0.1` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5 | Tablas CRUD scroll horizontal | módulo CRUD, D6 | `table-responsive` obligatorio; `list.columns[].priority` oculta columnas secundarias en `<768px`; toolbar usable en móvil. |
+| CF6 | RBAC router CRUD/calendario | D6/M3 | Errores 403 accionables (slug requerido vs permiso denegado); documentar o aplicar `RbacMiddleware` en router. |
+| CF7 | Health endpoint público | D7/M4 | `GET /api/health` 200 sin cookie; body JSON mínimo `{ "status": "ok" }`; documentar en checklist VPS. |
+| CF8 | Permisos admin catálogo | D8/M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga | `ui_ux_implementacion_v0.1` §8 | Unificar empty states; spinners/carga en CRUD list; errores de validación con hint de corrección. |
+| CF10 | Copy errores accionables | transversal | Auth, CRUD, wizard estado: mensaje = qué falló + qué hacer (ej. «regenera APP_KEY», «contacta admin para slug X»). |
+
+---
+
 ## Criterios de aceptación
 
 ### Framework (verificables en repo)
@@ -255,6 +318,13 @@ El tag `archive/backoffice-api-integration` @ `4789f95` documenta el monolito pr
 
 - [ ] SHA Portal `main` y `composer.lock` ≥ `v1.2.1` — requiere acceso `gh` (D3/M6).
 - [ ] QA Stripe subscription antes de `PAYMENTS_SUBSCRIPTION_CHECKOUT=true` — Portal (D14).
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **normal** (superficie UI acotada) con requisitos K/U/R verificables para M1+M2.
+- [ ] **AC-UX2:** Requisitos U1–U7 (display semver, env copy, checklist, tests accionables) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF10 documentado; CF1–CF2 no arrastrados (cubiertos por M1/M2).
+- [ ] **AC-UX4:** Smoke responsive R1–R3 en 320–768px para estado admin e install resultado post-merge.
 
 ### Deuda técnica (inventario)
 
@@ -357,4 +427,4 @@ Fuente: auditoría `docs/audits/2026-08-01-auditoria-tecnica-diaria.md` (rama `a
 
 ---
 
-*Design-only. Ningún archivo de código, config, rutas, migraciones, scripts ni tests fue modificado en la corrida AUTOMATION-01. Pase deuda técnica enriqueció este spec in-place.*
+*Design-only. Ningún archivo de código, config, rutas, migraciones, scripts ni tests fue modificado en la corrida AUTOMATION-01. Pases deuda técnica y UX enriquecieron este spec in-place.*
