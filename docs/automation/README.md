@@ -19,13 +19,28 @@ Repositorio: `Parzival2103/Lebytek_Framework`, branch `main`.
 | 04 | `AUTOMATION-04-plan-writer.md` | reconciliación del plan activo + plan del día | `automation/spec-YYYY-MM-DD` |
 | 05 | `AUTOMATION-05-wha-notify.md` | aviso WhatsApp del estado real | — |
 
-## Fase 2 — Readiness → ejecución → cierre (06–08) · en verificación
+## Fase 2 — Readiness → ejecución → cierre (06–08)
 
 | # | Archivo | Entrega | Cuándo |
 |---|---------|---------|--------|
-| 06 | `AUTOMATION-06-plan-readiness-gate.md` | reporte `docs/automation-reports/*-plan-readiness.md` + veredicto READY/BLOCKED | Tras 05; **auditar vs 04/05** antes de activar |
+| 06 | `AUTOMATION-06-plan-readiness-gate.md` | reporte `docs/automation-reports/*-plan-readiness.md` + veredicto READY/BLOCKED | Tras 05 |
 | 07 | `AUTOMATION-07-plan-executor.md` | implementación del plan (rama `feat/*`, PR producto) | Solo si 06 autoriza |
-| 08 | `AUTOMATION-08-plan-closure.md` | merges/cierre PRs pendientes + plan archivado + reporte closure | Tras 07 |
+| 08 | `AUTOMATION-08-plan-closure.md` | merges/cierre PRs + plan archivado + reporte closure + **WhatsApp cierre** | Tras 07 |
+
+**WhatsApp:** AUTOMATION-05 avisa «plan listo»; AUTOMATION-08 avisa «ciclo cerrado»
+(qué se mergeó, SHA `main`, PRs aún abiertos). Mismas variables de entorno.
+
+### Permisos Cursor (07–08)
+
+| Etapa | Git write | `gh pr merge` | WhatsApp |
+|-------|-----------|---------------|----------|
+| 06 | opcional (reporte) | no | no |
+| 07 | sí (rama `feat/*`) | no (abre PR) | no |
+| 08 | sí (`main` docs) | **sí** | **sí** |
+
+Detalle de configuración en `AUTOMATION-08-plan-closure.md` § Permisos Cursor
+Automations. Sin permisos de merge, 08 entra en dry-run pero **igual envía**
+WhatsApp con checklist para el operador.
 
 ### Por qué 06–08
 
@@ -49,13 +64,12 @@ Cuando exista un plan nuevo del día, contrastar:
 
 Si 06 marca READY pero 05 dijo PIPELINE ROTO → fallo de diseño del prompt 06.
 
-### Activación gradual
+### Activación fase 2
 
-1. **Semana verificación:** programar solo 06 en dry-run o report-only; 07/08
-   manuales o interactivos.
-2. **Tras auditoría positiva:** 07 con trigger humano post-READY.
-3. **Último paso:** 08 con merge autónomo solo si CI green y política del equipo
-   lo permite; si no, dry-run + checklist operador.
+1. **06–07:** validados en corrida manual (readiness + ejecutor).
+2. **08:** habilitar permisos Git write + `gh pr merge` + secrets WhatsApp (ver
+   prompt 08).
+3. Reemplazar prompt pegado en Cursor UI tras cada cambio canónico (O2).
 
 ## Invariantes
 
@@ -86,8 +100,9 @@ Si 06 marca READY pero 05 dijo PIPELINE ROTO → fallo de diseño del prompt 06.
 - La evidencia entre repositorios se lee con llamadas autenticadas a la API de
   GitHub, sin checkout ni merge.
 - Framework llega a Portal por tag semver y `composer.lock`.
-- Las corridas no despliegan, no usan SSH, no mergean PRs de producto, no editan
-  archivos de entorno de producción ni ejecutan migraciones de producción.
+- Las etapas **00–07** no mergean PRs de producto a `main` (08 sí mergea el
+  ciclo del día con CI green y permisos configurados). Ninguna etapa despliega,
+  usa SSH, edita `.env` prod ni ejecuta migraciones de producción.
 - Un comando que descubre cero tests no es un gate verde.
 
 ## Ciclo de vida de artefactos (Enfoque B)
@@ -99,7 +114,7 @@ Cadena objetivo audit → spec → plan:
 3. **AUTOMATION-03** abre PR `docs(spec):`, **mergea** el PR audit del mismo `YYYY-MM-DD` a `main`, luego cierra el PR audit ya mergeado.
 4. **AUTOMATION-04** entrega plan en la misma rama spec.
 5. **AUTOMATION-06** valida readiness; **AUTOMATION-07** implementa; **AUTOMATION-08**
-   mergea/cierra PRs pendientes del ciclo (ver fase 2 arriba).
+   mergea/cierra PRs pendientes del ciclo y envía WhatsApp de cierre (ver fase 2).
 
 ### Reglas invariantes (M7)
 
