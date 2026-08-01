@@ -1415,12 +1415,13 @@ Expected: `200` en los tres dominios y la suite del framework en 0 failed.
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-07-30T14:00:00Z |
-| SHA `origin/main` verificado | `0ec722bc38258b2e479d30cafd59940aa44d558e` |
+| Reconciliación UTC | 2026-08-01T14:01:00Z |
+| SHA `origin/main` verificado | `7ad72247c8799d827080252b020831c2bb8a6820` |
 | Tareas completadas / totales | **0.5 / 10** (Task 1 Framework verificada; Portal y Tasks 2–10 pendientes) |
-| Siguiente tarea ejecutable | **Task 1 Steps 5–11 (Portal)** o **Task 2 (Framework)** — skeleton `composer.json` VCS |
-| Prerrequisitos Task 1 Portal | Acceso `gh`/`git` a `Parzival2103/Lebytek_Portal` (bloqueado M6/D3); rama `chore/deploy-scripts-cleanup` desde Portal `main` |
-| Prerrequisitos Task 2 | Ninguno en Framework; independiente de Portal |
-| Bloqueos | (1) Token automation sin lectura Portal — Steps 5–11 no verificables desde este repo. (2) Tasks 4–8 requieren VPS/credenciales (`Requiere operador humano`). (3) Task 10 requiere Task 9 en verde. (4) Rama `docs/skeleton-package-staging-design` ya no existe — corregida a `main`. (5) Repo espejo `Lebytek_Skeleton` no existe aún (Task 4). |
-| Evidencia Task 1 Framework | PR #36 — scripts `vps-deploy-*.sh` eliminados; `tests/Docs/DeployScriptsRemovedTest.php` presente en `origin/main` |
+| Siguiente tarea ejecutable | **Task 2 (Framework)** — invertir `skeleton/composer.json` a repo VCS + `^1.1` (independiente de Portal) **o** Task 1 Steps 5–11 (Portal) si hay acceso `gh` |
+| Prerrequisitos Task 1 Portal | Acceso `gh`/`git` a `Parzival2103/Lebytek_Portal` (bloqueado M6/D3); rama `chore/deploy-scripts-cleanup` creable desde Portal `main` |
+| Prerrequisitos Task 2 | Ninguno en Framework |
+| Bloqueos | (1) Token automation sin lectura Portal — Steps 5–11 no verificables desde este repo. (2) Tasks 4–8 requieren VPS/credenciales (**Requiere operador humano:** sí). (3) Task 10 requiere Task 9 en verde. (4) Repo espejo `Lebytek_Skeleton` no existe aún (Task 4). (5) `skeleton/composer.json` sigue con repo `path` y `*@dev` — Task 2 sin iniciar |
+| Evidencia Task 1 Framework | PR #36 — `scripts/vps-deploy-*.sh` ausentes; `tests/Docs/DeployScriptsRemovedTest.php` presente @ `origin/main` |
+| Evidencia Tasks 2–10 | `scripts/publish-skeleton.sh` **ausente**; `skeleton/README.md` **ausente**; `SkeletonPurityTest` aún exige repo `path` @ `origin/main` |
 | Plan activo | **Incompleto** — permanece en `docs/superpowers/plans/` |

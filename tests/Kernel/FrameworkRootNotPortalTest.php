@@ -25,3 +25,27 @@ test('framework PACKAGE-ROOT doc exists and forbids deploy', function () use ($r
         'must forbid deploy'
     );
 });
+
+test('framework root .env.example does not ship Portal or Marketing env keys', function () use ($root): void {
+    $path = $root . '/.env.example';
+    assert_true(is_readable($path), 'root .env.example must exist');
+    $lines = file($path, FILE_IGNORE_NEW_LINES) ?: [];
+    $forbiddenPrefixes = ['MKT_', 'LEBYTEK_API_', 'WAAPI_PORTAL_'];
+    foreach ($lines as $lineNum => $line) {
+        $trimmed = ltrim($line);
+        if ($trimmed === '' || str_starts_with($trimmed, '#')) {
+            continue;
+        }
+        if (!str_contains($trimmed, '=')) {
+            continue;
+        }
+        $key = trim(explode('=', $trimmed, 2)[0]);
+        foreach ($forbiddenPrefixes as $prefix) {
+            assert_true(
+                !str_starts_with($key, $prefix),
+                ".env.example line " . ($lineNum + 1) . ": key «{$key}» uses forbidden prefix «{$prefix}». "
+                . 'Action: remove Portal/Marketing vars from root .env.example; see Lebytek_Portal/.env.example'
+            );
+        }
+    }
+});
