@@ -63,3 +63,15 @@ test('Framework automation README points to portable kit', function () use ($roo
         'docs/automation/README.md must link the portable kit'
     );
 });
+
+test('multi-repo Agent migrate prompt exists with Prompt block', function () use ($root): void {
+    $path = $root . '/docs/automation/AGENT-PROMPT-migrate-kit-to-whatsapi.md';
+    assert_true(is_file($path), 'Missing Agent migrate prompt: ' . $path);
+    $src = (string) file_get_contents($path);
+    assert_true(str_contains($src, '## Prompt'), 'migrate prompt must expose ## Prompt');
+    assert_true(str_contains($src, 'WhatsApiLebytek'), 'migrate prompt must target WhatsApiLebytek');
+    assert_true(
+        str_contains($src, 'gh pr close') || str_contains($src, 'ciérralo'),
+        'migrate prompt must instruct closing/removing the Framework PR after API merge'
+    );
+});

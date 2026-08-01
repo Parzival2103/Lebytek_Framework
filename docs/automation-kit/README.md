@@ -91,6 +91,16 @@ No sustituyas los prompts de Framework por este kit en las automations ya
 configuradas de Framework. Evoluciona ambos en paralelo; cuando un invariante
 cambie aquí, porta el cambio al kit o viceversa.
 
+## Migración multi-repo (Cursor Agents)
+
+Si tu Workspace tiene Framework + WhatsApiLebytek, no copies a mano: abre el
+prompt canónico en Framework
+
+`docs/automation/AGENT-PROMPT-migrate-kit-to-whatsapi.md`
+
+y pega el bloque `## Prompt` en Agents. Ese flujo instala el kit en el API
+(con PR, tests Pest y merge) y después elimina el kit de Framework.
+
 ## Perfil WhatsApiLebytek
 
 Ver `profiles/WhatsApiLebytek.md`. Diferencias típicas vs Framework:

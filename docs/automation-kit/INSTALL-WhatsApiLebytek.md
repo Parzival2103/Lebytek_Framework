@@ -3,8 +3,11 @@
 Guía concreta para llevar el kit genérico a
 `Parzival2103/WhatsApiLebytek` (api.lebytek.com).
 
-Este repo Framework **no** puede pushear al API desde este flujo; copia los
-archivos en un checkout local del API o abre PR allí.
+**Preferido:** en un Workspace multi-repo, usa el Agent prompt
+`docs/automation/AGENT-PROMPT-migrate-kit-to-whatsapi.md` (bloque `## Prompt`).
+Ese agente copia al API, abre PR, corre tests, mergea, y limpia Framework.
+
+Instalación manual (abajo) solo si no tienes el Workspace multi-repo.
 
 ## 1. Copiar archivos
 

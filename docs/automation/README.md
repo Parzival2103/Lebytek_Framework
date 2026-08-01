@@ -8,10 +8,13 @@ fases: creación de artefactos (00–05) y ciclo plan→implementación→cierre
 
 Repositorio: `Parzival2103/Lebytek_Framework`, branch `main`.
 
-> **Portable kit:** para instalar la misma cadena en otro repo (p. ej.
-> `WhatsApiLebytek`) usa `docs/automation-kit/` — prompts genéricos +
-> `REPO-PROFILE`. No sustituyas estos prompts de Framework por el kit en las
-> automations ya configuradas aquí.
+> **Portable kit (migración):** el kit genérico está en `docs/automation-kit/`.
+> Para **moverlo** a `WhatsApiLebytek` desde un Workspace multi-repo, abre en
+> Cursor Agents el prompt
+> [`AGENT-PROMPT-migrate-kit-to-whatsapi.md`](./AGENT-PROMPT-migrate-kit-to-whatsapi.md)
+> (copia el bloque `## Prompt`). Ese agente instala + mergea en el API y luego
+> borra el kit / cierra este rastro en Framework. No sustituyas los prompts de
+> producción de Framework por el kit.
 
 ## Fase 1 — Audit → spec → plan (00–05)
 
