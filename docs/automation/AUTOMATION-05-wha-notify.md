@@ -1,7 +1,10 @@
 # AUTOMATION-05 — Aviso WhatsApp del plan del día
 
 **Cursor Automations:** repositorio `Parzival2103/Lebytek_Framework`, branch `main`.
-**Posición en la cadena:** etapa 6 de 6, +30 min sobre AUTOMATION-04.
+**Posición en la cadena:** etapa 6 de 9, +30 min sobre AUTOMATION-04.
+
+Este aviso cubre **plan listo** (fase 1). El **cierre del ciclo** (merges,
+implementación, PRs abiertos) lo envía AUTOMATION-08 al final del día.
 
 Copia el bloque `## Prompt` completo en el editor de Automations.
 
