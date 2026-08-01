@@ -36,9 +36,15 @@ inventar un plan alternativo.
 
 1. `git fetch origin --prune --tags`.
 2. `git rev-parse --verify origin/main` debe resolver. Si falla → **STOP**.
-3. Resuelve `<LEGACY_REF>` (tag `archive/backoffice-api-integration`, luego rama
-   `feature/backoffice-api-integration`). Misma regla que etapas 00–04: si no
-   resuelve y fetch OK → comprobación vacua.
+3. Resuelve `<LEGACY_REF>`, primer candidato que resuelva con
+   `git rev-parse --verify --quiet '<candidato>^{commit}'`:
+   1. `refs/tags/archive/backoffice-api-integration`
+   2. `refs/remotes/origin/feature/backoffice-api-integration`
+
+   - Si resuelve: ningún commit de `git rev-list origin/main..<LEGACY_REF>` puede
+     ser ancestro de `HEAD`.
+   - Si no resuelve ninguno y el paso 2 pasó: comprobación vacua, registra y
+     **continúa**.
 4. `git merge-base --is-ancestor origin/main HEAD` debe salir `0`.
 5. `git status --porcelain` vacío.
 6. Fallo en 2, 4 o 5 → **STOP** sin escribir reporte.

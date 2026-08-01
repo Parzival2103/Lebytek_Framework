@@ -31,7 +31,19 @@ Si 07 no corrió o no hay PR implementación, opera en modo **cierre parcial**
 
 ### Preflight obligatorio
 
-Mismas reglas 00–07: fetch, `origin/main`, legacy ref, working tree limpio.
+1. `git fetch origin --prune --tags`.
+2. `git rev-parse --verify origin/main` debe resolver. Si falla → **STOP**.
+3. Resuelve `<LEGACY_REF>`, primer candidato que resuelva con
+   `git rev-parse --verify --quiet '<candidato>^{commit}'`:
+   1. `refs/tags/archive/backoffice-api-integration`
+   2. `refs/remotes/origin/feature/backoffice-api-integration`
+
+   - Si resuelve: ningún commit de `git rev-list origin/main..<LEGACY_REF>` puede
+     ser ancestro de `HEAD`.
+   - Si no resuelve ninguno y el paso 2 pasó: comprobación vacua, registra y
+     **continúa**.
+4. `git merge-base --is-ancestor origin/main HEAD` debe salir `0`.
+5. `git status --porcelain` vacío.
 
 ### 1. Inventario de PRs pendientes
 

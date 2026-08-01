@@ -35,13 +35,22 @@ Antes de la primera línea de código:
 ### Preflight obligatorio
 
 1. `git fetch origin --prune --tags`.
-2. Base branch del plan (`Global Constraints`) verificada con
+2. `git rev-parse --verify origin/main` debe resolver. Si falla → **STOP**.
+3. Resuelve `<LEGACY_REF>`, primer candidato que resuelva con
+   `git rev-parse --verify --quiet '<candidato>^{commit}'`:
+   1. `refs/tags/archive/backoffice-api-integration`
+   2. `refs/remotes/origin/feature/backoffice-api-integration`
+
+   - Si resuelve: ningún commit de `git rev-list origin/main..<LEGACY_REF>` puede
+     ser ancestro de `HEAD`.
+   - Si no resuelve ninguno y el paso 2 pasó: comprobación vacua, registra y
+     **continúa**.
+4. Base branch del plan (`Global Constraints`) verificada con
    `git rev-parse --verify origin/<base>`.
-3. Legacy ref / ancestry: mismas reglas que 00–06.
-4. Crea o checkout la rama de implementación del plan desde la base indicada.
+5. Crea o checkout la rama de implementación del plan desde la base indicada.
    **No** reutilices `automation/audit-*` ni `automation/spec-*`.
-5. `git status --porcelain` vacío antes de Task 1.
-6. PHP CLI disponible si el plan exige harness.
+6. `git status --porcelain` vacío antes de Task 1.
+7. PHP CLI disponible si el plan exige harness.
 
 ### Alcance estricto
 
