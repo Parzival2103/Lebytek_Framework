@@ -192,4 +192,4 @@ curl -sS -X POST "$LEBYTEK_API_URL/tenants" \
 | [VPS_CHECKLIST.md](VPS_CHECKLIST.md) | Deploy smoke tests |
 | [../ARCHITECTURE.md](../ARCHITECTURE.md) | Mapa ecosistema |
 
-Repo back-office: `Parzival2103/Lebytek_Framework`, branch `feature/backoffice-api-integration`.
+Repo back-office: `Parzival2103/Lebytek_Portal`, branch `main`.

@@ -118,21 +118,29 @@ Cada app consumidora (Portal, skeleton, tenant) define su propio autoload `App\`
 - **`PackagePaths`**: rutas del framework resueltas desde `vendor/lebytek/framework` (schema SQL, vistas de plataforma).
 - **No** añadir path-autoload de `src/` del framework en el consumidor; usar siempre el paquete Composer.
 
-## 6. Pin a branch de feature (desarrollo)
+## 6. Versión semver en consumidores
 
-Mientras la integración api no esté en `main`:
+Instala el paquete plataforma por **tag semver** publicado — no por branch VCS del monolito legacy (congelada en tag `archive/backoffice-api-integration`):
 
 ```json
 "require": {
-    "lebytek/framework": "dev-feature/backoffice-api-integration"
+    "lebytek/framework": "^1.2"
 }
 ```
 
-O path repo local durante desarrollo FPS:
+Comando concreto en un consumidor existente:
+
+```bash
+composer require lebytek/framework:^1.2
+```
+
+Ver mapa de entornos en [`docs/ENVIRONMENTS.md`](ENVIRONMENTS.md).
+
+**Desarrollo local del paquete** (mantenedor Framework, no deploy VPS): path repository no versionado en el consumidor:
 
 ```json
 "repositories": [
-    { "type": "path", "url": "../Lebytek_Framework/.worktrees/framework-portal-separation" }
+    { "type": "path", "url": "../Lebytek_Framework" }
 ]
 ```
 

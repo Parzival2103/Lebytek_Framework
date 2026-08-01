@@ -10,7 +10,7 @@ Criterios de aceptación del spec `2026-07-01-integration-e2e-phase0-1-design.md
 
 - [x] `GREEN_API_PARTNER_TOKEN` configurado y no vacío en api VPS (2026-07-01)
 - [x] `LEBYTEK_API_TOKEN` + `MAIL_*` smtp configurados en lebytek VPS (2026-07-01)
-- [x] Deploy lebytek ≥ `c2d51cd` — `health_rc=0` en `vps-deploy-lebytek-com.sh` (2026-07-01)
+- [x] Deploy lebytek ≥ `c2d51cd` — **histórico 2026-07-01** — script vps-deploy eliminado PR #36; deploy actual vía `Lebytek_Portal` git pull @ `main` (no ejecutar script legacy)
 - [x] `php scripts/lebytek-api-health.php` → exit 0 (2026-07-01)
 - [x] Smoke E2E provisioning verde — botón **Provisionar demo (api)** en CRUD leads (2026-07-01)
 - [ ] Cron health cada 5 min — script listo en repo; **pendiente confirmar crontab operador en VPS**
@@ -84,18 +84,21 @@ curl -X POST https://api.lebytek.com/api/v1/tenants \
 
 ## lebytek.com (VPS target)
 
+> **Package source ≠ app desplegable.** Este hostname corre **`Parzival2103/Lebytek_Portal`** @ `main` + `composer.lock` — no clonar `Lebytek_Framework` como sitio. Ver [`docs/ENVIRONMENTS.md`](../ENVIRONMENTS.md).
+
 Ruta: `/home/lebytek/htdocs/lebytek.com`  
 Usuario CloudPanel: `lebytek`  
-Branch: `feature/backoffice-api-integration` (until merge)
+Repo: `https://github.com/Parzival2103/Lebytek_Portal.git`  
+Branch: `main`
 
 ### Código
 
-- [ ] Clone/pull Lebytek_Framework feature branch
-- [ ] `composer install --no-dev`
+- [ ] `git pull origin main` en checkout Portal existente (no clone Framework)
+- [ ] `composer install --no-dev` (instala `lebytek/framework` desde lock)
 - [ ] Document root → `public/`
 - [ ] `.env`: DB, MAIL_*, LEBYTEK_API_URL, LEBYTEK_API_TOKEN
 - [x] `LEBYTEK_API_TOKEN` + `MAIL_*` smtp configurados (2026-07-01)
-- [x] Deploy ≥ `c2d51cd` — `DEPLOY_DONE health_rc=0` (2026-07-01)
+- [ ] Post-deploy: `curl -sf https://lebytek.com/up` → exit 0 (o ruta health documentada en Portal)
 
 ### BD
 
