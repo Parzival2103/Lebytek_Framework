@@ -316,8 +316,13 @@ gh pr create --base main --title "fix(config): sync platform version 1.2.1 (semv
 
 | Campo | Valor |
 |-------|-------|
-| Plan creado UTC | 2026-07-29 |
-| `origin/main` referencia | `0ec722bc38258b2e479d30cafd59940aa44d558e` |
-| Tareas | 4 |
+| Reconciliación UTC | 2026-08-01T14:01:00Z |
+| `origin/main` verificado | `7ad72247c8799d827080252b020831c2bb8a6820` |
+| Tareas completadas / totales | **0 / 4** |
 | Modo fuente | normal (spec `2026-07-29-audit-config-version-semver-sync-design.md`) |
-| Estado | Pendiente de implementación |
+| Siguiente tarea ejecutable | **Task 1** — crear `tests/Docs/PlatformVersionSemverTest.php` (TDD rojo) |
+| Prerrequisitos | Rama `feature/platform-version-semver-sync` creable desde `main`; PHP ≥ 8.1 para `php tests/run.php` |
+| Bloqueos | Ninguno en Framework; M2 env purge **fuera de alcance** de este plan (cubierto por plan `2026-08-01-audit-harness-hygiene-unblock.md`); cloud agent puede carecer de PHP CLI |
+| Evidencia verificada | `composer.json` sin `"version"`; `config/app.php:7` y `skeleton/config/app.php:7` → `'1.0.0'`; tag `v1.2.1` @ `fba3e03`; `tests/Docs/PlatformVersionSemverTest.php` **ausente** en `origin/main` |
+| Nota | Spec 2026-08-01 agrupa M1+M2 en PR único; este plan permanece como referencia M1-only hasta merge o archivo |
+| Estado | **Pendiente de implementación** |
