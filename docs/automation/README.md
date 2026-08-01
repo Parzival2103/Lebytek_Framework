@@ -1,17 +1,61 @@
 # Cursor Automations — Lebytek Framework
 
-Prompts canónicos de la cadena diaria de auditoría. Seis etapas, cada una a **30
-minutos** de la anterior, todas configuradas en Cursor Automations con
-repositorio `Parzival2103/Lebytek_Framework` y branch `main`.
+Prompts canónicos de la cadena diaria de auditoría. **Nueve etapas** en dos
+fases: creación de artefactos (00–05) y ciclo plan→implementación→cierre
+(06–08). Las etapas 00–05 corren cada **30 minutos**; 06–08 están en
+**modo verificación** (no desatendidas hasta auditar 06 contra el outcome de
+04/05 con un plan real).
+
+Repositorio: `Parzival2103/Lebytek_Framework`, branch `main`.
+
+## Fase 1 — Audit → spec → plan (00–05)
 
 | # | Archivo | Entrega | Rama |
 |---|---------|---------|------|
 | 00 | `AUTOMATION-00-check-code-main-framework.md` | reporte de auditoría + PR draft `docs(audit):` | `automation/audit-YYYY-MM-DD` |
 | 01 | `AUTOMATION-01-daily-spec.md` | design spec | `automation/spec-YYYY-MM-DD` |
 | 02 | `AUTOMATION-02-audit-tech-debt.md` | pase de deuda técnica sobre el spec | `automation/spec-YYYY-MM-DD` |
-| 03 | `AUTOMATION-03-audit-ux.md` | pase compat/UX + **PR de la rama diaria** + cierre del PR de auditoría | `automation/spec-YYYY-MM-DD` |
+| 03 | `AUTOMATION-03-audit-ux.md` | pase compat/UX + **PR de la rama diaria** + merge audit | `automation/spec-YYYY-MM-DD` |
 | 04 | `AUTOMATION-04-plan-writer.md` | reconciliación del plan activo + plan del día | `automation/spec-YYYY-MM-DD` |
 | 05 | `AUTOMATION-05-wha-notify.md` | aviso WhatsApp del estado real | — |
+
+## Fase 2 — Readiness → ejecución → cierre (06–08) · en verificación
+
+| # | Archivo | Entrega | Cuándo |
+|---|---------|---------|--------|
+| 06 | `AUTOMATION-06-plan-readiness-gate.md` | reporte `docs/automation-reports/*-plan-readiness.md` + veredicto READY/BLOCKED | Tras 05; **auditar vs 04/05** antes de activar |
+| 07 | `AUTOMATION-07-plan-executor.md` | implementación del plan (rama `feat/*`, PR producto) | Solo si 06 autoriza |
+| 08 | `AUTOMATION-08-plan-closure.md` | merges/cierre PRs pendientes + plan archivado + reporte closure | Tras 07 |
+
+### Por qué 06–08
+
+La fase 1 deja habitualmente **PRs spec abiertos**, **plan sin ejecutar** y
+**implementación manual** (p. ej. SDD interactivo). 06 evita ejecutar con M7,
+PHP ausente o bloqueos humanos no leídos; 07 acota el alcance a implementar; 08
+cierra el ciclo (merge implementación/spec, reconciliar plan, reducir PRs
+huérfanos).
+
+### Alineación 06 ↔ 04 ↔ 05 (checklist de verificación)
+
+Cuando exista un plan nuevo del día, contrastar:
+
+| Campo | AUTOMATION-04 | AUTOMATION-05 | AUTOMATION-06 debe |
+|-------|---------------|---------------|-------------------|
+| Modo plan | `Modo:` normal/degradado/continuación | Clasificación WhatsApp equivalente | Mismo modo; BLOCKED si 05 = PIPELINE ROTO |
+| Progreso | `Estado de ejecución` tareas N/M | Bullet «Tareas: N/M · Siguiente: …» | Misma siguiente tarea |
+| Bloqueos | Sección bloqueos / `Requiere operador humano` | Bullets bloqueos ops | BLOCKED vs DEFERRED coherente |
+| PR del día | URL en salida 04 | Enlace en WhatsApp | Inventario PR coherente |
+| Plan activo | Parte A reconciliación | Enlace plan activo en `main` | No contradecir checkboxes verificados |
+
+Si 06 marca READY pero 05 dijo PIPELINE ROTO → fallo de diseño del prompt 06.
+
+### Activación gradual
+
+1. **Semana verificación:** programar solo 06 en dry-run o report-only; 07/08
+   manuales o interactivos.
+2. **Tras auditoría positiva:** 07 con trigger humano post-READY.
+3. **Último paso:** 08 con merge autónomo solo si CI green y política del equipo
+   lo permite; si no, dry-run + checklist operador.
 
 ## Invariantes
 
@@ -28,7 +72,7 @@ repositorio `Parzival2103/Lebytek_Framework` y branch `main`.
   un fallo de integridad del preflight, y entonces no se commitea nada.
 - En modo degradado está prohibido inventar hallazgos, rutas, PRs, SHAs o
   resultados de tests. Todo se apoya en evidencia verificable del repositorio.
-- El preflight de las seis etapas exige: fetch verificado, `origin/main` ancestro
+- El preflight de las **nueve** etapas exige: fetch verificado, `origin/main` ancestro
   de `HEAD`, ningún commit exclusivo del historial legacy en la ancestry, y
   working tree limpio.
 - Si ni el tag `archive/backoffice-api-integration` ni la rama
@@ -54,6 +98,8 @@ Cadena objetivo audit → spec → plan:
 2. **AUTOMATION-01–02** escriben spec en `automation/spec-*` sin heredar la rama audit.
 3. **AUTOMATION-03** abre PR `docs(spec):`, **mergea** el PR audit del mismo `YYYY-MM-DD` a `main`, luego cierra el PR audit ya mergeado.
 4. **AUTOMATION-04** entrega plan en la misma rama spec.
+5. **AUTOMATION-06** valida readiness; **AUTOMATION-07** implementa; **AUTOMATION-08**
+   mergea/cierra PRs pendientes del ciclo (ver fase 2 arriba).
 
 ### Reglas invariantes (M7)
 
