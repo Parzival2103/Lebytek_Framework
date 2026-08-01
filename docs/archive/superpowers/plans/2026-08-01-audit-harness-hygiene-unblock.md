@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development`
 > (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
-> Steps use checkbox (`- [ ]`) syntax for tracking.
+> Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Sincronizar la versión de plataforma visible con el release `v1.2.1` y purgar variables Portal/Marketing del root `.env.example`, con tests gate TDD que impidan regresión — sin tocar `src/`, `database/` ni negocio Portal.
 
@@ -70,7 +70,7 @@
 - Consumes: `composer.json` (sin `"version"`), `config/app.php:7` (`'1.0.0'`), `skeleton/config/app.php:7` (`'1.0.0'`) — estado actual @ `origin/main` `7ad72247`
 - Produces: test que falla con mensaje explícito de drift vs release `1.2.1`
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/PlatformVersionSemverTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/PlatformVersionSemverTest.php`:
 
 ```php
 <?php
@@ -111,15 +111,15 @@ test('skeleton config/app.php version matches composer.json', function () use ($
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` / Expected: **FAIL** — 3 tests descubiertos; primer fallo: `composer.json must declare a non-empty "version" field` o `expected '1.2.1', got '1.0.0'`.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` / Expected: **FAIL** — 3 tests descubiertos; primer fallo: `composer.json must declare a non-empty "version" field` o `expected '1.2.1', got '1.0.0'`.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 2 aplica el fix semver. Este step confirma gate rojo.
+- [x] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 2 aplica el fix semver. Este step confirma gate rojo.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php PlatformVersionSemver` / Expected: FAIL (confirmación TDD).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php PlatformVersionSemver` / Expected: FAIL (confirmación TDD).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/OpsDocsFpsAlignment` / Expected: PASS — al menos 1 test, 0 failed (M8 no regresa).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/OpsDocsFpsAlignment` / Expected: PASS — al menos 1 test, 0 failed (M8 no regresa).
 
-- [ ] **Step 6: Commit** — archivos: `tests/Docs/PlatformVersionSemverTest.php` / mensaje: `test(docs): add PlatformVersionSemverTest gate (red)`
+- [x] **Step 6: Commit** — archivos: `tests/Docs/PlatformVersionSemverTest.php` / mensaje: `test(docs): add PlatformVersionSemverTest gate (red)`
 
 ---
 
@@ -141,11 +141,11 @@ test('skeleton config/app.php version matches composer.json', function () use ($
 - Consumes: test rojo de Task 1
 - Produces: `"version": "1.2.1"` idéntico en tres archivos; `Config::get('app.version')` → `1.2.1`; `/admin/sistema/estado` muestra `v1.2.1`; `php scripts/status.php` imprime `Plataforma: v1.2.1`
 
-- [ ] **Step 1: Escribir el test que falla** — ya existe tras Task 1; re-ejecutar para confirmar rojo pre-fix.
+- [x] **Step 1: Escribir el test que falla** — ya existe tras Task 1; re-ejecutar para confirmar rojo pre-fix.
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` / Expected: FAIL antes de editar configs.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` / Expected: FAIL antes de editar configs.
 
-- [ ] **Step 3: Implementar el cambio mínimo**
+- [x] **Step 3: Implementar el cambio mínimo**
 
 En `composer.json`, después de `"license": "proprietary",`:
 
@@ -159,13 +159,13 @@ En `config/app.php` y `skeleton/config/app.php`, línea `'version'`:
     'version'  => '1.2.1',
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php PlatformVersionSemver` / Expected: PASS — 3 tests, 0 failed.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php PlatformVersionSemver` / Expected: PASS — 3 tests, 0 failed.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php SkeletonPurity` / Expected: PASS — 13 tests, 0 failed.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php SkeletonPurity` / Expected: PASS — 13 tests, 0 failed.
 
 Run: `php tests/run.php Kernel/FrameworkRootNotPortal` / Expected: PASS — 3 tests, 0 failed (env assert aún no existe; pasa con tests actuales).
 
-- [ ] **Step 6: Commit** — archivos: `composer.json`, `config/app.php`, `skeleton/config/app.php` / mensaje: `fix(config): sync platform version 1.2.1 with composer.json`
+- [x] **Step 6: Commit** — archivos: `composer.json`, `config/app.php`, `skeleton/config/app.php` / mensaje: `fix(config): sync platform version 1.2.1 with composer.json`
 
 ---
 
@@ -185,7 +185,7 @@ Run: `php tests/run.php Kernel/FrameworkRootNotPortal` / Expected: PASS — 3 te
 - Consumes: root `.env.example` con **16** keys activas `MKT_*` / `LEBYTEK_API_*` / `WAAPI_PORTAL_*` (L53–102 @ `origin/main`)
 - Produces: test que falla citando prefijo prohibido y acción «eliminar prefijo Portal en root .env.example»
 
-- [ ] **Step 1: Escribir el test que falla** — añadir al final de `tests/Kernel/FrameworkRootNotPortalTest.php`:
+- [x] **Step 1: Escribir el test que falla** — añadir al final de `tests/Kernel/FrameworkRootNotPortalTest.php`:
 
 ```php
 test('framework root .env.example does not ship Portal or Marketing env keys', function () use ($root): void {
@@ -213,15 +213,15 @@ test('framework root .env.example does not ship Portal or Marketing env keys', f
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php FrameworkRootNotPortal` / Expected: **FAIL** — 4 tests descubiertos; fallo en el nuevo test citando p. ej. `MKT_EMAIL_DOCS_URL` o `LEBYTEK_API_URL`.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php FrameworkRootNotPortal` / Expected: **FAIL** — 4 tests descubiertos; fallo en el nuevo test citando p. ej. `MKT_EMAIL_DOCS_URL` o `LEBYTEK_API_URL`.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 4 purga `.env.example`.
+- [x] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 4 purga `.env.example`.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php FrameworkRootNotPortal` / Expected: FAIL (gate rojo confirmado).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php FrameworkRootNotPortal` / Expected: FAIL (gate rojo confirmado).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php PlatformVersionSemver` / Expected: PASS si Task 2 mergeada en rama; FAIL si solo Task 3 committeada (orden flexible en rama, ambos verdes antes de PR).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php PlatformVersionSemver` / Expected: PASS si Task 2 mergeada en rama; FAIL si solo Task 3 committeada (orden flexible en rama, ambos verdes antes de PR).
 
-- [ ] **Step 6: Commit** — archivos: `tests/Kernel/FrameworkRootNotPortalTest.php` / mensaje: `test(kernel): assert root .env.example has no Portal env prefixes (red)`
+- [x] **Step 6: Commit** — archivos: `tests/Kernel/FrameworkRootNotPortalTest.php` / mensaje: `test(kernel): assert root .env.example has no Portal env prefixes (red)`
 
 ---
 
@@ -241,11 +241,11 @@ test('framework root .env.example does not ship Portal or Marketing env keys', f
 - Consumes: test rojo Task 3; `skeleton/.env.example` limpio (sin cambio — referencia)
 - Produces: root `.env.example` sin keys `MKT_*`, `LEBYTEK_API_*`, `WAAPI_PORTAL_*`; conserva `REGISTRO_*`, `LOGIN_*`, `INSTALL_TOKEN`, `GREEN_API_*`, `INTEGRATIONS_API_DOCS_URL`, `STRIPE_*`, `PAYMENTS_*`
 
-- [ ] **Step 1: Escribir el test que falla** — test de Task 3 ya rojo; re-ejecutar.
+- [x] **Step 1: Escribir el test que falla** — test de Task 3 ya rojo; re-ejecutar.
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php FrameworkRootNotPortal` / Expected: FAIL pre-purga.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php FrameworkRootNotPortal` / Expected: FAIL pre-purga.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `.env.example`:
+- [x] **Step 3: Implementar el cambio mínimo** — en `.env.example`:
 
 1. **Eliminar** líneas 53–55 (comentario + `MKT_EMAIL_DOCS_URL`, `MKT_EMAIL_DASHBOARD_URL`).
 2. **Eliminar** bloque L70–82 (`# API MOTOR` … `WAAPI_PORTAL_ENABLED`).
@@ -268,11 +268,11 @@ grep -E '^(MKT_|LEBYTEK_API_|WAAPI_PORTAL_)' .env.example ; echo "grep_exit=$?"
 
 Expected: sin líneas; `grep_exit=1`.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php FrameworkRootNotPortal` / Expected: PASS — 4 tests, 0 failed.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php FrameworkRootNotPortal` / Expected: PASS — 4 tests, 0 failed.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php SkeletonPurity` / Expected: PASS — 13 tests (skeleton `.env.example` sin regresión).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php SkeletonPurity` / Expected: PASS — 13 tests (skeleton `.env.example` sin regresión).
 
-- [ ] **Step 6: Commit** — archivos: `.env.example` / mensaje: `chore(env): purge Portal marketing vars from harness .env.example`
+- [x] **Step 6: Commit** — archivos: `.env.example` / mensaje: `chore(env): purge Portal marketing vars from harness .env.example`
 
 ---
 
@@ -293,7 +293,7 @@ Expected: sin líneas; `grep_exit=1`.
 - Consumes: versión sincronizada Task 2
 - Produces: checklist numerado 5 pasos; test que exige menciones `composer.json`, `skeleton/config/app.php`, `PlatformVersionSemver`
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/ReleaseChecklistDocTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/ReleaseChecklistDocTest.php`:
 
 ```php
 <?php
@@ -311,9 +311,9 @@ test('despliegue-y-versionado documents three-file semver sync on release', func
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php ReleaseChecklistDoc` / Expected: FAIL — doc sin checklist.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php ReleaseChecklistDoc` / Expected: FAIL — doc sin checklist.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — insertar en `docs/core/despliegue-y-versionado.md` tras el párrafo «Activar o actualizar un módulo **no** obliga a subir la versión de plataforma…»:
+- [x] **Step 3: Implementar el cambio mínimo** — insertar en `docs/core/despliegue-y-versionado.md` tras el párrafo «Activar o actualizar un módulo **no** obliga a subir la versión de plataforma…»:
 
 ````markdown
 ### Checklist release de plataforma (tag `vX.Y.Z`)
@@ -329,11 +329,11 @@ Al publicar un release del paquete `lebytek/framework`, sincronizar **en el mism
 La versión mostrada en UI y CLI proviene de `config/app.php` → `Config::get('app.version')`, **no** de `git describe` ni de `InstalledVersions` en runtime.
 ````
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php ReleaseChecklistDoc` / Expected: PASS — 1 test, 0 failed.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php ReleaseChecklistDoc` / Expected: PASS — 1 test, 0 failed.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php PlatformVersionSemver` / Expected: PASS.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php PlatformVersionSemver` / Expected: PASS.
 
-- [ ] **Step 6: Commit** — archivos: `docs/core/despliegue-y-versionado.md`, `tests/Docs/ReleaseChecklistDocTest.php` / mensaje: `docs: add platform release semver sync checklist`
+- [x] **Step 6: Commit** — archivos: `docs/core/despliegue-y-versionado.md`, `tests/Docs/ReleaseChecklistDocTest.php` / mensaje: `docs: add platform release semver sync checklist`
 
 ---
 
@@ -352,13 +352,13 @@ La versión mostrada en UI y CLI proviene de `config/app.php` → `Config::get('
 - Consumes: Tasks 1–5 mergeables en rama
 - Produces: evidencia pre/post fix; PR hacia `main`
 
-- [ ] **Step 1: Escribir el test que falla** — N/A (verificación integrada).
+- [x] **Step 1: Escribir el test que falla** — N/A (verificación integrada).
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` sobre commit **anterior** a Task 2 / Expected: FAIL (evidencia TDD para PR body).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` sobre commit **anterior** a Task 2 / Expected: FAIL (evidencia TDD para PR body).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — N/A.
+- [x] **Step 3: Implementar el cambio mínimo** — N/A.
 
-- [ ] **Step 4: Verificación enfocada** — Run:
+- [x] **Step 4: Verificación enfocada** — Run:
 
 ```bash
 php tests/run.php PlatformVersionSemver
@@ -371,7 +371,7 @@ php tests/run.php Kernel/FrameworkRootNotPortal
 
 Expected: cada filtro PASS con ≥1 test descubierto; totales 0 failed.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed en gates M1/M2; distinguir fallos Integrations por MySQL ausente (no gate verde).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed en gates M1/M2; distinguir fallos Integrations por MySQL ausente (no gate verde).
 
 Smoke manual (harness local con `.env`):
 
@@ -384,7 +384,7 @@ grep -E '^(MKT_|LEBYTEK_API_|WAAPI_PORTAL_)' .env.example ; echo "grep_exit=$?"
 
 Expected: `Plataforma: v1.2.1`; `grep_exit=1`.
 
-- [ ] **Step 6: Commit / PR** — push y abrir PR:
+- [x] **Step 6: Commit / PR** — push y abrir PR:
 
 ```bash
 git push -u origin feature/harness-hygiene-unblock
@@ -414,15 +414,15 @@ gh pr create --base main --title "fix(harness): sync platform semver 1.2.1 and p
 
 ## Criterios finales de aceptación
 
-- [ ] `composer.json` contiene `"version": "1.2.1"`.
-- [ ] `config/app.php` y `skeleton/config/app.php` tienen `'version' => '1.2.1'`.
-- [ ] Root `.env.example` sin keys `MKT_*`, `LEBYTEK_API_*`, `WAAPI_PORTAL_*`.
-- [ ] `php tests/run.php PlatformVersionSemver` — FAIL pre-fix, PASS post-fix (≥ 3 tests).
-- [ ] `php tests/run.php FrameworkRootNotPortal` — FAIL pre-fix por env, PASS post-fix (4 tests).
-- [ ] `php tests/run.php ReleaseChecklistDoc` — FAIL pre-fix, PASS post-fix.
-- [ ] `php tests/run.php SkeletonPurity` y `Docs/OpsDocsFpsAlignment` sin regresión.
-- [ ] Sin edits en `src/`, `database/`, `routes/` para este alcance.
-- [ ] Smoke: `/admin/sistema/estado` y `scripts/status.php` muestran `v1.2.1`.
+- [x] `composer.json` contiene `"version": "1.2.1"`.
+- [x] `config/app.php` y `skeleton/config/app.php` tienen `'version' => '1.2.1'`.
+- [x] Root `.env.example` sin keys `MKT_*`, `LEBYTEK_API_*`, `WAAPI_PORTAL_*`.
+- [x] `php tests/run.php PlatformVersionSemver` — FAIL pre-fix, PASS post-fix (≥ 3 tests).
+- [x] `php tests/run.php FrameworkRootNotPortal` — FAIL pre-fix por env, PASS post-fix (4 tests).
+- [x] `php tests/run.php ReleaseChecklistDoc` — FAIL pre-fix, PASS post-fix.
+- [x] `php tests/run.php SkeletonPurity` y `Docs/OpsDocsFpsAlignment` sin regresión.
+- [x] Sin edits en `src/`, `database/`, `routes/` para este alcance.
+- [x] Smoke: `/admin/sistema/estado` y `scripts/status.php` muestran `v1.2.1`.
 
 ## Riesgos y rollback
 
@@ -451,10 +451,12 @@ gh pr create --base main --title "fix(harness): sync platform semver 1.2.1 and p
 | Campo | Valor |
 |-------|-------|
 | Plan creado UTC | 2026-08-01T14:01:00Z |
-| `origin/main` referencia | `7ad72247c8799d827080252b020831c2bb8a6820` |
-| Tareas | 6 |
+| Reconciliación UTC | 2026-08-01T17:20:00Z |
+| `origin/main` verificado | `2135953b0b250ad13f43dbd10af53e6f05b37a2e` |
+| Tareas completadas / totales | **6 / 6** (Framework) |
 | Modo fuente | normal (`docs/superpowers/specs/2026-08-01-audit-harness-hygiene-unblock-design.md`) |
-| Siguiente tarea ejecutable | **Task 1** — `PlatformVersionSemverTest` (TDD rojo) |
-| Prerrequisitos | Rama `feature/harness-hygiene-unblock` desde `main`; PHP ≥ 8.1 |
-| Bloqueos | Ninguno en Framework; Portal QA (D3/D14) requiere operador humano con acceso gh Portal |
-| Estado | **Pendiente de implementación** |
+| Siguiente tarea ejecutable | N/A — plan cerrado |
+| Prerrequisitos | Cumplidos |
+| Bloqueos pendientes ops | D3/D14/D15 Portal QA — **Requiere operador humano** (fuera de alcance Framework) |
+| Evidencia | PR #60 audit, #61 spec+plan, #62 implementación merged; tests gate 27 passed / 0 failed en `main` |
+| Estado | **Completo** — archivado 2026-08-01 |
