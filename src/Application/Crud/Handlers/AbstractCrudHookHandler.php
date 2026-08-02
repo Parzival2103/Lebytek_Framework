@@ -6,6 +6,7 @@ namespace Lebytek\Framework\Application\Crud\Handlers;
 
 use Lebytek\Framework\Application\Crud\Context\CrudFormContext;
 use Lebytek\Framework\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Application\Crud\Context\CrudListRowsContext;
 use Lebytek\Framework\Application\Crud\Context\CrudTransitionContext;
 use Lebytek\Framework\Application\Crud\Context\CrudWriteContext;
 use Lebytek\Framework\Domain\Interfaces\CrudHookHandlerInterface;
@@ -37,6 +38,8 @@ abstract class AbstractCrudHookHandler implements CrudHookHandlerInterface
     public function beforeRenderForm(CrudFormContext $ctx): void {}
 
     public function beforeListQuery(CrudListContext $ctx): void {}
+
+    public function afterListRows(CrudListRowsContext $ctx): void {}
 
     public function afterUpload(CrudWriteContext $ctx): void {}
 }

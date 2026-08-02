@@ -65,6 +65,9 @@ final class CrudTableBuilder
             }
         } else {
             foreach ($definition->listColumns() as $column) {
+                if (($column['list_visible'] ?? true) === false) {
+                    continue;
+                }
                 $built = [
                     'name' => (string) ($column['name'] ?? ''),
                     'label' => (string) ($column['label'] ?? ($column['name'] ?? '')),
@@ -152,14 +155,14 @@ final class CrudTableBuilder
             $value = $row[$name] ?? null;
 
             if ($format === 'date' && !empty($value)) {
-                $timestamp = strtotime((string) $value);
-                $row['_formatted'][$name] = $timestamp ? date('d/m/Y', $timestamp) : $value;
+                $formatted = $this->formatDateTimeValue((string) $value, 'd/m/Y');
+                $row['_formatted'][$name] = $formatted ?? $value;
                 continue;
             }
 
             if ($format === 'datetime' && !empty($value)) {
-                $timestamp = strtotime((string) $value);
-                $row['_formatted'][$name] = $timestamp ? date('d/m/Y H:i', $timestamp) : $value;
+                $formatted = $this->formatDateTimeValue((string) $value, 'd/m/Y H:i');
+                $row['_formatted'][$name] = $formatted ?? $value;
                 continue;
             }
 
@@ -203,13 +206,11 @@ final class CrudTableBuilder
     private function formatScalar(mixed $value, string $format): mixed
     {
         if ($format === 'date' && !empty($value)) {
-            $timestamp = strtotime((string) $value);
-            return $timestamp ? date('d/m/Y', $timestamp) : $value;
+            return $this->formatDateTimeValue((string) $value, 'd/m/Y') ?? $value;
         }
 
         if ($format === 'datetime' && !empty($value)) {
-            $timestamp = strtotime((string) $value);
-            return $timestamp ? date('d/m/Y H:i', $timestamp) : $value;
+            return $this->formatDateTimeValue((string) $value, 'd/m/Y H:i') ?? $value;
         }
 
         if ($format === 'money' && $value !== null && $value !== '') {
@@ -221,5 +222,21 @@ final class CrudTableBuilder
         }
 
         return $value;
+    }
+
+    private function formatDateTimeValue(string $value, string $pattern): ?string
+    {
+        $value = trim($value);
+        if ($value === '' || str_starts_with($value, '0000-00-00')) {
+            return null;
+        }
+
+        try {
+            return (new \DateTimeImmutable($value))->format($pattern);
+        } catch (\Throwable) {
+            $timestamp = strtotime($value);
+
+            return $timestamp ? date($pattern, $timestamp) : null;
+        }
     }
 }

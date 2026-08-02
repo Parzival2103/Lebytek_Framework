@@ -93,6 +93,10 @@ final class CrudConfigValidator
                 continue;
             }
 
+            if (! empty($column['virtual'])) {
+                continue;
+            }
+
             if (!isset($columnLookup[$name])) {
                 $errors[] = "La columna de listado {$name} no existe en {$table}.";
             }

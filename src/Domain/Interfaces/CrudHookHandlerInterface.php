@@ -16,6 +16,7 @@ use Lebytek\Framework\Application\Crud\Context\CrudWriteContext;
  *   beforeTransition/afterTransition(CrudTransitionContext)
  *   beforeRenderForm(CrudFormContext)
  *   beforeListQuery(CrudListContext)
+ *   afterListRows(CrudListRowsContext)
  *   afterUpload(CrudWriteContext)
  */
 interface CrudHookHandlerInterface
