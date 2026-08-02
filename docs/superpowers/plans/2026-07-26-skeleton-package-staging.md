@@ -1415,9 +1415,9 @@ Expected: `200` en los tres dominios y la suite del framework en 0 failed.
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-01T14:01:00Z |
-| SHA `origin/main` verificado | `7ad72247c8799d827080252b020831c2bb8a6820` |
-| Tareas completadas / totales | **0.5 / 10** (Task 1 Framework verificada; Portal y Tasks 2–10 pendientes) |
+| Reconciliación UTC | 2026-08-02T12:40:00Z |
+| `origin/main` verificado | `d372ad8f9ea7c76ce394607a7e0ef4cb4cafec85` |
+| Tareas completadas / totales | **0.5 / 10** (Task 1 Framework verificada PR #36; Portal Steps 5–11 no verificables) |
 | Siguiente tarea ejecutable | **Task 2 (Framework)** — invertir `skeleton/composer.json` a repo VCS + `^1.1` (independiente de Portal) **o** Task 1 Steps 5–11 (Portal) si hay acceso `gh` |
 | Prerrequisitos Task 1 Portal | Acceso `gh`/`git` a `Parzival2103/Lebytek_Portal` (bloqueado M6/D3); rama `chore/deploy-scripts-cleanup` creable desde Portal `main` |
 | Prerrequisitos Task 2 | Ninguno en Framework |
