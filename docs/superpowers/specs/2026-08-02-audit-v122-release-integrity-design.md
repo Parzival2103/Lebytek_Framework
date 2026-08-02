@@ -33,6 +33,7 @@
 | `<LEGACY_REF>` | `refs/tags/archive/backoffice-api-integration` @ `4789f953ef746d17bae2e6b50c85504782d306e3` — 53 commits exclusivos; ninguno ancestro de HEAD ni del head de auditoría |
 | Issues abiertos Framework | **0** (`gh issue list --repo Parzival2103/Lebytek_Framework --state open` → vacío) |
 | Issues abiertos Portal | **No verificable** — mismo bloqueador gh 404 que M6 |
+| Pase UX | `2026-08-02T12:35:00Z` UTC; modo **normal** (semver display Framework + listado CRUD `mkt_leads` Portal) |
 
 ---
 
@@ -270,6 +271,69 @@ Usar mock de `LebytekApiClient` en test unitario; no llamar API real en CI.
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: normal
+
+Este spec combina **F1 semver** (display plataforma en harness/skeleton), **F2 dompdf** (superficie PDF/reportes, sin layout admin nuevo) y **P1–P5** (listado admin Portal `mkt_leads` enriquecido vía `afterListRows`). Superficie UI verificable: tarjeta versión y tablas en `/admin/sistema/estado`, copy semver en install/`scripts/status.php`, y tabla CRUD leads con columnas virtuales. Health API pública, login responsive y dashboard nav permanecen carry-forward.
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (F1–F4 / P1–P5) | Evidencia / carry-forward |
+|------|---------------------------|---------------------------|
+| PHP soportado | Sin cambio runtime Framework | `composer.json` exige `>=8.1`; VPS documentado PHP **8.4.22** (`2026-07-26-skeleton-package-staging-design.md`). F1–F4 y hook `afterListRows` compatibles 8.1+; dompdf bump PATCH no eleva requisito PHP. |
+| Instalación vía `vendor/` | **Alcance P1 + F1–F4** | Consumidores instalan `lebytek/framework` ≥ `v1.2.2` en `vendor/lebytek/framework` — **solo lectura**; handler Portal vive en `App\` + `config/crud_handlers.php`. Framework publica tag; Portal bump `composer.lock` antes de P2–P5. Path-repo sólo desarrollo local del package source. |
+| Health sin cookie de sesión | Carry-forward **M4/D7** | `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` L23 requiere sesión. Smoke post-merge: **no** usar `/api/ping` como health LB; backlog `GET /api/health` público (CF7). |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` L55 comenta no duplicar `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*`; `FrameworkRootNotPortalTest` PASS (#62). P1–P5 usan vars Portal en consumidor — fuera harness. |
+| Navegadores objetivo | Superficie admin + CRUD | Baseline `docs/core/ui_ux.md`: admin breakpoint **992px (`lg`)**; install wizard **720px**. Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15; sin IE11. Columnas virtuales leads deben degradar en `<768px` vía `list.columns[].priority`. |
+
+### UX — flujos Framework (F1–F4)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | Tarjeta versión en `/admin/sistema/estado` muestra **`v1.2.2`** (no `v1.2.1`) tras F1 — operador distingue versión plataforma publicada del tag Git | M1 |
+| **U2** | Install `paso_resultado.php` y `scripts/status.php` stdout alineados con tarjeta web — mismo semver post-merge | M1 |
+| **U3** | `PlatformVersionSemverTest` / `DompdfSecurityVersionTest`: mensaje de fallo cita archivo, valor esperado y acción («sync tres archivos a 1.2.2» / «composer update dompdf/dompdf ≥3.1.6») | M1, M9 |
+| **U4** | Checklist release en `despliegue-y-versionado.md`: pasos numerados cumplidos antes de tag `v1.2.3` (si dompdf incluido) | D13 |
+
+### UX — flujos Portal `mkt_leads` (P1–P5, **no verificados**)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U5** | Columnas virtuales `wa_estado` / `tenant_actividad` (o equivalente) con **labels legibles** en español; valor «—» cuando `api_tenant_public_id` ausente — no celda vacía ambigua | P1 |
+| **U6** | Timeout API (>2s por página) o fallo HTTP: degradación graceful — mostrar valor persistido en BD (`api_lifecycle_status`) o «—»; **no** bloquear render del listado ni error 500 genérico | P1, P2 |
+| **U7** | Copy accionable si API caída repetida: hint operador («revisa WhatsApi / credenciales en `.env` Portal») en tooltip o badge secundario — no sólo «Error» | P1, CF10 parcial |
+| **U8** | Handler no registrado o clave JSON inválida: validación `CrudConfigValidator` con mensaje que indique `config/crud_handlers.php` + clave esperada (`mkt_leads_enrich`) | P3, P4 |
+| **U9** | Estado carga durante batch `afterListRows`: spinner fila o placeholder «…» en columnas virtuales hasta completar enriquecimiento — evitar flash vacío→valor (CF9 parcial) | P2 |
+
+### Responsive — smoke en superficies tocadas
+
+Referencia: `docs/core/ui_ux.md` §542 — breakpoint admin **992px (`lg`)**; tablas CRUD exigen `table-responsive` (`ui_ux.md` L222).
+
+| Superficie | Verificación post-merge | Rango |
+|------------|-------------------------|-------|
+| Tarjeta versión (`/admin/sistema/estado`) | `v1.2.2` legible sin truncar; `col-md-4` stack full-width en móvil | **320–768px** |
+| Tabla health checks (misma página) | `table-responsive` + `js-dt-responsive` sin regresión por F1 | **320–768px** |
+| Listado admin `mkt_leads` (Portal) | `table-responsive` obligatorio; columnas virtuales con `priority` (identificador lead `1–2`, `wa_estado` `2–3`, actividad tenant `4+`); toolbar filtros usable sin solapamiento | **320–768px** |
+| PDF/reportes dompdf (F2) | Sin cambio layout admin; smoke generación PDF en viewport escritorio ≥992px si aplica | ≥992px |
+
+### Carry-forward UX — próximo spec con superficie UI más amplia
+
+Ítems derivados de deuda abierta; **CF1–CF2 (semver harness + env purge) resueltos** (#62); **CF5 parcialmente cubierto** para `mkt_leads` en P4 — otros CRUDs pendientes.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF6 | RBAC router CRUD/calendario | M3 | Errores 403 accionables (slug requerido vs permiso denegado). |
+| CF7 | Health endpoint público | M4/D7 | `GET /api/health` 200 sin cookie; body `{ "status": "ok" }`; checklist VPS. |
+| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección — más allá de U9 en leads. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer; extiende U7 fuera de leads. |
+
+---
+
 ## Criterios de aceptación
 
 ### Framework
@@ -288,10 +352,17 @@ Usar mock de `LebytekApiClient` en test unitario; no llamar API real en CI.
 - [ ] Sin ediciones en `vendor/lebytek/framework`.
 - [ ] Frontera FPS respetada: handler en `App\`, cliente API en `App\Infrastructure\Integrations\`.
 
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **normal** con requisitos K/U/R verificables para F1–F4 y P1–P5.
+- [ ] **AC-UX2:** Requisitos U1–U9 (semver display, tests accionables, enriquecimiento leads, degradación API) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF6–CF10 documentado; CF1–CF2 no arrastrados (resueltos); CF5 parcial vía P4.
+- [ ] **AC-UX4:** Smoke responsive R1–R3 en **320–768px** para estado admin Framework y listado `mkt_leads` Portal post-implementación.
+
 ### Cadena automation
 
 - [ ] Spec commit único bajo `docs/superpowers/specs/`.
-- [ ] AUTOMATION-03 generará plan desde este spec; no cerrar PR audit manualmente.
+- [ ] PR spec abierto hacia `main`; PR auditoría fuente mergeado por AUTOMATION-03.
 
 ---
 
