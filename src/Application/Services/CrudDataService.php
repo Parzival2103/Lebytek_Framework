@@ -44,10 +44,20 @@ final class CrudDataService
     public function list(CrudResourceDefinition $definition, array $query, ?int $userId = null, ?callable $can = null): array
     {
         $columns = $definition->listColumns();
-        $selectColumns = array_values(array_unique(array_map(
-            static fn(array $column): string => (string) ($column['name'] ?? ''),
-            $columns
-        )));
+        $selectColumns = [];
+        foreach ($columns as $column) {
+            if (! is_array($column)) {
+                continue;
+            }
+            if (! empty($column['virtual'])) {
+                continue;
+            }
+            $name = (string) ($column['name'] ?? '');
+            if ($name !== '') {
+                $selectColumns[] = $name;
+            }
+        }
+        $selectColumns = array_values(array_unique($selectColumns));
 
         $selectColumns[] = $definition->primaryKey();
         $selectColumns[] = 'deleted';

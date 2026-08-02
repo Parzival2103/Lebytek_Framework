@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lebytek\Framework\Application\Services;
 
+use Lebytek\Framework\Application\Crud\Context\CrudListRowsContext;
 use Lebytek\Framework\Domain\Calendar\DateRange;
 use Lebytek\Framework\Domain\Exceptions\ValidationException;
 use Lebytek\Framework\Domain\Interfaces\CalendarEventSourceInterface;
@@ -22,6 +23,7 @@ final class CrudResourceService implements CalendarEventSourceInterface
         private readonly CrudDetailBuilder $detailBuilder,
         private readonly CrudScopeResolver $scopeResolver,
         private readonly CrudReturnUrlResolver $returnUrlResolver,
+        private readonly CrudHookRunner $hookRunner,
     ) {}
 
     public function resolveListReturnUrl(string $resource, ?string $candidate = null): string
@@ -48,11 +50,25 @@ final class CrudResourceService implements CalendarEventSourceInterface
 
         $can = fn(string $slug): bool => $this->rbacService->puede($slug);
         $result = $this->dataService->list($definition, $query, $userId, $can);
+        $rows = is_array($result['rows'] ?? null) ? $result['rows'] : [];
+
+        $rowsCtx = new CrudListRowsContext(
+            resourceKey: $definition->key(),
+            table: $definition->table(),
+            primaryKey: $definition->primaryKey(),
+            userId: $userId,
+            ip: (string) ($_SERVER['REMOTE_ADDR'] ?? ''),
+            rows: $rows,
+            query: $query,
+        );
+        $this->hookRunner->run($definition, 'afterListRows', $rowsCtx);
+        $rows = $rowsCtx->rows();
+
         $permissions = $this->resolvePermissions($definition->permissionPrefix());
 
         $data = $this->tableBuilder->build(
             definition: $definition,
-            rows: $result['rows'],
+            rows: $rows,
             paginator: $result['paginator'],
             total: $result['total'],
             permissions: $permissions,

@@ -227,7 +227,8 @@ final class FrameworkServiceProvider
                 $c->get(CrudActionService::class),
                 $c->get(CrudDetailBuilder::class),
                 $c->get(CrudScopeResolver::class),
-                $c->get(\Lebytek\Framework\Application\Services\CrudReturnUrlResolver::class)
+                $c->get(\Lebytek\Framework\Application\Services\CrudReturnUrlResolver::class),
+                $c->get(CrudHookRunner::class),
             ));
         
             // ── Módulo Calendario ───────────────────────────────────────────────────
