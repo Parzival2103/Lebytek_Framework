@@ -20,6 +20,9 @@ lebytek.com            →  Lebytek_Portal main + composer.lock
 waapi.lebytek.com      →  Lebytek_Portal main + composer.lock
                            PRODUCCIÓN negocio Lebytek
 
+crm.lebytek.com        →  Lebytek_CRM main + composer.lock
+                           PRODUCCIÓN producto CRM (skeleton + framework)
+
 api.lebytek.com        →  WhatsApiLebytek main
                            PRODUCCIÓN API WhatsApp (repo aparte)
 ```
@@ -72,6 +75,20 @@ al hostname antiguo `staging.lebytek.com` con una **copia sin git de Portal** y 
 ese estado está **obsoleto y prohibido**. El reemplazo correcto es **skeleton** con BD
 propia, no una copia de Portal.
 
+## crm.lebytek.com — producto CRM
+
+### Propósito
+
+Tenant de producto CRM: semilla `skeleton/` + `lebytek/framework` semver.
+Negocio CRM vive en `Parzival2103/Lebytek_CRM`. **No** es el lab de plataforma
+(`skeleton.lebytek.com`) ni Portal.
+
+### Reglas
+
+- BD propia `lebytek_crm`
+- Sin Marketing/Portal
+- Framework solo por Composer + lock
+
 ## staging.lebytek.com — pre-producción Portal (fase futura)
 
 ### Propósito
@@ -105,6 +122,7 @@ Plan archivado: `Lebytek_Portal/docs/archive/superpowers/plans/2026-07-21-portal
 | Sitio | Repo | Rama | Framework |
 |-------|------|------|-----------|
 | lebytek.com, waapi | `Lebytek_Portal` | `main` | `lebytek/framework` vía `composer.lock` (v1.2.1) |
+| crm.lebytek.com | `Lebytek_CRM` | `main` | `lebytek/framework` vía `composer.lock` |
 | api.lebytek.com | `WhatsApiLebytek` | `main` | Laravel propio (no Portal) |
 
 Runbook Portal: [`Lebytek_Portal/docs/DEPLOY-VPS.md`](https://github.com/Parzival2103/Lebytek_Portal/blob/main/docs/DEPLOY-VPS.md).
