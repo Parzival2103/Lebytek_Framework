@@ -443,12 +443,13 @@ gh pr create --base main --title "feat(marketing): enrich mkt_leads list via aft
 
 | Campo | Valor |
 |-------|-------|
+| Reconciliación UTC | 2026-08-03T12:40:00Z |
 | Plan creado UTC | 2026-08-02T12:40:00Z |
-| Framework `origin/main` referencia | `d372ad8f9ea7c76ce394607a7e0ef4cb4cafec85` |
+| Framework `origin/main` referencia | `041e402d404bf4c398d0866776b03614db0be8d4` |
 | Portal SHA | **No verificado** (gh 404 M6) |
-| Tareas | 5 |
-| Modo fuente | normal (spec 2026-08-02, sección Portal) |
+| Tareas completadas / totales | **0 / 5** |
+| Modo fuente | normal (spec 2026-08-02; **supersedido para ejecución** por plan `2026-08-03-audit-mkt-leads-after-list-rows.md`) |
 | Siguiente tarea ejecutable | **Task 1** — bump `composer.lock` (requiere clone Portal) |
-| Prerrequisitos | Acceso git/gh Portal; Framework ≥ v1.2.2 publicado |
+| Prerrequisitos | Acceso git/gh Portal; Framework ≥ `v1.2.2` **satisfecho** (tag `v1.2.3` @ `041e402`) |
 | Bloqueos | **M6** — automation sin lectura Portal; smoke requiere operador |
-| Estado | **Pendiente de implementación** |
+| Estado | **Pendiente de implementación** — continuar vía plan del día 2026-08-03 |
