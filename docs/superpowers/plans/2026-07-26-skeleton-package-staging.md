@@ -1415,13 +1415,13 @@ Expected: `200` en los tres dominios y la suite del framework en 0 failed.
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-02T12:40:00Z |
-| `origin/main` verificado | `d372ad8f9ea7c76ce394607a7e0ef4cb4cafec85` |
+| Reconciliación UTC | 2026-08-03T12:40:00Z |
+| `origin/main` verificado | `041e402d404bf4c398d0866776b03614db0be8d4` |
 | Tareas completadas / totales | **0.5 / 10** (Task 1 Framework verificada PR #36; Portal Steps 5–11 no verificables) |
-| Siguiente tarea ejecutable | **Task 2 (Framework)** — invertir `skeleton/composer.json` a repo VCS + `^1.1` (independiente de Portal) **o** Task 1 Steps 5–11 (Portal) si hay acceso `gh` |
-| Prerrequisitos Task 1 Portal | Acceso `gh`/`git` a `Parzival2103/Lebytek_Portal` (bloqueado M6/D3); rama `chore/deploy-scripts-cleanup` creable desde Portal `main` |
+| Siguiente tarea ejecutable | **Task 2 (Framework)** — invertir `skeleton/composer.json` a repo VCS + `^1.2` (recomendado post-`v1.2.3`) |
+| Prerrequisitos Task 1 Portal | Acceso `gh`/`git` a `Parzival2103/Lebytek_Portal` (bloqueado M6/D3) |
 | Prerrequisitos Task 2 | Ninguno en Framework |
-| Bloqueos | (1) Token automation sin lectura Portal — Steps 5–11 no verificables desde este repo. (2) Tasks 4–8 requieren VPS/credenciales (**Requiere operador humano:** sí). (3) Task 10 requiere Task 9 en verde. (4) Repo espejo `Lebytek_Skeleton` no existe aún (Task 4). (5) `skeleton/composer.json` sigue con repo `path` y `*@dev` — Task 2 sin iniciar |
-| Evidencia Task 1 Framework | PR #36 — `scripts/vps-deploy-*.sh` ausentes; `tests/Docs/DeployScriptsRemovedTest.php` presente @ `origin/main` |
-| Evidencia Tasks 2–10 | `scripts/publish-skeleton.sh` **ausente**; `skeleton/README.md` **ausente**; `SkeletonPurityTest` aún exige repo `path` @ `origin/main` |
-| Plan activo | **Incompleto** — permanece en `docs/superpowers/plans/` |
+| Bloqueos | (1) M6 gh Portal 404. (2) Tasks 4–8 VPS/credenciales (**Requiere operador humano:** sí). (3) Task 10 requiere Task 9. (4) Repo espejo `Lebytek_Skeleton` no existe. (5) `skeleton/composer.json` sigue repo `path` |
+| Evidencia Task 1 Framework | PR #36 — scripts ausentes; `DeployScriptsRemovedTest` @ `041e402` |
+| Evidencia Tasks 2–10 | Sin cambio vs reconciliación 2026-08-02 |
+| Plan activo | **Incompleto** |
