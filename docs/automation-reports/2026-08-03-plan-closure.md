@@ -102,9 +102,11 @@ Ninguna — token automation carece permiso `closePullRequest` / delete branch.
 
 | Campo | Valor |
 |-------|-------|
-| HTTP status | *(registrar post-envío)* |
+| HTTP status | **202** (queued) |
 | Destinatario | `***0102` (E.164 enmascarado) |
 | API URL | `https://api.lebytek.com/api/v1` (default — env `LEBYTEK_API_URL` era placeholder literal) |
+| Idempotency-Key | `audit-closure-2026-08-03-*` |
+| messagePublicId | `01KZ3WXPTJK7QV2YW50WZRHJT2` |
 
 ## Enlaces verificados
 
