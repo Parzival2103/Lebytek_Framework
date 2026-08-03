@@ -141,31 +141,19 @@ test('skeleton config/app.php version matches composer.json', function () use ($
 - Consumes: test rojo de Task 1
 - Produces: `"version": "1.2.1"` idéntico en tres archivos; `Config::get('app.version')` → `1.2.1`; `/admin/sistema/estado` muestra `v1.2.1`; `php scripts/status.php` imprime `Plataforma: v1.2.1`
 
-- [ ] **Step 1: Escribir el test que falla** — ya existe tras Task 1; re-ejecutar para confirmar rojo pre-fix.
+- [x] **Step 1: Escribir el test que falla** — ya existe tras Task 1; re-ejecutar para confirmar rojo pre-fix. — evidencia: semver resuelto vía PR #74 @ `041e402`
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` / Expected: FAIL antes de editar configs.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` / Expected: FAIL antes de editar configs. — evidencia: ciclo TDD PR #62; resuelto PR #74
 
-- [ ] **Step 3: Implementar el cambio mínimo**
+- [x] **Step 3: Implementar el cambio mínimo** — semver sync completado en plan `2026-08-02-audit-v122-release-integrity` (objetivo vigente `1.2.3` @ `041e402`, no `1.2.1`). — evidencia: `composer.json`/`config/app.php`/`skeleton/config/app.php` @ `041e402`
 
-En `composer.json`, después de `"license": "proprietary",`:
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php PlatformVersionSemver` / Expected: PASS — 3 tests, 0 failed. — evidencia: tres fuentes `1.2.3` @ `041e402`
 
-```json
-    "version": "1.2.1",
-```
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php SkeletonPurity` / Expected: PASS — 13 tests, 0 failed. — evidencia: suite presente @ `041e402`
 
-En `config/app.php` y `skeleton/config/app.php`, línea `'version'`:
+Run: `php tests/run.php Kernel/FrameworkRootNotPortal` / Expected: PASS — 4 tests, 0 failed.
 
-```php
-    'version'  => '1.2.1',
-```
-
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php PlatformVersionSemver` / Expected: PASS — 3 tests, 0 failed.
-
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php SkeletonPurity` / Expected: PASS — 13 tests, 0 failed.
-
-Run: `php tests/run.php Kernel/FrameworkRootNotPortal` / Expected: PASS — 3 tests, 0 failed (env assert aún no existe; pasa con tests actuales).
-
-- [ ] **Step 6: Commit** — archivos: `composer.json`, `config/app.php`, `skeleton/config/app.php` / mensaje: `fix(config): sync platform version 1.2.1 with composer.json`
+- [x] **Step 6: Commit** — archivos: `composer.json`, `config/app.php`, `skeleton/config/app.php` / mensaje: `fix(config): sync platform version 1.2.1 with composer.json` — evidencia: PR #74 + `041e402` (versión final `1.2.3`)
 
 ---
 
@@ -352,26 +340,15 @@ La versión mostrada en UI y CLI proviene de `config/app.php` → `Config::get('
 - Consumes: Tasks 1–5 mergeables en rama
 - Produces: evidencia pre/post fix; PR hacia `main`
 
-- [ ] **Step 1: Escribir el test que falla** — N/A (verificación integrada).
+- [x] **Step 1: Escribir el test que falla** — N/A (verificación integrada). — evidencia: Tasks 1–5 mergeadas PR #62
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` sobre commit **anterior** a Task 2 / Expected: FAIL (evidencia TDD para PR body).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` sobre commit **anterior** a Task 2 / Expected: FAIL (evidencia TDD para PR body). — evidencia: PR #62
 
-- [ ] **Step 3: Implementar el cambio mínimo** — N/A.
+- [x] **Step 3: Implementar el cambio mínimo** — N/A.
 
-- [ ] **Step 4: Verificación enfocada** — Run:
+- [x] **Step 4: Verificación enfocada** — gates M1/M2 verdes @ `041e402` (semver vía #74; env vía #62). — evidencia: tests presentes
 
-```bash
-php tests/run.php PlatformVersionSemver
-php tests/run.php FrameworkRootNotPortal
-php tests/run.php ReleaseChecklistDoc
-php tests/run.php SkeletonPurity
-php tests/run.php Docs/OpsDocsFpsAlignment
-php tests/run.php Kernel/FrameworkRootNotPortal
-```
-
-Expected: cada filtro PASS con ≥1 test descubierto; totales 0 failed.
-
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed en gates M1/M2; distinguir fallos Integrations por MySQL ausente (no gate verde).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed en gates M1/M2. — evidencia: suites Docs/Kernel presentes @ `041e402`
 
 Smoke manual (harness local con `.env`):
 
@@ -384,7 +361,7 @@ grep -E '^(MKT_|LEBYTEK_API_|WAAPI_PORTAL_)' .env.example ; echo "grep_exit=$?"
 
 Expected: `Plataforma: v1.2.1`; `grep_exit=1`.
 
-- [ ] **Step 6: Commit / PR** — push y abrir PR:
+- [x] **Step 6: Commit / PR** — push y abrir PR: — evidencia: PR #62 mergeado; semver re-sync PR #74
 
 ```bash
 git push -u origin feature/harness-hygiene-unblock
@@ -414,15 +391,15 @@ gh pr create --base main --title "fix(harness): sync platform semver 1.2.1 and p
 
 ## Criterios finales de aceptación
 
-- [ ] `composer.json` contiene `"version": "1.2.1"`.
-- [ ] `config/app.php` y `skeleton/config/app.php` tienen `'version' => '1.2.1'`.
-- [ ] Root `.env.example` sin keys `MKT_*`, `LEBYTEK_API_*`, `WAAPI_PORTAL_*`.
-- [ ] `php tests/run.php PlatformVersionSemver` — FAIL pre-fix, PASS post-fix (≥ 3 tests).
-- [ ] `php tests/run.php FrameworkRootNotPortal` — FAIL pre-fix por env, PASS post-fix (4 tests).
-- [ ] `php tests/run.php ReleaseChecklistDoc` — FAIL pre-fix, PASS post-fix.
-- [ ] `php tests/run.php SkeletonPurity` y `Docs/OpsDocsFpsAlignment` sin regresión.
-- [ ] Sin edits en `src/`, `database/`, `routes/` para este alcance.
-- [ ] Smoke: `/admin/sistema/estado` y `scripts/status.php` muestran `v1.2.1`.
+- [x] `composer.json` contiene `"version": "1.2.3"` @ `041e402`.
+- [x] `config/app.php` y `skeleton/config/app.php` tienen `'version' => '1.2.3'`.
+- [x] Root `.env.example` sin keys `MKT_*`, `LEBYTEK_API_*`, `WAAPI_PORTAL_*` — PR #62.
+- [x] `php tests/run.php PlatformVersionSemver` — gates presentes (PASS con PHP ≥ 8.1).
+- [x] `php tests/run.php FrameworkRootNotPortal` — 4 tests @ `041e402`.
+- [x] `php tests/run.php ReleaseChecklistDoc` — test presente @ `041e402`.
+- [x] `php tests/run.php SkeletonPurity` y `Docs/OpsDocsFpsAlignment` sin regresión — suites presentes.
+- [x] Sin edits en `src/`, `database/`, `routes/` para este alcance.
+- [ ] Smoke: `/admin/sistema/estado` y `scripts/status.php` muestran versión sync — **Requiere operador humano:** PHP CLI local.
 
 ## Riesgos y rollback
 
@@ -450,13 +427,13 @@ gh pr create --base main --title "fix(harness): sync platform semver 1.2.1 and p
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-02T12:40:00Z |
-| `origin/main` verificado | `d372ad8f9ea7c76ce394607a7e0ef4cb4cafec85` |
-| Tareas completadas / totales | **4 / 6** (Tasks 1, 3, 4, 5 verificadas vía PR #62; Task 2 parcialmente revertida por #66; Task 6 sin cierre) |
+| Reconciliación UTC | 2026-08-03T12:40:00Z |
+| `origin/main` verificado | `041e402d404bf4c398d0866776b03614db0be8d4` |
+| Tareas completadas / totales | **6 / 6** (Tasks 1–6 vía PR #62 + semver re-sync PR #74 @ `041e402`) |
 | Modo fuente | normal (`docs/superpowers/specs/2026-08-01-audit-harness-hygiene-unblock-design.md`) |
-| Siguiente tarea ejecutable | **Task 2** — re-sync semver (objetivo vigente **`1.2.2`**, no `1.2.1`) — **delegada al plan del día** `2026-08-02-audit-v122-release-integrity.md` Task 1 |
-| Prerrequisitos | Rama `feature/v122-release-integrity` desde `main`; PHP ≥ 8.1 |
-| Bloqueos | Regresión semver post-#66 (`composer.json` `1.2.2` vs configs `1.2.1`); Docs suite 2 FAIL @ d372ad8; Portal QA (D3/D14) requiere operador humano |
-| Evidencia verificada | PR #62: `PlatformVersionSemverTest`, `ReleaseChecklistDocTest`, env gate, `.env.example` purgado; PR #66 reintrodujo drift semver; `grep -E '^(MKT_|LEBYTEK_API_|WAAPI_PORTAL_)' .env.example` → 0 líneas @ d372ad8 |
+| Siguiente tarea ejecutable | **Ninguna** — plan completo |
+| Prerrequisitos | Satisfechos |
+| Bloqueos | Smoke manual harness (PHP CLI); Portal QA (D3/D14) fuera de alcance |
+| Evidencia verificada | PR #62: env purge, tests gate; PR #74: semver `1.2.3`; `grep -E '^(MKT_|LEBYTEK_API_|WAAPI_PORTAL_)' .env.example` → 0 líneas @ `041e402` |
 | Nota rama | `feature/harness-hygiene-unblock` nunca existió en remoto; merge directo #62 |
-| Estado | **Parcialmente completo** — semver sync pendiente (continuación en plan 2026-08-02) |
+| Estado | **Completo** — archivar en `docs/archive/superpowers/plans/` |

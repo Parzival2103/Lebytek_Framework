@@ -1,0 +1,441 @@
+# Design: Enriquecimiento listado `mkt_leads` vía hook `afterListRows` (Portal)
+
+**Fecha:** 2026-08-03  
+**Repo spec:** `Parzival2103/Lebytek_Framework` (artefacto de diseño; implementación Portal en `Lebytek_Portal`)  
+**Estado:** diseño — sin implementación en esta corrida  
+**Modo:** normal (fuente Nivel C)
+
+**Auditoría fuente:** `docs/audits/2026-08-02-auditoria-tecnica-diaria.md` (mergeada en `main` vía PR #67 @ `d372ad8`)  
+**Estado post-audit verificado en tip `main`:** M1 semver y M9 dompdf **resueltos** (#74 + bump `v1.2.3` @ `041e402`); hook `afterListRows` publicado (#66, tag `v1.2.2`+). El hallazgo accionable restante es **consumo Portal** (P1).
+
+**Specs/planes relacionados:**
+
+- Framework release integrity (implementado): `docs/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md` · plan `docs/superpowers/plans/2026-08-02-audit-v122-release-integrity.md` (Tasks 1–4 completadas #74)
+- Plan Portal hermano: `docs/superpowers/plans/2026-08-02-audit-mkt-leads-after-list-rows.md`
+- Contratos integración: `docs/integration/waapi-api-contract.md`, `docs/integration/role-delegation-lebytek-api.md`
+- Frontera FPS: `docs/superpowers/BOUNDARY-framework-vs-portal-fps.md`
+
+---
+
+## Automation provenance
+
+| Campo | Valor |
+|-------|-------|
+| Artifact type | spec |
+| Repositorio | `Parzival2103/Lebytek_Framework` |
+| Base branch | `main` |
+| SHA `origin/main` inspeccionado | `041e402d404bf4c398d0866776b03614db0be8d4` |
+| SHA Portal inspeccionado | **No verificado** — `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository»; `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404. Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
+| SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
+| Rama generada | `automation/spec-2026-08-03` |
+| Timestamp UTC | trigger cron `2026-08-03T12:10:00Z` / corrida agente `2026-08-03T12:15:00Z` / pase ux `2026-08-03T12:30:00Z` / pase deuda `2026-08-03T13:01:30Z` (modo **normal**) |
+| Pase deuda | `2026-08-03T13:01:30Z` UTC; SHA `origin/main` `041e402d404bf4c398d0866776b03614db0be8d4`; modo **normal** |
+| Nivel de fuente | **C** — no hubo auditoría del día 2026-08-03; reporte más reciente en `origin/main`: `docs/audits/2026-08-02-auditoria-tecnica-diaria.md` (fecha real del reporte: 2026-08-02, merge PR #67). Nivel A: `gh pr list --search "docs(audit):" --state open --base main` → vacío. Nivel B: rama `origin/automation/audit-2026-08-02` existe pero `origin/main` no es ancestro de su head (reporte ya mergeado por camino distinto) → rechazada. |
+| PR auditoría fuente | #67 — mergeado 2026-08-02; head histórico `a8331573ec94d65621dd77512ec7ccaf522af035` |
+| headRefOid fuente | `a8331573ec94d65621dd77512ec7ccaf522af035` (rama audit; no heredada) |
+| `<LEGACY_REF>` | `refs/tags/archive/backoffice-api-integration` @ `4789f953ef746d17bae2e6b50c85504782d306e3` — 53 commits exclusivos; ninguno ancestro de HEAD ni del head de auditoría |
+| Issues abiertos Framework | **0** (`gh issue list --repo Parzival2103/Lebytek_Framework --state open` → vacío) |
+| Issues abiertos Portal | **No verificable** — mismo bloqueador gh 404 (M6) |
+
+---
+
+## Problema
+
+La auditoría del 2026-08-02 identificó que Framework publicó la capacidad CRUD `afterListRows` (#66, tag `v1.2.2`) para permitir que consumidores enriquezcan filas de listado **después** de la query SQL y **antes** del formateo de tabla. El caso de uso documentado en el commit es el listado admin de `mkt_leads` en Portal con estado WhatsApi/tenant en vivo.
+
+**Estado verificado en tip `main` @ `041e402` (post-audit):**
+
+| ID | Hallazgo audit 2026-08-02 | Estado hoy |
+|----|--------------------------|------------|
+| **M1** | Regresión semver post-`v1.2.2` | **RESUELTO** — tres fuentes `1.2.3`; tag `v1.2.3` @ `041e402` |
+| **M9** | dompdf v3.1.5 advisories | **RESUELTO** — lock `v3.1.6`; `DompdfSecurityVersionTest` presente |
+| **F-hook** | Hook `afterListRows` genérico | **PUBLICADO** — `CrudListRowsContext`, `CrudResourceService::buildIndexData`, tests Crud 171/171 |
+| **P1** | Portal no consume el hook | **ABIERTO / no verificable** — M6 impide inspeccionar `Lebytek_Portal`; última evidencia: framework `v1.1.0` |
+
+**Consecuencia:** el admin de leads en Portal sigue mostrando solo columnas SQL persistidas (`api_lifecycle_status`, etc.) sin estado en vivo de instancia/tenant ni columnas virtuales enriquecidas. La capacidad Framework existe pero no tiene consumidor desplegado.
+
+**Contexto positivo (no reabrir):** M2 `.env.example` resuelto (#62); fronteras FPS intactas (hook en `src/` sin `mkt_*` ni `LebytekApiClient`); C2 Stripe Framework resuelto; WhatsApi @ `f3f3ec7` accesible vía gh.
+
+**Deuda carry-forward registrada (fuera de alcance inmediato):** M3 (CRUD RBAC router), M4 (API sesión), M5 (`permisos.gestionar` seeds), M6 (gh Portal 404), D6 (`skeleton.lebytek.com`), D7 (CI GitHub Actions).
+
+---
+
+## Brainstorm y recomendación de diseño
+
+### Contexto, propósito, restricciones y criterios de éxito
+
+- **Propósito:** diseñar la implementación Portal que consume `afterListRows` para enriquecer `/admin/crud/mkt_leads` con estado WhatsApi y actividad tenant, usando el contrato HTTP documentado contra `api.lebytek.com`.
+- **Restricciones:** negocio Marketing vive en `Lebytek_Portal`; no editar `vendor/lebytek/framework`; Portal requiere `lebytek/framework` ≥ `v1.2.2` (recomendado `v1.2.3`); staging Portal inexistente (`docs/ENVIRONMENTS.md`); legacy `archive/backoffice-api-integration` solo evidencia histórica.
+- **Éxito:** `composer.lock` Portal referencia framework ≥ `v1.2.2`; handler registrado; JSON CRUD declara hook + columnas `"virtual": true`; listado admin muestra `wa_estado` y `tenant_actividad` con degradación si API falla; test gate Portal rojo→verde.
+
+### Enfoques evaluados — enriquecimiento Portal
+
+| Enfoque | Descripción | Pros | Contras |
+|---------|-------------|------|---------|
+| **A — Handler Application + batch API por página** | `MktLeadsListEnrichmentHandler` llama `LebytekApiClient` con batch de `api_tenant_public_id` de la página actual (≤15 filas) | Estado en vivo; alinea intención #66 y docs integración; timeout acotado por página | Latencia listado; depende API; requiere cliente HTTP Portal |
+| **B — Solo columnas BD persistidas** | Handler lee `api_lifecycle_status` / columnas SQL sin HTTP | Rápido, sin dependencia runtime | No refleja actividad en vivo; desalinea propósito del hook |
+| **C — Híbrido con cache TTL (Redis/file)** | Batch API + cache 60s por `publicId` | Balance latencia/frescura | Infra cache no verificada en Portal; complejidad ops |
+
+**Recomendación:** **A con degradación graceful** — enriquecer vía batch `GET /tenants/{publicId}` (o endpoint batch futuro) cuando `api_tenant_public_id` presente; timeout total **2s por página**; fallback a valor BD (`api_lifecycle_status`) o «—». Rechazar B como solución final. C queda optimización futura si latencia lo exige en producción.
+
+### Enfoques evaluados — estrategia de bump Framework en Portal
+
+| Enfoque | Descripción | Pros | Contras |
+|---------|-------------|------|---------|
+| **A1 — PR único bump + handler** | Un PR: `composer update lebytek/framework` + handler + JSON + tests | Un merge, smoke único | PR más grande |
+| **A2 — Dos PRs: bump lock primero** | PR1 solo lock; PR2 handler+JSON | Aislamiento de riesgo Composer | Dos merges; hook inerte entre PRs (aceptable) |
+
+**Recomendación:** **A1** — bump y handler en un solo PR `feature/mkt-leads-after-list-rows`; el hook es inerte hasta registrar handler + JSON.
+
+---
+
+## Comportamiento esperado
+
+### Portal — consumo `afterListRows` para `mkt_leads`
+
+1. Tras `composer update lebytek/framework` a ≥ `v1.2.2` (recomendado `v1.2.3`), el listado `/admin/crud/mkt_leads` invoca el hook registrado.
+2. Handler Portal (`App\Application\Marketing\Crud\MktLeadsListEnrichmentHandler` o equivalente) implementa `afterListRows(CrudListRowsContext $ctx)`:
+   - Recibe filas post-query con columnas SQL existentes (`api_tenant_public_id`, `api_lifecycle_status`, etc.).
+   - Agrupa `api_tenant_public_id` únicos de la página.
+   - Para cada ID, consulta API WhatsApi (`GET /tenants/{publicId}` con token plataforma) — estado instancia / `isActive`.
+   - Escribe columnas virtuales en cada fila: `wa_estado`, `tenant_actividad`.
+   - Si API falla, timeout (>2s total) o ID ausente: fallback «—» o valor BD persistido.
+3. `config/cruds/mkt_leads.json` declara:
+   - `"hooks": { "handler": "mkt_leads_enrich" }` (clave whitelist, no FQCN).
+   - Columnas listado con `"virtual": true` para campos enriquecidos.
+4. Registro en `config/crud_handlers.php` → `'mkt_leads_enrich' => MktLeadsListEnrichmentHandler::class`.
+5. Sin cambios en `vendor/lebytek/framework`.
+
+### Contrato público Framework (ya publicado — no reimplementar)
+
+| Artefacto | Namespace / ruta | Notas |
+|-----------|-------------------|-------|
+| `CrudListRowsContext` | `Lebytek\Framework\Application\Crud\Context\` | `rows()`, `setRows()`, `query()` |
+| `AbstractCrudHookHandler::afterListRows` | `Lebytek\Framework\Application\Crud\Handlers\` | No-op default; Portal sobrescribe |
+| Invocación | `CrudResourceService::buildIndexData` | Hook **después** de `list()` y **antes** de `CrudTableBuilder::build` |
+| Registro handler | `config/crud_handlers.php` → `CrudHandlerRegistry` | Clave string en JSON CRUD |
+| Columnas virtuales | `list.columns[].virtual: true` | Soportado desde #66 |
+
+**Contratos ausentes en Framework (correcto — no asumir):**
+
+- No existe `LebytekApiClient` en el paquete — Portal debe implementar cliente HTTP contra `https://api.lebytek.com/api/v1` según `docs/integration/waapi-api-contract.md`.
+- No existe endpoint batch tenants en contrato documentado — diseño asume N llamadas paralelas acotadas por página (≤15) con timeout global; batch API sería mejora futura en `WhatsApiLebytek`.
+
+### Framework — sin cambios requeridos
+
+Prerrequisito satisfecho en tip `main` @ `041e402`. No se requiere nuevo release Framework para este diseño.
+
+---
+
+## Alcance
+
+### Portal — `Parzival2103/Lebytek_Portal`, base `main` (**no verificado**)
+
+| ID | Entregable | Archivos esperados (convención Portal) |
+|----|------------|----------------------------------------|
+| P1 | Bump `composer.lock` a `lebytek/framework` ≥ `v1.2.2` | `composer.json`, `composer.lock` |
+| P2 | Handler `afterListRows` | `app/Application/Marketing/Crud/MktLeadsListEnrichmentHandler.php` |
+| P3 | Registro handler | `config/crud_handlers.php` → clave `mkt_leads_enrich` |
+| P4 | CRUD JSON hook + columnas virtuales | `config/cruds/mkt_leads.json` |
+| P5 | Test gate Portal | `tests/Marketing/Crud/MktLeadsListEnrichmentTest.php` (o equivalente) |
+
+### Framework — `Parzival2103/Lebytek_Framework`, base `main`
+
+| ID | Entregable | Estado |
+|----|------------|--------|
+| F-hook | Hook `afterListRows` | **Ya publicado** — no acción |
+| F-semver | Release ≥ `v1.2.2` | **Satisfecho** — tip `v1.2.3` @ `041e402` |
+
+### Operaciones — implementación y staging (incluidas)
+
+- Portal: rama `feature/mkt-leads-after-list-rows` → PR → merge `main`.
+- Verificación local Portal: `php tests/run.php Marketing` o suite CRUD equivalente (**estructura no verificada** — M6).
+- Smoke admin listado leads en entorno dev/staging Portal cuando exista.
+
+### Operaciones — producción (fuera de esta corrida desatendida)
+
+- Deploy `lebytek.com` / bump `composer.lock` en VPS producción.
+- Configuración `.env` producción (`LEBYTEK_API_TOKEN`).
+- SSH, smoke VPS, habilitar Stripe subscription checkout.
+- Conceder token gh lectura Portal a automation (M6).
+
+---
+
+## No-alcance
+
+- Implementación código en esta corrida (spec-only).
+- Cambios en `src/`, `database/`, `routes/`, `skeleton/` Framework.
+- Reabrir M1, M2, M7, M8, M9 — resueltos en tip `main`.
+- M3–M5 (RBAC router, API token, permisos seed) — backlog Framework separado.
+- D6 (`skeleton.lebytek.com`), D7 (CI GitHub Actions), M3–M5 — backlog Framework documentado en **Deuda técnica**; no auto-fix en esta corrida.
+- P1 consumo hook Portal — alcance de implementación en `Lebytek_Portal`, no en package source.
+- Merge o referencia operativa a `feature/backoffice-api-integration`.
+- QA Stripe subscription checkout Portal (C2 ops).
+- Nuevo endpoint batch en WhatsApi (mejora futura, no bloqueante).
+
+---
+
+## Ownership map
+
+| Requisito | Repositorio | Rama base | Release semver |
+|-----------|-------------|-----------|----------------|
+| P1–P5 hook mkt_leads | `Lebytek_Portal` | `main` | Consume Framework ≥ `v1.2.2`; recomendado `v1.2.3` |
+| F-hook (prerrequisito) | `Lebytek_Framework` | `main` | Tag `v1.2.3` @ `041e402` — **ya publicado** |
+| Cliente HTTP leads↔API | `Lebytek_Portal` | `main` | `LebytekApiClient` o equivalente en `App\Infrastructure` |
+| API tenant status | `WhatsApiLebytek` | `main` | Sin cambio requerido @ `f3f3ec7` |
+| Credenciales gh Portal | Ops / automation | — | Fuera de diseño producto (M6) |
+
+---
+
+## Dependencias y compatibilidad
+
+### Framework → Portal
+
+| Versión Framework | Capacidad | Consumidor |
+|-------------------|-----------|------------|
+| `< v1.2.2` | Sin `afterListRows` | Portal **no debe** registrar hook (validación fallará o no-op) |
+| `v1.2.2` | Hook + columnas virtuales | Mínimo P1–P5 |
+| `v1.2.3` | M1+M9 fix + hook | **Recomendado** — compatible con constraint `^1.2` |
+
+**Frontera semver/release:** Portal debe actualizar `composer.lock` a tag ≥ `v1.2.2` **antes** de merge P2–P5. El tag `v1.2.3` incluye fixes de hygiene no bloqueantes para el hook pero recomendados por seguridad dompdf.
+
+### Portal → WhatsApi
+
+- Autenticación: `Authorization: Bearer {LEBYTEK_API_TOKEN}` (token plataforma).
+- Endpoint consumido: `GET /tenants/{publicId}` — permiso `tenants.ver`.
+- Respuesta esperada: `isActive`, metadata tenant; mapear a `tenant_actividad` / `wa_estado` según convención UI Portal (**labels exactos no verificados en repo Portal**).
+
+### Migración segura
+
+1. **Framework ya publicado:** no hay dependencia de orden con nuevo release Framework.
+2. **Portal base existente:**
+   - Crear rama desde `main` Portal.
+   - `composer update lebytek/framework` — verificar que `CrudConfigValidator` acepta clave handler.
+   - Merge handler + JSON + registro en un PR.
+   - Columnas `dom_mkt_leads` con `api_tenant_public_id` ya documentadas en `docs/integration/role-delegation-lebytek-api.md` (**estado BD producción no verificado**).
+3. **Portal base nueva (skeleton/tenant):** instalar framework ≥ `v1.2.2`; patrón handler solo aplica si módulo Marketing habilitado.
+4. **Rollback Portal:** quitar `"hooks"` de `mkt_leads.json` y entrada en `crud_handlers.php`; listado vuelve a columnas SQL-only sin revertir bump lock.
+
+---
+
+## Tests (TDD — deben fallar antes del fix)
+
+### Portal (**diseño — rutas no verificadas en repo**)
+
+| Test | Archivo propuesto | Pre-fix esperado | Post-fix |
+|------|-------------------|------------------|----------|
+| Framework version gate | script o test existente | **FAIL** — vendor < `v1.2.2` (evidencia doc: v1.1.0) | **PASS** — lock ≥ `v1.2.2` |
+| Handler registrado | `tests/Marketing/Crud/MktLeadsListEnrichmentTest.php` | **FAIL** — clave `mkt_leads_enrich` ausente | **PASS** |
+| JSON hook declarado | idem | **FAIL** — `mkt_leads.json` sin `hooks.handler` | **PASS** |
+| Enriquecimiento filas | idem | **FAIL** — filas sin `wa_estado` tras hook (mock API) | **PASS** — columna virtual poblada |
+| Timeout degradación | idem | N/A pre-fix | **PASS** — API mock timeout → fallback «—» |
+
+Usar mock de cliente API en test unitario; no llamar `api.lebytek.com` real en CI.
+
+### Framework (verificación cruzada — ya verde en tip)
+
+| Test | Archivo | Estado @ `041e402` |
+|------|---------|-------------------|
+| Hook mutates rows | `tests/Crud/Table/CrudListRowsHookTest.php` | **PASS** (171/171 Crud suite) |
+| Semver sync | `tests/Docs/PlatformVersionSemverTest.php` | **PASS** (1.2.3) |
+| Dompdf seguro | `tests/Docs/DompdfSecurityVersionTest.php` | **PASS** (≥3.1.6) |
+
+---
+
+## Riesgos
+
+| Riesgo | Severidad | Deuda | Mitigación |
+|--------|-----------|-------|------------|
+| Portal prod sigue en framework `v1.1.0` — hook inerte | Alta | P1, D3/M6 | P1 explícito; ops confirman SHA + lock ≥ `v1.2.2`; prerrequisito Framework ya publicado @ `v1.2.3` |
+| Latencia listado leads (N HTTP por página) | Media | P2 diseño | Paralelizar requests; timeout 2s; fallback BD |
+| API WhatsApp caída en listado admin | Media | P2 diseño | Degradación graceful — «—» o valor cache BD |
+| Credenciales automation sin acceso Portal | Media | M6 | Marcar P1–P5 **no verificados**; operador valida rutas |
+| Staging Portal inexistente | Media | D6 complementario | Smoke en dev local; `skeleton.lebytek.com` pendiente como LAB package |
+| Endpoint batch tenants ausente | Baja | — | N ≤ 15 por página; optimización futura WhatsApi |
+| Regresión bump framework en Portal | Media | P1 | Correr suite Portal completa post-bump |
+| RBAC CRUD/calendario solo en servicio | Baja | M3 | Backlog: middleware router-level o documentar patrón 403 |
+| Health LB usa `/api/ping` con cookie | Media | M4/D7 | **No** usar `/api/ping` como health; backlog `GET /api/health` público (CF7) |
+| Stripe subscription sin QA Portal | Alta (Portal) | D14 | Gate `PAYMENTS_SUBSCRIPTION_CHECKOUT` OFF; Framework contrato base resuelto |
+| Sin CI GitHub Actions | Media | D7 | Gates ejecutables vía `php tests/run.php`; spec futuro workflow mínimo |
+| Regresión semver post-release | Baja | ~~M1~~ ✅ | `PlatformVersionSemverTest` + checklist H6 — cerrado #74 @ `v1.2.3` |
+| Advisories dompdf &lt;3.1.6 | Baja | ~~M9~~ ✅ | Lock `v3.1.6`; `DompdfSecurityVersionTest` — cerrado #74 |
+
+---
+
+## Rollback
+
+| Ámbito | Procedimiento |
+|--------|---------------|
+| Portal handler | Revert PR: quitar hooks JSON + registro handler; listado SQL-only |
+| Portal bump lock | Mantener bump si no hay breaking change; hook es opt-in vía JSON |
+| Framework | No aplica — sin cambios en esta implementación |
+
+---
+
+## Compatibilidad, UX y responsive
+
+### Modo del pase: normal
+
+Este spec es **Portal-first (P1–P5)**: enriquecimiento del listado admin `/admin/crud/mkt_leads` vía hook `afterListRows` ya publicado en Framework (#66, tag ≥ `v1.2.2`). Superficie UI verificable: tabla CRUD leads con columnas virtuales `wa_estado` y `tenant_actividad`, degradación ante fallo API y registro handler en `config/crud_handlers.php`. Framework no introduce layout admin nuevo (F-hook satisfecho). Login responsive, dashboard nav y health API pública permanecen carry-forward.
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (P1–P5) | Evidencia / carry-forward |
+|------|-------------------|---------------------------|
+| PHP soportado | Sin cambio runtime Framework | `composer.json` exige `>=8.1`; VPS documentado PHP **8.4.22** (`2026-07-26-skeleton-package-staging-design.md`). Handler Portal y hook `afterListRows` compatibles 8.1+; bump recomendado `v1.2.3` no eleva requisito PHP. |
+| Instalación vía `vendor/` | **Alcance P1 + P2–P5** | Consumidores instalan `lebytek/framework` ≥ `v1.2.2` en `vendor/lebytek/framework` — **solo lectura**; handler Portal vive en `App\` + `config/crud_handlers.php`. Path-repo sólo desarrollo local del package source. |
+| Health sin cookie de sesión | Carry-forward **M4/D7** | `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` requiere sesión. Smoke post-merge: **no** usar `/api/ping` como health LB; backlog `GET /api/health` público (CF7). |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` comenta no duplicar `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*`; `FrameworkRootNotPortalTest` PASS (#62). P1–P5 usan `LEBYTEK_API_TOKEN` en consumidor Portal — fuera harness Framework. |
+| Navegadores objetivo | Superficie admin CRUD | Baseline `docs/core/ui_ux.md`: admin breakpoint **992px (`lg`)**. Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15; sin IE11. Columnas virtuales leads deben degradar en `<768px` vía `list.columns[].priority`. |
+
+### UX — flujos Portal `mkt_leads` (P1–P5, **no verificados** — M6)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | Columnas virtuales `wa_estado` / `tenant_actividad` con **labels legibles** en español; valor «—» cuando `api_tenant_public_id` ausente — no celda vacía ambigua | P4 |
+| **U2** | Timeout API (>2s por página) o fallo HTTP: degradación graceful — mostrar valor persistido en BD (`api_lifecycle_status`) o «—»; **no** bloquear render del listado ni error 500 genérico | P2 |
+| **U3** | Copy accionable si API caída repetida: hint operador («revisa WhatsApi / credenciales `LEBYTEK_API_TOKEN` en `.env` Portal») en tooltip o badge secundario — no sólo «Error» | P2, CF10 parcial |
+| **U4** | Handler no registrado o clave JSON inválida: validación `CrudConfigValidator` con mensaje que indique `config/crud_handlers.php` + clave esperada (`mkt_leads_enrich`) | P3, P4 |
+| **U5** | Estado carga durante batch `afterListRows`: spinner fila o placeholder «…» en columnas virtuales hasta completar enriquecimiento — evitar flash vacío→valor (CF9 parcial) | P2 |
+| **U6** | Listado vacío (0 leads): empty state accionable con CTA «crear lead» o enlace a documentación Marketing — no tabla vacía sin contexto | P4 |
+| **U7** | Bump Framework fallido (`composer update`): mensaje install/CLI indica versión mínima `v1.2.2` y acción («ejecuta composer update lebytek/framework») | P1 |
+
+### UX — Framework (prerrequisito satisfecho — sin cambios UI)
+
+| Requisito | Criterio | Estado |
+|-----------|----------|--------|
+| **U8** | Hook `afterListRows` invocado en `CrudResourceService::buildIndexData` post-query, pre-format | **Publicado** @ `v1.2.2`+ |
+| **U9** | Tests Crud (`CrudListRowsHookTest`): mensaje de fallo cita handler, clave registro y acción esperada | **Verde** 171/171 @ `041e402` |
+
+### Responsive — smoke en superficies tocadas
+
+Referencia: `docs/core/ui_ux.md` §542 — breakpoint admin **992px (`lg`)**; tablas CRUD exigen `table-responsive` (`ui_ux.md` L222).
+
+| Superficie | Verificación post-merge | Rango |
+|------------|-------------------------|-------|
+| Listado admin `mkt_leads` (Portal) | `table-responsive` obligatorio; columnas virtuales con `priority` (identificador lead `1–2`, `wa_estado` `2–3`, `tenant_actividad` `4+`); toolbar filtros usable sin solapamiento; scroll horizontal aceptable en columnas secundarias | **320–768px** |
+| Formulario/detalle lead (sin cambio directo) | Sin regresión responsive en vistas CRUD existentes tras añadir columnas listado | **320–768px** |
+| Login / dashboard admin (sin alcance) | Carry-forward CF3–CF4 — no regresión por bump lock Portal | **320–768px** smoke opcional |
+
+### Carry-forward UX — próximo spec con superficie UI más amplia
+
+Ítems derivados de deuda abierta; **CF1–CF2 (semver harness + env purge) y CF5 parcial (`mkt_leads`) resueltos** en specs previos; este spec cubre CF5 para `mkt_leads` vía P4.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF6 | RBAC router CRUD/calendario | M3 | Errores 403 accionables (slug requerido vs permiso denegado). |
+| CF7 | Health endpoint público | M4/D7 | `GET /api/health` 200 sin cookie; body `{ "status": "ok" }`; checklist VPS. |
+| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección — más allá de U5–U6 en leads. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer; extiende U3 fuera de leads. |
+
+---
+
+## Criterios de aceptación
+
+### Portal (P1–P5)
+
+- [ ] `composer.lock` referencia `lebytek/framework` ≥ `v1.2.2` (preferible `v1.2.3`).
+- [ ] Handler `MktLeadsListEnrichmentHandler` registrado como `mkt_leads_enrich`.
+- [ ] `config/cruds/mkt_leads.json` declara hook y columnas `wa_estado`, `tenant_actividad` con `"virtual": true`.
+- [ ] Test gate `MktLeadsListEnrichmentTest` pasa con mock API.
+- [ ] Listado admin muestra columnas enriquecidas; timeout API → fallback sin error 500.
+- [ ] Sin edits en `vendor/lebytek/framework`.
+
+### Framework (prerrequisito — ya cumplido)
+
+- [x] Tag ≥ `v1.2.2` publicado con hook `afterListRows`.
+- [x] Semver sync y dompdf seguro en tip `main` @ `041e402`.
+
+### Verificación cruzada documentada
+
+- [x] Framework hook verificado en `src/Application/Services/CrudResourceService.php` y tests Crud.
+- [ ] Portal SHA y lock — **no verificado** (M6).
+- [ ] Issues Portal abiertos — **no verificado** (M6).
+- [x] WhatsApi `main` @ `f3f3ec7` accesible vía gh.
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **normal** con requisitos K/U/R verificables para P1–P5.
+- [ ] **AC-UX2:** Requisitos U1–U7 (enriquecimiento leads, degradación API, empty state, bump accionable) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF6–CF10 documentado; CF5 parcial cubierto para `mkt_leads` vía P4; CF1–CF2 no arrastrados (resueltos).
+- [ ] **AC-UX4:** Smoke responsive R1 en **320–768px** para listado `mkt_leads` Portal post-implementación (`table-responsive`, column priority, toolbar).
+
+### Deuda técnica (inventario)
+
+- [ ] **AC-D1:** Sección **Deuda técnica** lista ítems abiertos verificados (M3–M5, D6, D7) con evidencia ruta/línea en `main` @ `041e402`.
+- [ ] **AC-D2:** M1, M9, D1–D2, D4–D5, D13 reconciliados como **resueltos** (#62, #74); D10–D12, D16, D22, D17–D21, M2, M7, M8 permanecen resueltos; no re-listados como abiertos.
+- [ ] **AC-D3:** P1, D3/M6, D14, D15 marcados **no verificados** Portal; acción concreta documentada.
+- [ ] **AC-D4:** Verificado sin deuda nueva — migraciones post-baseline 3 SQL ↔ 3 entradas manifiesto (`config/modules/{core,crud-engine,pdf-kit}.php`); `src/` sin `TODO`/`FIXME`; referencias operativas vivas a `feature/backoffice-api-integration` ausentes en `scripts/`, `docs/composer-setup.md`, `docs/integration/` (`OpsDocsFpsAlignmentTest` PASS).
+
+### Cadena automation
+
+- [ ] Spec commit único bajo `docs/superpowers/specs/`.
+- [ ] PR spec abierto hacia `main`; auditoría fuente #67 ya mergeada (Nivel C — sin PR audit 2026-08-03).
+
+---
+
+## Deuda técnica
+
+Fuente: auditoría `docs/audits/2026-08-02-auditoria-tecnica-diaria.md` (PR #67 @ `d372ad8`); reconciliación con inventario spec `2026-08-01` (pase deuda @ `5b03d9e`) y tip `origin/main` @ `041e402`.
+
+### Reconciliación heredada
+
+| ID | Tema | Estado | Resolución |
+|----|------|--------|------------|
+| **M1** | Sync semver tres archivos (reabierto post-`v1.2.2`) | **Resuelto** | PR #74 + tag `v1.2.3` @ `041e402` — `composer.json`, `config/app.php`, `skeleton/config/app.php` → `1.2.3`; `PlatformVersionSemverTest` PASS |
+| **M9** | dompdf advisories &lt;3.1.6 | **Resuelto** | PR #74 — `composer.lock` fija `dompdf/dompdf` **v3.1.6**; `DompdfSecurityVersionTest` PASS |
+| **D1** | Drift semver plataforma | **Resuelto** | #62 + #74 — ver M1 |
+| **D2** | Root `.env.example` vars Portal | **Resuelto** | PR #62 — keys activas `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` = **0**; comentario L55; `FrameworkRootNotPortalTest` PASS |
+| **D4** | Test gate semver ausente | **Resuelto** | PR #62 — `tests/Docs/PlatformVersionSemverTest.php` presente |
+| **D5** | `FrameworkRootNotPortalTest` env | **Resuelto** | PR #62 — assert prefijos L33+ |
+| **D13** | Checklist release semver | **Resuelto** | PR #62 — `docs/core/despliegue-y-versionado.md` L189–191 + `ReleaseChecklistDocTest` |
+| **M2** | `.env.example` Marketing | **Resuelto** | PR #62 — sin regresión |
+| **M7** | Audit PR sin merge | **Resuelto** | #54/#55/#60/#67 |
+| **M8 / D5 docs** | Docs ops legacy | **Resuelto** | #56/#57 + `OpsDocsFpsAlignmentTest` |
+| **D10–D12, D16, D22** | Runbooks/composer-setup/VPS | **Resuelto** | #56/#57 — sin regresión (`grep feature/backoffice-api-integration` en ops docs → 0) |
+| **D17–D21** | Cadena audit M7 | **Resuelto** | PRs #51, #54, #55 |
+
+**Cierres desde corrida anterior (2026-08-01):** **7** (D1, D2, D4, D5, D13, M1, M9).
+
+### Alcance principal de este spec (P1 — Portal, no verificable aquí)
+
+| ID | Hallazgo | Evidencia | Impacto | Capa | Owner | Acción |
+|----|----------|-----------|---------|------|-------|--------|
+| **P1** | Portal no consume hook `afterListRows` | Auditoría 2026-08-02: última evidencia `composer.lock` Portal con `lebytek/framework` **v1.1.0** @ `a79d3ad`; Framework publicó hook #66 (`v1.2.2`+). **Estado actual Portal no re-inspeccionable** (M6) | Listado admin `mkt_leads` sin columnas virtuales en vivo | `Application` Portal | `Lebytek_Portal` | P1–P5: bump lock ≥ `v1.2.2`, handler + JSON + tests |
+
+### Backlog Framework verificado (fuera alcance P1–P5)
+
+| ID | Hallazgo | Evidencia (`main` @ `041e402`) | Impacto | Capa | Owner | Acción |
+|----|----------|--------------------------------|---------|------|-------|--------|
+| **M3** | CRUD/Calendario sin `RbacMiddleware` router | `routes/web.php` L114–125 — `/crud/{resource}`, `/calendario/{key}` solo heredan `AuthMiddleware` del grupo admin | RBAC delegado a servicio; 403 inconsistente | `Presentation` / `routes/` | Framework | Backlog: middleware router-level o documentar patrón (CF6) |
+| **M4** | API `/api/*` autenticada por sesión | `routes/api.php` L10–11 (comentario token futuro), L14–16 (`AuthMiddleware` grupo), L23 (`/api/ping`) | LB/cron no health-check sin cookie | `Presentation` / `routes/` | Framework | Backlog Fase 3: `GET /api/health` público (CF7) |
+| **M5** | Slug `permisos.gestionar` ausente | `routes/web.php` L61–65 — workaround `administracion.ver`; `grep permisos.gestionar database/` → **0** | Catálogo RBAC acoplado | `Domain` RBAC | Framework | Backlog producto: seed + rutas (CF8) |
+| **D6** | Plan `skeleton.lebytek.com` sin implementar | `docs/ENVIRONMENTS.md` L6, L13, L31 — «skeleton.lebytek.com pendiente»; plan `2026-07-26-skeleton-package-staging.md` Tasks 2–10 sin deploy | LAB package puro no desplegado | Ops / Framework | Framework/Ops | Ejecutar plan humano Tasks 6–8 |
+| **D7** | Sin pipeline GitHub Actions | `.github/workflows/` **ausente** (`git ls-tree origin/main .github/workflows/` → vacío) | Tests solo manual / agente / `tests/run.php` | Ops / repo | Framework/Ops | Spec futuro workflow mínimo con gates Docs/Kernel/Crud |
+
+### No verificados (declarados explícitamente)
+
+| ID | Hallazgo | Motivo | Acción |
+|----|----------|--------|--------|
+| **M6 / D3** | Portal SHA / `composer.lock` | `gh repo view Parzival2103/Lebytek_Portal` → GraphQL fail; `gh api …/commits/main` → HTTP 404 | Ops: conceder lectura Portal al token automation; confirmar lock ≥ `v1.2.2` |
+| **D14** | Stripe subscription QA Portal (#21) | Repo Portal inaccesible; Framework contrato base resuelto @ `v1.2.3` | Portal: QA checkout antes de `PAYMENTS_SUBSCRIPTION_CHECKOUT=true` |
+| **D15** | Bootstrap marketing Portal (#23) | Re-scopeado `Lebytek_Portal#4` — no inspeccionable aquí | Portal issue #4 |
+| **P1 estado actual** | Implementación handler en tip Portal | M6 — no se puede verificar si P1–P5 ya mergearon tras spec 2026-08-03 | Operador Portal valida post-merge |
+
+### Verificado sin deuda nueva
+
+- **Migraciones ↔ manifiesto:** 3 archivos en `database/migrations/` ↔ 3 entradas en `config/modules/core.php` L16, `crud-engine.php` L15, `pdf-kit.php` L16 — sin drift.
+- **`src/`:** grep `TODO`/`FIXME` → **0** con impacto.
+- **Capas:** sin violaciones nuevas detectadas en `src/` (hook `afterListRows` en `Application`; Domain sin deps Presentation/Infrastructure).
+- **Legacy operativo:** referencias vivas a `feature/backoffice-api-integration` o `dev-feature/backoffice-api-integration` **ausentes** en `scripts/`, `docs/composer-setup.md` (L123 solo mención histórica tag archive), `docs/integration/` — gate `OpsDocsFpsAlignmentTest` PASS.
+- **Payments bootstrap:** `vertical.payments=false` en harness; requisitos Stripe documentados como gate ops Portal (D14), no auto-fix en `src/`.
+
+**Conteo:** **5 abiertos verificados** (M3–M5, D6, D7); **4 no verificados** (P1 estado, M6/D3, D14, D15); **7 heredados cerrados** esta corrida (D1, D2, D4, D5, D13, M1, M9).
+
+---
+
+*Spec-only. Ningún archivo de código, config, rutas, migraciones, scripts ni tests fue modificado en esta corrida.*
