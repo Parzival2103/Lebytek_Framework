@@ -28,7 +28,7 @@
 | SHA Portal inspeccionado | **No verificado** — `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository»; `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404. Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-03` |
-| Timestamp UTC | trigger cron `2026-08-03T12:10:00Z` / corrida agente `2026-08-03T12:15:00Z` |
+| Timestamp UTC | trigger cron `2026-08-03T12:10:00Z` / corrida agente `2026-08-03T12:15:00Z` / pase ux `2026-08-03T12:30:00Z` (modo **normal**) |
 | Nivel de fuente | **C** — no hubo auditoría del día 2026-08-03; reporte más reciente en `origin/main`: `docs/audits/2026-08-02-auditoria-tecnica-diaria.md` (fecha real del reporte: 2026-08-02, merge PR #67). Nivel A: `gh pr list --search "docs(audit):" --state open --base main` → vacío. Nivel B: rama `origin/automation/audit-2026-08-02` existe pero `origin/main` no es ancestro de su head (reporte ya mergeado por camino distinto) → rechazada. |
 | PR auditoría fuente | #67 — mergeado 2026-08-02; head histórico `a8331573ec94d65621dd77512ec7ccaf522af035` |
 | headRefOid fuente | `a8331573ec94d65621dd77512ec7ccaf522af035` (rama audit; no heredada) |
@@ -264,6 +264,68 @@ Usar mock de cliente API en test unitario; no llamar `api.lebytek.com` real en C
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: normal
+
+Este spec es **Portal-first (P1–P5)**: enriquecimiento del listado admin `/admin/crud/mkt_leads` vía hook `afterListRows` ya publicado en Framework (#66, tag ≥ `v1.2.2`). Superficie UI verificable: tabla CRUD leads con columnas virtuales `wa_estado` y `tenant_actividad`, degradación ante fallo API y registro handler en `config/crud_handlers.php`. Framework no introduce layout admin nuevo (F-hook satisfecho). Login responsive, dashboard nav y health API pública permanecen carry-forward.
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (P1–P5) | Evidencia / carry-forward |
+|------|-------------------|---------------------------|
+| PHP soportado | Sin cambio runtime Framework | `composer.json` exige `>=8.1`; VPS documentado PHP **8.4.22** (`2026-07-26-skeleton-package-staging-design.md`). Handler Portal y hook `afterListRows` compatibles 8.1+; bump recomendado `v1.2.3` no eleva requisito PHP. |
+| Instalación vía `vendor/` | **Alcance P1 + P2–P5** | Consumidores instalan `lebytek/framework` ≥ `v1.2.2` en `vendor/lebytek/framework` — **solo lectura**; handler Portal vive en `App\` + `config/crud_handlers.php`. Path-repo sólo desarrollo local del package source. |
+| Health sin cookie de sesión | Carry-forward **M4/D7** | `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` requiere sesión. Smoke post-merge: **no** usar `/api/ping` como health LB; backlog `GET /api/health` público (CF7). |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` comenta no duplicar `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*`; `FrameworkRootNotPortalTest` PASS (#62). P1–P5 usan `LEBYTEK_API_TOKEN` en consumidor Portal — fuera harness Framework. |
+| Navegadores objetivo | Superficie admin CRUD | Baseline `docs/core/ui_ux.md`: admin breakpoint **992px (`lg`)**. Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15; sin IE11. Columnas virtuales leads deben degradar en `<768px` vía `list.columns[].priority`. |
+
+### UX — flujos Portal `mkt_leads` (P1–P5, **no verificados** — M6)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | Columnas virtuales `wa_estado` / `tenant_actividad` con **labels legibles** en español; valor «—» cuando `api_tenant_public_id` ausente — no celda vacía ambigua | P4 |
+| **U2** | Timeout API (>2s por página) o fallo HTTP: degradación graceful — mostrar valor persistido en BD (`api_lifecycle_status`) o «—»; **no** bloquear render del listado ni error 500 genérico | P2 |
+| **U3** | Copy accionable si API caída repetida: hint operador («revisa WhatsApi / credenciales `LEBYTEK_API_TOKEN` en `.env` Portal») en tooltip o badge secundario — no sólo «Error» | P2, CF10 parcial |
+| **U4** | Handler no registrado o clave JSON inválida: validación `CrudConfigValidator` con mensaje que indique `config/crud_handlers.php` + clave esperada (`mkt_leads_enrich`) | P3, P4 |
+| **U5** | Estado carga durante batch `afterListRows`: spinner fila o placeholder «…» en columnas virtuales hasta completar enriquecimiento — evitar flash vacío→valor (CF9 parcial) | P2 |
+| **U6** | Listado vacío (0 leads): empty state accionable con CTA «crear lead» o enlace a documentación Marketing — no tabla vacía sin contexto | P4 |
+| **U7** | Bump Framework fallido (`composer update`): mensaje install/CLI indica versión mínima `v1.2.2` y acción («ejecuta composer update lebytek/framework») | P1 |
+
+### UX — Framework (prerrequisito satisfecho — sin cambios UI)
+
+| Requisito | Criterio | Estado |
+|-----------|----------|--------|
+| **U8** | Hook `afterListRows` invocado en `CrudResourceService::buildIndexData` post-query, pre-format | **Publicado** @ `v1.2.2`+ |
+| **U9** | Tests Crud (`CrudListRowsHookTest`): mensaje de fallo cita handler, clave registro y acción esperada | **Verde** 171/171 @ `041e402` |
+
+### Responsive — smoke en superficies tocadas
+
+Referencia: `docs/core/ui_ux.md` §542 — breakpoint admin **992px (`lg`)**; tablas CRUD exigen `table-responsive` (`ui_ux.md` L222).
+
+| Superficie | Verificación post-merge | Rango |
+|------------|-------------------------|-------|
+| Listado admin `mkt_leads` (Portal) | `table-responsive` obligatorio; columnas virtuales con `priority` (identificador lead `1–2`, `wa_estado` `2–3`, `tenant_actividad` `4+`); toolbar filtros usable sin solapamiento; scroll horizontal aceptable en columnas secundarias | **320–768px** |
+| Formulario/detalle lead (sin cambio directo) | Sin regresión responsive en vistas CRUD existentes tras añadir columnas listado | **320–768px** |
+| Login / dashboard admin (sin alcance) | Carry-forward CF3–CF4 — no regresión por bump lock Portal | **320–768px** smoke opcional |
+
+### Carry-forward UX — próximo spec con superficie UI más amplia
+
+Ítems derivados de deuda abierta; **CF1–CF2 (semver harness + env purge) y CF5 parcial (`mkt_leads`) resueltos** en specs previos; este spec cubre CF5 para `mkt_leads` vía P4.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF6 | RBAC router CRUD/calendario | M3 | Errores 403 accionables (slug requerido vs permiso denegado). |
+| CF7 | Health endpoint público | M4/D7 | `GET /api/health` 200 sin cookie; body `{ "status": "ok" }`; checklist VPS. |
+| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección — más allá de U5–U6 en leads. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer; extiende U3 fuera de leads. |
+
+---
+
 ## Criterios de aceptación
 
 ### Portal (P1–P5)
@@ -286,6 +348,18 @@ Usar mock de cliente API en test unitario; no llamar `api.lebytek.com` real en C
 - [ ] Portal SHA y lock — **no verificado** (M6).
 - [ ] Issues Portal abiertos — **no verificado** (M6).
 - [x] WhatsApi `main` @ `f3f3ec7` accesible vía gh.
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **normal** con requisitos K/U/R verificables para P1–P5.
+- [ ] **AC-UX2:** Requisitos U1–U7 (enriquecimiento leads, degradación API, empty state, bump accionable) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF6–CF10 documentado; CF5 parcial cubierto para `mkt_leads` vía P4; CF1–CF2 no arrastrados (resueltos).
+- [ ] **AC-UX4:** Smoke responsive R1 en **320–768px** para listado `mkt_leads` Portal post-implementación (`table-responsive`, column priority, toolbar).
+
+### Cadena automation
+
+- [ ] Spec commit único bajo `docs/superpowers/specs/`.
+- [ ] PR spec abierto hacia `main`; auditoría fuente #67 ya mergeada (Nivel C — sin PR audit 2026-08-03).
 
 ---
 
