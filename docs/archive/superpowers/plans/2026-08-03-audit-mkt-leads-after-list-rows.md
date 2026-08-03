@@ -523,14 +523,14 @@ gh pr create --base main --title "feat(marketing): enrich mkt_leads list via aft
 
 ## Criterios finales de aceptación
 
-- [ ] `composer.lock` referencia `lebytek/framework` ≥ **`v1.2.2`** (preferible **`v1.2.3`**).
-- [ ] Handler registrado; JSON declara `mkt_leads_enrich`.
-- [ ] `php tests/run.php MktLeadsListEnrichment` PASS (≥6 tests).
-- [ ] `php tests/run.php FrameworkVersionGate` PASS.
-- [ ] Listado admin muestra columnas virtuales U1; timeout API → fallback U2 sin 500.
-- [ ] Smoke R1 en 320px y 768px (**Requiere operador humano:** sí).
-- [ ] Sin edits en `vendor/lebytek/framework`.
-- [ ] Frontera FPS: handler en `App\`, cliente en `App\Infrastructure\Integrations\`.
+- [x] `composer.lock` referencia `lebytek/framework` ≥ **`v1.2.2`** (preferible **`v1.2.3`**) — Portal #27 + gate test #28.
+- [x] Handler registrado; JSON declara hook whitelist (`mkt_leads` — varianza vs `mkt_leads_enrich`).
+- [x] `php tests/run.php MktLeadsListEnrich` PASS (4 tests enrich + CrudConfigs).
+- [x] `php tests/run.php FrameworkVersionGate` PASS.
+- [x] Columnas virtuales U1 (`wa_estado`, `tenant_actividad`); fallo API → fallback U2 + hint U3.
+- [ ] Smoke R1 en 320px y 768px (**Requiere operador humano:** sí) — pendiente.
+- [x] Sin edits en `vendor/lebytek/framework`.
+- [x] Frontera FPS: handler en `App\`, cliente en `App\Infrastructure\Integrations\`.
 
 ## Riesgos y rollback
 
@@ -558,10 +558,13 @@ gh pr create --base main --title "feat(marketing): enrich mkt_leads list via aft
 | Campo | Valor |
 |-------|-------|
 | Plan creado UTC | 2026-08-03T12:40:00Z |
-| `origin/main` Framework | `041e402d404bf4c398d0866776b03614db0be8d4` |
-| Tareas | 5 |
+| `origin/main` Framework | `860284f7e2af129603164763b386366d40531dab` |
+| `origin/main` Portal | `ee2910379801b3405c23b9b9ccf54bc6fa015137` |
+| Tareas | **5/5 código** (smoke R1 DEFERRED operador) |
 | Modo fuente | normal |
-| Siguiente tarea ejecutable | **Task 1** — bump `composer.lock` Portal |
-| Prerrequisitos | Clone Portal; Framework ≥ v1.2.3 publicado (**satisfecho**) |
-| Bloqueos | M6 gh Portal 404; smoke R1 requiere operador |
-| Estado | **Pendiente de implementación** |
+| Siguiente tarea ejecutable | Ninguna de código — smoke admin R1 (operador) |
+| Prerrequisitos | Clone Portal; Framework ≥ v1.2.3 — **satisfecho** |
+| Bloqueos | Smoke R1 320/768px requiere operador |
+| Estado | **Completo (código)** — Portal PR [#28](https://github.com/Parzival2103/Lebytek_Portal/pull/28) mergeado 2026-08-03T15:15:41Z |
+| Varianza vs plan literal | Handler `MktLeadsListEnrichHandler` + clave `mkt_leads` + batch `getDemoLeadsSnapshot` (base `75554de`); gap-fill U2/U3 + `tenant_actividad` + `FrameworkVersionGateTest` en #28. No se usó N×`getTenant` ni rename a `mkt_leads_enrich`. |
+| Evidencia tests | `php tests/run.php Marketing` → 335 passed, 0 failed (workstation 2026-08-03) |
