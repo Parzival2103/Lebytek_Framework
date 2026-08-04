@@ -29,7 +29,7 @@
 | SHA Portal inspeccionado | **No verificado** — `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository»; `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404. Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-04` |
-| Timestamp UTC | trigger cron `2026-08-04T12:10:00Z` / corrida agente `2026-08-04T12:15:00Z` |
+| Timestamp UTC | trigger cron `2026-08-04T12:10:00Z` / corrida agente `2026-08-04T12:15:00Z` / pase ux `2026-08-04T12:30:00Z` (modo **sin superficie UI**) |
 | Nivel de fuente | **C** — no hubo auditoría del día 2026-08-04; reporte más reciente en `origin/main`: `docs/audits/2026-08-02-auditoria-tecnica-diaria.md` (fecha real 2026-08-02, merge PR #67). Nivel A: `gh pr list --search "docs(audit):" --state open --base main` → vacío. Nivel B: rama `origin/automation/audit-2026-08-02` @ `a8331573ec94d65621dd77512ec7ccaf522af035` existe pero `git merge-base --is-ancestor origin/main a833157` → exit 1 (reporte ya mergeado por camino distinto) → rechazada. |
 | PR auditoría fuente | #67 — mergeado 2026-08-02; head histórico `a8331573ec94d65621dd77512ec7ccaf522af035` |
 | headRefOid fuente | `a8331573ec94d65621dd77512ec7ccaf522af035` (rama audit; no heredada) |
@@ -221,6 +221,61 @@ PR / push main
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: sin superficie UI
+
+Este spec trata exclusivamente de **infraestructura CI GitHub Actions** (workflow YAML, test gate Docs,
+documentación operativa § CI). No introduce ni modifica pantallas, rutas HTTP de producto, assets CSS ni
+flujos de login/dashboard. **Sin superficie UI en este spec.**
+
+Los requisitos K/U/R siguientes documentan (a) compatibilidad verificada para el alcance CI/harness y
+(b) **carry-forward UX** — ítems concretos que el próximo spec con superficie UI debe cubrir, derivados
+de deuda abierta real (M3–M6, D6; M1/M2/M9 resueltos; D7 cubierto por este spec).
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (F1–F6) | Evidencia / carry-forward |
+|------|-------------------|---------------------------|
+| PHP soportado | **Alcance CI** | `composer.json` exige `>=8.1`; matrix recomendada **8.1 + 8.3** en workflow (Enfoque B). VPS documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`) — compatible; CI no debe fijar sólo 8.4 hasta runner esté disponible en matriz. |
+| Instalación vía `vendor/` | Sin cambio contrato paquete | CI corre `composer install` sobre lock commiteado; consumidores siguen instalando `lebytek/framework` semver en `vendor/` — workflow **no** se exporta vía paquete. |
+| Health sin cookie de sesión | Carry-forward **M4** | `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` requiere sesión. Smoke post-merge CI: **no** usar `/api/ping` como health LB; backlog `GET /api/health` público (CF7). |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` L53–55 remite vars `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` a Portal; job CI debe usar `DB_*` inline de test (no secretos prod). AC8 prohíbe Stripe live / DB prod en workflow. |
+| Navegadores objetivo | N/A en este spec | Carry-forward: Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15 para admin; sin IE11. Baseline `docs/core/ui_ux.md`. |
+
+### UX — flujos operativos CI y documentación (alcance de este spec)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | § CI en `docs/core/despliegue-y-versionado.md`: comandos locales equivalentes al job fast (`composer install && php tests/run.php Kernel Docs …`) — operador reproduce fallo sin adivinar suite | F5 |
+| **U2** | `CiWorkflowPresentTest`: mensaje de fallo cita ruta `.github/workflows/platform-tests.yml`, suites esperadas y acción («añadir workflow según spec D7») | F4 |
+| **U3** | Status check GitHub: nombre job legible (`platform-fast-gates`, `platform-integration-gates`) — no IDs opacos; PR muestra qué suite falló | F1 |
+| **U4** | Fallo MySQL en job integration: log Actions incluye hint («verificar health-check servicio mysql:8.0; replicar `DB_*` de `.env.example` harness») — no sólo PDO exception | F3 |
+| **U5** | `composer audit` falla con advisory: mensaje indica paquete afectado y acción («composer update <pkg> en PR dedicado») — no silenciar | F2 |
+| **U6** | Doc branch protection (F6): copy accionable para operador («Settings → Branches → required check: platform-fast-gates») — fuera automation, documentado | F6 |
+
+### Carry-forward UX — próximo spec con superficie UI
+
+Ítems derivados de deuda abierta verificada; **CF1–CF2 (semver harness + env purge), CF5 parcial (`mkt_leads`) y D7 (CI) quedan cubiertos** en specs previos o este spec — no se arrastran.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF6 | RBAC router CRUD/calendario | M3 | Errores 403 accionables (slug requerido vs permiso denegado). |
+| CF7 | Health endpoint público | M4 | `GET /api/health` 200 sin cookie; body `{ "status": "ok" }`; checklist VPS. |
+| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer. |
+
+### Responsive
+
+**N/A en este spec** (sin superficie UI). Los ítems **CF3–CF5′** del carry-forward son el backlog
+responsive verificado para el próximo spec con pantallas.
+
+---
+
 ## Criterios de aceptación
 
 - [ ] **AC1:** Existe `.github/workflows/platform-tests.yml` con al menos dos jobs (fast + integration) o un job único documentado que cubre ambos.
@@ -232,6 +287,12 @@ PR / push main
 - [ ] **AC7:** Documentación § CI en `despliegue-y-versionado.md` describe comandos locales equivalentes.
 - [ ] **AC8:** Ningún secret de producción (Stripe live, DB prod, SSH keys VPS) en el workflow.
 - [ ] **AC9:** `git diff origin/main...HEAD` del PR de implementación no incluye cambios en `src/`, `app/`, `database/` schema de negocio Portal, ni `skeleton/` salvo doc cross-ref si aplica.
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **sin superficie UI** con requisitos K/U/R verificables para F1–F6 (CI/docs).
+- [ ] **AC-UX2:** Requisitos U1–U6 (reproducibilidad local, mensajes test gate, nombres jobs, hints MySQL/audit, doc branch protection) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF6–CF10 documentado; CF1–CF2, CF5 parcial (`mkt_leads`) y D7 no arrastrados (resueltos o cubiertos por este spec).
 
 ---
 
