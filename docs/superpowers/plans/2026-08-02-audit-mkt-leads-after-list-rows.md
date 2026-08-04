@@ -443,13 +443,13 @@ gh pr create --base main --title "feat(marketing): enrich mkt_leads list via aft
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-03T12:40:00Z |
+| Reconciliación UTC | 2026-08-04T12:40:00Z |
 | Plan creado UTC | 2026-08-02T12:40:00Z |
-| Framework `origin/main` referencia | `041e402d404bf4c398d0866776b03614db0be8d4` |
+| Framework `origin/main` verificado | `c78e672b73b8259a6cab6a7126aaf45354dded09` |
 | Portal SHA | **No verificado** (gh 404 M6) |
 | Tareas completadas / totales | **0 / 5** |
-| Modo fuente | normal (spec 2026-08-02; **supersedido para ejecución** por plan `2026-08-03-audit-mkt-leads-after-list-rows.md`) |
-| Siguiente tarea ejecutable | **Task 1** — bump `composer.lock` (requiere clone Portal) |
-| Prerrequisitos | Acceso git/gh Portal; Framework ≥ `v1.2.2` **satisfecho** (tag `v1.2.3` @ `041e402`) |
-| Bloqueos | **M6** — automation sin lectura Portal; smoke requiere operador |
-| Estado | **Pendiente de implementación** — continuar vía plan del día 2026-08-03 |
+| Modo fuente | normal (spec 2026-08-02; guía de ejecución ampliada en plan archivado `docs/archive/superpowers/plans/2026-08-03-audit-mkt-leads-after-list-rows.md`) |
+| Siguiente tarea ejecutable | **Task 1** — bump `composer.lock` Portal (requiere clone `Parzival2103/Lebytek_Portal`) |
+| Prerrequisitos | Acceso git/gh Portal; Framework ≥ `v1.2.2` **satisfecho** — tag `v1.2.3` @ `041e402`, `CrudListRowsContext` en `src/Application/Crud/Context/` @ `c78e672` |
+| Bloqueos | **M6** — automation sin lectura Portal; smoke admin requiere operador |
+| Estado | **Pendiente de implementación** — sin cambios verificables en Framework desde reconciliación 2026-08-03 |
