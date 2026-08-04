@@ -80,8 +80,8 @@ PHP instalado en este run: `PHP 8.3.6` vía `apt-get install php-cli … compose
 
 | Campo | Valor |
 |-------|-------|
-| HTTP status | *(registrado post-envío)* |
-| Destinatario | `***` + últimos 4 dígitos `AUDIT_PLAN_WHATSAPP_TO` |
+| HTTP status | **202** (messagePublicId `01KZ6F9ABKCWM93CEKJSJ94SFS`) |
+| Destinatario | `****0102` |
 
 ## Enlaces verificados
 
