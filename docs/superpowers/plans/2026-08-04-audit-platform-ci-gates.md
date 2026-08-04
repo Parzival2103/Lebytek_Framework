@@ -517,12 +517,12 @@ Validación manual AC6 (una vez): pin deliberado `dompdf/dompdf` `<3.1.6` en ram
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-04T12:40:00Z |
+| Reconciliación UTC | 2026-08-04T13:30:00Z (AUTOMATION-08) |
 | Plan creado UTC | 2026-08-04T12:40:00Z |
-| Framework `origin/main` referencia | `c78e672b73b8259a6cab6a7126aaf45354dded09` |
+| Framework `origin/main` referencia | `6ddf34d4a87750c1ee93212b45b3b5e66810187a` |
 | Tareas completadas / totales | **0 / 5** |
-| Modo fuente | normal (spec Nivel A — `docs/superpowers/specs/2026-08-04-audit-platform-ci-gates-design.md` @ PR #78) |
+| Modo fuente | normal (spec mergeado PR #78 @ `14309c8`) |
 | Siguiente tarea ejecutable | **Task 1** — `CiWorkflowPresentTest` (TDD rojo) |
 | Prerrequisitos | Ninguno — `composer.lock` presente; scripts migrate/install existentes |
-| Bloqueos | PHP/MySQL ausentes en agente cloud actual — no impiden plan; ejecutor con PHP 8.3+ y MySQL local o Actions |
+| Bloqueos | AUTOMATION-07 no ejecutó (06 BLOCKED B1 en cloud; PHP disponible post-08 vía apt) |
 | Estado | **Pendiente de implementación** |
