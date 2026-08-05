@@ -517,12 +517,14 @@ Validación manual AC6 (una vez): pin deliberado `dompdf/dompdf` `<3.1.6` en ram
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-04T13:30:00Z (AUTOMATION-08) |
+| Reconciliación UTC | 2026-08-05T12:40:00Z (AUTOMATION-03) |
 | Plan creado UTC | 2026-08-04T12:40:00Z |
-| Framework `origin/main` referencia | `6ddf34d4a87750c1ee93212b45b3b5e66810187a` |
+| Framework `origin/main` referencia | `42c3a0a4d0fafacd24d8632ca6e77c00836da79f` |
 | Tareas completadas / totales | **0 / 5** |
 | Modo fuente | normal (spec mergeado PR #78 @ `14309c8`) |
 | Siguiente tarea ejecutable | **Task 1** — `CiWorkflowPresentTest` (TDD rojo) |
-| Prerrequisitos | Ninguno — `composer.lock` presente; scripts migrate/install existentes |
-| Bloqueos | AUTOMATION-07 no ejecutó (06 BLOCKED B1 en cloud; PHP disponible post-08 vía apt) |
+| Prerrequisitos | Ninguno — `composer.lock` presente; `scripts/migrate.php` y `scripts/install.php` existen @ `42c3a0a` |
+| Bloqueos | Ninguno en Framework; plan M4 health (2026-08-05) es independiente y no bloquea Task 1 |
+| Evidencia verificación | `.github/workflows/platform-tests.yml` ausente @ `42c3a0a`; `tests/Docs/CiWorkflowPresentTest.php` ausente @ `42c3a0a` |
+| Rama `feature/platform-ci-gates` | **No existe** en `origin` — crear desde `main` al ejecutar |
 | Estado | **Pendiente de implementación** |

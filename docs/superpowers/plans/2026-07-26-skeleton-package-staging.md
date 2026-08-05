@@ -1415,14 +1415,14 @@ Expected: `200` en los tres dominios y la suite del framework en 0 failed.
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-04T12:40:00Z |
-| `origin/main` verificado | `c78e672b73b8259a6cab6a7126aaf45354dded09` |
-| Tareas completadas / totales | **0.5 / 10** (Task 1 Framework verificada PR #36; Portal Steps 5–11 no verificables) |
-| Siguiente tarea ejecutable | **Task 2 (Framework)** — invertir `skeleton/composer.json` a repo VCS + `^1.2` |
+| Reconciliación UTC | 2026-08-05T12:40:00Z (AUTOMATION-03) |
+| `origin/main` verificado | `42c3a0a4d0fafacd24d8632ca6e77c00836da79f` |
+| Tareas completadas / totales | **0.5 / 10** (Task 1 Framework Steps 1–4 + 13 verificados PR #36; Portal Steps 5–11 no verificables) |
+| Siguiente tarea ejecutable | **Task 2 (Framework)** — invertir `skeleton/composer.json` a repo VCS + `^1.1` |
 | Prerrequisitos Task 1 Portal | Acceso `gh`/`git` a `Parzival2103/Lebytek_Portal` (bloqueado M6/D3) |
 | Prerrequisitos Task 2 | Ninguno en Framework |
-| Bloqueos | (1) M6 gh Portal 404. (2) Tasks 4–8 VPS/credenciales (**Requiere operador humano:** sí). (3) Task 10 requiere Task 9. (4) Repo espejo `Lebytek_Skeleton` no existe @ `c78e672`. (5) `skeleton/composer.json` sigue repo `path` + `*@dev` @ `c78e672` |
-| Evidencia Task 1 Framework | PR #36 — `scripts/vps-deploy-*.sh` ausentes; `tests/Docs/DeployScriptsRemovedTest.php` @ `c78e672` |
+| Bloqueos | (1) M6 gh Portal 404. (2) Tasks 4–8 VPS/credenciales (**Requiere operador humano:** sí). (3) Task 10 requiere Task 9. (4) Repo espejo `Lebytek_Skeleton` no existe @ `42c3a0a`. (5) `skeleton/composer.json` sigue repo `path` + `*@dev` @ `42c3a0a` |
+| Evidencia Task 1 Framework | PR #36 — `scripts/vps-deploy-*.sh` ausentes; `tests/Docs/DeployScriptsRemovedTest.php` @ `42c3a0a` |
 | Evidencia Task 2 pendiente | `skeleton/composer.json` L8–15 declara `"type":"path"` — no cumple Task 2 |
-| Evidencia Tasks 3–10 | Sin cambio vs reconciliación 2026-08-03 |
+| Evidencia Tasks 3–10 | `scripts/publish-skeleton.sh` ausente; `skeleton/README.md` ausente @ `42c3a0a` |
 | Plan activo | **Incompleto** |
