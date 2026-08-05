@@ -443,13 +443,15 @@ gh pr create --base main --title "feat(marketing): enrich mkt_leads list via aft
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-04T12:40:00Z |
+| Reconciliación UTC | 2026-08-05T12:40:00Z (AUTOMATION-03) |
 | Plan creado UTC | 2026-08-02T12:40:00Z |
-| Framework `origin/main` verificado | `c78e672b73b8259a6cab6a7126aaf45354dded09` |
+| Framework `origin/main` verificado | `42c3a0a4d0fafacd24d8632ca6e77c00836da79f` |
 | Portal SHA | **No verificado** (gh 404 M6) |
 | Tareas completadas / totales | **0 / 5** |
-| Modo fuente | normal (spec 2026-08-02; guía de ejecución ampliada en plan archivado `docs/archive/superpowers/plans/2026-08-03-audit-mkt-leads-after-list-rows.md`) |
+| Modo fuente | normal (spec 2026-08-02; guía ampliada en plan archivado `docs/archive/superpowers/plans/2026-08-03-audit-mkt-leads-after-list-rows.md`) |
 | Siguiente tarea ejecutable | **Task 1** — bump `composer.lock` Portal (requiere clone `Parzival2103/Lebytek_Portal`) |
-| Prerrequisitos | Acceso git/gh Portal; Framework ≥ `v1.2.2` **satisfecho** — tag `v1.2.3` @ `041e402`, `CrudListRowsContext` en `src/Application/Crud/Context/` @ `c78e672` |
+| Prerrequisitos | Acceso git/gh Portal; Framework ≥ `v1.2.2` **satisfecho** — tag `v1.2.3` @ `041e402`, `CrudListRowsContext` en `src/Application/Crud/Context/CrudListRowsContext.php` @ `42c3a0a` |
 | Bloqueos | **M6** — automation sin lectura Portal; smoke admin requiere operador |
-| Estado | **Pendiente de implementación** — sin cambios verificables en Framework desde reconciliación 2026-08-03 |
+| Evidencia verificación | Sin entregables Portal verificables desde Framework; hook `afterListRows` genérico presente en paquete @ `42c3a0a` |
+| Rama `feature/mkt-leads-after-list-rows` | **No verificada** — crear en clone Portal desde `main` |
+| Estado | **Pendiente de implementación** |
