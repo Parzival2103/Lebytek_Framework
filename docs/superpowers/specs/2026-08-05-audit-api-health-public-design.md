@@ -31,7 +31,7 @@
 | SHA Portal inspeccionado | **No verificado** — `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository»; `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404. Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-05` |
-| Timestamp UTC | trigger cron `2026-08-05T12:10:02Z` / corrida agente `2026-08-05T12:15:00Z` |
+| Timestamp UTC | trigger cron `2026-08-05T12:10:02Z` / corrida agente `2026-08-05T12:15:00Z` / pase ux `2026-08-05T12:30:01Z` (modo **sin superficie UI**) |
 | Nivel de fuente | **C** — no hubo auditoría del día 2026-08-05; reporte más reciente en `origin/main`: `docs/audits/2026-08-02-auditoria-tecnica-diaria.md` (fecha real 2026-08-02). Nivel A: `gh pr list --repo Parzival2103/Lebytek_Framework --state open --base main --search "docs(audit):"` → vacío. Nivel B: no existe `origin/automation/audit-2026-08-05`; rama `origin/automation/audit-2026-08-02` ya mergeada en `main` (reporte presente @ `docs/audits/2026-08-02-auditoria-tecnica-diaria.md`). |
 | PR auditoría fuente | #67 — mergeado 2026-08-02; head histórico `a8331573ec94d65621dd77512ec7ccaf522af035` |
 | headRefOid fuente | `a8331573ec94d65621dd77512ec7ccaf522af035` (rama audit; no heredada) |
@@ -249,30 +249,58 @@ $router->group([
 
 ## Compatibilidad, UX y responsive
 
-### Modo del pase: superficie API mínima (sin UI admin)
+### Modo del pase: sin superficie UI
 
-Este spec añade un endpoint JSON público — no modifica pantallas login/dashboard/CRUD.
+Este spec añade exclusivamente un **endpoint JSON público** (`GET /api/health`) y documentación
+operativa § Monitoreo. No introduce ni modifica pantallas login/dashboard/CRUD, assets CSS ni layouts
+admin. **Sin superficie UI en este spec.**
+
+Los requisitos K/U/R siguientes documentan (a) compatibilidad verificada para el alcance API/harness y
+(b) **carry-forward UX** — ítems concretos que el próximo spec con superficie UI debe cubrir, derivados
+de deuda abierta real (M3–M6, D6; M1/M2/M9 resueltos; D7 cubierto por spec 2026-08-04; **CF7 cubierto
+por este spec**).
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (F1–F6) | Evidencia / carry-forward |
+|------|-------------------|---------------------------|
+| PHP soportado | Sin cambio runtime | `composer.json` exige `>=8.1`; VPS documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`) — compatible; `HealthController::health()` no requiere extensiones nuevas. |
+| Instalación vía `vendor/` | Contrato paquete semver | Consumidores obtienen `/api/health` tras bump `lebytek/framework` al tag release (≥ patch post-F1–F6); ruta vive en `routes/api.php` copiado/espejado desde paquete — **no** parche en `vendor/`. Portal con `routes/api.php` propio: merge manual línea pública (P2, **no verificado** M6). |
+| Health sin cookie de sesión | **Alcance principal M4** | Hoy: `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` redirige a login (L21–24 `AuthMiddleware`). Post F1: `GET /api/health` **fuera** del grupo → 200 JSON `{ "status": "ok" }` sin cookie, CSRF ni `Authorization`. Smoke: `curl -sf https://<host>/api/health`. |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` L55 remite vars `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` a Portal; endpoint health no introduce env vars nuevas. |
+| Navegadores objetivo | N/A en este spec | Carry-forward: Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15 para admin; sin IE11. Baseline `docs/core/ui_ux.md`. Respuesta JSON legible en panel hosting móvil (U4). |
+
+### UX — flujos operativos API y documentación (alcance de este spec)
 
 | Requisito | Criterio | Deuda |
 |-----------|----------|-------|
-| **U1** | Doc § Monitoreo: copy-paste `curl -sf https://<host>/api/health` esperado `{"status":"ok"}` | F6 |
-| **U2** | Test gate: mensaje de fallo cita spec M4 y acción («registrar GET /api/health fuera de AuthMiddleware») | F4 |
-| **U3** | Tabla doc: `/api/health` = LB/cron; `/api/ping` = smoke autenticado interno | F6 |
-| **U4** | Respuesta JSON ≤ 200 bytes — legible en panel hosting móvil | F2 |
+| **U1** | § Monitoreo en `despliegue-y-versionado.md`: copy-paste `curl -sf https://<host>/api/health` con respuesta esperada `{"status":"ok"}` — operador no debe usar `/api/ping` para LB/cron | F6 |
+| **U2** | `ApiHealthPublicRouteTest`: mensaje de fallo cita spec M4, ruta `routes/api.php` y acción («registrar GET /api/health **antes** del `$router->group` con AuthMiddleware») | F4 |
+| **U3** | Tabla doc § Monitoreo: `/api/health` = liveness LB/cron/hosting (público); `/api/ping` = smoke autenticado post-login (interno) — no intercambiables | F6 |
+| **U4** | Respuesta JSON ≤ 200 bytes, body fijo `{ "status": "ok" }` — legible en panel hosting móvil sin truncar ni requerir parser especial | F2 |
+| **U5** | `ApiHealthPublicDispatchTest`: fallo sin implementación indica estado actual («GET /api/health ausente o dentro de grupo auth») y siguiente paso TDD | F5 |
+| **U6** | Redirect `/api/ping` sin sesión: operador doc entiende que 302 a `/login` es **esperado**, no falso negativo de liveness — evita tickets de soporte | F6 |
 
 ### Carry-forward UX — próximo spec con superficie UI
 
+Ítems derivados de deuda abierta verificada; **CF7 (health público) queda cubierto por este spec** — no
+arrastrar. CF1–CF2 (semver harness + env purge), CF5 parcial (`mkt_leads` spec 2026-08-03) y D7 (CI spec
+2026-08-04) tampoco se arrastran.
+
 | # | Ítem | Origen | Requisito concreto |
 |---|------|--------|-------------------|
-| CF3 | Login responsive 320–768px | `ui_ux.md` | Sin overflow horizontal |
-| CF4 | Dashboard admin responsive | layouts | Nav colapsable |
-| CF5′ | Tablas CRUD restantes | D6/M3 | `table-responsive` + priority |
-| CF6 | RBAC router CRUD/calendario | M3 | 403 accionables |
-| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` |
-| CF9 | Estados vacío/error/carga | `ui_ux.md` | Empty states CRUD |
-| CF10 | Copy errores accionables | transversal | Auth, wizard, CRUD |
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF6 | RBAC router CRUD/calendario | M3 | Errores 403 accionables (slug requerido vs permiso denegado). |
+| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer. |
 
-**CF7 (health público) queda cubierto por este spec** — no arrastrar.
+### Responsive
+
+**N/A en este spec** (sin superficie UI). Los ítems **CF3–CF5′** del carry-forward son el backlog
+responsive verificado para el próximo spec con pantallas.
 
 ---
 
@@ -286,6 +314,12 @@ Este spec añade un endpoint JSON público — no modifica pantallas login/dashb
 - [ ] **AC6:** § Monitoreo en `despliegue-y-versionado.md` distingue `/api/health` vs `/api/ping`.
 - [ ] **AC7:** Tag semver patch publicado; tres fuentes versión sincronizadas; `PlatformVersionSemverTest` verde.
 - [ ] **AC8:** Diff PR no incluye lógica Marketing/Portal en `src/`; frontera FPS intacta.
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **sin superficie UI** con requisitos K/U/R verificables para F1–F6 (API/docs).
+- [ ] **AC-UX2:** Requisitos U1–U6 (curl copy-paste, mensajes test gate, tabla health vs ping, payload ≤200 bytes, hints TDD, doc redirect esperado) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF6, CF8–CF10 documentado; CF7 no arrastrado (cubierto por este spec); CF1–CF2, CF5 parcial y D7 no arrastrados (resueltos o cubiertos en specs previos).
 
 ### Deuda técnica (inventario)
 
