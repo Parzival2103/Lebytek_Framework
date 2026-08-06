@@ -222,6 +222,57 @@ Un despliegue que existía antes del tracking adopta el histórico con `php scri
 
 ---
 
+## CI / gates PR
+
+El repositorio Framework ejecuta gates automáticos vía GitHub Actions (`.github/workflows/platform-tests.yml`).
+
+### Jobs
+
+| Job | Qué ejecuta | Bloquea merge |
+|-----|-------------|---------------|
+| `platform-fast-gates` | `composer validate --strict`, `composer audit --no-dev`, suites Kernel, Docs, SkeletonPurity, Crud, Payments, Install | Recomendado required check |
+| `platform-integration-gates` | MySQL 8.0 service → `php scripts/migrate.php` → `php scripts/install.php --modules=integrations` → `php tests/run.php Integrations` | Recomendado required check |
+
+### Reproducir localmente (equivalente al job fast)
+
+```bash
+composer validate --strict
+composer install --no-interaction
+cp .env.example .env
+composer audit --no-dev
+php tests/run.php Kernel
+php tests/run.php Docs
+php tests/run.php SkeletonPurity
+php tests/run.php Crud
+php tests/run.php Payments
+php tests/run.php Install
+```
+
+### Reproducir Integrations (equivalente al job integration)
+
+Requiere MySQL 8 accesible. Exportar `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (ver `.env.example`), luego:
+
+```bash
+cp .env.example .env
+php scripts/migrate.php
+php scripts/install.php --modules=integrations
+php tests/run.php Integrations
+```
+
+Si el job integration falla con error PDO, verificar health-check del servicio MySQL y que `DB_*` del workflow coinciden con la base creada (`lebytek_ci` en CI).
+
+### Branch protection (operador humano)
+
+Tras merge del workflow a `main`:
+
+1. GitHub → **Settings** → **Branches** → regla para `main`
+2. Marcar **Require status checks to pass**
+3. Seleccionar: `platform-fast-gates` y `platform-integration-gates`
+
+La automation no configura branch protection; documentado aquí para el operador (F6).
+
+---
+
 ## Checklist pre/post deploy por entorno
 
 | Ítem | Local (`php -S … -t public`) | VPS Linux (auto-pull) | Hosting compartido Apache |
