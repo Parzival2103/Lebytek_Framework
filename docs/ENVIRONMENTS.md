@@ -3,9 +3,9 @@
 Documento canónico para agentes y operadores. Define **para qué sirve cada hostname**
 y qué repo/paquete despliega en cada capa. No confundir skeleton con staging.
 
-**Estado (2026-07-27):** producción Portal operativa; **skeleton.lebytek.com pendiente
-de implementar**; **staging Portal (pre-prod producto) no existe aún** — documentado
-como fase futura.
+**Estado (2026-08-06):** producción Portal operativa; **crm.lebytek.com operativo**
+(repo `Lebytek_CRM`); **skeleton.lebytek.com pendiente de implementar**; **staging
+Portal (pre-prod producto) no existe aún** — documentado como fase futura.
 
 ## Mapa de capas
 
@@ -19,6 +19,9 @@ staging.lebytek.com    →  Lebytek_Portal + composer.lock  [FUTURO]
 lebytek.com            →  Lebytek_Portal main + composer.lock
 waapi.lebytek.com      →  Lebytek_Portal main + composer.lock
                            PRODUCCIÓN negocio Lebytek
+
+crm.lebytek.com        →  Lebytek_CRM main + composer.lock
+                           PRODUCCIÓN producto CRM (skeleton + framework)
 
 api.lebytek.com        →  WhatsApiLebytek main
                            PRODUCCIÓN API WhatsApp (repo aparte)
@@ -72,6 +75,26 @@ al hostname antiguo `staging.lebytek.com` con una **copia sin git de Portal** y 
 ese estado está **obsoleto y prohibido**. El reemplazo correcto es **skeleton** con BD
 propia, no una copia de Portal.
 
+## crm.lebytek.com — producto CRM
+
+### Propósito
+
+Tenant de producto CRM: semilla `skeleton/` + `lebytek/framework` semver.
+Negocio CRM vive en `Parzival2103/Lebytek_CRM`. **No** es el lab de plataforma
+(`skeleton.lebytek.com`) ni Portal.
+
+### Estado
+
+**Operativo.** Levantado fuera de este repo (implementación y deploy en
+`Lebytek_CRM` / VPS). Este documento solo registra el hostname en el mapa canónico.
+
+### Reglas
+
+- BD propia `lebytek_crm`
+- Sin Marketing/Portal
+- Framework solo por Composer + lock
+- No desplegar desde ramas del Framework; solo tag semver vía `composer.lock`
+
 ## staging.lebytek.com — pre-producción Portal (fase futura)
 
 ### Propósito
@@ -105,6 +128,7 @@ Plan archivado: `Lebytek_Portal/docs/archive/superpowers/plans/2026-07-21-portal
 | Sitio | Repo | Rama | Framework |
 |-------|------|------|-----------|
 | lebytek.com, waapi | `Lebytek_Portal` | `main` | `lebytek/framework` vía `composer.lock` (v1.2.1) |
+| crm.lebytek.com | `Lebytek_CRM` | `main` | `lebytek/framework` vía `composer.lock` |
 | api.lebytek.com | `WhatsApiLebytek` | `main` | Laravel propio (no Portal) |
 
 Runbook Portal: [`Lebytek_Portal/docs/DEPLOY-VPS.md`](https://github.com/Parzival2103/Lebytek_Portal/blob/main/docs/DEPLOY-VPS.md).
