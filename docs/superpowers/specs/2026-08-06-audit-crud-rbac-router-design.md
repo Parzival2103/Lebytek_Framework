@@ -32,7 +32,8 @@
 | SHA Portal inspeccionado | **No verificado** — `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404; `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository». Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-06` |
-| Timestamp UTC | trigger cron `2026-08-06T12:10:00Z` / corrida agente `2026-08-06T12:10:00Z` / pase ux `2026-08-06T12:30:00Z` (modo **normal**) |
+| Timestamp UTC | trigger cron `2026-08-06T12:10:00Z` / corrida agente `2026-08-06T12:10:00Z` / pase ux `2026-08-06T12:30:00Z` (modo **normal**) / pase deuda `2026-08-06T13:02:05Z` (modo **normal**) |
+| Pase deuda | `2026-08-06T13:02:05Z` · modo **normal** · `origin/main` inspeccionado @ `ddc55ec8fb025acfada9500d711bbbe8843f5997` |
 | Nivel de fuente | **A** — PR abierto #84, título `docs(audit): auditoría técnica diaria 2026-08-06`, `baseRefName=main`, `mergeable=MERGEABLE`, `updatedAt=2026-08-06T12:05:24Z`. Verificaciones: `merge-base --is-ancestor origin/main 5d6df2f` → exit 0; diff `origin/main...5d6df2f` → único archivo `docs/audits/2026-08-06-auditoria-tecnica-diaria.md`; ningún commit legacy ancestro del head. |
 | PR auditoría fuente | #84 — https://github.com/Parzival2103/Lebytek_Framework/pull/84 |
 | headRefOid fuente | `5d6df2f5d23b28baa4d0166e766fc70fa93ecd45` (rama audit; no heredada) |
@@ -270,6 +271,8 @@ $router->get('/crud/{resource}', ..., $crudRbac);
 | Regresión performance (carga JSON por request) | Baja | Cache request-scope en middleware o loader existente |
 | Orden release vs M4 (`v1.2.4` vs `v1.2.5`) | Baja | Plan implementation coordina numeración |
 | gh Portal 404 impide validar P2 | Media | Marcar no verificado; no asumir merge Portal |
+| D7 — sin CI GitHub Actions | Media | **159** tests `*Test.php` sin gate PR; F4 TDD no bloquea merge hasta plan `2026-08-04` (0/5) |
+| `composer validate` lock content-hash | Baja | Auditoría 2026-08-06 documenta posible drift post-bump semver — **no verificado** (composer CLI ausente en agente); corregir con `composer update --lock` en release train, no reabre M1 |
 
 ---
 
@@ -368,6 +371,13 @@ CF1–CF2 (semver harness + env purge), CF5 parcial (`mkt_leads` spec 2026-08-03
 - [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF7–CF10 documentado; CF6 no arrastrado (cubierto por este spec); CF1–CF2, CF5 parcial y D7 no arrastrados (resueltos o cubiertos en specs previos).
 - [ ] **AC-UX4:** Smoke responsive en **320–768px** para página 403/flash RBAC y listados CRUD/calendario accesibles post-implementación (sin regresión `table-responsive`).
 
+### Deuda técnica (inventario)
+
+- [ ] **AC-D1:** Sección **Deuda técnica** lista abiertos verificados (M4, M5, D6, D7, M10) con evidencia ruta/línea en `main` @ `ddc55ec`.
+- [ ] **AC-D2:** M1, M2, M7, M8, M9, D1–D5, D13 reconciliados como **resueltos**; M3 **abierto → este spec** (F1–F6) hasta merge implementación.
+- [ ] **AC-D3:** P1, P2, M6/D3, D14, D15 marcados **no verificados** Portal; acción concreta documentada.
+- [ ] **AC-D4:** Verificado sin deuda nueva — migraciones 3 SQL ↔ 3 entradas manifiesto; `src/` sin `TODO`/`FIXME`; referencias operativas vivas a `feature/backoffice-api-integration` ausentes en `scripts/`, `docs/composer-setup.md`, `docs/integration/`; `despliegue-y-versionado.md` sin § Monitoreo/§ CI (gap planificado M4 F6 / D7 F5, no drift pre-implementación).
+
 ---
 
 ## Operaciones por entorno
@@ -381,21 +391,73 @@ CF1–CF2 (semver harness + env purge), CF5 parcial (`mkt_leads` spec 2026-08-03
 
 ---
 
-## Deuda técnica (reconciliación post-audit 2026-08-06)
+## Deuda técnica
 
-| ID | Hallazgo | Estado | Owner | Acción |
-|----|----------|--------|-------|--------|
-| **M3** | CRUD/calendario sin RBAC router | **Abierto → este spec** | Framework | F1–F6 |
-| M4 | API sesión / health público | Abierto — spec/plan 0/5 | Framework | Plan 2026-08-05 |
-| M5 | `permisos.gestionar` seeds | Abierto — sin spec | Framework | Spec futuro CF8 |
-| M6 | Portal gh 404 | Abierto (entorno) | Ops | O1 credenciales |
-| M10 | Hueco audits 03–05 | Abierto (proceso) | Ops/automation | Spec artifact-chain + corrida 00 diaria |
-| D6 | skeleton.lebytek.com | Abierto — plan 0/5 | Ops | Plan 2026-07-26 |
-| D7 | CI GitHub Actions | Abierto — plan 0/5 | Framework | Plan 2026-08-04 |
-| M1, M9 | Semver sync, dompdf | **Resueltos** @ v1.2.3 | Framework | — |
-| C2 Framework | Stripe subscriptions | **Resuelto** Framework | Portal QA **no verificado** | — |
+Fuente: auditoría `docs/audits/2026-08-06-auditoria-tecnica-diaria.md` (PR #84 @ `5d6df2f`, mergeado `ddc55ec`); reconciliación con inventario spec `2026-08-05` (pase deuda @ `42c3a0a`) y tip `origin/main` @ `ddc55ec` (pase deuda 2026-08-06).
 
-**Requisitos marcados no verificados:** P1, P2, P3 (Portal); issues Portal; lock Portal ≥ v1.2.3; QA Stripe Portal.
+### Reconciliación heredada (cerrados)
+
+| ID | Tema | Estado | Resolución |
+|----|------|--------|------------|
+| **M1** | Sync semver | **Resuelto** | #74 + `v1.2.3` @ `041e402`; `composer.json` L6, `config/app.php` L7, `skeleton/config/app.php` L7 → `1.2.3` @ `ddc55ec`; `PlatformVersionSemverTest` presente |
+| **M2** | `.env.example` Portal vars | **Resuelto** | #62 — root `.env.example` L55 comentario explícito; keys activas `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` = **0**; `skeleton/.env.example` sin vars Portal |
+| **M9** | dompdf advisories | **Resuelto** | #74 — `composer.lock` fija `dompdf/dompdf` **v3.1.6**; `DompdfSecurityVersionTest` presente |
+| **D1–D5, D13** | Semver harness / env / checklist | **Resuelto** | #62 + #74 — ver M1/M2 |
+| **M7/M8** | Audit lifecycle / ops docs | **Resuelto** | PRs #54–#67, #56/#57 + `OpsDocsFpsAlignmentTest` |
+| **C1** | Scripts `vps-deploy-*` destructivos | **Resuelto** | PR #36; `DeployScriptsRemovedTest` verde |
+| **C2** | Stripe subscription (Framework) | **Resuelto** Framework | PR #42 + tags `v1.2.1`…`v1.2.3`; `vertical.payments=false` @ `config/vertical.php` L22 — QA Portal **no verificado** (M6) |
+| **C3** | Bootstrap marketing Portal | **Re-scopeado** | `Lebytek_Portal#4` — no inspeccionable aquí |
+
+**Cierres desde corrida anterior (2026-08-05 pase deuda @ `42c3a0a`):** **0** — intervalo `42c3a0a..ddc55ec` en `main` sólo añadió docs automation/spec/plan/audit (#81–#84); sin cambios de código que cierren M3–M6, D6/D7 ni M10.
+
+### Alcance principal de este spec (M3 — abierto, verificado)
+
+| ID | Hallazgo | Evidencia (`main` @ `ddc55ec`) | Impacto | Capa | Owner | Acción |
+|----|----------|--------------------------------|---------|------|-------|--------|
+| **M3** | CRUD/Calendario sin `RbacMiddleware` router | `routes/web.php` L114–125 — `/crud/{resource}*`, `/calendario/{key}*` sin middleware RBAC; contraste L127–139 (pdf-kit, reportes **sí** usan `RbacMiddleware`); `skeleton/routes/web.php` espejo idéntico; RBAC fino permanece en `CrudResourceService.php` L49, L110, L132…; `CrudController.php` L41–42, L55–56 → `AccesoException` → `Response::forbidden()`; `RbacMiddleware.php` L30–36 → JSON 403 AJAX; `CalendarioController.php` L37–38, L59–60; `rg 'CrudRbac\|crud.*RbacMiddleware' tests/` → **0**; `CrudRbacRouterTest` / `CrudRbacMiddlewareTest` **ausentes** | Defensa en profundidad débil; 403 inconsistentes HTML/JSON vs resto admin; `rbac_integrity_report.php` no refleja slugs CRUD en router | `Presentation` / `routes/` | Framework | F1–F6 + tag patch semver (plan `2026-08-06-audit-crud-rbac-router.md`, **0/5** tareas) |
+
+### Backlog Framework verificado (fuera alcance F1–F6)
+
+| ID | Hallazgo | Evidencia (`main` @ `ddc55ec`) | Impacto | Capa | Owner | Acción |
+|----|----------|--------------------------------|---------|------|-------|--------|
+| **M4** | `/api/*` autenticada por sesión; sin health público | `routes/api.php` L14–16 grupo `AuthMiddleware`; L23 `/api/ping` dentro del grupo; `skeleton/routes/api.php` espejo; `rg '/health' routes/` → **0**; `HealthController.php` L13–16 sólo `ping()` — método `health()` **ausente**; `AuthMiddleware.php` L21–24 redirect `/login` (302) sin JSON 401; `ApiHealthPublicRouteTest` / `ApiHealthPublicDispatchTest` **ausentes** | LB/cron/hosting no verifican liveness sin cookie | `Presentation` / `routes/` | Framework | Plan `2026-08-05-audit-api-health-public.md` (**0/5** tareas) |
+| **M5** | Slug `permisos.gestionar` ausente | `routes/web.php` L61–65 — comentario + workaround `administracion.ver`; `rg permisos.gestionar database/` → **0** | Catálogo RBAC acoplado a permiso amplio | `Domain` RBAC | Framework | Spec futuro CF8 |
+| **D6** | Plan `skeleton.lebytek.com` sin implementar | `docs/ENVIRONMENTS.md` L6, L13, L31, L63 — «skeleton.lebytek.com pendiente»; plan `2026-07-26-skeleton-package-staging.md` Tasks 2–10 sin deploy | LAB package puro no desplegado | Ops / Framework | Framework/Ops | Ejecutar plan humano Tasks 6–8 |
+| **D7** | Sin pipeline GitHub Actions | `git ls-tree origin/main .github` → vacío; `tests/Docs/CiWorkflowPresentTest.php` **ausente**; `docs/core/despliegue-y-versionado.md` sin § CI; **159** archivos `*Test.php` bajo `tests/` sin gate CI en PR | Regresiones semver/dompdf/RBAC no bloqueadas en PR | Ops / repo | Framework/Ops | Plan `2026-08-04-audit-platform-ci-gates.md` (**0/5** tareas) |
+| **M10** | Hueco auditorías 2026-08-03..05 | `docs/audits/` sin archivos `2026-08-03`/`08-04`/`08-05`; closures automation confirman paso 00 omitido; audit #84 cierra hueco para 2026-08-06 | Cadena 01–08 diseñó specs sin ancla audit diaria; deuda implementación acumulada | Proceso automation | Ops/automation | `AuditArtifactFreshnessTest` (M7) + corrida 00 diaria |
+
+### Planes activos — estado ejecución real
+
+| Plan | Tareas | Estado @ `ddc55ec` |
+|------|--------|-------------------|
+| `docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md` | 0/5 | Pendiente — Task 1 `CrudRbacRouterTest` (este spec) |
+| `docs/superpowers/plans/2026-08-05-audit-api-health-public.md` | 0/5 | Pendiente — Task 1 `ApiHealthPublicRouteTest` |
+| `docs/superpowers/plans/2026-08-04-audit-platform-ci-gates.md` | 0/5 | Pendiente — Task 1 `CiWorkflowPresentTest` |
+| `docs/superpowers/plans/2026-08-02-audit-mkt-leads-after-list-rows.md` | 0/5 | Pendiente — requiere clone Portal (M6) |
+
+### No verificados (declarados explícitamente)
+
+| ID | Hallazgo | Motivo | Acción |
+|----|----------|--------|--------|
+| **P1** | Portal lock ≥ `v1.2.3` / handler `afterListRows` | `gh repo view Parzival2103/Lebytek_Portal` → GraphQL fail; última evidencia `composer.lock` Portal con `lebytek/framework` **v1.1.0** @ `a79d3ad` | Plan Portal Task 1 cuando M6 resuelva |
+| **P2** | Portal `routes/web.php` merge CRUD RBAC | Clone Portal inaccesible | Operador verifica post-release Framework que registro `CrudRbacMiddleware` no se pierda en merge |
+| **P3** | Portal CRUD JSON `permission_prefix` | Repo Portal inaccesible | Asumido por patrón harness; validar en staging O1 |
+| **M6 / D3** | Portal SHA / `composer.lock` | `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404 | Ops: conceder lectura Portal al token automation |
+| **D14** | Stripe subscription QA Portal | Repo Portal inaccesible; Framework `vertical.payments=false` | Portal: QA checkout antes de `PAYMENTS_SUBSCRIPTION_CHECKOUT=true` |
+| **D15** | Bootstrap marketing Portal | Re-scopeado `Lebytek_Portal#4` — no inspeccionable aquí | Portal issue #4 |
+| **H1** | `composer validate` lock content-hash | Composer CLI **ausente** en agente cloud | Ejecutar en release train humano; auditoría #84 documenta posible drift post-bump semver — no reabre M1 |
+
+### Verificado sin deuda nueva
+
+- **Migraciones ↔ manifiesto:** 3 archivos en `database/migrations/` ↔ 3 entradas en `config/modules/core.php` L16, `crud-engine.php` L15, `pdf-kit.php` L16 — sin drift.
+- **`src/`:** grep `TODO`/`FIXME` → **0** con impacto; sin `LebytekApiClient` ni Marketing.
+- **Capas:** hook `afterListRows` en `Application`; Domain sin deps Presentation/Infrastructure.
+- **Legacy operativo:** referencias vivas a `feature/backoffice-api-integration` o `dev-feature/backoffice-api-integration` **ausentes** en `scripts/`, `docs/composer-setup.md`, `docs/integration/`.
+- **Payments bootstrap:** `vertical.payments=false` en harness; requisitos Stripe documentados como gate ops Portal (D14), no auto-fix en `src/`.
+- **Semver/dompdf:** tres fuentes `1.2.3`; lock dompdf `v3.1.6` — sin regresión M1/M9.
+- **Doc pre-implementación:** `despliegue-y-versionado.md` sin § Monitoreo (M4 F6) ni § CI (D7 F5) — gap planificado, no drift doc↔código.
+
+**Conteo:** **5 abiertos verificados** en backlog (M4, M5, D6, D7, M10) + **M3 pendiente implementación** (alcance este spec); **7 no verificados** (P1, P2, P3, M6/D3, D14, D15, H1); **0 heredados cerrados** esta corrida.
 
 ---
 
