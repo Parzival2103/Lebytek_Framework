@@ -1,0 +1,52 @@
+name: Platform tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  platform-fast-gates:
+    name: platform-fast-gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, curl, zip, sqlite3, pdo_mysql
+          coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Composer audit
+        run: composer audit --no-dev
+
+      - name: Prepare harness .env
+        run: cp .env.example .env
+
+      - name: Kernel tests
+        run: php tests/run.php Kernel
+
+      - name: Docs tests
+        run: php tests/run.php Docs
+
+      - name: SkeletonPurity tests
+        run: php tests/run.php SkeletonPurity
+
+      - name: Crud tests
+        run: php tests/run.php Crud
+
+      - name: Payments tests
+        run: php tests/run.php Payments
+
+      - name: Install tests
+        run: php tests/run.php Install
+
+  # platform-integration-gates: Task 3 — DB service, schema migrate, Integrations suite
