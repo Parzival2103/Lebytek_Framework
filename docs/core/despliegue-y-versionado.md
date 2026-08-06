@@ -236,7 +236,7 @@ El repositorio Framework ejecuta gates automáticos vía GitHub Actions (`.githu
 ### Reproducir localmente (equivalente al job fast)
 
 ```bash
-composer validate --strict
+composer validate --no-check-lock
 composer install --no-interaction
 cp .env.example .env
 composer audit --no-dev
