@@ -517,14 +517,14 @@ Validación manual AC6 (una vez): pin deliberado `dompdf/dompdf` `<3.1.6` en ram
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-05T13:30:00Z (AUTOMATION-08) |
+| Reconciliación UTC | 2026-08-06T13:30:00Z (AUTOMATION-08) |
 | Plan creado UTC | 2026-08-04T12:40:00Z |
-| Framework `origin/main` referencia | `c1c93053eadaba128dfdc24ff391527b8fd40e5e` |
+| Framework `origin/main` referencia | `2d4bc7ae6420c609690e95cd845e7b7c45376cb4` |
 | Tareas completadas / totales | **0 / 5** |
 | Modo fuente | normal (spec mergeado PR #78 @ `14309c8`) |
 | Siguiente tarea ejecutable | **Task 1** — `CiWorkflowPresentTest` (TDD rojo) |
-| Prerrequisitos | Ninguno — `composer.lock` presente; `scripts/migrate.php` y `scripts/install.php` existen @ `c1c9305` |
-| Bloqueos | AUTOMATION-07 no ejecutado (06 BLOCKED B1 PHP al mediodía); PHP 8.3.6 verificado en run 08 |
-| Evidencia verificación | `.github/workflows/platform-tests.yml` ausente @ `c1c9305`; `tests/Docs/CiWorkflowPresentTest.php` ausente @ `c1c9305` |
+| Prerrequisitos | Ninguno — `composer.lock` presente; `scripts/migrate.php` y `scripts/install.php` existen @ `2d4bc7a` |
+| Bloqueos | AUTOMATION-07 no ejecutado (06 BLOCKED B1 PHP al mediodía 2026-08-06); PHP 8.3.6 verificado en run 08-06 |
+| Evidencia verificación | `.github/workflows/platform-tests.yml` ausente @ `2d4bc7a`; `tests/Docs/CiWorkflowPresentTest.php` ausente @ `2d4bc7a` |
 | Rama `feature/platform-ci-gates` | **No existe** en `origin` — crear desde `main` al ejecutar |
 | Estado | **Pendiente de implementación** |

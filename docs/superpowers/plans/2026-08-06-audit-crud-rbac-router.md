@@ -734,12 +734,12 @@ Plan: docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md"
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-06T12:40:00Z (AUTOMATION-03 — plan creado) |
+| Reconciliación UTC | 2026-08-06T13:30:00Z (AUTOMATION-08) |
 | Plan creado UTC | 2026-08-06T12:40:00Z |
-| Framework `origin/main` referencia | `ddc55ec8fb025acfada9500d711bbbe8843f5997` |
+| Framework `origin/main` referencia | `2d4bc7ae6420c609690e95cd845e7b7c45376cb4` |
 | Tareas completadas / totales | **0 / 5** |
-| Modo fuente | normal (spec PR #85 @ `automation/spec-2026-08-06`; audit #84 mergeado) |
+| Modo fuente | normal (spec+plan mergeados PR #85 @ `2d4bc7a`; audit #84 mergeado) |
 | Siguiente tarea ejecutable | **Task 1** — `CrudRbacRouterTest` (TDD rojo) |
-| Prerrequisitos | Ninguno — rutas CRUD/calendario existen sin middleware @ `ddc55ec`; `demo_clientes` / `demo_citas` JSON verificados |
-| Bloqueos | PHP CLI ausente en agente cloud; Portal P1/P2 (M6); rama `feature/crud-rbac-router-m3` no existe aún (creable desde `main`) |
+| Prerrequisitos | Ninguno — rutas CRUD/calendario existen sin middleware @ `2d4bc7a`; `demo_clientes` / `demo_citas` JSON verificados |
+| Bloqueos | AUTOMATION-07 no ejecutado (06 BLOCKED B1); Portal P1/P2 (M6); rama `feature/crud-rbac-router-m3` no existe aún (creable desde `main`) |
 | Estado | **Pendiente de implementación** |
