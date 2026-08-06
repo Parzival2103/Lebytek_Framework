@@ -32,7 +32,7 @@
 | SHA Portal inspeccionado | **No verificado** — `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404; `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository». Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-06` |
-| Timestamp UTC | trigger cron `2026-08-06T12:10:00Z` / corrida agente `2026-08-06T12:10:00Z` |
+| Timestamp UTC | trigger cron `2026-08-06T12:10:00Z` / corrida agente `2026-08-06T12:10:00Z` / pase ux `2026-08-06T12:30:00Z` (modo **normal**) |
 | Nivel de fuente | **A** — PR abierto #84, título `docs(audit): auditoría técnica diaria 2026-08-06`, `baseRefName=main`, `mergeable=MERGEABLE`, `updatedAt=2026-08-06T12:05:24Z`. Verificaciones: `merge-base --is-ancestor origin/main 5d6df2f` → exit 0; diff `origin/main...5d6df2f` → único archivo `docs/audits/2026-08-06-auditoria-tecnica-diaria.md`; ningún commit legacy ancestro del head. |
 | PR auditoría fuente | #84 — https://github.com/Parzival2103/Lebytek_Framework/pull/84 |
 | headRefOid fuente | `5d6df2f5d23b28baa4d0166e766fc70fa93ecd45` (rama audit; no heredada) |
@@ -282,6 +282,73 @@ $router->get('/crud/{resource}', ..., $crudRbac);
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: normal
+
+Este spec introduce **middleware RBAC dinámico** en rutas admin `/crud/{resource}` y `/calendario/{key}`.
+Superficie UI verificable: pantallas **403** (HTML flash + JSON AJAX), acceso temprano antes de renderizar
+listados/formularios CRUD y calendario, y mensajes de error accionables con slug de permiso. No modifica layout
+login/dashboard ni estilos globales; login responsive y nav admin permanecen carry-forward.
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (F1–F6) | Evidencia / carry-forward |
+|------|-------------------|---------------------------|
+| PHP soportado | Sin cambio runtime | `composer.json` exige `>=8.1`; VPS documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`) — compatible; middleware y resolver no requieren extensiones nuevas. |
+| Instalación vía `vendor/` | Contrato paquete semver | Consumidores obtienen `CrudRbacMiddleware` + resolver tras bump `lebytek/framework` al tag release (≥ patch post-F1–F6); registro en `routes/web.php` espejado desde harness/skeleton — **no** parche en `vendor/`. Portal con `routes/web.php` propio: merge manual P2 (**no verificado** M6). |
+| Health sin cookie de sesión | Carry-forward **M4** | `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` requiere sesión. Smoke LB: **no** usar `/api/ping`; backlog `GET /api/health` público (spec 2026-08-05, plan 0/5). |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` L55 remite vars `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` a Portal; middleware RBAC no introduce env vars nuevas. |
+| Navegadores objetivo | Superficie admin 403 + CRUD | Baseline `docs/core/ui_ux.md`: admin breakpoint **992px (`lg`)**. Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15; sin IE11. Página 403 y flash deben ser legibles en **320–768px** sin overflow horizontal. |
+
+### UX — flujos admin CRUD/calendario (F1–F6)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | 403 HTML incluye **slug requerido** explícito (p. ej. «No tienes permiso… `demo_clientes.ver`») — operador distingue permiso faltante de error genérico | F2, AC3 |
+| **U2** | Copy accionable: qué falló (acceso denegado) + qué hacer (solicitar permiso al administrador o revisar rol en **Usuarios/Roles**) — no sólo «Acceso denegado» | F2, CF10 parcial |
+| **U3** | Peticiones AJAX (`Request::isAjax()`): JSON 403 `{ "error": "Acceso denegado.", "permiso": "<slug>" }` — coherente con `RbacMiddleware` y extensible sin romper clientes existentes | F2 |
+| **U4** | Recurso CRUD/key calendario **inválido** → `ValidationException` + redirect flash (comportamiento actual) — **no** confundir con 403 RBAC; mensaje indica recurso inexistente, no permiso | F1 |
+| **U5** | `CrudRbacRouterTest`: mensaje de fallo cita spec M3, archivo `routes/web.php` y acción («registrar `CrudRbacMiddleware` en rutas `/crud/` y `/calendario/`») | F4 |
+| **U6** | `CrudRbacMiddlewareTest`: fallo sin implementación indica estado actual («middleware ausente o no registrado») y slug esperado en assert | F4 |
+| **U7** | Calendario JSON (`/calendario/{key}/eventos`): 403 con mismo contrato U3 — no HTML en respuesta AJAX | F2, F3 |
+| **U8** | Doc § RBAC CRUD (`auth_rbac_seguridad_v0.1.md`) + `config/rbac_route_permissions.php`: operador ve slugs CRUD reflejados en capa router para auditoría `rbac_integrity_report.php` | F5 |
+
+### UX — instalación y operaciones (sin cambio directo)
+
+| Requisito | Criterio | Estado |
+|-----------|----------|--------|
+| **U9** | Wizard install / smoke post-tag: usuario rol restringido que antes veía listado CRUD vacío ahora recibe 403 temprano — doc O1 indica comportamiento **esperado** (seguridad correcta), no regresión | O1 |
+| **U10** | Bump Framework fallido: mensaje CLI indica versión mínima del tag release y acción («composer update lebytek/framework») | P1 carry-forward |
+
+### Responsive — smoke en superficies tocadas
+
+Referencia: `docs/core/ui_ux.md` §542 — breakpoint admin **992px (`lg`)**; tablas CRUD exigen `table-responsive` (`ui_ux.md` L222).
+
+| Superficie | Verificación post-merge | Rango |
+|------------|-------------------------|-------|
+| Página 403 / flash RBAC | Mensaje y enlace «volver» legibles; sin scroll horizontal; tap targets ≥44px en acciones | **320–768px** |
+| Listado CRUD (usuario **con** permiso) | Sin regresión: `table-responsive` + scroll horizontal en columnas secundarias | **320–768px** |
+| Calendario admin (usuario **con** permiso) | Vista calendario usable; eventos AJAX degradan con 403 JSON legible en móvil | **320–768px** |
+| Login / dashboard nav (sin alcance directo) | Carry-forward CF3–CF4 — smoke opcional post-merge | **320–768px** |
+
+### Carry-forward UX — próximo spec con superficie UI más amplia
+
+Ítems derivados de deuda abierta; **CF6 (RBAC router CRUD/calendario) queda cubierto por este spec** — no arrastrar.
+CF1–CF2 (semver harness + env purge), CF5 parcial (`mkt_leads` spec 2026-08-03) y D7 (CI spec 2026-08-04) tampoco se arrastran.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF7 | Health endpoint público | M4 | `GET /api/health` 200 sin cookie; body `{ "status": "ok" }`; checklist VPS — spec/plan 2026-08-05 (**0/5**). |
+| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección — más allá de U4. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer — extiende U2 fuera de RBAC 403. |
+
+---
+
 ## Criterios de aceptación
 
 - [ ] **AC1:** Rutas `/crud/*` y `/calendario/*` en harness y skeleton registran `CrudRbacMiddleware`.
@@ -293,6 +360,13 @@ $router->get('/crud/{resource}', ..., $crudRbac);
 - [ ] **AC7:** Doc § RBAC CRUD + `rbac_route_permissions.php` actualizados (F5).
 - [ ] **AC8:** Tag semver patch publicado; trío versión sincronizado; `PlatformVersionSemverTest` verde.
 - [ ] **AC9:** Diff PR no incluye Marketing/Portal en `src/`; frontera FPS intacta; `SkeletonPurityTest` verde.
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **normal** con requisitos K/U/R verificables para F1–F6 (403 accionables, CRUD/calendario admin).
+- [ ] **AC-UX2:** Requisitos U1–U8 (slug en 403, copy accionable, JSON AJAX coherente, distinción ValidationException, hints test gate, doc rbac_route_permissions) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF7–CF10 documentado; CF6 no arrastrado (cubierto por este spec); CF1–CF2, CF5 parcial y D7 no arrastrados (resueltos o cubiertos en specs previos).
+- [ ] **AC-UX4:** Smoke responsive en **320–768px** para página 403/flash RBAC y listados CRUD/calendario accesibles post-implementación (sin regresión `table-responsive`).
 
 ---
 
