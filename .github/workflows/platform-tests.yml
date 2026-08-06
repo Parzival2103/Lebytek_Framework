@@ -29,7 +29,18 @@ jobs:
         run: composer audit --no-dev
 
       - name: Prepare harness .env
-        run: cp .env.example .env
+        run: |
+          cp .env.example .env
+          # Ensure CI MySQL service credentials win over .env.example (EnvLoader fills unset $_ENV from file)
+          for kv in DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=lebytek_ci DB_USERNAME=root DB_PASSWORD=root; do
+            key="${kv%%=*}"
+            val="${kv#*=}"
+            if grep -q "^${key}=" .env; then
+              sed -i "s/^${key}=.*/${key}=${val}/" .env
+            else
+              echo "${key}=${val}" >> .env
+            fi
+          done
 
       - name: Kernel tests
         run: php tests/run.php Kernel
@@ -87,7 +98,18 @@ jobs:
         run: composer install --no-interaction --prefer-dist
 
       - name: Prepare harness .env
-        run: cp .env.example .env
+        run: |
+          cp .env.example .env
+          # Ensure CI MySQL service credentials win over .env.example (EnvLoader fills unset $_ENV from file)
+          for kv in DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=lebytek_ci DB_USERNAME=root DB_PASSWORD=root; do
+            key="${kv%%=*}"
+            val="${kv#*=}"
+            if grep -q "^${key}=" .env; then
+              sed -i "s/^${key}=.*/${key}=${val}/" .env
+            else
+              echo "${key}=${val}" >> .env
+            fi
+          done
 
       - name: Apply platform schema
         run: php scripts/migrate.php
