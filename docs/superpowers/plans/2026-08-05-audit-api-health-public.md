@@ -520,12 +520,12 @@ Plan: docs/superpowers/plans/2026-08-05-audit-api-health-public.md"
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-05T12:40:00Z (AUTOMATION-03 — plan creado) |
+| Reconciliación UTC | 2026-08-06T12:40:00Z (AUTOMATION-03 — reconciliación diaria) |
 | Plan creado UTC | 2026-08-05T12:40:00Z |
-| Framework `origin/main` referencia | `42c3a0a4d0fafacd24d8632ca6e77c00836da79f` |
+| Framework `origin/main` verificado | `ddc55ec8fb025acfada9500d711bbbe8843f5997` |
 | Tareas completadas / totales | **0 / 5** |
 | Modo fuente | normal (spec PR #81 @ `automation/spec-2026-08-05`) |
 | Siguiente tarea ejecutable | **Task 1** — `ApiHealthPublicRouteTest` (TDD rojo) |
-| Prerrequisitos | Ninguno — `HealthController::ping()` existe; rutas auth actuales verificadas @ `42c3a0a` |
-| Bloqueos | PHP CLI puede estar ausente en agente cloud — verificar en entorno con PHP 8.1+; Portal P1/P2 requiere operador (M6) |
+| Prerrequisitos | Ninguno — `HealthController::ping()` existe @ `ddc55ec`; `/api/health` ausente; tests `ApiHealthPublicRouteTest` / `ApiHealthPublicDispatchTest` ausentes; semver `1.2.3` |
+| Bloqueos | PHP CLI ausente en agente cloud (verificado 2026-08-06) — ejecutor debe correr gates en entorno PHP ≥8.1; Portal P1/P2 requiere operador (M6 gh 404); rama `feature/api-health-public-m4` no existe aún (creable desde `main`) |
 | Estado | **Pendiente de implementación** |
