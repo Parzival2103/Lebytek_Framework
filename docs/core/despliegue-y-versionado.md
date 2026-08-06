@@ -230,7 +230,7 @@ El repositorio Framework ejecuta gates automáticos vía GitHub Actions (`.githu
 
 | Job | Qué ejecuta | Bloquea merge |
 |-----|-------------|---------------|
-| `platform-fast-gates` | `composer validate --strict`, `composer audit --no-dev`, suites Kernel, Docs, SkeletonPurity, Crud, Payments, Install | Recomendado required check |
+| `platform-fast-gates` | `composer validate --no-check-lock`, `composer audit --no-dev`, suites Kernel, Docs, SkeletonPurity, Crud, Payments, Install | Recomendado required check |
 | `platform-integration-gates` | MySQL 8.0 service → `php scripts/migrate.php` → `php scripts/install.php --modules=integrations` → `php tests/run.php Integrations` | Recomendado required check |
 
 ### Reproducir localmente (equivalente al job fast)
