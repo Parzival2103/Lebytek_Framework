@@ -118,7 +118,26 @@ final class InMemoryInvoiceEventLog implements InvoiceEventLogRepositoryInterfac
     {
         $key = $this->key($provider, $idempotencyKey);
         if (! isset($this->rows[$key])) {
-            return;
+            throw new RuntimeException(sprintf(
+                'Cannot mark invoice event for provider "%s" and idempotency key "%s": claim row not found.',
+                $provider,
+                $idempotencyKey,
+            ));
+        }
+
+        $currentProviderInvoiceId = $this->rows[$key]['providerInvoiceId'];
+        if (
+            $currentProviderInvoiceId !== null
+            && (string) $currentProviderInvoiceId !== ''
+            && (string) $currentProviderInvoiceId !== $invoice->providerInvoiceId()
+        ) {
+            throw new RuntimeException(sprintf(
+                'Cannot mark invoice event for provider "%s" and idempotency key "%s": existing provider_invoice_id "%s" differs from "%s".',
+                $provider,
+                $idempotencyKey,
+                (string) $currentProviderInvoiceId,
+                $invoice->providerInvoiceId(),
+            ));
         }
 
         $this->rows[$key]['providerInvoiceId'] = $invoice->providerInvoiceId();

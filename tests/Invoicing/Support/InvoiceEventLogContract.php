@@ -11,6 +11,25 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     $provider = 'facturapi';
     $sourceRef = 'invoice-contract-'.$suffix;
 
+    assert_throws(RuntimeException::class, fn () => $events->markIssued(
+        $provider,
+        'missing-issued-'.$suffix,
+        new IssuedInvoice(
+            'inv_missing_issued_'.$suffix,
+            'uuid-missing-issued-'.$suffix,
+            InvoiceStatus::Valid,
+        ),
+    ), 'markIssued must fail closed when claim row is missing');
+    assert_throws(RuntimeException::class, fn () => $events->markNeedsReconcile(
+        $provider,
+        'missing-reconcile-'.$suffix,
+        new IssuedInvoice(
+            'inv_missing_reconcile_'.$suffix,
+            'uuid-missing-reconcile-'.$suffix,
+            InvoiceStatus::NeedsReconcile,
+        ),
+    ), 'markNeedsReconcile must fail closed when claim row is missing');
+
     $claimKey = 'claim-'.$suffix;
     assert_false($events->hasProcessed($provider, $claimKey), 'new claim must not be processed');
     assert_true($events->tryClaim($provider, $claimKey, $sourceRef, 'membership', ['step' => 'claim']));
@@ -62,6 +81,67 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     assert_same(2, count($bySource), 'source lookup returns rows with provider ids only');
     assert_same('inv_issued_'.$suffix, $bySource[0]->providerInvoiceId(), 'source lookup is id ASC');
     assert_same('inv_reconcile_'.$suffix, $bySource[1]->providerInvoiceId(), 'source lookup includes reconcile row');
+
+    $issuedMismatchKey = 'issued-mismatch-'.$suffix;
+    assert_true($events->tryClaim($provider, $issuedMismatchKey, $sourceRef.'-issued-mismatch', 'membership'));
+    $events->markIssued($provider, $issuedMismatchKey, new IssuedInvoice(
+        'inv_locked_issued_'.$suffix,
+        'uuid-locked-issued-'.$suffix,
+        InvoiceStatus::Valid,
+        null,
+        $sourceRef.'-issued-mismatch',
+    ));
+    assert_throws(RuntimeException::class, fn () => $events->markNeedsReconcile(
+        $provider,
+        $issuedMismatchKey,
+        new IssuedInvoice(
+            'inv_conflict_issued_'.$suffix,
+            'uuid-conflict-issued-'.$suffix,
+            InvoiceStatus::NeedsReconcile,
+            null,
+            $sourceRef.'-issued-mismatch',
+        ),
+    ), 'markNeedsReconcile must not overwrite a different provider invoice id');
+    $issuedAfterConflict = $events->findByIdempotencyKey($provider, $issuedMismatchKey);
+    assert_true($issuedAfterConflict instanceof IssuedInvoice, 'issued mismatch row remains findable');
+    assert_same('inv_locked_issued_'.$suffix, $issuedAfterConflict->providerInvoiceId(), 'markNeedsReconcile conflict preserves provider invoice id');
+    assert_same(InvoiceStatus::Valid, $issuedAfterConflict->status(), 'markNeedsReconcile conflict preserves status');
+
+    $reconcileMismatchKey = 'reconcile-mismatch-'.$suffix;
+    assert_true($events->tryClaim($provider, $reconcileMismatchKey, $sourceRef.'-reconcile-mismatch', 'membership'));
+    $events->markNeedsReconcile($provider, $reconcileMismatchKey, new IssuedInvoice(
+        'inv_locked_reconcile_'.$suffix,
+        'uuid-locked-reconcile-'.$suffix,
+        InvoiceStatus::NeedsReconcile,
+        null,
+        $sourceRef.'-reconcile-mismatch',
+    ));
+    assert_throws(RuntimeException::class, fn () => $events->markIssued(
+        $provider,
+        $reconcileMismatchKey,
+        new IssuedInvoice(
+            'inv_conflict_reconcile_'.$suffix,
+            'uuid-conflict-reconcile-'.$suffix,
+            InvoiceStatus::Valid,
+            null,
+            $sourceRef.'-reconcile-mismatch',
+        ),
+    ), 'markIssued must not overwrite a different provider invoice id');
+    $reconcileAfterConflict = $events->findByIdempotencyKey($provider, $reconcileMismatchKey);
+    assert_true($reconcileAfterConflict instanceof IssuedInvoice, 'reconcile mismatch row remains findable');
+    assert_same('inv_locked_reconcile_'.$suffix, $reconcileAfterConflict->providerInvoiceId(), 'markIssued conflict preserves provider invoice id');
+    assert_same(InvoiceStatus::NeedsReconcile, $reconcileAfterConflict->status(), 'markIssued conflict preserves status');
+    $events->markIssued($provider, $reconcileMismatchKey, new IssuedInvoice(
+        'inv_locked_reconcile_'.$suffix,
+        'uuid-reconciled-issued-'.$suffix,
+        InvoiceStatus::Valid,
+        null,
+        $sourceRef.'-reconcile-mismatch',
+    ));
+    $sameProviderUpdate = $events->findByIdempotencyKey($provider, $reconcileMismatchKey);
+    assert_true($sameProviderUpdate instanceof IssuedInvoice, 'same provider id update remains findable');
+    assert_same('inv_locked_reconcile_'.$suffix, $sameProviderUpdate->providerInvoiceId(), 'same provider id update keeps provider invoice id');
+    assert_same(InvoiceStatus::Valid, $sameProviderUpdate->status(), 'same provider id update can move needs_reconcile to issued');
 
     foreach (['extra-a', 'extra-b'] as $name) {
         $key = $name.'-'.$suffix;

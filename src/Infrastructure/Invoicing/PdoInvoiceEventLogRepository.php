@@ -9,6 +9,7 @@ use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
 use Lebytek\Framework\Kernel\Database\Connection;
 use PDO;
 use PDOException;
+use RuntimeException;
 
 final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInterface
 {
@@ -167,6 +168,8 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
     private function mark(string $provider, string $idempotencyKey, IssuedInvoice $invoice, string $status): void
     {
         $pdo = Connection::getInstance();
+        $this->assertCanMark($pdo, $provider, $idempotencyKey, $invoice);
+
         $stmt = $pdo->prepare(
             'UPDATE inv_events
              SET provider_invoice_id = :provider_invoice_id,
@@ -177,10 +180,17 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
                  meta = :meta,
                  updated_at = CURRENT_TIMESTAMP
              WHERE provider = :provider
-               AND idempotency_key = :idempotency_key'
+               AND idempotency_key = :idempotency_key
+               AND (
+                   provider_invoice_id IS NULL
+                   OR provider_invoice_id = :empty_provider_invoice_id
+                   OR provider_invoice_id = :provider_invoice_id_match
+               )'
         );
         $stmt->execute([
             'provider_invoice_id' => $invoice->providerInvoiceId(),
+            'provider_invoice_id_match' => $invoice->providerInvoiceId(),
+            'empty_provider_invoice_id' => '',
             'uuid' => $invoice->uuid() !== '' ? $invoice->uuid() : null,
             'folio_number' => $invoice->folioNumber(),
             'source_ref' => $invoice->sourceRef(),
@@ -189,6 +199,51 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
             'provider' => $provider,
             'idempotency_key' => $idempotencyKey,
         ]);
+
+        if ($stmt->rowCount() === 0) {
+            $this->assertCanMark($pdo, $provider, $idempotencyKey, $invoice);
+        }
+    }
+
+    private function assertCanMark(PDO $pdo, string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+    {
+        $stmt = $pdo->prepare(
+            'SELECT provider_invoice_id
+             FROM inv_events
+             WHERE provider = :provider
+               AND idempotency_key = :idempotency_key
+             LIMIT 1'
+        );
+        $stmt->execute([
+            'provider' => $provider,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (! is_array($row)) {
+            throw new RuntimeException(sprintf(
+                'Cannot mark invoice event for provider "%s" and idempotency key "%s": claim row not found.',
+                $provider,
+                $idempotencyKey,
+            ));
+        }
+
+        $currentProviderInvoiceId = $row['provider_invoice_id'] !== null
+            ? (string) $row['provider_invoice_id']
+            : null;
+        if (
+            $currentProviderInvoiceId !== null
+            && $currentProviderInvoiceId !== ''
+            && $currentProviderInvoiceId !== $invoice->providerInvoiceId()
+        ) {
+            throw new RuntimeException(sprintf(
+                'Cannot mark invoice event for provider "%s" and idempotency key "%s": existing provider_invoice_id "%s" differs from "%s".',
+                $provider,
+                $idempotencyKey,
+                $currentProviderInvoiceId,
+                $invoice->providerInvoiceId(),
+            ));
+        }
     }
 
     /**
