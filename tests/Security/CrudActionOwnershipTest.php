@@ -2,17 +2,45 @@
 
 declare(strict_types=1);
 
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
+use Lebytek\Framework\Application\Services\CrudHandlerRegistry;
 use Lebytek\Framework\Application\Services\CrudScopeResolver;
 use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 use Lebytek\Framework\Domain\Exceptions\ValidationException;
+use Lebytek\Framework\Domain\Interfaces\CrudListScopeInterface;
 
 /**
  * H2 (IDOR) — la regla de propiedad usada por show/edit/update/delete y por las
  * acciones de fila/masivas vive en un único guard puro: CrudScopeResolver::assertOwnedBy().
+ * Cubre owner built-in y `list.scope_handler` custom (C1).
  * Aquí se prueba ese guard con una definición real (vía fromArray) y un closure
  * $can, sin tocar DB ni doblar clases final. CrudActionService la consume
  * idénticamente desde run()/runBulk().
  */
+
+if (!class_exists('OwnershipFixtureCustomScope')) {
+    class OwnershipFixtureCustomScope implements CrudListScopeInterface
+    {
+        public function apply(CrudListContext $ctx): void
+        {
+            $ctx->addCondition('created_by', '=', 99);
+        }
+    }
+}
+
+function ownership_def_handler(string $handlerKey): CrudResourceDefinition
+{
+    return CrudResourceDefinition::fromArray([
+        'resource' => [
+            'key' => 'eventos',
+            'title' => 'Eventos',
+            'table' => 'dom_eventos',
+            'primary_key' => 'id',
+            'permission_prefix' => 'eventos',
+        ],
+        'list' => ['scope_handler' => $handlerKey],
+    ]);
+}
 function ownership_def(?array $scope): CrudResourceDefinition
 {
     return CrudResourceDefinition::fromArray([
@@ -115,4 +143,49 @@ test('assertOwnedBy bloquea si hay bypass declarado pero el usuario no lo posee 
             $deny
         );
     });
+});
+
+test('assertOwnedBy bloquea registro fuera de scope_handler custom (C1 IDOR)', function () use ($deny): void {
+    $r = new CrudScopeResolver(new CrudHandlerRegistry([
+        'eventos_custom' => OwnershipFixtureCustomScope::class,
+    ]));
+    assert_throws(ValidationException::class, function () use ($r, $deny): void {
+        $r->assertOwnedBy(
+            ownership_def_handler('eventos_custom'),
+            ['id' => 7, 'created_by' => 42], // 42 ≠ 99 del fixture
+            42,
+            $deny
+        );
+    });
+});
+
+test('assertOwnedBy permite registro dentro de scope_handler custom', function () use ($deny): void {
+    $r = new CrudScopeResolver(new CrudHandlerRegistry([
+        'eventos_custom' => OwnershipFixtureCustomScope::class,
+    ]));
+    $r->assertOwnedBy(
+        ownership_def_handler('eventos_custom'),
+        ['id' => 7, 'created_by' => 99],
+        42,
+        $deny
+    );
+    assert_true(true, 'dentro de scope custom: no lanza');
+});
+
+test('assertOwnedBy con scope_handler conserva mensaje no revelador', function () use ($deny): void {
+    $r = new CrudScopeResolver(new CrudHandlerRegistry([
+        'eventos_custom' => OwnershipFixtureCustomScope::class,
+    ]));
+    $msg = null;
+    try {
+        $r->assertOwnedBy(
+            ownership_def_handler('eventos_custom'),
+            ['id' => 7, 'created_by' => 1],
+            42,
+            $deny
+        );
+    } catch (ValidationException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_same('El registro solicitado no existe.', $msg);
 });
