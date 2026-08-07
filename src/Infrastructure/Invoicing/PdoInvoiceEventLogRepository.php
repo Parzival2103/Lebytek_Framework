@@ -1,0 +1,240 @@
+<?php
+declare(strict_types=1);
+
+namespace Lebytek\Framework\Infrastructure\Invoicing;
+
+use Lebytek\Framework\Domain\Invoicing\InvoiceEventLogRepositoryInterface;
+use Lebytek\Framework\Domain\Invoicing\InvoiceStatus;
+use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
+use Lebytek\Framework\Kernel\Database\Connection;
+use PDO;
+use PDOException;
+
+final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInterface
+{
+    private const STATUS_CLAIMED = 'claimed';
+    private const STATUS_ISSUED = 'issued';
+    private const STATUS_NEEDS_RECONCILE = 'needs_reconcile';
+
+    public function hasProcessed(string $provider, string $idempotencyKey): bool
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT 1
+             FROM inv_events
+             WHERE provider = :provider
+               AND idempotency_key = :idempotency_key
+               AND provider_invoice_id IS NOT NULL
+             LIMIT 1'
+        );
+        $stmt->execute([
+            'provider' => $provider,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
+    public function tryClaim(
+        string $provider,
+        string $idempotencyKey,
+        string $sourceRef,
+        string $type,
+        array $meta = [],
+    ): bool {
+        $pdo = Connection::getInstance();
+
+        try {
+            $stmt = $pdo->prepare(
+                'INSERT INTO inv_events (provider, idempotency_key, source_ref, type, status, meta)
+                 VALUES (:provider, :idempotency_key, :source_ref, :type, :status, :meta)'
+            );
+            $stmt->execute([
+                'provider' => $provider,
+                'idempotency_key' => $idempotencyKey,
+                'source_ref' => $sourceRef !== '' ? $sourceRef : null,
+                'type' => $type,
+                'status' => self::STATUS_CLAIMED,
+                'meta' => $this->encodeMeta($meta),
+            ]);
+
+            return true;
+        } catch (PDOException $e) {
+            if ($e->getCode() === '23000' || str_contains($e->getMessage(), '1062')) {
+                return false;
+            }
+
+            throw $e;
+        }
+    }
+
+    public function releaseClaim(string $provider, string $idempotencyKey): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'DELETE FROM inv_events
+             WHERE provider = :provider
+               AND idempotency_key = :idempotency_key
+               AND status = :status
+               AND provider_invoice_id IS NULL'
+        );
+        $stmt->execute([
+            'provider' => $provider,
+            'idempotency_key' => $idempotencyKey,
+            'status' => self::STATUS_CLAIMED,
+        ]);
+    }
+
+    public function markIssued(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+    {
+        $this->mark($provider, $idempotencyKey, $invoice, self::STATUS_ISSUED);
+    }
+
+    public function markNeedsReconcile(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+    {
+        $this->mark($provider, $idempotencyKey, $invoice, self::STATUS_NEEDS_RECONCILE);
+    }
+
+    public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT provider_invoice_id, uuid, folio_number, source_ref, status, meta
+             FROM inv_events
+             WHERE provider = :provider
+               AND idempotency_key = :idempotency_key
+               AND provider_invoice_id IS NOT NULL
+             LIMIT 1'
+        );
+        $stmt->execute([
+            'provider' => $provider,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (! is_array($row)) {
+            return null;
+        }
+
+        return $this->hydrate($row);
+    }
+
+    public function findIssuedBySourceRef(string $sourceRef): array
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT provider_invoice_id, uuid, folio_number, source_ref, status, meta
+             FROM inv_events
+             WHERE source_ref = :source_ref
+               AND provider_invoice_id IS NOT NULL
+             ORDER BY id ASC'
+        );
+        $stmt->execute(['source_ref' => $sourceRef]);
+
+        return array_map(
+            fn (array $row): IssuedInvoice => $this->hydrate($row),
+            $stmt->fetchAll(PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function findNeedsReconcile(string $provider, int $limit = 100): array
+    {
+        if ($limit <= 0) {
+            return [];
+        }
+
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT provider_invoice_id, uuid, folio_number, source_ref, status, meta
+             FROM inv_events
+             WHERE provider = :provider
+               AND status = :status
+               AND provider_invoice_id IS NOT NULL
+             ORDER BY id ASC
+             LIMIT '.max(1, $limit)
+        );
+        $stmt->execute([
+            'provider' => $provider,
+            'status' => self::STATUS_NEEDS_RECONCILE,
+        ]);
+
+        return array_map(
+            fn (array $row): IssuedInvoice => $this->hydrate($row),
+            $stmt->fetchAll(PDO::FETCH_ASSOC)
+        );
+    }
+
+    private function mark(string $provider, string $idempotencyKey, IssuedInvoice $invoice, string $status): void
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'UPDATE inv_events
+             SET provider_invoice_id = :provider_invoice_id,
+                 uuid = :uuid,
+                 folio_number = :folio_number,
+                 source_ref = COALESCE(:source_ref, source_ref),
+                 status = :status,
+                 meta = :meta,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE provider = :provider
+               AND idempotency_key = :idempotency_key'
+        );
+        $stmt->execute([
+            'provider_invoice_id' => $invoice->providerInvoiceId(),
+            'uuid' => $invoice->uuid() !== '' ? $invoice->uuid() : null,
+            'folio_number' => $invoice->folioNumber(),
+            'source_ref' => $invoice->sourceRef(),
+            'status' => $status,
+            'meta' => $this->encodeMeta($invoice->meta()),
+            'provider' => $provider,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function hydrate(array $row): IssuedInvoice
+    {
+        return new IssuedInvoice(
+            (string) $row['provider_invoice_id'],
+            (string) ($row['uuid'] ?? ''),
+            $this->domainStatus((string) $row['status']),
+            $row['folio_number'] !== null ? (string) $row['folio_number'] : null,
+            $row['source_ref'] !== null ? (string) $row['source_ref'] : null,
+            meta: $this->decodeMeta($row['meta'] ?? null),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $meta
+     */
+    private function encodeMeta(array $meta): ?string
+    {
+        return $meta === [] ? null : json_encode($meta, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decodeMeta(mixed $meta): array
+    {
+        if (! is_string($meta) || $meta === '') {
+            return [];
+        }
+
+        $decoded = json_decode($meta, true, flags: JSON_THROW_ON_ERROR);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    private function domainStatus(string $status): InvoiceStatus
+    {
+        return match ($status) {
+            self::STATUS_ISSUED => InvoiceStatus::Valid,
+            self::STATUS_NEEDS_RECONCILE => InvoiceStatus::NeedsReconcile,
+            'canceled' => InvoiceStatus::Canceled,
+            default => InvoiceStatus::Unknown,
+        };
+    }
+}
