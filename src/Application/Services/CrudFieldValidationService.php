@@ -233,10 +233,17 @@ final class CrudFieldValidationService
             }
         }
 
+        $allowed = null;
         if (isset($rules['in']) && is_array($rules['in'])) {
-            if (!in_array((string) $normalized, array_map('strval', $rules['in']), true)) {
-                $errors[] = $this->msg($rules, 'in', 'Valor no permitido.');
+            $allowed = array_map('strval', $rules['in']);
+        } elseif ($field->type() === 'select') {
+            $options = $field->options();
+            if ($options !== []) {
+                $allowed = array_map('strval', array_keys($options));
             }
+        }
+        if ($allowed !== null && !in_array((string) $normalized, $allowed, true)) {
+            $errors[] = $this->msg($rules, 'in', 'Valor no permitido.');
         }
 
         if (isset($rules['regex']) && is_string($rules['regex'])) {
