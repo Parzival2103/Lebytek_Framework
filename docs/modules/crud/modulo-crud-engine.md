@@ -540,6 +540,10 @@ Restringe el listado (y bloquea show/edit/update/delete) a las filas del usuario
 
 donde `clientes_owner` se registra en `config/crud_handlers.php` apuntando a una clase que implementa `CrudListScopeInterface`.
 
+El mismo scope (built-in u handler) se revalida en acceso por ID: show, edit, update,
+delete y acciones de fila/masivas. Un ID conocido fuera de scope responde como
+inexistente (mismo mensaje que owner).
+
 `scope` y `scope_handler` son **mutuamente excluyentes**. Un recurso sin ninguno se comporta como hoy (sin scope).
 
 ## Pie de totales en listado plano

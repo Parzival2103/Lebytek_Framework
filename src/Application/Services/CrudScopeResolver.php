@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lebytek\Framework\Application\Services;
 
+use Lebytek\Framework\Application\Crud\Context\CrudListContext;
 use Lebytek\Framework\Application\Crud\Scopes\OwnerListScope;
 use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 use Lebytek\Framework\Domain\Exceptions\ValidationException;
@@ -43,27 +44,75 @@ final class CrudScopeResolver
     /**
      * Bloqueo server-side de propiedad: única fuente de verdad para show/edit/
      * update/delete (CrudResourceService) y para las acciones de fila/masivas
-     * (CrudActionService). Si el recurso no declara owner scope, no hace nada
-     * (comportamiento sin cambios). Si lo declara, deja pasar al dueño o a quien
-     * tenga el permiso de bypass; cualquier otro caso se trata como inexistente
-     * para no revelar registros ajenos.
+     * (CrudActionService). Si `resolve()` no produce scope, no hace nada. Si
+     * produce scope (owner o `scope_handler`), exige que el registro cumpla las
+     * condiciones; si no, trata como inexistente para no revelar registros ajenos.
      *
      * @param array<string, mixed> $record
      * @param callable(string): bool $can
      */
     public function assertOwnedBy(CrudResourceDefinition $definition, array $record, ?int $userId, callable $can): void
     {
-        $meta = $this->ownerMeta($definition);
-        if ($meta === null) {
+        $scope = $this->resolve($definition, $userId, $can);
+        if ($scope === null) {
             return;
         }
-        if ($meta['bypass'] !== null && $can($meta['bypass'])) {
-            return;
-        }
-        $owner = $record[$meta['column']] ?? null;
-        if ($userId === null || (string) $owner !== (string) $userId) {
+
+        $ctx = new CrudListContext(
+            $definition->key(),
+            $definition->table(),
+            $definition->primaryKey(),
+            $userId,
+            '',
+            []
+        );
+        $scope->apply($ctx);
+
+        if (!self::recordMatchesConditions($record, $ctx->conditions())) {
             throw new ValidationException('El registro solicitado no existe.');
         }
+    }
+
+    /**
+     * Evalúa condiciones de scope contra un registro ya cargado (acceso por ID).
+     * Mapa vacío => true (p. ej. owner con bypass). Columna ausente => false (fail-closed).
+     *
+     * @param array<string, mixed> $record
+     * @param list<array{column: string, op: string, value: mixed}> $conditions
+     */
+    public static function recordMatchesConditions(array $record, array $conditions): bool
+    {
+        foreach ($conditions as $cond) {
+            $column = (string) ($cond['column'] ?? '');
+            if ($column === '' || !array_key_exists($column, $record)) {
+                return false;
+            }
+            $actual = $record[$column];
+            $op = (string) ($cond['op'] ?? '=');
+            $expected = $cond['value'] ?? null;
+
+            $ok = match ($op) {
+                '='  => (string) $actual === (string) $expected,
+                '!=' => (string) $actual !== (string) $expected,
+                '<'  => (float) $actual < (float) $expected,
+                '>'  => (float) $actual > (float) $expected,
+                '<=' => (float) $actual <= (float) $expected,
+                '>=' => (float) $actual >= (float) $expected,
+                'IN' => is_array($expected) && in_array((string) $actual, array_map('strval', $expected), true),
+                'LIKE' => is_string($expected) && self::likeMatch((string) $actual, $expected),
+                default => false,
+            };
+            if (!$ok) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static function likeMatch(string $actual, string $pattern): bool
+    {
+        $regex = '/^' . str_replace(['%', '_'], ['.*', '.'], preg_quote($pattern, '/')) . '$/u';
+        return preg_match($regex, $actual) === 1;
     }
 
     /**
