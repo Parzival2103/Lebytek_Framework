@@ -1,0 +1,35 @@
+{
+  "type": "I",
+  "customer": {
+    "legal_name": "SERVICIOS EXENTOS SA DE CV",
+    "tax_id": "SEX0101019A0",
+    "tax_system": "601",
+    "address": {
+      "zip": "03100",
+      "country": "MEX"
+    }
+  },
+  "items": [
+    {
+      "quantity": 1.0,
+      "product": {
+        "description": "Servicio exento",
+        "product_key": "80141600",
+        "unit_key": "E48",
+        "price": 500.0,
+        "tax_included": false,
+        "taxability": "02",
+        "taxes": [
+          {
+            "type": "IVA",
+            "rate": 0.0,
+            "factor": "Exento"
+          }
+        ]
+      }
+    }
+  ],
+  "payment_form": "99",
+  "use": "G01",
+  "currency": "MXN"
+}
