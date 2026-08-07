@@ -22,6 +22,8 @@
 
 **Target repository/branches:** `Parzival2103/Lebytek_Framework` @ `main` (`da3ab58bd77be95c4003341454d939aa2584a742`); rama de implementación `cursor/crud-p01-authz-multi-canal-0a6f` (PR #95 OPEN — verificado `git ls-remote origin refs/heads/cursor/crud-p01-authz-multi-canal-0a6f`)
 
+**Plan revision UTC:** 2026-08-07T12:40:00Z (AUTOMATION-04 Part B — fuente Nivel A spec audit; 6 tareas / 45 steps checkbox)
+
 ## Baseline asumida (puntos 1..N-1)
 
 | Punto | Plan | Estado verificado | Evidencia (SHA / PR / archivos) |
