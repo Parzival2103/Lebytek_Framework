@@ -5,8 +5,9 @@
     "license": "proprietary",
     "version": "1.2.6",
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.2",
         "dompdf/dompdf": "^3.1",
+        "facturapi/facturapi-php": "^4",
         "phpmailer/phpmailer": "^7.1",
         "stripe/stripe-php": "^16.0"
     },

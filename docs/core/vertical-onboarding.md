@@ -25,6 +25,7 @@ Archivo: [`config/vertical.php`](../../config/vertical.php)
 - [ ] Mantener coherencia entre `modules` y el menú: cada clave debe corresponder al **`slug` de una entrada raíz** en `core_menu_items` (u omitir si el ítem define `vertical_module`). Por defecto existen `dashboard` y `administracion`; pon `false` lo que esta instancia no ofrezca **y** ocultará el filtro de módulos (además conviene retirar o desactivar filas en BD si no deben existir rutas huérfanas).
 - [ ] Opcional: en `labels.menu`, sobrescribir textos (`slug` → etiqueta visible) sin tocar [`core_menu_items`](../../database/schema/schema.sql) — ver [modulo-menu.md](../modules/modulo-menu.md).
 - [ ] Para nuevos ítems de menú, insertar en **`core_menu_items`** y ampliar `vertical.modules` si aplica el toggle por vertical.
+- [ ] Para `payments` o `invoicing`, confirmar que el modulo esta OFF por defecto y activarlo solo despues de cargar su `bootstrap_sql`, configurar env vars y registrar los binds de consumidor requeridos. Invoicing requiere `InvoiceableSourceInterface`; ver [`docs/modules/modulo-invoicing.md`](../modules/modulo-invoicing.md).
 
 ## 4. Bootstrap y permisos
 

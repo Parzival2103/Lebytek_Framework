@@ -14,6 +14,8 @@ El archivo [`database/schema/schema.sql`](../../database/schema/schema.sql) defi
 | `rep_` | Definiciones de métricas / reporting. |
 | `tmp_` | Colas o trabajos temporales (puede usar JSON; requiere motor reciente). |
 | `sys_` | Almacén clave-valor u otros metadatos de sistema. |
+| `pay_` | Pagos genericos de plataforma (ledger / integraciones de gateway). |
+| `inv_` | Facturacion electronica generica de plataforma (`inv_events`, `inv_organizations`); negocio fiscal ampliado permanece en el consumidor. |
 
 ## Dominio de negocio
 

@@ -1,0 +1,37 @@
+{
+  "type": "I",
+  "customer": {
+    "legal_name": "ACME SA DE CV",
+    "tax_id": "ACM010101ABC",
+    "tax_system": "601",
+    "email": "billing@example.test",
+    "address": {
+      "zip": "01000",
+      "country": "MEX",
+      "street": "Av Siempre Viva 123"
+    }
+  },
+  "items": [
+    {
+      "quantity": 2.0,
+      "product": {
+        "description": "Servicio mensual",
+        "product_key": "81112100",
+        "unit_key": "E48",
+        "price": 1234.56,
+        "tax_included": false,
+        "taxability": "02",
+        "taxes": [
+          {
+            "type": "IVA",
+            "rate": 0.16,
+            "factor": "Tasa"
+          }
+        ]
+      }
+    }
+  ],
+  "payment_form": "03",
+  "use": "G03",
+  "currency": "MXN"
+}

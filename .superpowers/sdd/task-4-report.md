@@ -1,105 +1,68 @@
-# Task 4 Report — Reglas Cursor Portal + cierre SDD Plan 07
+# Task 4 Report — Platform SQL `inv_events` + `inv_organizations`
 
-**Status:** DONE  
-**Repos:** `Lebytek_Portal` + `Lebytek_Framework` (worktree `framework-portal-separation`)
+**Branch:** `cursor/invoicing-facturapi-impl-03e4`  
+**Date:** 2026-08-07
 
-## Commits
+## Deliverables
 
-| Repo | BASE HEAD | Commit | Subject |
-|------|-----------|--------|---------|
-| Portal (`main`) | `7ce6348` | `98d62c6` | `docs(rules): consumer vendor-readonly guardrails for Portal` |
-| Framework (`consolidation/framework-portal-separation`) | `81ecddb` | `db514f5` | `docs(fps): record Plan 07 completion in SDD progress` |
-
-## Summary
-
-Created Portal consumer Cursor rules (`framework-en-vendor.mdc`, `reglas-para-ia.mdc`) verbatim from brief. Appended Plan 07 completion checklist to SDD `progress.md` (preserving Plans 00–06 history and controller Task 1–3 ledger). Docs/rules only; no PHP, SQL, push, or merge to `main`.
-
-## Steps executed
-
-| Step | Result |
+| File | Action |
 |------|--------|
-| 1. Portal `framework-en-vendor.mdc` | **Created** — vendor-readonly consumer model |
-| 2. Portal `reglas-para-ia.mdc` | **Created** — Portal IA guardrails |
-| 3. Final gates | **PASS** — see below |
-| 4. SDD progress + commits | Plan 07 block appended; both commits via `git add -f` |
+| `database/schema/modules/invoicing.sql` | Created |
+| `tests/Invoicing/InvoicingSchemaTest.php` | Created |
 
-## Changes
+## TDD evidence
 
-| File | Repo | Action |
-|------|------|--------|
-| `.cursor/rules/framework-en-vendor.mdc` | Portal | **Created** |
-| `.cursor/rules/reglas-para-ia.mdc` | Portal | **Created** |
-| `.superpowers/sdd/progress.md` | Framework | Appended Plan 06 final review backfill (uncommitted controller lines) + Plan 07 checklist |
+### Step 1 — Schema string tests (RED)
 
-## Gate evidence
+Added `InvoicingSchemaTest.php` with three tests:
 
-```powershell
-# Framework worktree
-php tests/run.php FpsDocumentation 2>&1 | Select-Object -Last 1
-# → 4 passed, 0 failed
+1. `inv_events`: idempotent CREATE, UNIQUE `(provider, idempotency_key)`, indexes on `source_ref` and `(provider, status)`, nullable mark* columns, status literals documented.
+2. `inv_organizations`: idempotent CREATE, UNIQUE `(provider_key, external_org_id)`, `external_org_id NOT NULL DEFAULT ''`, `mode` / `label` / `meta JSON`.
+3. No `dom_*` tables.
 
-# Portal
-Test-Path docs/database/SCHEMA-OWNERSHIP.md        # → True
-Test-Path .cursor/rules/framework-en-vendor.mdc    # → True
-Test-Path .cursor/rules/reglas-para-ia.mdc         # → True
+### Step 2 — Run (expect FAIL)
+
+```text
+$ php tests/run.php Invoicing
+18 passed, 2 failed
 ```
 
-## Self-review (author)
+Failures: `file_get_contents(.../invoicing.sql): No such file or directory` on the two schema tests (third test passed vacuously on empty string).
 
-| Requisito roadmap Plan 07 | Task |
-|---------------------------|------|
-| Arquitectura consumidor/paquete | Task 1 |
-| Ownership SQL | Task 1 + Task 2 |
-| Assets sync | Task 1 |
-| Guía tenants | Task 1 |
-| README ambos árboles | Task 1 + Task 2 |
-| Reglas Cursor + CLAUDE | Task 3 + Task 4 |
-| Payments Framework / Marketing Portal | SCHEMA-OWNERSHIP + CLAUDE |
-| No merge/deploy/vendor/secrets | Global Constraints |
+### Step 3 — Write SQL
 
-Placeholder scan: brief content applied verbatim; no TBD/TODO added.  
-Portal rules point to `vendor/lebytek/framework`; platform changes via `Lebytek_Framework` + `composer update`.
+Created `database/schema/modules/invoicing.sql` mirroring `payments.sql` style:
 
-## Concerns (non-blocking)
+- MySQL 8 safe: `SET NAMES utf8mb4`, `FOREIGN_KEY_CHECKS`, `CREATE TABLE IF NOT EXISTS`, InnoDB utf8mb4_unicode_ci.
+- `inv_events`: ledger columns per spec; `status` default `claimed`; comment documents `claimed | issued | needs_reconcile | canceled`.
+- `inv_organizations`: org cache with composite unique for default org (`external_org_id = ''`).
 
-1. **Portal `composer.lock` dirty** — Local path-repo reference drift from worktree HEAD; intentionally not committed (brief constraint).
-2. **Framework `skeleton/vendor/` + `skeleton/composer.lock` untracked** — Operational local install; not committed (brief constraint).
-3. **`progress.md` commit scope** — Included previously uncommitted Plan 06 final review + Task 1–3 ledger lines already in working copy from controller; Plan 07 block appended per brief without wiping history.
+### Step 4 — Run (expect PASS)
 
-## Test evidence
+```text
+$ php tests/run.php Invoicing
+20 passed, 0 failed
+```
 
-- FpsDocumentation: 4 passed, 0 failed
-- Portal Test-Path gates: all True
-- No PHPUnit beyond FpsDocumentation for this task
+(17 existing Invoicing tests + 3 new schema tests.)
 
----
+## Contract checklist
 
-Plan 07 SDD complete. Siguiente: Plan 08 publication readiness (docs only).
+- [x] `inv_events` status: claimed | issued | needs_reconcile | canceled
+- [x] UNIQUE `(provider, idempotency_key)`
+- [x] INDEX `(source_ref)`
+- [x] INDEX `(provider, status)` for `findNeedsReconcile`
+- [x] `provider_invoice_id` / `uuid` / `folio_number` nullable until mark*
+- [x] `inv_organizations` UNIQUE `(provider_key, external_org_id)`
+- [x] `external_org_id` VARCHAR NOT NULL DEFAULT `''`
+- [x] `mode`, `label`, `meta` JSON
+- [x] No `dom_*` tables
+- [x] No PHP repos (Task 5)
 
----
-
-## Plan 07 final-review fixes (Important findings)
-
-**Status:** DONE  
-**Branch:** `consolidation/framework-portal-separation`
-
-### Commits
-
-| Commit | Subject |
-|--------|---------|
-| `d86da1e` | `docs(readme): align with package-source and FPS docs` |
-| `5ef0307` | `docs(rules): reframe alwaysApply rules for package source` |
-
-### Fixes applied
-
-1. **README.md** — Removed "se despliega como aplicación" / Marketing-in-root framing. Now matches `CLAUDE.md` + `PACKAGE-ROOT.md`: ships `lebytek/framework`, Portal deploy, harness-only root, links to ARCHITECTURE-CONSUMER, TENANTS, SCHEMA-OWNERSHIP, ASSETS-PLATFORM, PACKAGE-ROOT. Kept harness commands (`composer install`, `php tests/run.php`, optional `php -S`).
-2. **Cursor rules** — Rewrote `arquitectura-base`, `estructura-proyecto`, `dependencias-y-flujo`, `convenciones-nombres` to package-source (`src/`, Portal/skeleton consumers). Left `framework-en-vendor` + `reglas-para-ia` unchanged (already correct).
-
-### Gate evidence
+## Commit
 
 ```
-php tests/run.php FpsDocumentation → 4 passed, 0 failed
-CLAUDE.md "monorepo desplegable" → absent (PASS)
-README.md "se despliega" → absent (PASS)
-.cursor/rules vendor refs → only describe consumer read-only model (PASS)
+feat(invoicing): platform SQL inv_events and inv_organizations
 ```
+
+Not pushed (per task instructions).
