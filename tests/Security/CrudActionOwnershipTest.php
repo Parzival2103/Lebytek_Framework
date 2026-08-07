@@ -172,6 +172,30 @@ test('assertOwnedBy permite registro dentro de scope_handler custom', function (
     assert_true(true, 'dentro de scope custom: no lanza');
 });
 
+test('assertOwnedBy deniega si el scope_handler declarado no está en la whitelist', function () use ($deny): void {
+    $r = new CrudScopeResolver(new CrudHandlerRegistry([]));
+    assert_throws(ValidationException::class, function () use ($r, $deny): void {
+        $r->assertOwnedBy(
+            ownership_def_handler('eventos_custom'),
+            ['id' => 7, 'created_by' => 42],
+            42,
+            $deny
+        );
+    }, 'handler no registrado no puede degradar a "sin scope"');
+});
+
+test('assertOwnedBy deniega si el recurso declara scope_handler y falta el registry', function () use ($deny): void {
+    $r = new CrudScopeResolver();
+    assert_throws(ValidationException::class, function () use ($r, $deny): void {
+        $r->assertOwnedBy(
+            ownership_def_handler('eventos_custom'),
+            ['id' => 7, 'created_by' => 42],
+            42,
+            $deny
+        );
+    }, 'sin registry cableado el aislamiento declarado debe fallar cerrado');
+});
+
 test('assertOwnedBy con scope_handler conserva mensaje no revelador', function () use ($deny): void {
     $r = new CrudScopeResolver(new CrudHandlerRegistry([
         'eventos_custom' => OwnershipFixtureCustomScope::class,

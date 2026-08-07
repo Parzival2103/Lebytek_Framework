@@ -20,6 +20,12 @@ final class CrudReporteDataSource implements ReporteDataSourceInterface, Reporte
         private readonly CrudRelationService $crudRelationService,
     ) {}
 
+    /**
+     * Exige `{permission_prefix}.ver` del recurso además de los permisos del
+     * módulo Reportes: generar un reporte no habilita leer un recurso vedado.
+     *
+     * @internal Público para pruebas del paquete; no es contrato de consumidor.
+     */
     public static function assertCanViewResource(CrudResourceDefinition $definition, ?callable $can): void
     {
         $slug = $definition->permissionFor('ver');

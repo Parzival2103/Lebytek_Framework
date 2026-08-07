@@ -39,8 +39,10 @@ final class CrudActionService
     ) {}
 
     /**
-     * Resuelve el slug RBAC de una acción ejecutable. Falla cerrado si falta permission
-     * en handler/transition (C2). Builtin/link no usan este camino en run()/runBulk().
+     * Resuelve el slug RBAC de una acción ejecutable. Todo lo que llega a
+     * run()/runBulk() debe traer un permiso resuelto: si la acción no declara
+     * `permission` (o expande a vacío) se falla cerrado con AccesoException
+     * usando `{prefix}.{accion}`, en vez de ejecutar sin gating.
      */
     public static function resolveExecutablePermission(CrudActionDefinition $action, string $prefix): string
     {
