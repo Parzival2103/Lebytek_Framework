@@ -10,7 +10,7 @@
 
 **Specs/planes relacionados:**
 
-- Framework release integrity (implementado): `docs/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md` · plan `docs/superpowers/plans/2026-08-02-audit-v122-release-integrity.md` (Tasks 1–4 completadas #74)
+- Framework release integrity (implementado): `docs/archive/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md` · plan `docs/archive/superpowers/plans/2026-08-02-audit-v122-release-integrity.md` (Tasks 1–4 completadas #74)
 - Plan Portal hermano: `docs/superpowers/plans/2026-08-02-audit-mkt-leads-after-list-rows.md`
 - Contratos integración: `docs/integration/waapi-api-contract.md`, `docs/integration/role-delegation-lebytek-api.md`
 - Frontera FPS: `docs/superpowers/BOUNDARY-framework-vs-portal-fps.md`

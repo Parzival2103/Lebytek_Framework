@@ -47,18 +47,17 @@
 | [`history/correccion_crud_engine_v0.1.md`](modules/crud/history/correccion_crud_engine_v0.1.md) | Cambios tras auditoría CRUD |
 | [`history/refinamiento_crud_engine_v0.1.md`](modules/crud/history/refinamiento_crud_engine_v0.1.md) | Validación, agregaciones, UI |
 
-## `docs/audits/`
+## `docs/audits/` (activo — no viaja en Composer dist)
 
-| Documento | Contenido |
-|-----------|-----------|
-| [`auditoria_crud_engine_v0.1.md`](audits/auditoria_crud_engine_v0.1.md) | Auditoría técnica CRUD + plataforma (2026-04-28); parcialmente superada por `history/` y spec actual |
-| [`auditoria_documentacion.md`](audits/auditoria_documentacion.md) | Esta reorganización y coherencia documental |
-| [`auditoria_alineacion_modulos_v0.1.md`](audits/auditoria_alineacion_modulos_v0.1.md) | Alineación CRUD / LEBYTEK / RBAC por sección |
-| [`correccion_alineacion_modulos_v0.1.md`](audits/correccion_alineacion_modulos_v0.1.md) | RBAC en rutas, redirects usuarios, menú granular (2026-05-02) |
-| [`correccion_auth_rbac_v0.1.md`](audits/correccion_auth_rbac_v0.1.md) | Endurecimiento RBAC, slugs, formulario roles, informe integridad (2026-05-02) |
+Auditorías técnicas diarias y el inventario de deuda. Históricas one-off:
+[`archive/audits/`](archive/audits/).
 
-## `docs/legacy/`
+## `docs/archive/`
 
-| Documento | Nota |
-|-----------|------|
-| [`example-domain-imprenta.md`](legacy/example-domain-imprenta.md) | Anexo histórico; no es procedimiento vigente |
+Specs/plans cerrados, auditorías one-off y reportes de automation.
+Ver [`archive/README.md`](archive/README.md). **No** se incluye en el paquete
+Composer (`export-ignore`).
+
+## Empaquetado
+
+Qué entra / no entra en `vendor/`: [`PACKAGE-ROOT.md`](PACKAGE-ROOT.md) § Composer dist.

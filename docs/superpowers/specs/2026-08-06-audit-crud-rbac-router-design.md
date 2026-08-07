@@ -13,10 +13,10 @@
 - API health público (M4): `docs/superpowers/specs/2026-08-05-audit-api-health-public-design.md` · plan `docs/superpowers/plans/2026-08-05-audit-api-health-public.md` (**0/5** tareas)
 - CI gates (D7): `docs/superpowers/specs/2026-08-04-audit-platform-ci-gates-design.md` · plan `docs/superpowers/plans/2026-08-04-audit-platform-ci-gates.md` (**0/5** tareas)
 - Portal afterListRows: `docs/superpowers/specs/2026-08-03-audit-mkt-leads-after-list-rows-design.md` · plan `docs/superpowers/plans/2026-08-02-audit-mkt-leads-after-list-rows.md` (**0/5** tareas)
-- Cadena artefactos audit (M7/M10 proceso): `docs/superpowers/specs/2026-07-30-audit-artifact-chain-design.md` · test `tests/Docs/AuditArtifactFreshnessTest.php` (M7)
-- Release integrity (M1/M9 resueltos): `docs/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md` · tag `v1.2.3` @ `041e402`
+- Cadena artefactos audit (M7/M10 proceso): `docs/archive/superpowers/specs/2026-07-30-audit-artifact-chain-design.md` · test `tests/Docs/AuditArtifactFreshnessTest.php` (M7)
+- Release integrity (M1/M9 resueltos): `docs/archive/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md` · tag `v1.2.3` @ `041e402`
 - Inventario deuda: `docs/audits/2026-07-28-deuda-tecnica-inventario.md` · auditoría carry-forward `docs/audits/2026-08-02-auditoria-tecnica-diaria.md`
-- Evidencia histórica alineación: `docs/audits/correccion_alineacion_modulos_v0.1.md`, `docs/audits/auditoria_crud_engine_v0.1.md` § RBAC por recurso en servicio
+- Evidencia histórica alineación: `docs/archive/audits/correccion_alineacion_modulos_v0.1.md`, `docs/archive/audits/auditoria_crud_engine_v0.1.md` § RBAC por recurso en servicio
 - Frontera FPS: `docs/superpowers/BOUNDARY-framework-vs-portal-fps.md`
 
 ---

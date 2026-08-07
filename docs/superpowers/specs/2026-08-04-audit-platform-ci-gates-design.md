@@ -10,7 +10,7 @@
 
 **Specs/planes relacionados:**
 
-- Release integrity (implementado): `docs/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md` · plan archivado `docs/superpowers/plans/2026-08-02-audit-v122-release-integrity.md`
+- Release integrity (implementado): `docs/archive/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md` · plan archivado `docs/archive/superpowers/plans/2026-08-02-audit-v122-release-integrity.md`
 - Portal afterListRows (diseño): `docs/superpowers/specs/2026-08-03-audit-mkt-leads-after-list-rows-design.md` · plan `docs/superpowers/plans/2026-08-02-audit-mkt-leads-after-list-rows.md`
 - Skeleton staging (D6, separado): `docs/superpowers/specs/2026-07-26-skeleton-package-staging-design.md`
 - Inventario deuda: `docs/audits/2026-07-28-deuda-tecnica-inventario.md` § D7

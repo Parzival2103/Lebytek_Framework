@@ -1,6 +1,6 @@
 # Corrección CRUD Engine v0.1
 
-Informe breve de endurecimiento y mejoras aplicadas al **CRUD Engine existente**, alineado con [`docs/audits/auditoria_crud_engine_v0.1.md`](../../../audits/auditoria_crud_engine_v0.1.md) (sin reconstruir el motor).
+Informe breve de endurecimiento y mejoras aplicadas al **CRUD Engine existente**, alineado con [`docs/archive/audits/auditoria_crud_engine_v0.1.md`](../../../archive/audits/auditoria_crud_engine_v0.1.md) (sin reconstruir el motor).
 
 ## Archivos modificados / agregados
 

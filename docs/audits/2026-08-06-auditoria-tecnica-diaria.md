@@ -98,7 +98,7 @@ $ git rev-parse --verify --quiet 'refs/tags/archive/backoffice-api-integration^{
 
 | Campo | Valor |
 |-------|-------|
-| Evidencia | `docs/audits/` sin archivos `2026-08-03` / `08-04` / `08-05`. Closures automation (`docs/automation-reports/2026-08-0{3,4,5}-plan-closure.md`) confirman «audit del día no ejecutado / paso 00». Specs del intervalo declaran Nivel C sobre audit #67. |
+| Evidencia | `docs/audits/` sin archivos `2026-08-03` / `08-04` / `08-05`. Closures automation (`docs/archive/automation-reports/2026-08-0{3,4,5}-plan-closure.md`) confirman «audit del día no ejecutado / paso 00». Specs del intervalo declaran Nivel C sobre audit #67. |
 | Impacto | Cadena 01–08 diseñó specs/planes sin ancla audit del día; AUTOMATION-07 no ejecutó (B1 PHP + readiness BLOCKED). Deuda de implementación acumulada (CI, `/api/health`, Portal leads) sin priorización fresca diaria. |
 | Owner | Ops / automation Framework |
 | Estado | **Abierto** — este artefacto cierra el hueco para 2026-08-06; no recupera los tres días omitidos |
@@ -264,7 +264,7 @@ Delta `09b4f3e..0d26a15` (relevantes):
 - `tests/Docs/DompdfSecurityVersionTest.php` (nuevo)
 - `docs/audits/2026-08-02-auditoria-tecnica-diaria.md`
 - Specs/planes: `docs/superpowers/specs|plans/2026-08-0{2,3,4,5}-*` (v122, mkt_leads, CI gates, api health)
-- `docs/automation-reports/2026-08-0{2,3,4,5}-plan-{readiness,closure}.md`
+- `docs/archive/automation-reports/2026-08-0{2,3,4,5}-plan-{readiness,closure}.md`
 - Artefacto nuevo: `docs/audits/2026-08-06-auditoria-tecnica-diaria.md` (este archivo)
 
 Re-inspeccionados sin cambio de código en deuda abierta: `routes/web.php`, `routes/api.php`, `src/Domain/Payments/*`, `config/vertical.php`, `database/schema/modules/*`.

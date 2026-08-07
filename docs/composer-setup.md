@@ -17,6 +17,11 @@ git push origin v1.0.0
 
 Composer resuelve `^1.0` contra tags semver (`v1.0.0`, `v1.0.1`, `v1.1.0`).
 
+El dist del tag (**prefer-dist**, zip de GitHub) respeta `.gitattributes` `export-ignore`:
+no incluye `docs/superpowers|audits|automation|archive|integration`, `tests/`, ni
+tooling de agents. Las guías `docs/core/` y `docs/modules/` sí viajan. Detalle:
+[`PACKAGE-ROOT.md`](PACKAGE-ROOT.md).
+
 El `composer.json` del paquete declara:
 
 ```json

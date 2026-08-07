@@ -117,7 +117,7 @@ Inventario verificado en rama `automation/audit-spec-2026-07-28` contra `main` @
 | Evidencia | Impacto | Capa | Acción requerida |
 |-----------|---------|------|------------------|
 | `/admin/crud/{resource}`, `/admin/calendario/{key}` — solo `AuthMiddleware`; RBAC en servicios | 403 vía Application, no middleware | Application | Backlog; no bloqueante |
-| `routes/web.php` L58–65 — slug `permisos.gestionar` **inexistente**; rutas permisos usan `administracion.ver` | Roles amplios gestionan permisos RBAC | Presentation | Issue alineación; ref. `docs/audits/correccion_alineacion_modulos_v0.1.md` |
+| `routes/web.php` L58–65 — slug `permisos.gestionar` **inexistente**; rutas permisos usan `administracion.ver` | Roles amplios gestionan permisos RBAC | Presentation | Issue alineación; ref. `docs/archive/audits/correccion_alineacion_modulos_v0.1.md` |
 
 ### D5 — Checklist VPS / docs ops obsoletos (drift docs↔producción)
 

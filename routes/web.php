@@ -60,7 +60,7 @@ $router->group([
     $rbacRoles     = [new RbacMiddleware('roles.gestionar')];
     /*
      * permisos.gestionar no existe en seeds/base; se usa administracion.ver
-     * hasta definir slug dedicado (ver docs/audits/correccion_alineacion_modulos_v0.1.md).
+     * hasta definir slug dedicado (ver docs/archive/audits/correccion_alineacion_modulos_v0.1.md).
      */
     $rbacPermisos  = [new RbacMiddleware('administracion.ver')];
 

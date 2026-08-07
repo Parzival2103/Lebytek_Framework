@@ -10,7 +10,7 @@ El bootstrap greenfield actual usa `database/schema/schema.sql` + módulos en `d
 
 ### Proveniencia (rama `consolidation/framework-portal-separation`)
 
-En esta rama (derivada de `main`), **`database/seeds_legacy/` y `database/migrations_legacy/` no están presentes** en el árbol de trabajo. Las listas de paths en `docs/superpowers/FPS-legacy-seeds-list.txt` y `FPS-legacy-migrations-list.txt` se caracterizaron desde un checkout que **sí** contiene esos directorios (`feature/backoffice-api-integration` / rama docs). **Política sin cambio:** no archivar ni eliminar hasta evidencia greenfield del Plan 03.
+En esta rama (derivada de `main`), **`database/seeds_legacy/` y `database/migrations_legacy/` no están presentes** en el árbol de trabajo. Las listas de paths en `docs/archive/superpowers/fps-artifacts/FPS-legacy-seeds-list.txt` y `FPS-legacy-migrations-list.txt` se caracterizaron desde un checkout que **sí** contiene esos directorios (`feature/backoffice-api-integration` / rama docs). **Política sin cambio:** no archivar ni eliminar hasta evidencia greenfield del Plan 03.
 
 ## seeds_legacy
 
@@ -19,7 +19,7 @@ En esta rama (derivada de `main`), **`database/seeds_legacy/` y `database/migrat
 | `database/seeds_legacy/baseline-2026-06/` | Copia seeds `010`–`035` pre-consolidación | **No** — ver README interno |
 | Archivos | `010_auth_permisos.sql`, `015_core_menu_items.sql`, `020_auth_roles.sql`, `025_auth_roles_permisos.sql`, `030_auth_usuario_admin.sql`, `035_cfg_configuraciones.sql` | Referencia histórica |
 
-Lista completa: `docs/superpowers/FPS-legacy-seeds-list.txt`
+Lista completa: `docs/archive/superpowers/fps-artifacts/FPS-legacy-seeds-list.txt`
 
 ## migrations_legacy
 
@@ -28,7 +28,7 @@ Lista completa: `docs/superpowers/FPS-legacy-seeds-list.txt`
 | `database/migrations_legacy/incrementales-2026-06/` | Incrementales pre-consolidación | **No** |
 | `database/migrations_legacy/*.sql` (raíz) | Scripts sueltos archivados | **No** |
 
-Lista completa: `docs/superpowers/FPS-legacy-migrations-list.txt`
+Lista completa: `docs/archive/superpowers/fps-artifacts/FPS-legacy-migrations-list.txt`
 
 ## Migraciones activas (no legacy)
 

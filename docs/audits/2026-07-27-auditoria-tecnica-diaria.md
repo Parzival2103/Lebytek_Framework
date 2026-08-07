@@ -128,7 +128,7 @@ monitoreo desde el VPS.
 
 Las rutas de permisos usan `administracion.ver` como workaround (comentado en
 `routes/web.php`). Deuda RBAC conocida desde
-`docs/audits/correccion_alineacion_modulos_v0.1.md`.
+`docs/archive/audits/correccion_alineacion_modulos_v0.1.md`.
 
 ---
 
