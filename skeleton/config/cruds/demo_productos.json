@@ -187,18 +187,6 @@
           "type": "integer",
           "min": 0
         }
-      },
-      {
-        "name": "status",
-        "label": "Estado",
-        "type": "select",
-        "required": true,
-        "options": {
-          "activo": "Activo",
-          "inactivo": "Inactivo"
-        },
-        "default": "activo",
-        "col": "col-md-4"
       }
     ]
   },

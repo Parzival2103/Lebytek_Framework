@@ -106,19 +106,6 @@
         "type": "datetime-local",
         "required": false,
         "col": "col-md-6"
-      },
-      {
-        "name": "estado",
-        "label": "Estado",
-        "type": "select",
-        "required": true,
-        "options": {
-          "pendiente": "Pendiente",
-          "confirmada": "Confirmada",
-          "cancelada": "Cancelada"
-        },
-        "default": "pendiente",
-        "col": "col-md-6"
       }
     ]
   },
