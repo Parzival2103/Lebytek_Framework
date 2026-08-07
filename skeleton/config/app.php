@@ -4,7 +4,7 @@ use Lebytek\Framework\Kernel\EnvLoader;
 
 return [
     'name'     => EnvLoader::get('APP_NAME', 'Sistema Administrativo'),
-    'version'  => '1.2.6',
+    'version'  => '1.2.7',
     'env'      => EnvLoader::get('APP_ENV',  'production'),
     'debug'    => EnvLoader::get('APP_DEBUG', false),
     'url'      => EnvLoader::get('APP_URL',  'http://localhost'),

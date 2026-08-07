@@ -460,7 +460,7 @@ Bloque `states` opcional en `config/cruds/{resource}.json` que declara una máqu
 }
 ```
 
-- **`column`**: columna del registro que guarda el estado. Obligatoria, debe existir en la tabla y no puede ser una columna protegida (`id`, `created_*`, `updated_*`, `deleted*`).
+- **`column`**: columna del registro que guarda el estado. Obligatoria, debe existir en la tabla y no puede ser una columna protegida (`id`, `created_*`, `updated_*`, `deleted*`). **No puede aparecer en `form.fields`**: el motor rechaza esa colisión en `CrudConfigValidator` y la omite del payload de create/update. El estado inicial en create debe venir del `DEFAULT` SQL de la columna, de un hook `beforeCreate`, o de una acción `type: transition` posterior — nunca de un `<select>` del formulario. Cambios de estado en runtime **solo** vía acciones `type: transition` (`CrudTransitionService`); no uses un `type: handler` que haga `updateRecord` de esa columna.
 - **`values`**: mapa `estado → { label, badge }`. `label` por defecto es la clave; `badge` por defecto `secondary`. Define los estados conocidos.
 - **`transitions`**: mapa `origen → [destinos permitidos]`. Un estado terminal usa `[]`. Los orígenes y destinos deben existir en `values`.
 
