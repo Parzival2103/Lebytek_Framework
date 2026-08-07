@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 namespace Lebytek\Framework\Application\Invoicing;
 
+use Lebytek\Framework\Domain\Invoicing\InvoiceableSourceInterface;
 use Lebytek\Framework\Domain\Invoicing\InvoiceProviderInterface;
 use Lebytek\Framework\Infrastructure\Invoicing\FacturapiInvoiceProvider;
+use Lebytek\Framework\Infrastructure\Invoicing\PdoInvoiceEventLogRepository;
 use Lebytek\Framework\Kernel\Config\Config;
 
 final class InvoicingFactory
@@ -24,6 +26,26 @@ final class InvoicingFactory
         $config = (array) Config::get('invoicing', []);
         return self::$cached = new InvoiceProviderRegistry(
             self::buildProviders((array) ($config['providers'] ?? []))
+        );
+    }
+
+    public static function makeIssueInvoiceFromSource(InvoiceableSourceInterface $source): IssueInvoiceFromSource
+    {
+        return new IssueInvoiceFromSource(
+            source: $source,
+            events: new PdoInvoiceEventLogRepository(),
+            registry: self::registry(),
+            validator: new InvoiceDraftValidator(),
+            defaultProviderKey: self::defaultProviderKey(),
+        );
+    }
+
+    public static function makeReconcileIssuedInvoice(): ReconcileIssuedInvoice
+    {
+        return new ReconcileIssuedInvoice(
+            events: new PdoInvoiceEventLogRepository(),
+            registry: self::registry(),
+            defaultProviderKey: self::defaultProviderKey(),
         );
     }
 
@@ -57,5 +79,10 @@ final class InvoicingFactory
             ];
         }
         return $out;
+    }
+
+    private static function defaultProviderKey(): string
+    {
+        return (string) Config::get('invoicing.default', 'facturapi');
     }
 }
