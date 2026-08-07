@@ -1096,7 +1096,7 @@ git commit -m "feat(invoicing): IssueInvoiceFromSource with idempotent claims"
 
 Resolution helper (private or shared small class `InvoiceIdResolver`): if `providerInvoiceId` null, require `sourceRef` and `findBySourceRef`; if still null throw `InvoiceSourceNotFound`.
 
-Cancel: call provider; optionally `tryClaim` with type `cancel` + distinct idempotency key `cancel:{providerInvoiceId}` for audit — **keep YAGNI:** call provider + do not require claim unless easy; spec says “registra evento cuando aplique”. Minimal: after successful cancel, `tryClaim`+`markIssued` with key `cancel:{id}` (ignore false claim).
+Cancel flow (explicit): resolve id → `provider->cancelInvoice` → `tryClaim(provider, 'cancel:'.$id, sourceRef ?: $id, 'cancel')`; if claim succeeds, `markIssued` with canceled `IssuedInvoice`; if claim is false, ignore (audit best-effort). Do not `releaseClaim` on cancel audit failure.
 
 - [ ] **Step 1: Write failing tests** for cancel→canceled status, pdf bytes, xml bytes, sendByEmail invokes transport/provider.
 
