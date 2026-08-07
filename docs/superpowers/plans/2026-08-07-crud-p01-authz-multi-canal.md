@@ -12,18 +12,21 @@
 
 **Programa:** Remediación CRUD Engine · **Punto:** 1/12 · **IDs:** C1, C2, C5
 
-**Source audit:** `docs/audits/2026-08-07-auditoria-critica-crud-engine.md`  
-**Estructura programa:** `docs/superpowers/plans/2026-08-07-crud-engine-remediacion-estructura.md`  
-**Modo:** normal
+**Source spec:** `docs/superpowers/specs/2026-08-07-audit-crud-authz-multi-canal-design.md`  ·  **Modo:** normal
 
-**Source audit PR:** #90 — https://github.com/Parzival2103/Lebytek_Framework/pull/90  
-**Target repository/branches:** `Parzival2103/Lebytek_Framework` @ `main` (`17643b142a6f2db3278561c06d000542cfd50380`); rama de trabajo `feature/crud-p01-authz-multi-canal` (creable desde `main` — verificado `git ls-remote origin refs/heads/main`)
+**Source audit:** `docs/audits/2026-08-07-auditoria-critica-crud-engine.md` (PR #90) · auditoría diaria `docs/audits/2026-08-07-auditoria-tecnica-diaria.md` (PR #96)
+
+**Estructura programa:** `docs/superpowers/plans/2026-08-07-crud-engine-remediacion-estructura.md`
+
+**Source audit PR:** #96 — https://github.com/Parzival2103/Lebytek_Framework/pull/96 (diaria); hallazgos CRUD #90 — https://github.com/Parzival2103/Lebytek_Framework/pull/90
+
+**Target repository/branches:** `Parzival2103/Lebytek_Framework` @ `main` (`da3ab58bd77be95c4003341454d939aa2584a742`); rama de implementación `cursor/crud-p01-authz-multi-canal-0a6f` (PR #95 OPEN — verificado `git ls-remote origin refs/heads/cursor/crud-p01-authz-multi-canal-0a6f`)
 
 ## Baseline asumida (puntos 1..N-1)
 
 | Punto | Plan | Estado verificado | Evidencia (SHA / PR / archivos) |
 |------:|------|-------------------|----------------------------------|
-| — | (ninguno; este es el punto 1) | N/A | `origin/main` @ `17643b1`; no existen `docs/superpowers/plans/2026-08-07-crud-p0*.md` previos |
+| — | (ninguno; este es el punto 1) | N/A | `origin/main` @ `da3ab58`; no existen `docs/superpowers/plans/2026-08-07-crud-p0*.md` previos |
 
 **Implicaciones para este plan:** se implementa sobre el código actual de `main` sin asumir fixes de puntos 2–12. El plan histórico `2026-08-06-audit-crud-rbac-router.md` (G4 / punto 6) **no** se ejecuta aquí y **no** cierra C5.
 
@@ -82,7 +85,7 @@
 ### Task 1: Tests C1 — `assertOwnedBy` con `scope_handler` (rojo)
 
 **Repository:** `Parzival2103/Lebytek_Framework`  
-**Branch:** `feature/crud-p01-authz-multi-canal`  
+**Branch:** `cursor/crud-p01-authz-multi-canal-0a6f`  
 **Depends on:** None  
 **Files:**
 - Modify: `tests/Security/CrudActionOwnershipTest.php`
@@ -193,7 +196,7 @@ git commit -m "test(security): add C1 assertOwnedBy scope_handler IDOR gates (re
 ### Task 2: Implementar C1 — `assertOwnedBy` unificado (verde)
 
 **Repository:** `Parzival2103/Lebytek_Framework`  
-**Branch:** `feature/crud-p01-authz-multi-canal`  
+**Branch:** `cursor/crud-p01-authz-multi-canal-0a6f`  
 **Depends on:** Task 1  
 **Files:**
 - Modify: `src/Application/Services/CrudScopeResolver.php`
@@ -313,7 +316,7 @@ git commit -m "fix(crud): reapply list scope on ID access including scope_handle
 ### Task 3: C2 — Validator exige `permission` en handler/transition (TDD)
 
 **Repository:** `Parzival2103/Lebytek_Framework`  
-**Branch:** `feature/crud-p01-authz-multi-canal`  
+**Branch:** `cursor/crud-p01-authz-multi-canal-0a6f`  
 **Depends on:** None (paralelo seguro tras Task 2; no comparte archivos con C1 salvo suites)  
 **Files:**
 - Modify: `tests/Crud/Action/CrudConfigValidatorActionsTest.php`
@@ -425,7 +428,7 @@ git commit -m "fix(crud): require permission on executable actions in validator 
 ### Task 4: C2 — Runtime fail-closed en `CrudActionService`
 
 **Repository:** `Parzival2103/Lebytek_Framework`  
-**Branch:** `feature/crud-p01-authz-multi-canal`  
+**Branch:** `cursor/crud-p01-authz-multi-canal-0a6f`  
 **Depends on:** Task 3  
 **Files:**
 - Create: `tests/Crud/Action/CrudActionPermissionTest.php`
@@ -582,7 +585,7 @@ git commit -m "fix(crud): fail-closed RBAC when action permission missing (C2)"
 ### Task 5: C5 — `{resource}.ver` en `CrudReporteDataSource`
 
 **Repository:** `Parzival2103/Lebytek_Framework`  
-**Branch:** `feature/crud-p01-authz-multi-canal`  
+**Branch:** `cursor/crud-p01-authz-multi-canal-0a6f`  
 **Depends on:** None (archivo distinto; ejecutar tras Task 2 recomendado para baseline limpia)  
 **Files:**
 - Create: `tests/Reporte/CrudReporteDataSourceAuthzTest.php`
@@ -712,7 +715,7 @@ git commit -m "fix(reportes): require resource.ver inside CrudReporteDataSource 
 ### Task 6: Regresión cruzada + semver `1.2.6`
 
 **Repository:** `Parzival2103/Lebytek_Framework`  
-**Branch:** `feature/crud-p01-authz-multi-canal`  
+**Branch:** `cursor/crud-p01-authz-multi-canal-0a6f`  
 **Depends on:** Task 2, Task 4, Task 5  
 **Files:**
 - Modify: `composer.json` (`version`)
@@ -779,6 +782,7 @@ Tag `v1.2.6` **solo post-merge** en `main` (operador / release); no taggear desd
 - [ ] Semver trío @ `1.2.6` + `PlatformVersionSemver` PASS.
 - [ ] `SkeletonPurity` PASS; demos JSON siguen cargables.
 - [ ] Diff **sin** Marketing/Portal business; **sin** cambios de punto 2–12 (states, uploads, CAS, router RBAC, etc.).
+- [ ] UX U1–U9 del spec audit (mensaje IDOR exacto, 403 vs 404 vs flash, slug en `AccesoException`, validator accionable, doc § AuthZ multi-canal) — ver spec § Compatibilidad, UX y responsive.
 
 ## Fuera de alcance
 
@@ -819,10 +823,14 @@ Tag `v1.2.6` **solo post-merge** en `main` (operador / release); no taggear desd
 
 | Campo | Valor |
 |-------|-------|
+| Reconciliación UTC | 2026-08-07T12:40:00Z (AUTOMATION-04) |
 | Plan creado UTC | 2026-08-07T05:08:29Z |
-| Framework `origin/main` referencia al planificar | `17643b142a6f2db3278561c06d000542cfd50380` |
-| Tareas completadas / totales | 0 / 6 |
-| Siguiente tarea ejecutable | Task 1 |
+| Framework `origin/main` verificado | `da3ab58bd77be95c4003341454d939aa2584a742` |
+| Tareas completadas / totales | **0 / 6** |
+| Modo fuente | normal — spec `2026-08-07-audit-crud-authz-multi-canal-design.md` (PR #97) |
+| Evidencia @ `da3ab58` | `CrudScopeResolver::assertOwnedBy` owner-only (C1 abierto); `CrudActionService` skip si `permission` null (C2); `CrudReporteDataSource` sin gate `.ver` (C5); ausentes `tests/Reporte/CrudReporteDataSourceAuthzTest.php`, `tests/Crud/Action/CrudActionPermissionTest.php`; semver trío `1.2.3` |
+| Implementación draft (no mergeada) | PR #95 — `cursor/crud-p01-authz-multi-canal-0a6f` (OPEN; no marca checkboxes hasta merge en `main`) |
+| Siguiente tarea ejecutable | **Task 1** — tests C1 `scope_handler` rojo en `tests/Security/CrudActionOwnershipTest.php` |
 | Prerrequisitos | Ninguno (punto 1); PHP ≥8.1 en entorno de ejecución |
-| Bloqueos | Ninguno al planificar. PHP CLI puede faltar en algunos agentes cloud — el ejecutor debe usar entorno con PHP. |
-| Estado | Pendiente de implementación |
+| Bloqueos | PR #95 no mergeado; M6 gh Portal 404 (P1–P4 fuera de alcance); PHP CLI puede faltar en agentes cloud |
+| Estado | **Pendiente de implementación en main** |
