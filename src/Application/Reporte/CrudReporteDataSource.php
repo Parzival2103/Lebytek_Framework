@@ -6,6 +6,7 @@ namespace Lebytek\Framework\Application\Reporte;
 use Lebytek\Framework\Application\Services\CrudDataService;
 use Lebytek\Framework\Application\Services\CrudRelationService;
 use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\AccesoException;
 use Lebytek\Framework\Domain\Reporte\ReporteDataSourceInterface;
 use Lebytek\Framework\Domain\Reporte\ReporteRecordSourceInterface;
 
@@ -19,6 +20,14 @@ final class CrudReporteDataSource implements ReporteDataSourceInterface, Reporte
         private readonly CrudRelationService $crudRelationService,
     ) {}
 
+    public static function assertCanViewResource(CrudResourceDefinition $definition, ?callable $can): void
+    {
+        $slug = $definition->permissionFor('ver');
+        if ($can === null || !$can($slug)) {
+            throw new AccesoException("No tienes permiso para realizar esta acción: {$slug}");
+        }
+    }
+
     public function rows(
         CrudResourceDefinition $definition,
         string $dateColumn,
@@ -28,6 +37,7 @@ final class CrudReporteDataSource implements ReporteDataSourceInterface, Reporte
         ?callable $can,
         array $filters
     ): array {
+        self::assertCanViewResource($definition, $can);
         return $this->crudDataService->eventsInRange(
             $definition,
             $dateColumn,
@@ -46,6 +56,7 @@ final class CrudReporteDataSource implements ReporteDataSourceInterface, Reporte
         ?callable $can,
         array $relationNames
     ): ?array {
+        self::assertCanViewResource($definition, $can);
         $record = $this->crudDataService->findInScope($definition, $id, $userId, $can);
         if ($record === null) {
             return null;
