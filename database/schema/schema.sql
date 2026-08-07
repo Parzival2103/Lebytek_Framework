@@ -118,7 +118,8 @@ CREATE TABLE IF NOT EXISTS `auth_login_intentos` (
 CREATE TABLE IF NOT EXISTS `cfg_configuraciones` (
   `id`          INT UNSIGNED   NOT NULL AUTO_INCREMENT,
   `clave`       VARCHAR(100)   NOT NULL UNIQUE,
-  `valor`       TEXT           DEFAULT '',
+  -- MySQL 8.0 rejects non-NULL defaults on TEXT/BLOB/JSON (error 1101).
+  `valor`       TEXT           DEFAULT NULL,
   `tipo`        ENUM('string','boolean','integer','json') DEFAULT 'string',
   `descripcion` VARCHAR(500)   DEFAULT '',
   `updated_at`  DATETIME       DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
