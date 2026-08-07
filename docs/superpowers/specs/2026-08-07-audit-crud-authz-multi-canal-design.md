@@ -32,7 +32,7 @@
 | SHA Portal inspeccionado | **No verificado** — `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404; `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository». Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-07` |
-| Timestamp UTC | trigger cron `2026-08-07T12:10:00Z` / corrida agente `2026-08-07T12:10:00Z` |
+| Timestamp UTC | trigger cron `2026-08-07T12:10:00Z` / corrida agente `2026-08-07T12:10:00Z` / pase ux `2026-08-07T12:30:00Z` (modo **normal**) |
 | Nivel de fuente | **A** — PR abierto #96, título `docs(audit): auditoría técnica diaria 2026-08-07`, `baseRefName=main`, `mergeable=MERGEABLE`, `updatedAt=2026-08-07T12:04:11Z`. Verificaciones: `merge-base --is-ancestor origin/main 9ca422b` → exit 0; diff `origin/main...9ca422b` → único archivo `docs/audits/2026-08-07-auditoria-tecnica-diaria.md`; ningún commit legacy ancestro del head. |
 | PR auditoría fuente | #96 — https://github.com/Parzival2103/Lebytek_Framework/pull/96 |
 | headRefOid fuente | `9ca422b53a8cb803d3f6e4e3a064da73854cc659` (rama audit; no heredada) |
@@ -292,6 +292,76 @@ GET Reportes → CrudReporteDataSource::rows|findRecord
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: normal
+
+Este spec cierra **AuthZ multi-canal en Application** (C1 scope por ID, C2 permission en actions,
+C5 gate Reportes). Superficie UI verificable: respuestas **403** y **404** en show/edit/delete/acciones
+CRUD, flash de error en listado/delete/action, pantalla Reportes admin cuando falta `{prefix}.ver`, y
+mensajes de validación al cargar JSON CRUD inválido post-C2. No modifica layout login/dashboard ni
+estilos globales; **M3 router RBAC** (spec 2026-08-06, plan 0/5) permanece carry-forward complementario.
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (F1–F8) | Evidencia / carry-forward |
+|------|-------------------|---------------------------|
+| PHP soportado | Sin cambio runtime | `composer.json` exige `>=8.1`; VPS documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`) — compatible; `CrudScopeResolver`, `CrudActionService` y `CrudReporteDataSource` no requieren extensiones nuevas. |
+| Instalación vía `vendor/` | Contrato paquete semver | Consumidores obtienen parche C1/C2/C5 tras bump `lebytek/framework` al tag **`v1.2.6`**; cambios viven en `src/Application/` — **no** parche en `vendor/`. Portal bump lock P1 (**no verificado** M6). |
+| Health sin cookie de sesión | Carry-forward **M4** | `routes/api.php` L14–16 — grupo `/api` + `AuthMiddleware`; `/api/ping` requiere sesión. Smoke LB: usar `GET /api/health` cuando M4 mergee (spec 2026-08-05, plan **0/5**). |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` L55 remite vars `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` a Portal; AuthZ Application no introduce env vars nuevas. |
+| Navegadores objetivo | Superficie admin CRUD + Reportes | Baseline `docs/core/ui_ux.md`: admin breakpoint **992px (`lg`)**. Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15; sin IE11. Páginas 403/404 y flash deben ser legibles en **320–768px** sin overflow horizontal. |
+
+### UX — flujos admin CRUD y Reportes (F1–F8)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | C1 IDOR: mensaje **exacto** «El registro solicitado no existe.» cuando registro fuera de `scope_handler`/owner — **sin** revelar existencia del ID | F1, AC-F1 |
+| **U2** | C1 show/edit: `ValidationException` scope → `Response::notFound()` (404) — coherente con comportamiento actual `CrudController` L97–99, L119–120 | F1 |
+| **U3** | C1 delete/action/bulk: mismo mensaje U1 vía flash redirect — operador entiende «registro no disponible», no error de permiso RBAC | F1, F4 |
+| **U4** | C2 runtime: `AccesoException` con slug explícito alineado a `RbacService::verificar` («No tienes permiso para realizar esta acción: {slug}») **antes** de mutar — acción/bulk no ejecutan silenciosamente | F4, AC-F4 |
+| **U5** | C2 validator: rechazo de JSON con action `handler`/`transition` sin `permission` incluye recurso, nombre de action y campo faltante — copy accionable para corregir `config/cruds/*.json` | F3, AC-F3 |
+| **U6** | C5 Reportes: usuario sin `{prefix}.ver` recibe **403** coherente (HTML o JSON según controlador Reportes) — no filas vacías silenciosas ni exfiltración | F5, AC-F5 |
+| **U7** | Distinción UX: **403** = permiso RBAC denegado; **404** = registro inexistente o fuera de scope (C1); **flash error** en index = recurso/config inválido — operador no confunde causas | F1–F5 |
+| **U8** | Tests TDD F6: mensajes de fallo citan spec C1/C2/C5, archivo bajo test y acción («implementar fail-closed en `CrudActionService`», «gate `.ver` en `CrudReporteDataSource`») | F6 |
+| **U9** | Doc F7 (`modulo-crud-engine.md` § AuthZ multi-canal): tabla scope listado vs show/edit/action vs Reportes — operador sabe qué capa protege cada flujo | F7, AC-F8 |
+
+### UX — instalación y operaciones (sin cambio directo)
+
+| Requisito | Criterio | Estado |
+|-----------|----------|--------|
+| **U10** | Configs CRUD con actions sin `permission` dejan de cargar post-C2 — doc/wizard indica revisar JSON **antes** de bump a `v1.2.6` (no regresión silenciosa) | P2 carry-forward |
+| **U11** | Bump Framework fallido: mensaje CLI indica tag mínimo `v1.2.6` y acción («composer update lebytek/framework») | P1 carry-forward |
+
+### Responsive — smoke en superficies tocadas
+
+Referencia: `docs/core/ui_ux.md` §542 — breakpoint admin **992px (`lg`)**; tablas CRUD exigen `table-responsive` (`ui_ux.md` L222).
+
+| Superficie | Verificación post-merge | Rango |
+|------------|-------------------------|-------|
+| Página 403 / 404 AuthZ | Mensaje legible; enlace «volver» usable; sin scroll horizontal; tap targets ≥44px | **320–768px** |
+| Listado CRUD (usuario **con** permiso) | Sin regresión: `table-responsive` + scroll horizontal en columnas secundarias | **320–768px** |
+| Formulario show/edit/action redirect | Flash error U1/U3 legible en móvil; no truncar slug en U4/U5 | **320–768px** |
+| Reportes admin (usuario **con** `.ver`) | Tabla reporte con scroll horizontal; 403 C5 legible si permiso revocado | **320–768px** |
+| Login / dashboard nav (sin alcance directo) | Carry-forward CF3–CF4 — smoke opcional post-merge | **320–768px** |
+
+### Carry-forward UX — próximo spec con superficie UI más amplia
+
+Ítems derivados de deuda abierta verificada; **C1/C2/C5 Application quedan cubiertos por este spec** en capa servicio — **no** sustituyen **CF6 (M3 router RBAC)**, que sigue en spec 2026-08-06 plan **0/5**. CF1–CF2 (semver harness + env purge) y D7 (CI #88) tampoco se arrastran.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF6 | RBAC router CRUD/calendario | M3 | `CrudRbacMiddleware` en rutas; 403 temprano con slug — spec 2026-08-06 (**0/5**); complementario a C1/C2/C5. |
+| CF7 | Health endpoint público | M4 | `GET /api/health` 200 sin cookie; body `{ "status": "ok" }` — spec 2026-08-05 (**0/5**). |
+| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección — más allá de U7. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer — extiende U4/U5 fuera de AuthZ Application. |
+
+---
+
 ## Criterios de aceptación
 
 ### Framework (punto 1 — bloqueante release `v1.2.6`)
@@ -318,6 +388,13 @@ GET Reportes → CrudReporteDataSource::rows|findRecord
 ### Producción
 
 - [ ] **AC-PROD:** Explícitamente **fuera** de automation desatendida.
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **normal** con requisitos K/U/R verificables para F1–F8 (AuthZ Application CRUD + Reportes).
+- [ ] **AC-UX2:** Requisitos U1–U9 (mensaje IDOR exacto, 404 vs flash, slug en AccesoException, validator accionable, gate Reportes, distinción 403/404/flash, hints test gate, doc multi-canal) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF6, CF7–CF10 documentado; CF6 **no** cubierto por este spec (M3 router complementario); CF1–CF2 y D7 no arrastrados (resueltos).
+- [ ] **AC-UX4:** Smoke responsive en **320–768px** para 403/404/flash AuthZ y tablas CRUD/Reportes accesibles post-implementación (sin regresión `table-responsive`).
 
 ---
 
