@@ -55,7 +55,11 @@ final class IssueInvoiceFromSource
             return $observedInvoice;
         } catch (Throwable $e) {
             if ($observedInvoice instanceof IssuedInvoice) {
-                $this->events->markNeedsReconcile($resolvedProviderKey, $idempotencyKey, $observedInvoice);
+                try {
+                    $this->events->markNeedsReconcile($resolvedProviderKey, $idempotencyKey, $observedInvoice);
+                } catch (Throwable) {
+                    // Local reconcile mark failed; still surface InvoiceNeedsReconcile for the remote invoice.
+                }
 
                 throw new InvoiceNeedsReconcile(
                     sprintf(

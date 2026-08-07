@@ -52,3 +52,17 @@ No cancel/download/reconcile/container wiring was added.
 ## Config/default provider
 
 `IssueInvoiceFromSource` accepts `?string $defaultProviderKey` in the constructor for hermetic unit tests. If neither `handle(..., providerKey: ...)` nor constructor default is provided, it falls back to `Config::get('invoicing.default', 'facturapi')`.
+
+## Fix: markNeedsReconcile failure after remote create
+
+**Finding:** If `markNeedsReconcile()` threw after remote success, the raw exception leaked instead of `InvoiceNeedsReconcile`.
+
+**Change:** Nested try/catch around `markNeedsReconcile` in the post-create catch path — once `$observedInvoice` is set, any failure still throws `InvoiceNeedsReconcile` with the provider id (inner reconcile-mark error discarded; original `markIssued` failure chained as `previous`).
+
+**Test added:** `IssueInvoiceFromSource lanza InvoiceNeedsReconcile aunque markNeedsReconcile falle tras create` — fake events throw on both `markIssued` and `markNeedsReconcile`; asserts `InvoiceNeedsReconcile`, provider id in message, no `releaseClaim`.
+
+**Verification:**
+- `php tests/run.php Invoicing/IssueInvoiceFromSource` → 8 passed, 0 failed
+- `php tests/run.php Invoicing` → 41 passed, 0 failed
+
+**Commit:** `fix(invoicing): always surface InvoiceNeedsReconcile after remote create` (not pushed)

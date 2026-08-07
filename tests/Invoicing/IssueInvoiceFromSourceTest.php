@@ -149,6 +149,66 @@ function task9_registry(InvoiceProviderInterface $provider, string $key = 'factu
     ]);
 }
 
+function task9_failing_mark_needs_reconcile_log(InMemoryInvoiceEventLog $inner): InvoiceEventLogRepositoryInterface
+{
+    return new class($inner) implements InvoiceEventLogRepositoryInterface {
+        public int $releaseCalls = 0;
+        public int $markNeedsReconcileCalls = 0;
+
+        public function __construct(private readonly InMemoryInvoiceEventLog $inner)
+        {
+        }
+
+        public function hasProcessed(string $provider, string $idempotencyKey): bool
+        {
+            return $this->inner->hasProcessed($provider, $idempotencyKey);
+        }
+
+        public function tryClaim(
+            string $provider,
+            string $idempotencyKey,
+            string $sourceRef,
+            string $type,
+            array $meta = [],
+        ): bool {
+            return $this->inner->tryClaim($provider, $idempotencyKey, $sourceRef, $type, $meta);
+        }
+
+        public function releaseClaim(string $provider, string $idempotencyKey): void
+        {
+            $this->releaseCalls++;
+            $this->inner->releaseClaim($provider, $idempotencyKey);
+        }
+
+        public function markIssued(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            throw new RuntimeException('simulated markIssued failure');
+        }
+
+        public function markNeedsReconcile(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            $this->markNeedsReconcileCalls++;
+
+            throw new RuntimeException('simulated markNeedsReconcile failure');
+        }
+
+        public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
+        {
+            return $this->inner->findByIdempotencyKey($provider, $idempotencyKey);
+        }
+
+        public function findIssuedBySourceRef(string $sourceRef): array
+        {
+            return $this->inner->findIssuedBySourceRef($sourceRef);
+        }
+
+        public function findNeedsReconcile(string $provider, int $limit = 100): array
+        {
+            return $this->inner->findNeedsReconcile($provider, $limit);
+        }
+    };
+}
+
 function task9_failing_mark_issued_log(InMemoryInvoiceEventLog $inner): InvoiceEventLogRepositoryInterface
 {
     return new class($inner) implements InvoiceEventLogRepositoryInterface {
@@ -347,4 +407,35 @@ test('IssueInvoiceFromSource marca needs_reconcile si markIssued falla tras crea
     assert_same('inv_remote_observed', $replayed->providerInvoiceId());
     assert_same(InvoiceStatus::NeedsReconcile, $replayed->status());
     assert_same(1, $provider->createCalls);
+});
+
+test('IssueInvoiceFromSource lanza InvoiceNeedsReconcile aunque markNeedsReconcile falle tras create', function (): void {
+    $inner = new InMemoryInvoiceEventLog();
+    $events = task9_failing_mark_needs_reconcile_log($inner);
+    $provider = task9_provider(new IssuedInvoice(
+        providerInvoiceId: 'inv_reconcile_fail',
+        uuid: 'uuid_reconcile_fail',
+        status: InvoiceStatus::Valid,
+        sourceRef: 'order:task9',
+    ));
+    $useCase = new IssueInvoiceFromSource(
+        source: task9_source(task9_valid_draft()),
+        events: $events,
+        registry: task9_registry($provider),
+        validator: new InvoiceDraftValidator(),
+        defaultProviderKey: 'facturapi',
+    );
+
+    $thrown = null;
+    try {
+        $useCase->handle('order:task9', 'idem:reconcile-fails');
+    } catch (InvoiceNeedsReconcile $e) {
+        $thrown = $e;
+    }
+
+    assert_true($thrown instanceof InvoiceNeedsReconcile);
+    assert_true(str_contains($thrown->getMessage(), 'inv_reconcile_fail'));
+    assert_same(1, $provider->createCalls);
+    assert_same(1, $events->markNeedsReconcileCalls);
+    assert_same(0, $events->releaseCalls);
 });
