@@ -22,7 +22,6 @@ declare(strict_types=1);
 */
 
 return [
-    'demo_producto_toggle' => \Lebytek\Framework\Application\Crud\Handlers\DemoProductoToggleStatusHandler::class,
     'demo_producto_state_guard' => \Lebytek\Framework\Application\Crud\Handlers\DemoProductoStateGuard::class,
 
     'demo_pedido_total'        => \Lebytek\Framework\Application\Crud\Handlers\DemoPedidoTotalValidator::class,
