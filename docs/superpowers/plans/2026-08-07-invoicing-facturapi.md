@@ -1,6 +1,10 @@
 # Invoicing (Facturapi) Implementation Plan
 
-> **Spec:** [`docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md`](../specs/2026-08-07-invoicing-facturapi-design.md)
+**Source spec:** `docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md`  ·  **Modo:** normal
+
+**Source audit PR:** ninguno — spec de diseño Facturapi (brainstorm 2026-08-07); no deriva de auditoría diaria
+
+**Target repository/branches:** `Parzival2103/Lebytek_Framework` @ `main` (`da3ab58bd77be95c4003341454d939aa2584a742`); rama de implementación `feature/invoicing-facturapi` (creable desde `main` — verificado `git ls-remote origin refs/heads/main`)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -1304,6 +1308,21 @@ git commit -m "docs(invoicing): module guide and architecture ownership"
 | CFDI I only / no dom_* / no webhooks | enforced by scope of tasks |
 | Skeleton purity | 1, 10 |
 | Tests `Invoicing/*` | 1–11 |
+
+## Estado de ejecución
+
+| Campo | Valor |
+|-------|-------|
+| Reconciliación UTC | 2026-08-07T12:40:00Z (AUTOMATION-04) |
+| Plan creado UTC | 2026-08-07 (PR #94 restructure) |
+| Framework `origin/main` verificado | `da3ab58bd77be95c4003341454d939aa2584a742` |
+| Tareas completadas / totales | **0 / 11** |
+| Modo fuente | normal — spec `2026-08-07-invoicing-facturapi-design.md` (paralelo al audit CRUD del día) |
+| Evidencia @ `da3ab58` | `composer.json` `"php": ">=8.1"` (sin bump 8.2); sin `facturapi/facturapi-php`; sin `src/Domain/Invoicing/`; sin `config/modules/invoicing.php`; sin `vertical.modules.invoicing`; sin `database/schema/modules/invoicing.sql` |
+| Siguiente tarea ejecutable | **Task 1** — PHP 8.2 floor, Facturapi dep, vertical/config stubs |
+| Prerrequisitos | Ninguno en Framework; bump PHP 8.2 es breaking para consumidores 8.1 — documentar en release |
+| Bloqueos | Ninguno al planificar; emisión real Facturapi en prod requiere operador (keys VPS); Portal `dom_*` sources fuera de este repo |
+| Estado | **Pendiente de implementación en main** |
 
 ## Deviations / notes for implementers
 
