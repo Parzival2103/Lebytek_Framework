@@ -16,12 +16,24 @@
 - Business SQL → consumer `database/`
 - Platform UI assets → consumer `public/assets/` (copied; see ASSETS-PLATFORM.md)
 
-## Ownership: Payments vs Marketing
+## Ownership: framework modules vs consumer business
 
 | Concern | Owner | Namespace / path |
 |---------|-------|------------------|
 | Payments generic (Stripe gateway, event log, registry) | **Framework** | `Lebytek\Framework\Domain\Payments\`, toggled OFF by default |
 | Checkout, orders, memberships, Stripe business rules | **Portal** | `App\Application\Marketing\`, `*mkt*` SQL |
+| Invoicing generic (Facturapi provider, CFDI I ports, `inv_*` ledger, reconcile) | **Framework** | `Lebytek\Framework\Domain\Invoicing\`, toggled OFF by default |
+| Invoice source data, fiscal CRM, invoice timing and domain UI | **Consumer** | `App\` implements `InvoiceableSourceInterface`; business SQL stays in `dom_*` |
+
+## Release compatibility notes
+
+- Invoicing raises the package runtime to PHP `>=8.2` because
+  `facturapi/facturapi-php` requires it. Consumers should take that tag as a
+  major or otherwise explicitly documented breaking release before upgrading
+  shared environments.
+- The Facturapi SDK is required by Composer in the same dependency style as the
+  Stripe gateway for Payments; consumers enable it only through
+  `vertical.modules.invoicing` and `FACTURAPI_ENABLED`.
 
 ## Build a system
 
