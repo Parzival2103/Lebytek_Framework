@@ -9,6 +9,7 @@ use Lebytek\Framework\Application\Reporte\GuardarReporteUseCase;
 use Lebytek\Framework\Application\Reporte\ReporteConfigLoader;
 use Lebytek\Framework\Application\Services\AdminNavigationMenuService;
 use Lebytek\Framework\Application\Services\ConfiguracionService;
+use Lebytek\Framework\Domain\Exceptions\AccesoException;
 use Lebytek\Framework\Domain\Exceptions\ValidationException;
 use Lebytek\Framework\Domain\Interfaces\ReporteRepositoryInterface;
 use Lebytek\Framework\Domain\Policies\RbacPolicy;
@@ -157,6 +158,8 @@ final class ReportesController extends AdminBaseController
 
         try {
             $bytes = $this->generar->generar($reporte, $this->userId(), $this->canChecker());
+        } catch (AccesoException) {
+            return Response::forbidden();
         } catch (ValidationException $e) {
             Session::flash('errors', $this->flashErrors($e));
             return $this->redirect('/admin/reportes');
@@ -180,6 +183,8 @@ final class ReportesController extends AdminBaseController
 
         try {
             $bytes = $this->documentos->generar($fuente, $id, $template, $this->userId(), $this->canChecker());
+        } catch (AccesoException) {
+            return Response::forbidden();
         } catch (ValidationException) {
             return Response::notFound();
         } catch (\Throwable $e) {

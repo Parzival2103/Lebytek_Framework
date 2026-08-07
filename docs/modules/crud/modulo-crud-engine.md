@@ -433,7 +433,8 @@ Bloque `actions` opcional en `config/cruds/{resource}.json`:
 
 - **Tipos** (Fase 1): `builtin` (show/edit/delete, usa las rutas existentes; `delete` confirma vía modal global `#confirmModal` con defaults de plataforma), `handler` (ejecuta una clase `CrudActionHandlerInterface` whitelisteada), `link` (solo navegación, no se ejecuta en servidor). `transition` llega en Fase 2.
 - **`visible_when` / `enabled_when`**: mapa de igualdad simple (escalar o lista) evaluado en el render **y re-validado en el servidor** antes de ejecutar.
-- **`permission`**: slug completo (`modulo.accion`) o sufijo expandido contra `permission_prefix`. Las acciones builtin sin `permission` explícito conservan el gating estándar (`show`→`.ver`, `edit`→`.editar`, `delete`→`.eliminar`).
+- **`permission`**: slug completo (`modulo.accion`) o sufijo expandido contra `permission_prefix`. Las acciones builtin sin `permission` explícito conservan el gating estándar (`show`→`.ver`, `edit`→`.editar`, `delete`→`.eliminar`); `link` es solo navegación y tampoco lo requiere.
+- **`permission` obligatorio en acciones ejecutables**: `handler` y `transition` **deben** declarar un `permission` no vacío. El validador de configuración rechaza el recurso si falta, y en tiempo de ejecución `CrudActionService` falla cerrado con `AccesoException` (`No tienes permiso para realizar esta acción: {prefix}.{accion}`) antes de tocar la base de datos. No hay ejecución sin slug RBAC resuelto.
 - **Endpoints**: `POST /admin/crud/{resource}/{id}/accion/{action}` y `POST /admin/crud/{resource}/accion-masiva/{action}` (ambos con CSRF). Las acciones masivas son best-effort por ítem con resumen en flash y tope de 500 ids.
 - **Auditoría**: cada ejecución registra `crud.action:{name}` en `log_bitacora`.
 - **Compat**: sin bloque `actions`, se usan los `list.actions` (show/edit/delete) actuales y no hay barra bulk.
@@ -540,7 +541,22 @@ Restringe el listado (y bloquea show/edit/update/delete) a las filas del usuario
 
 donde `clientes_owner` se registra en `config/crud_handlers.php` apuntando a una clase que implementa `CrudListScopeInterface`.
 
+El mismo scope (built-in u handler) se revalida en acceso por ID: show, edit, update,
+delete y acciones de fila/masivas. Un ID conocido fuera de scope responde como
+inexistente (mismo mensaje que owner).
+
 `scope` y `scope_handler` son **mutuamente excluyentes**. Un recurso sin ninguno se comporta como hoy (sin scope).
+
+### Reportes sobre un recurso CRUD
+
+Los reportes leen el recurso a través de `CrudReporteDataSource`, que exige
+`{permission_prefix}.ver` del recurso **además** de los permisos del módulo
+Reportes (`reportes.*`). Tener permiso para generar un reporte no habilita leer
+un recurso que el usuario no puede ver. Si falta `.ver`, la fuente lanza
+`AccesoException` con la misma forma de mensaje que `RbacService::verificar`
+(`No tienes permiso para realizar esta acción: {prefix}.ver`), y
+`ReportesController` la traduce a **403**. El `list.scope` del recurso (owner o
+`scope_handler`) se sigue aplicando a las filas devueltas.
 
 ## Pie de totales en listado plano
 

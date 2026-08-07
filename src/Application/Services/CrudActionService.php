@@ -7,6 +7,7 @@ namespace Lebytek\Framework\Application\Services;
 use Lebytek\Framework\Application\Crud\Context\CrudActionContext;
 use Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition;
 use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
+use Lebytek\Framework\Domain\Exceptions\AccesoException;
 use Lebytek\Framework\Domain\Exceptions\ValidationException;
 use Lebytek\Framework\Domain\Interfaces\BitacoraRepositoryInterface;
 use Lebytek\Framework\Domain\Interfaces\CrudActionHandlerInterface;
@@ -36,6 +37,23 @@ final class CrudActionService
         private readonly ?CrudTransitionService $transitionService = null,
         private readonly ?CrudScopeResolver $scopeResolver = null
     ) {}
+
+    /**
+     * Resuelve el slug RBAC de una acción ejecutable. Todo lo que llega a
+     * run()/runBulk() debe traer un permiso resuelto: si la acción no declara
+     * `permission` (o expande a vacío) se falla cerrado con AccesoException
+     * usando `{prefix}.{accion}`, en vez de ejecutar sin gating.
+     */
+    public static function resolveExecutablePermission(CrudActionDefinition $action, string $prefix): string
+    {
+        $permission = $action->resolvePermission($prefix);
+        if ($permission === null || $permission === '') {
+            throw new AccesoException(
+                'No tienes permiso para realizar esta acción: ' . $prefix . '.' . $action->name()
+            );
+        }
+        return $permission;
+    }
 
     /**
      * Bloqueo server-side de propiedad para acciones, idéntico en lógica a
@@ -88,10 +106,8 @@ final class CrudActionService
         $definition = $this->configLoader->load($resource);
         $action = $this->resolver->resolveExecutable($definition, $actionName);
 
-        $permission = $action->resolvePermission($definition->permissionPrefix());
-        if ($permission !== null) {
-            $this->rbacService->verificar($permission);
-        }
+        $permission = self::resolveExecutablePermission($action, $definition->permissionPrefix());
+        $this->rbacService->verificar($permission);
 
         $record = $this->dataService->find($definition, $id);
         if (!is_array($record) || (int) ($record['deleted'] ?? 0) === 1) {
@@ -150,10 +166,8 @@ final class CrudActionService
         $definition = $this->configLoader->load($resource);
         $action = $this->resolver->resolveBulkExecutable($definition, $actionName);
 
-        $permission = $action->resolvePermission($definition->permissionPrefix());
-        if ($permission !== null) {
-            $this->rbacService->verificar($permission);
-        }
+        $permission = self::resolveExecutablePermission($action, $definition->permissionPrefix());
+        $this->rbacService->verificar($permission);
 
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn(int $v): bool => $v > 0)));
         if (count($ids) > self::MAX_BULK_IDS) {

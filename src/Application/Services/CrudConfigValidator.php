@@ -311,6 +311,12 @@ final class CrudConfigValidator
                     && !in_array(strtoupper((string) $action['method']), ['GET', 'POST'], true)) {
                     $errors[] = "actions.{$group}[{$i}].method debe ser GET o POST.";
                 }
+                if (in_array($type, ['handler', 'transition'], true)) {
+                    $perm = $action['permission'] ?? null;
+                    if (!is_string($perm) || trim($perm) === '') {
+                        $errors[] = "actions.{$group}[{$i}] ({$type}) requiere 'permission'.";
+                    }
+                }
             }
         }
         return $errors;
