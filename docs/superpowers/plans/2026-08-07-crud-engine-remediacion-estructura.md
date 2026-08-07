@@ -331,7 +331,7 @@ Mantener esta tabla actualizada en commits de docs cuando un punto cambia de est
 
 | Punto | Plan | Estado | PR plan | PR impl | Notas |
 |------:|------|--------|---------|---------|-------|
-| 1 | `…-p01-authz-multi-canal.md` | no iniciado | — | — | |
+| 1 | `2026-08-07-crud-p01-authz-multi-canal.md` | plan listo | (este PR) | — | C1+C2+C5; baseline `17643b1` |
 | 2 | `…-p02-states-form-options.md` | no iniciado | — | — | |
 | 3 | `…-p03-uploads-hardening.md` | no iniciado | — | — | |
 | 4 | `…-p04-cas-bulk-equality.md` | no iniciado | — | — | |
