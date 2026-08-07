@@ -1,0 +1,123 @@
+name: Platform tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  platform-fast-gates:
+    name: platform-fast-gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, curl, zip, sqlite3, pdo_mysql
+          coverage: none
+
+      - name: Validate composer.json
+        # Tip main has pre-existing lock drift + composer.json "version" field warnings.
+        # AC9 forbids lock/json sync in this plan; re-enable --strict after a hygiene PR.
+        run: composer validate --no-check-lock
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Composer audit
+        run: composer audit --no-dev
+
+      - name: Prepare harness .env
+        run: |
+          cp .env.example .env
+          # Ensure CI MySQL service credentials win over .env.example (EnvLoader fills unset $_ENV from file)
+          for kv in DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=lebytek_ci DB_USERNAME=root DB_PASSWORD=root; do
+            key="${kv%%=*}"
+            val="${kv#*=}"
+            if grep -q "^${key}=" .env; then
+              sed -i "s/^${key}=.*/${key}=${val}/" .env
+            else
+              echo "${key}=${val}" >> .env
+            fi
+          done
+
+      - name: Kernel tests
+        run: php tests/run.php Kernel
+
+      - name: Docs tests
+        run: php tests/run.php Docs
+
+      - name: SkeletonPurity tests
+        run: php tests/run.php SkeletonPurity
+
+      - name: Crud tests
+        run: php tests/run.php Crud
+
+      - name: Payments tests
+        run: php tests/run.php Payments
+
+      - name: Install tests
+        run: php tests/run.php Install
+
+  platform-integration-gates:
+    name: platform-integration-gates
+    runs-on: ubuntu-latest
+    needs: platform-fast-gates
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: lebytek_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: lebytek_ci
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      APP_ENV: local
+      APP_KEY: ci-test-key-32-characters-min!!
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, curl, zip, sqlite3, pdo_mysql
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare harness .env
+        run: |
+          cp .env.example .env
+          # Ensure CI MySQL service credentials win over .env.example (EnvLoader fills unset $_ENV from file)
+          for kv in DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=lebytek_ci DB_USERNAME=root DB_PASSWORD=root; do
+            key="${kv%%=*}"
+            val="${kv#*=}"
+            if grep -q "^${key}=" .env; then
+              sed -i "s/^${key}=.*/${key}=${val}/" .env
+            else
+              echo "${key}=${val}" >> .env
+            fi
+          done
+
+      - name: Apply platform schema
+        run: php scripts/migrate.php
+
+      - name: Bootstrap integrations module
+        run: php scripts/install.php --modules=integrations
+
+      - name: Integrations tests
+        run: php tests/run.php Integrations
