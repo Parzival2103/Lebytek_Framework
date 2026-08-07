@@ -27,18 +27,22 @@ function facturapi_fixture(string $name): array
     return $decoded;
 }
 
-/** @param array<string|int, mixed> $expected */
-function assert_facturapi_subset(array $expected, mixed $actual, string $path = 'payload'): void
+function assert_facturapi_payload(array $expected, mixed $actual): void
 {
-    assert_true(is_array($actual), "{$path} must be array");
-    foreach ($expected as $key => $expectedValue) {
-        assert_true(array_key_exists($key, $actual), "{$path}.{$key} missing");
-        $actualValue = $actual[$key];
-        if (is_array($expectedValue)) {
-            assert_facturapi_subset($expectedValue, $actualValue, "{$path}.{$key}");
-            continue;
+    assert_true(is_array($actual), 'payload must be array');
+    assert_same($expected, $actual, 'payload');
+}
+
+/** @param list<string> $forbidden */
+function assert_no_secret_leak(Throwable $exception, array $forbidden): void
+{
+    for ($current = $exception; $current !== null; $current = $current->getPrevious()) {
+        foreach ($forbidden as $token) {
+            assert_true(
+                !str_contains($current->getMessage(), $token),
+                'exception chain leaked secret token: ' . $token,
+            );
         }
-        assert_same($expectedValue, $actualValue, "{$path}.{$key}");
     }
 }
 
@@ -179,7 +183,7 @@ test('FacturapiInvoiceProvider mapea IVA 16 a payload golden y convierte Money a
     assert_same(InvoiceStatus::Valid, $issued->status());
     assert_same('914', $issued->folioNumber());
     assert_same('order:iva16', $issued->sourceRef());
-    assert_facturapi_subset(facturapi_fixture('facturapi_payload_iva16'), $transport->createdPayloads[0] ?? null);
+    assert_facturapi_payload(facturapi_fixture('facturapi_payload_iva16'), $transport->createdPayloads[0] ?? null);
 });
 
 test('FacturapiInvoiceProvider mapea taxExempt a IVA Exento en payload golden', function (): void {
@@ -187,7 +191,7 @@ test('FacturapiInvoiceProvider mapea taxExempt a IVA Exento en payload golden', 
 
     $provider->createInvoice(facturapi_exento_draft());
 
-    assert_facturapi_subset(facturapi_fixture('facturapi_payload_exento'), $transport->createdPayloads[0] ?? null);
+    assert_facturapi_payload(facturapi_fixture('facturapi_payload_exento'), $transport->createdPayloads[0] ?? null);
 });
 
 test('FacturapiInvoiceProvider delega cancel, pdf, xml y email al transporte', function (): void {
@@ -215,8 +219,8 @@ test('FacturapiInvoiceProvider envuelve errores del transporte sin filtrar secre
     try {
         $provider->createInvoice(facturapi_iva16_draft());
     } catch (InvoiceProviderException $exception) {
-        assert_true(!str_contains($exception->getMessage(), 'sk_test_SECRET'), 'provider exception leaked secret');
         assert_true(str_contains($exception->getMessage(), 'Facturapi create invoice failed'));
+        assert_no_secret_leak($exception, ['sk_test', 'SECRET']);
         return;
     }
 

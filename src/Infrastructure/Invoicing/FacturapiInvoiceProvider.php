@@ -16,6 +16,7 @@ use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\Money;
 use Lebytek\Framework\Infrastructure\Invoicing\Facturapi\FacturapiTransportInterface;
 use Lebytek\Framework\Infrastructure\Invoicing\Facturapi\SdkFacturapiTransport;
+use RuntimeException;
 use Throwable;
 
 final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterface
@@ -140,14 +141,14 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
         $product = [
             'description' => $item->description(),
             'product_key' => $item->productKey(),
-            'price' => $this->majorAmount($item->unitPrice()),
-            'tax_included' => false,
-            'taxability' => '02',
-            'taxes' => $this->mapTaxes($item),
         ];
         if ($item->unitKey() !== null) {
             $product['unit_key'] = $item->unitKey();
         }
+        $product['price'] = $this->majorAmount($item->unitPrice());
+        $product['tax_included'] = false;
+        $product['taxability'] = '02';
+        $product['taxes'] = $this->mapTaxes($item);
 
         return [
             'quantity' => $item->quantity(),
@@ -214,6 +215,25 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
 
     private function fail(string $operation, Throwable $exception): never
     {
-        throw new InvoiceProviderException('Facturapi ' . $operation . ' failed', 0, $exception);
+        throw new InvoiceProviderException(
+            'Facturapi ' . $operation . ' failed',
+            0,
+            $this->sanitizedPrevious($exception),
+        );
+    }
+
+    private function sanitizedPrevious(Throwable $exception): Throwable
+    {
+        return new RuntimeException(
+            $this->sanitizeSecretTokens($exception->getMessage()),
+            (int) $exception->getCode(),
+        );
+    }
+
+    private function sanitizeSecretTokens(string $message): string
+    {
+        $sanitized = preg_replace('/sk_(test|live)_[A-Za-z0-9]+/', '[redacted]', $message);
+
+        return is_string($sanitized) ? $sanitized : $message;
     }
 }
