@@ -19,6 +19,35 @@ test('schema.sql no referencia migraciones archivadas', function (): void {
     assert_true(!str_contains($sql, '20260428132500_crud_engine_demo'));
 });
 
+test('migraciones activas no usan ADD COLUMN IF NOT EXISTS (solo MariaDB)', function (): void {
+    $files = array_merge(
+        glob(ROOT_PATH . '/database/migrations/*.sql') ?: [],
+        glob(ROOT_PATH . '/skeleton/database/migrations/*.sql') ?: [],
+    );
+    assert_true($files !== [], 'expected active migration SQL files');
+    foreach ($files as $file) {
+        $sql = (string) file_get_contents($file);
+        assert_true(
+            !str_contains($sql, 'ADD COLUMN IF NOT EXISTS'),
+            basename($file) . ' uses MariaDB-only ADD COLUMN IF NOT EXISTS; '
+            . 'MySQL 8.0 (platform-integration-gates) requires information_schema + PREPARE'
+        );
+    }
+});
+
+test('schema.sql no usa DEFAULT no-NULL en columnas TEXT/BLOB/JSON (MySQL 8 error 1101)', function (): void {
+    $sql = (string) file_get_contents(ROOT_PATH . '/database/schema/schema.sql');
+    assert_true(
+        preg_match('/\b(TEXT|BLOB|JSON)\b[^,\n]*DEFAULT\s+\'/', $sql) === 0,
+        'MySQL 8.0 rejects non-NULL defaults on TEXT/BLOB/JSON (SQLSTATE 42000 / 1101); '
+        . 'use DEFAULT NULL instead — required for platform-integration-gates migrate'
+    );
+    assert_true(
+        str_contains($sql, '`valor`       TEXT           DEFAULT NULL'),
+        'cfg_configuraciones.valor must remain TEXT DEFAULT NULL for MySQL 8 CI'
+    );
+});
+
 test('crud-engine manifiesto declara bootstrap_sql y archivo existe', function (): void {
     $registry = new ModuleRegistry(SKELETON_PATH . '/config/modules');
     $crud = $registry->get('crud-engine');

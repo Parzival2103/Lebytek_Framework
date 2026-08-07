@@ -1,9 +1,23 @@
 -- Registro público y recuperación de contraseña (spec 2026-06-12).
 -- Tabla de tokens multi-propósito + verificación de email + rol 'usuario'.
 -- Idempotente: se puede re-ejecutar en cada despliegue.
+-- MySQL 8.0 compatible (avoid MariaDB-only IF NOT EXISTS on ADD COLUMN).
 SET NAMES utf8mb4;
 
-ALTER TABLE `auth_usuarios` ADD COLUMN IF NOT EXISTS `email_verificado_en` DATETIME DEFAULT NULL AFTER `ultimo_acceso`;
+SET @lebytek_col_exists := (
+  SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'auth_usuarios'
+    AND COLUMN_NAME = 'email_verificado_en'
+);
+SET @lebytek_sql := IF(
+  @lebytek_col_exists = 0,
+  'ALTER TABLE `auth_usuarios` ADD COLUMN `email_verificado_en` DATETIME DEFAULT NULL AFTER `ultimo_acceso`',
+  'SELECT 1'
+);
+PREPARE lebytek_stmt FROM @lebytek_sql;
+EXECUTE lebytek_stmt;
+DEALLOCATE PREPARE lebytek_stmt;
 
 CREATE TABLE IF NOT EXISTS `auth_tokens` (
   `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

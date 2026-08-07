@@ -47,6 +47,14 @@ jobs:
       - name: Kernel tests
         run: php tests/run.php Kernel
 
+      # AutomationPreflightRefTest resolves legacy refs via local git rev-parse.
+      # actions/checkout shallow clones omit tags, so Docs gates fail without this fetch.
+      # Prefer the surviving archive tag over the frozen feature branch (Task 10).
+      - name: Fetch legacy archive tag for Docs preflight gates
+        run: |
+          git fetch --no-tags origin tag archive/backoffice-api-integration
+          git rev-parse --verify --quiet 'refs/tags/archive/backoffice-api-integration^{commit}'
+
       - name: Docs tests
         run: php tests/run.php Docs
 

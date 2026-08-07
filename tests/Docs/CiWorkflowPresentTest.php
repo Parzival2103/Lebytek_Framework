@@ -22,6 +22,19 @@ test('platform-tests.yml references php tests/run.php and fast suites', function
     );
 });
 
+test('platform-tests.yml fetches archive legacy tag before Docs gates', function () use ($workflowPath): void {
+    $src = (string) file_get_contents($workflowPath);
+    assert_true(
+        str_contains($src, 'archive/backoffice-api-integration'),
+        'shallow checkout omits tags; workflow must fetch archive/backoffice-api-integration '
+        . 'so AutomationPreflightRefTest can rev-parse a legacy-ref candidate'
+    );
+    assert_true(
+        str_contains($src, 'git fetch') && str_contains($src, 'Docs tests'),
+        'workflow must git-fetch the archive tag in platform-fast-gates (before Docs tests)'
+    );
+});
+
 test('platform-tests.yml declares mysql service and DB migrate for Integrations', function () use ($workflowPath): void {
     $src = (string) file_get_contents($workflowPath);
     assert_true(str_contains($src, 'mysql:8'), 'workflow must use mysql:8.x service container');
