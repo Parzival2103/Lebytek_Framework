@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development`
 > (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
-> Steps use checkbox (`- [ ]`) syntax for tracking.
+> Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Cerrar tres canales AuthZ independientes del CRUD Engine: IDOR con `scope_handler` custom (C1), acciones ejecutables sin `permission` (C2) y exfiltración vía Reportes sin `{resource}.ver` (C5).
 
@@ -91,7 +91,7 @@
 - Consumes: `CrudScopeResolver::assertOwnedBy`, `CrudHandlerRegistry`, `CrudListScopeInterface`, `FixtureCustomScope` pattern de `tests/Crud/Scope/CrudScopeResolverTest.php`
 - Produces: tests que fallan porque `assertOwnedBy` retorna temprano cuando no hay `list.scope.type === 'owner'`
 
-- [ ] **Step 1: Escribir el test que falla** — al final de `tests/Security/CrudActionOwnershipTest.php`, añadir (tras los tests owner existentes):
+- [x] **Step 1: Escribir el test que falla** — al final de `tests/Security/CrudActionOwnershipTest.php`, añadir (tras los tests owner existentes):
 
 ```php
 use Lebytek\Framework\Application\Crud\Context\CrudListContext;
@@ -170,18 +170,18 @@ test('assertOwnedBy con scope_handler conserva mensaje no revelador', function (
 
 Actualizar el docblock del archivo: reemplazar la frase que dice que el guard solo cubre owner por: «cubre owner built-in y `list.scope_handler` custom (C1)».
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo**
+- [x] **Step 2: Ejecutar el test y comprobar el fallo**
 
 Run: `php tests/run.php Security/CrudActionOwnership`  
 Expected: **FAIL** — el test `assertOwnedBy bloquea registro fuera de scope_handler custom (C1 IDOR)` no lanza `ValidationException` (hoy `assertOwnedBy` retorna si `ownerMeta()` es null).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 2 implementa.
+- [x] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 2 implementa.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Security/CrudActionOwnership` / Expected: FAIL (TDD rojo confirmado en los 3 tests nuevos; los owner existentes siguen PASS).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Security/CrudActionOwnership` / Expected: FAIL (TDD rojo confirmado en los 3 tests nuevos; los owner existentes siguen PASS).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Crud/Scope/CrudScopeResolver` / Expected: PASS (suite scope existente intacta).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Crud/Scope/CrudScopeResolver` / Expected: PASS (suite scope existente intacta).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/Security/CrudActionOwnershipTest.php
@@ -203,11 +203,11 @@ git commit -m "test(security): add C1 assertOwnedBy scope_handler IDOR gates (re
 - Consumes: `resolve()`, `CrudListContext`, condiciones `list<array{column,op,value}>`
 - Produces: `assertOwnedBy` fail-closed para cualquier scope resuelto; `recordMatchesConditions(array $record, array $conditions): bool`
 
-- [ ] **Step 1: Escribir el test que falla** — ya escrito en Task 1 (rojo).
+- [x] **Step 1: Escribir el test que falla** — ya escrito en Task 1 (rojo).
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Security/CrudActionOwnership` / Expected: FAIL en tests C1.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Security/CrudActionOwnership` / Expected: FAIL en tests C1.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — reemplazar el cuerpo de `assertOwnedBy` y añadir helper estático en `CrudScopeResolver.php`:
+- [x] **Step 3: Implementar el cambio mínimo** — reemplazar el cuerpo de `assertOwnedBy` y añadir helper estático en `CrudScopeResolver.php`:
 
 ```php
 public function assertOwnedBy(CrudResourceDefinition $definition, array $record, ?int $userId, callable $can): void
@@ -291,17 +291,17 @@ delete y acciones de fila/masivas. Un ID conocido fuera de scope responde como
 inexistente (mismo mensaje que owner).
 ```
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php Security/CrudActionOwnership`  
 Expected: **PASS** — todos los tests owner previos + 3 C1 nuevos.
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Crud/Scope`  
 Expected: PASS — 0 failed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Application/Services/CrudScopeResolver.php docs/modules/crud/modulo-crud-engine.md
@@ -323,7 +323,7 @@ git commit -m "fix(crud): reapply list scope on ID access including scope_handle
 - Consumes: `CrudConfigValidator::actionsBlockErrors(array $config): array`
 - Produces: error string `actions.{group}[{i}] (handler|transition) requiere 'permission'.` cuando falta
 
-- [ ] **Step 1: Escribir el test que falla** — actualizar `tests/Crud/Action/CrudConfigValidatorActionsTest.php`:
+- [x] **Step 1: Escribir el test que falla** — actualizar `tests/Crud/Action/CrudConfigValidatorActionsTest.php`:
 
 1. En el test `well-formed actions pass`, añadir `"permission": "editar"` a cada action `handler` (y a cualquier `transition` si se añade). Los `builtin`/`link` sin permission siguen OK.
 2. Añadir tests nuevos:
@@ -378,12 +378,12 @@ test('actionsBlockErrors: handler con permission vacía es error (C2)', function
 
 También actualizar el test `reports structural problems`: el handler sin key `handler` sigue contando; si algún caso `handler` completo sin permission se añade al arreglo, incrementar el count esperado. El caso actual `['name' => 'h2', 'type' => 'handler']` generará **dos** errores (falta handler + falta permission) — ajustar `assert_same(6, count($errors))` → `assert_same(7, count($errors))` **o** añadir permission al caso h2 y dejar count en 6 si solo se quiere el error de handler key. Preferido: dejar h2 sin permission y sin handler key → count **7**.
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo**
+- [x] **Step 2: Ejecutar el test y comprobar el fallo**
 
 Run: `php tests/run.php Crud/Action/CrudConfigValidatorActions`  
 Expected: **FAIL** — tests C2 no encuentran el mensaje de permission (validator aún no lo exige).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — dentro del loop de `actionsBlockErrors` en `CrudConfigValidator.php`, tras las validaciones de `handler`/`link`/`transition`/`builtin`, añadir:
+- [x] **Step 3: Implementar el cambio mínimo** — dentro del loop de `actionsBlockErrors` en `CrudConfigValidator.php`, tras las validaciones de `handler`/`link`/`transition`/`builtin`, añadir:
 
 ```php
 if (in_array($type, ['handler', 'transition'], true)) {
@@ -394,12 +394,12 @@ if (in_array($type, ['handler', 'transition'], true)) {
 }
 ```
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php Crud/Action/CrudConfigValidatorActions`  
 Expected: **PASS**.
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Crud/Action`  
 Expected: PASS — 0 failed. Si algún fixture de action en otros tests del directorio declara handler sin permission, añadir `"permission": "editar"` mínimo.
@@ -413,7 +413,7 @@ rg -n '"type": "handler"|"type": "transition"' config/cruds skeleton/config/crud
 
 Expected: cada bloque handler/transition incluye línea `permission`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Application/Services/CrudConfigValidator.php tests/Crud/Action/CrudConfigValidatorActionsTest.php
@@ -445,7 +445,7 @@ Añadir método **público** puro (sin DB) para TDD sin cablear todo el servicio
 public static function resolveExecutablePermission(CrudActionDefinition $action, string $prefix): string
 ```
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Crud/Action/CrudActionPermissionTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Crud/Action/CrudActionPermissionTest.php`:
 
 ```php
 <?php
@@ -507,12 +507,12 @@ test('resolveExecutablePermission falla cerrado con permission vacía', function
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo**
+- [x] **Step 2: Ejecutar el test y comprobar el fallo**
 
 Run: `php tests/run.php Crud/Action/CrudActionPermission`  
 Expected: **FAIL** — `Call to undefined method` / method missing `resolveExecutablePermission`.
 
-- [ ] **Step 3: Implementar el cambio mínimo**
+- [x] **Step 3: Implementar el cambio mínimo**
 
 En `CrudActionService.php`:
 
@@ -560,17 +560,17 @@ $this->rbacService->verificar($permission);
 
 Nota: `resolveExecutable`/`resolveBulkExecutable` ya limitan a acciones declaradas; `link` no se ejecuta por `dispatch`. Si en el futuro un `builtin` pasara por `run()`, también exigiría permission — hoy los builtins no pasan por `run()` (rutas propias). `transition` sí pasa por `run()` vía action service → queda cubierto.
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php Crud/Action/CrudActionPermission`  
 Expected: **PASS**.
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Crud/Action Security/CrudActionOwnership`  
 Expected: PASS — 0 failed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Application/Services/CrudActionService.php tests/Crud/Action/CrudActionPermissionTest.php
@@ -598,7 +598,7 @@ Porque `CrudDataService` es `final` y costoso de construir, el gate se implement
 public static function assertCanViewResource(CrudResourceDefinition $definition, ?callable $can): void
 ```
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Reporte/CrudReporteDataSourceAuthzTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Reporte/CrudReporteDataSourceAuthzTest.php`:
 
 ```php
 <?php
@@ -657,12 +657,12 @@ test('assertCanViewResource mensaje incluye el slug .ver', function (): void {
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo**
+- [x] **Step 2: Ejecutar el test y comprobar el fallo**
 
 Run: `php tests/run.php Reporte/CrudReporteDataSourceAuthz`  
 Expected: **FAIL** — método `assertCanViewResource` inexistente.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `CrudReporteDataSource.php`:
+- [x] **Step 3: Implementar el cambio mínimo** — en `CrudReporteDataSource.php`:
 
 ```php
 use Lebytek\Framework\Domain\Exceptions\AccesoException;
@@ -690,17 +690,17 @@ public function findRecord(...): ?array
 
 No cambiar constructor ni `FrameworkServiceProvider` (se reutiliza `$can` ya inyectado por use cases / controller).
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php Reporte/CrudReporteDataSourceAuthz`  
 Expected: **PASS**.
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Reporte`  
 Expected: PASS — 0 failed. Los fakes de `BuildReporteDataUseCaseTest` / `GenerarDocumentoUseCaseTest` no pasan por `CrudReporteDataSource` real; no requieren cambio. Si algún test construye el datasource real sin `.ver` en `$can`, actualizar el callable a permitir `{resource}.ver`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Application/Reporte/CrudReporteDataSource.php tests/Reporte/CrudReporteDataSourceAuthzTest.php
@@ -723,28 +723,28 @@ git commit -m "fix(reportes): require resource.ver inside CrudReporteDataSource 
 - Consumes: trío semver existente @ `1.2.3` en `main` al planificar
 - Produces: trío sincronizado @ `1.2.6`
 
-- [ ] **Step 1: Escribir el test que falla** — N/A (gates de Tasks 1–5 ya verdes). Confirmar baseline semver:
+- [x] **Step 1: Escribir el test que falla** — N/A (gates de Tasks 1–5 ya verdes). Confirmar baseline semver:
 
 Run: `php tests/run.php PlatformVersionSemver`  
 Expected: PASS @ `1.2.3` (o la versión actual del tip si otro plan mergeó antes; **no** inventar — leer los tres archivos y alinear al mismo PATCH `1.2.6` solo si aún es `1.2.3`/`1.2.4`/`1.2.5`; si ya hay `≥1.2.6`, bump al siguiente PATCH libre y anótelo en el commit).
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — N/A para semver hasta editar. Primero correr regresión AuthZ:
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — N/A para semver hasta editar. Primero correr regresión AuthZ:
 
 Run: `php tests/run.php Security Crud/Scope Crud/Action Reporte/CrudReporteDataSourceAuthz`  
 Expected: PASS — 0 failed.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — poner **la misma** versión `1.2.6` en:
+- [x] **Step 3: Implementar el cambio mínimo** — poner **la misma** versión `1.2.6` en:
 
 - `composer.json` → `"version": "1.2.6"`
 - `config/app.php` → `'version' => '1.2.6'` (línea del array raíz; hoy `1.2.3`)
 - `skeleton/config/app.php` → `'version' => '1.2.6'` (espejo)
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php PlatformVersionSemver`  
 Expected: PASS @ `1.2.6`.
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Security Crud/Scope Crud/Action Reporte Kernel/SkeletonPurity`  
 Expected: PASS — 0 failed.
@@ -757,7 +757,7 @@ rg -n '"type": "handler"' config/cruds skeleton/config/cruds -A3 | rg -v permiss
 
 Expected: sin handlers huérfanos sin `permission` en las líneas de contexto.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add composer.json config/app.php skeleton/config/app.php
@@ -770,15 +770,15 @@ Tag `v1.2.6` **solo post-merge** en `main` (operador / release); no taggear desd
 
 ## Criterios de aceptación (punto 1)
 
-- [ ] **C1:** Con `list.scope_handler`, show/edit/update/delete/acciones por ID deniegan registros fuera de las condiciones del scope (mensaje `El registro solicitado no existe.`).
-- [ ] **C1:** Owner built-in + bypass siguen comportándose igual (`CrudActionOwnershipTest` verde).
-- [ ] **C2:** `CrudConfigValidator::actionsBlockErrors` rechaza `handler`/`transition` sin `permission` no vacío.
-- [ ] **C2:** `CrudActionService::run`/`runBulk` no ejecutan si falta permission (fail-closed `AccesoException`).
-- [ ] **C5:** `CrudReporteDataSource::{rows,findRecord}` lanzan `AccesoException` sin `{resource}.ver` aunque exista `reportes.generar`.
-- [ ] Tests nuevos del plan en verde: `Security/CrudActionOwnership`, `Crud/Action/CrudConfigValidatorActions`, `Crud/Action/CrudActionPermission`, `Reporte/CrudReporteDataSourceAuthz`.
-- [ ] Semver trío @ `1.2.6` + `PlatformVersionSemver` PASS.
-- [ ] `SkeletonPurity` PASS; demos JSON siguen cargables.
-- [ ] Diff **sin** Marketing/Portal business; **sin** cambios de punto 2–12 (states, uploads, CAS, router RBAC, etc.).
+- [x] **C1:** Con `list.scope_handler`, show/edit/update/delete/acciones por ID deniegan registros fuera de las condiciones del scope (mensaje `El registro solicitado no existe.`).
+- [x] **C1:** Owner built-in + bypass siguen comportándose igual (`CrudActionOwnershipTest` verde).
+- [x] **C2:** `CrudConfigValidator::actionsBlockErrors` rechaza `handler`/`transition` sin `permission` no vacío.
+- [x] **C2:** `CrudActionService::run`/`runBulk` no ejecutan si falta permission (fail-closed `AccesoException`).
+- [x] **C5:** `CrudReporteDataSource::{rows,findRecord}` lanzan `AccesoException` sin `{resource}.ver` aunque exista `reportes.generar`.
+- [x] Tests nuevos del plan en verde: `Security/CrudActionOwnership`, `Crud/Action/CrudConfigValidatorActions`, `Crud/Action/CrudActionPermission`, `Reporte/CrudReporteDataSourceAuthz`.
+- [x] Semver trío @ `1.2.6` + `PlatformVersionSemver` PASS.
+- [x] `SkeletonPurity` PASS; demos JSON siguen cargables.
+- [x] Diff **sin** Marketing/Portal business; **sin** cambios de punto 2–12 (states, uploads, CAS, router RBAC, etc.).
 
 ## Fuera de alcance
 
@@ -821,8 +821,13 @@ Tag `v1.2.6` **solo post-merge** en `main` (operador / release); no taggear desd
 |-------|-------|
 | Plan creado UTC | 2026-08-07T05:08:29Z |
 | Framework `origin/main` referencia al planificar | `17643b142a6f2db3278561c06d000542cfd50380` |
-| Tareas completadas / totales | 0 / 6 |
-| Siguiente tarea ejecutable | Task 1 |
-| Prerrequisitos | Ninguno (punto 1); PHP ≥8.1 en entorno de ejecución |
-| Bloqueos | Ninguno al planificar. PHP CLI puede faltar en algunos agentes cloud — el ejecutor debe usar entorno con PHP. |
-| Estado | Pendiente de implementación |
+| Reconciliación UTC | 2026-08-07T15:34:20Z |
+| Framework `origin/main` verificado en reconciliación | `b57bd6068b2cf8031b263f3ae73fdef1c913b570` |
+| Tareas completadas / totales | 6 / 6 |
+| Siguiente tarea ejecutable | ninguna (punto 1 cerrado) |
+| Prerrequisitos | Cumplidos |
+| Bloqueos | ninguno |
+| Estado | completo en main |
+| Evidencia | PR plan [#93](https://github.com/Parzival2103/Lebytek_Framework/pull/93) merged; PR impl [#95](https://github.com/Parzival2103/Lebytek_Framework/pull/95) merge commit `64a6877b8dd9c78a05bb9c871bf199ad7e2c9098`; en tip: `CrudScopeResolver::recordMatchesConditions`, `CrudActionService::resolveExecutablePermission`, `CrudReporteDataSource::assertCanViewResource`, tests `Security/CrudActionOwnership`, `Crud/Action/CrudActionPermission`, `Reporte/CrudReporteDataSourceAuthz`, semver trío `1.2.6` |
+
+**Nota de reconciliación (AUTOMATION-04 Parte A):** checkboxes marcados tras verificar entregables en `origin/main` @ `b57bd60` (ancestro `64a6877`). No se archiva aún: el programa de remediación 12 puntos mantiene el path bajo `docs/superpowers/plans/` hasta cierre del programa (estructura §7).
