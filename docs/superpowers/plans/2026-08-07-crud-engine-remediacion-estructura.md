@@ -332,7 +332,7 @@ Mantener esta tabla actualizada en commits de docs cuando un punto cambia de est
 | Punto | Plan | Estado | PR plan | PR impl | Notas |
 |------:|------|--------|---------|---------|-------|
 | 1 | `2026-08-07-crud-p01-authz-multi-canal.md` | completo en main | [#93](https://github.com/Parzival2103/Lebytek_Framework/pull/93) | [#95](https://github.com/Parzival2103/Lebytek_Framework/pull/95) | C1+C2+C5; merge `64a6877`; semver `1.2.6` |
-| 2 | `2026-08-07-crud-p02-states-form-options.md` | plan listo | (este PR) | — | C3+G15+G6; baseline `b57bd60` |
+| 2 | `2026-08-07-crud-p02-states-form-options.md` | plan listo | [#98](https://github.com/Parzival2103/Lebytek_Framework/pull/98) | — | C3+G15+G6; baseline `b57bd60` |
 | 3 | `…-p03-uploads-hardening.md` | no iniciado | — | — | |
 | 4 | `…-p04-cas-bulk-equality.md` | no iniciado | — | — | |
 | 5 | `…-p05-aggregation-breaker.md` | no iniciado | — | — | |
