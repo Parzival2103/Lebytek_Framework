@@ -10,7 +10,7 @@
 
 **Tech Stack:** PHP 8.1+, Composer 2.x, `lebytek/framework` ≥ `v1.2.2`, harness Portal (`php tests/run.php` — **estructura no verificada**: gh 404 Portal), Bootstrap 5.3 admin CRUD.
 
-**Source spec:** `docs/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md`  ·  **Modo:** normal
+**Source spec:** `docs/archive/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md`  ·  **Modo:** normal
 
 **Source audit PR:** #67 — https://github.com/Parzival2103/Lebytek_Framework/pull/67 (Framework audit; Portal no inspeccionable)
 

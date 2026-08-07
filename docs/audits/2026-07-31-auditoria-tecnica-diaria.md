@@ -91,7 +91,7 @@ Novedad positiva de proceso: el PR audit del 30 ([#51](https://github.com/Parziv
 | Campo | Valor |
 |-------|-------|
 | Archivo | `config/app.php` L7 |
-| Evidencia | `'version' => '1.0.0'` mientras tags publicados llegan a `v1.2.1` (`fba3e03`). Spec+plan en `main` (`docs/superpowers/specs/2026-07-29-audit-config-version-semver-sync-design.md`, plan homónimo) — **diseño sin implementar**. |
+| Evidencia | `'version' => '1.0.0'` mientras tags publicados llegan a `v1.2.1` (`fba3e03`). Spec+plan en `main` (`docs/archive/superpowers/specs/2026-07-29-audit-config-version-semver-sync-design.md`, plan homónimo) — **diseño sin implementar**. |
 | Impacto | Dashboard/operadores pueden mostrar versión incorrecta |
 | Owner | Framework |
 | Estado | **Abierto** — listo para PR de implementación desde spec #50 |

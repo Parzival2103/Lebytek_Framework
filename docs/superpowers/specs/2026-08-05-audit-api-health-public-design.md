@@ -11,7 +11,7 @@
 **Specs/planes relacionados (no duplicar):**
 
 - CI gates (D7): `docs/superpowers/specs/2026-08-04-audit-platform-ci-gates-design.md` · plan `docs/superpowers/plans/2026-08-04-audit-platform-ci-gates.md` (0/5 tareas)
-- Release integrity (implementado): `docs/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md`
+- Release integrity (implementado): `docs/archive/superpowers/specs/2026-08-02-audit-v122-release-integrity-design.md`
 - Portal afterListRows (diseño): `docs/superpowers/specs/2026-08-03-audit-mkt-leads-after-list-rows-design.md` · plan `docs/superpowers/plans/2026-08-02-audit-mkt-leads-after-list-rows.md` (0/5 tareas)
 - Skeleton staging (D6, separado): `docs/superpowers/specs/2026-07-26-skeleton-package-staging-design.md`
 - Inventario deuda: `docs/audits/2026-07-28-deuda-tecnica-inventario.md` § D3/M4

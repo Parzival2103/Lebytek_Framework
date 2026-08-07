@@ -24,9 +24,13 @@ Ver sección histórica al inicio de este directorio (planes mayo–jun 2026).
 - `specs/2026-07-27-stripe-subscription-boundary-design.md` (Framework #21, tag v1.2.1)
 - `specs/2026-07-27-audit-harness-portal-env-purge-design.md`
 - `specs/api-connections-module.md`
+- `specs/2026-07-29-audit-config-version-semver-sync-design.md` … `2026-08-02-audit-v122-release-integrity-design.md` (implementados)
+
+### Artefactos FPS one-shot
+
+- `fps-artifacts/FPS-delta-paths-main-to-feature.txt`
+- `fps-artifacts/FPS-legacy-seeds-list.txt`, `FPS-legacy-migrations-list.txt`
 
 ## Activo (no archivado)
 
-- [`../../superpowers/plans/2026-07-26-skeleton-package-staging.md`](../../superpowers/plans/2026-07-26-skeleton-package-staging.md) — **skeleton.lebytek.com**
-- [`../../superpowers/specs/2026-07-26-skeleton-package-staging-design.md`](../../superpowers/specs/2026-07-26-skeleton-package-staging-design.md)
-- Referencia vertical futura: [`specs/2026-05-15-vertical-inventario-design.md`](specs/2026-05-15-vertical-inventario-design.md) (en `docs/archive/superpowers/specs/` si aplica)
+Ver índice vigente: [`../../superpowers/README.md`](../../superpowers/README.md).

@@ -95,7 +95,7 @@ Novedades positivas:
 | Campo | Valor |
 |-------|-------|
 | Archivo | `config/app.php` L7 |
-| Evidencia | `'version' => '1.0.0'` mientras tags publicados llegan a `v1.2.1` (`fba3e03`). Spec+plan en `main` (`docs/superpowers/specs/2026-07-29-audit-config-version-semver-sync-design.md`) — **diseño sin implementar**. Sin cambios de código en este intervalo. |
+| Evidencia | `'version' => '1.0.0'` mientras tags publicados llegan a `v1.2.1` (`fba3e03`). Spec+plan en `main` (`docs/archive/superpowers/specs/2026-07-29-audit-config-version-semver-sync-design.md`) — **diseño sin implementar**. Sin cambios de código en este intervalo. |
 | Impacto | Dashboard/operadores pueden mostrar versión incorrecta |
 | Owner | Framework |
 | Estado | **Abierto** — listo para PR de implementación desde spec #50 |
@@ -249,7 +249,7 @@ Delta `e19fa25..5b03d9e` (docs/automation + test Docs; + audits 29/31 mergeados)
 - `docs/audits/2026-07-29-auditoria-tecnica-diaria.md`, `2026-07-31-auditoria-tecnica-diaria.md`
 - `docs/composer-setup.md`, `docs/integration/VPS_CHECKLIST.md`, `lebytek-implementation-real.md`, `role-delegation-lebytek-api.md`
 - `docs/core/seguridad_secretos_deploy.md`
-- `docs/superpowers/specs/2026-07-31-audit-ops-docs-legacy-alignment-design.md`
+- `docs/archive/superpowers/specs/2026-07-31-audit-ops-docs-legacy-alignment-design.md`
 - `docs/archive/superpowers/plans/2026-07-30-audit-artifact-chain.md`, `2026-07-31-audit-ops-docs-legacy-alignment.md`
 - `docs/automation/AUTOMATION-06|07|08-*.md`, `README.md`
 - `tests/Docs/OpsDocsFpsAlignmentTest.php`

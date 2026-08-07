@@ -1,2 +1,19 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# ---------------------------------------------------------------------------
+# Composer dist / git archive — omit maintainer-only noise from vendor installs
+# Guías de uso (docs/core, docs/modules, contratos raíz) SÍ viajan en el paquete.
+# Automations y el clone del repo fuente siguen viendo estas rutas en git.
+# ---------------------------------------------------------------------------
+docs/superpowers/        export-ignore
+docs/audits/             export-ignore
+docs/automation/         export-ignore
+docs/automation-reports/ export-ignore
+docs/archive/            export-ignore
+docs/integration/        export-ignore
+tests/                   export-ignore
+.cursor/                 export-ignore
+.agents/                 export-ignore
+AGENTS.md                export-ignore
+CLAUDE.md                export-ignore
