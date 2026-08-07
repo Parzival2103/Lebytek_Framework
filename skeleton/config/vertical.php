@@ -20,6 +20,7 @@ return [
         'marketing'      => false,
         'integrations'   => true,
         'payments'       => false,
+        'invoicing'      => false,
     ],
 
     'labels' => [

@@ -36,10 +36,11 @@ test('skeleton container.php does not reference App Marketing classes', function
     );
 });
 
-test('skeleton vertical keeps marketing and payments OFF', function () use ($skeleton): void {
+test('skeleton vertical keeps marketing, payments and invoicing OFF', function () use ($skeleton): void {
     $vertical = require $skeleton . '/config/vertical.php';
     assert_same(false, $vertical['modules']['marketing'] ?? null);
     assert_same(false, $vertical['modules']['payments'] ?? null);
+    assert_same(false, $vertical['modules']['invoicing'] ?? null);
 });
 
 test('skeleton does not ship LebytekApi client or env vars', function () use ($skeleton): void {

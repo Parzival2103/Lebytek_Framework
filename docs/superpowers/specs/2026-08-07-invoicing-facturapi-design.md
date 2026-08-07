@@ -1,7 +1,8 @@
 # Invoicing (Facturapi) — estructura plataforma + scaffold CFDI I
 
 **Fecha:** 2026-08-07  
-**Estado:** diseño aprobado; plan de implementación en `docs/superpowers/plans/2026-08-07-invoicing-facturapi.md`  
+**Estado:** implementación en curso — plan en [`docs/superpowers/plans/2026-08-07-invoicing-facturapi.md`](../plans/2026-08-07-invoicing-facturapi.md)  
+**Plan amendments:** Plan amendments A1–A10 supersede this spec where they disagree — ver [Design amendments](../plans/2026-08-07-invoicing-facturapi.md#design-amendments-post-pr-91-critique) en el plan.  
 **Módulo:** `invoicing` (vertical OFF by default)  
 **Proveedor v1:** Facturapi (SDK oficial `facturapi/facturapi-php`)
 
