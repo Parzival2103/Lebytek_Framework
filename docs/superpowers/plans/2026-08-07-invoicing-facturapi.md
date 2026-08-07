@@ -1,1313 +1,685 @@
 # Invoicing (Facturapi) Implementation Plan
 
-> **Spec:** [`docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md`](../specs/2026-08-07-invoicing-facturapi-design.md)
+> **Spec:** [`docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md`](../specs/2026-08-07-invoicing-facturapi-design.md)  
+> **Amendments:** this plan supersedes the spec where the two disagree (see § Design amendments).  
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans. Implement **one task per subagent**. Steps use checkbox (`- [ ]`) syntax.
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+**Goal:** Ship an optional Framework `invoicing` vertical (OFF by default) with Domain ports, Facturapi CFDI tipo I scaffold (create/cancel/PDF/XML/email), `InvoiceableSourceInterface` orchestration, `inv_*` platform tables, consumer connection docs — **safe under partial failure** (no double-stamp), with contracts that stay extensible, and **explicit mitigations** for the highest-risk technical debt.
 
-**Goal:** Ship an optional Framework `invoicing` vertical (OFF by default) with Domain ports, Facturapi CFDI tipo I scaffold (create/cancel/PDF/XML/email), `InvoiceableSourceInterface` orchestration, `inv_*` platform tables, and consumer connection docs.
+**Architecture:** Mirror Payments: Domain ports + VOs → Application factory/registry + use cases → Infrastructure `FacturapiInvoiceProvider` (SDK behind a transport seam). Consumers implement `InvoiceableSourceInterface` (`dom_*` / tabla X → `InvoiceDraft`). No Portal business rules in this package.
 
-**Architecture:** Mirror Payments: Domain ports + VOs → Application factory/registry + `IssueInvoiceFromSource` → Infrastructure `FacturapiInvoiceProvider` (official SDK behind a transport seam). Consumers implement `InvoiceableSourceInterface` to map `dom_*` / tabla X → `InvoiceDraft`. No Portal business rules in this package.
+**Tech Stack:** PHP `>=8.2`, Composer, `facturapi/facturapi-php` ^4, harness `php tests/run.php` + `tests/lib/microtest.php`, PDO/MySQL via module `bootstrap_sql`.
 
-**Tech Stack:** PHP `>=8.2`, Composer, `facturapi/facturapi-php` ^4, harness `php tests/run.php` + `tests/lib/microtest.php`, PDO/MySQL platform SQL via module `bootstrap_sql`.
+---
+
+## How to read this plan (subagents)
+
+Each task is a **self-contained mission**. Before coding, the assigned agent must:
+
+1. Read **Mission**, **Why this piece exists**, **Depends on**, **Unblocks**, **Owns**, **Contract**, **Do not**.
+2. Implement only files listed under **Owns** (plus tests named there).
+3. Satisfy **Done when** and run the listed commands.
+4. Commit with the suggested message, then stop — do not start the next task.
+
+**Orchestrator rule:** run tasks in numeric order unless two tasks are marked **parallel-safe**. Never start a task whose **Depends on** is incomplete.
+
+---
+
+## Design amendments (post PR #91 critique)
+
+These rules are **binding for implementation** even if the original spec is softer:
+
+| # | Topic | Rule |
+|---|--------|------|
+| A1 | Partial failure after remote create | If `createInvoice` already returned a provider id, **never** `releaseClaim`. Persist `provider_invoice_id` + status `needs_reconcile` (or equivalent) and throw a typed error. Only `releaseClaim` when the provider was **not** called successfully. |
+| A2 | `source_ref` authority | Issue may log many rows per `source_ref`. **Cancel / download / email require `providerInvoiceId`** unless exactly one issued row exists for that ref; otherwise throw `InvoiceAmbiguousSource` (do not pick “latest” silently). |
+| A3 | Orphan claims | Rows claimed without `provider_invoice_id` are incomplete. Status values: `claimed`, `issued`, `needs_reconcile`, `canceled`. No blind retry of create after timeout. |
+| A4 | Taxes | `InvoiceItem` carries optional tax lines; Facturapi payload maps them. Validator requires ≥1 tax line in v1 **or** `taxExempt=true`. |
+| A5 | Currency | `Money` stores currency string (uppercase). **v1 MXN-only enforcement lives in `InvoiceDraftValidator`**. |
+| A6 | Org settings schema | `inv_organizations` unique on `(provider_key, external_org_id)` with `external_org_id` default `''` for “default org”. |
+| A7 | Unknown provider status | `InvoiceStatus::fromProvider` → `Unknown` (or throw); never silent map to `Pending`. |
+| A8 | Money construction | Prefer `Money::fromMinor(int, string)`. |
+| A9 | Semver / PHP | Shipping requires a **major** (or clearly documented breaking) release for PHP `>=8.2`. Do not bump packaged `version` inside code tasks; Task 14 documents the release strategy. |
+| A10 | Async status | v1 records status at create time only. Do not assume status is immutable forever. |
+
+---
+
+## Technical debt register
+
+| ID | Debt | Severity | Mitigation in this plan | Residual (accepted) |
+|----|------|----------|-------------------------|---------------------|
+| D1 | `needs_reconcile` without close path | High | **Task 10** `ReconcileIssuedInvoice` + `findNeedsReconcile` | No auto job / webhook |
+| D2 | InMemory ≠ PDO behavior drift | High | **Task 5** shared ledger contract suite | Full MySQL suite still needs integration env |
+| D3 | Issue use case unbound / easy to miswire | High | **Task 13** factory helper + conditional DI | Consumer still must bind `InvoiceableSourceInterface` |
+| D4 | Spec vs plan dual source of truth | Med | **Task 1** amendments pointer on spec | Spec body not fully rewritten |
+| D5 | Tax mapping silent bugs | Med | **Task 7** golden IVA 16% + exento fixtures | No full SAT catalog |
+| D6 | Pieces green, system fragile | Med | **Task 12** smoke Issue+reconcile+fake transport | No live Facturapi CI |
+| D7 | PHP 8.2 + module in one bag | Med | **Task 14** explicit release strategy note | Consumers without invoicing still pay floor when they upgrade |
+| D8 | Dual Money / dual ledgers vs Payments | Low | Docs “do not share” (**Task 14**) | No shared abstraction in v1 |
+| D9 | Fat `InvoiceProviderInterface` | Low | Doc note future ISP (**Task 14**) | No split in v1 |
+| D10 | Async status / webhooks | Low | A10 + future name in docs | Out of scope |
+
+---
+
+## System map (how pieces fit)
+
+```
+Task 1   Config / vertical / composer + spec amendments pointer
+Task 2   Domain VOs + enums + exceptions
+Task 3   Domain ports (incl. reconcile reads)
+Task 4   SQL inv_*
+Task 5   PDO repos + InMemory + ledger CONTRACT suite     ← mitigates D2
+Task 6   InvoiceProviderRegistry
+Task 7   Facturapi transport + provider + golden tax fixtures ← mitigates D5
+Task 8   InvoicingFactory
+Task 9   IssueInvoiceFromSource + validator (A1)
+Task 10  ReconcileIssuedInvoice                             ← mitigates D1
+Task 11  Cancel / download / email (A2)
+Task 12  Smoke integration (Issue + Reconcile + fake)       ← mitigates D6
+Task 13  Container gated DI + conditional Issue bind          ← mitigates D3
+Task 14  Docs + runbook + release strategy + debt residuals ← mitigates D4/D7/D8
+
+Parallel-safe: Task 7 may start after Task 3 even if Task 5/6 in flight.
+Factory (8) MUST wait for provider (7). Issue (9) MUST wait for 5+6+8.
+Reconcile (10) MUST wait for 5+9. Smoke (12) MUST wait for 9+10+7.
+Container (13) MUST wait for 10+11. Docs (14) last.
+```
+
+**Data / control flow at runtime:**
+
+```
+Consumer InvoiceableSourceInterface
+        → IssueInvoiceFromSource
+            → tryClaim (inv_events)
+            → validate draft
+            → InvoiceProviderRegistry → FacturapiInvoiceProvider
+            → markIssued | markNeedsReconcile (never release after remote success)
+        → on needs_reconcile: ReconcileIssuedInvoice (promote / safe return)
+        → consumer persists business side in dom_*
+```
+
+---
 
 ## Global Constraints
 
-- Spec path: `docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md` — follow it; do not invent `dom_*` or Portal use cases.
-- PHP floor: package `composer.json` and `skeleton/composer.json` must declare `"php": ">=8.2"`.
-- Dependency: `facturapi/facturapi-php` required in root `composer.json` (SDK v4).
-- Vertical key: `invoicing` — OFF (`false`) in harness `config/vertical.php` and `skeleton/config/vertical.php`.
-- SQL prefix: `inv_` only for platform tables in this module (`inv_events`, `inv_organizations`).
+- Spec + **Design amendments** above — do not invent `dom_*` or Portal use cases.
+- PHP floor: package `composer.json` and `skeleton/composer.json` → `"php": ">=8.2"`.
+- Dependency: `facturapi/facturapi-php` ^4 in root `composer.json` (same pattern as Stripe).
+- Vertical key: `invoicing` — OFF in harness + skeleton `config/vertical.php`.
+- SQL prefix: `inv_` only (`inv_events`, `inv_organizations`).
 - Namespace: `Lebytek\Framework\{Domain,Application,Infrastructure}\Invoicing\…`
 - Domain must not import `Facturapi\*` types.
 - CFDI scope v1: tipo **I** only.
 - Env: `FACTURAPI_SECRET_KEY`, `FACTURAPI_MODE=test`, `FACTURAPI_ENABLED=false`, `INVOICING_DEFAULT_PROVIDER=facturapi`.
-- Do not bump packaged semver `version` in `composer.json` in this plan; the release that ships this work must document PHP ≥8.2 (treat as **major** if any consumer still runs 8.1).
-- Harness tests: `php tests/run.php Invoicing` must pass; also re-run `SkeletonPurity` and `Payments` after Task 1.
 - No UI/menu/settings section in this plan.
+- Harness: `php tests/run.php Invoicing` must pass; after Task 1 also `SkeletonPurity` + `Payments`.
 
-## File Structure
+## File Structure (target)
 
 | Path | Responsibility |
 |------|----------------|
-| `composer.json` | PHP ≥8.2 + `facturapi/facturapi-php` |
-| `skeleton/composer.json` | PHP ≥8.2 |
+| `composer.json` / `skeleton/composer.json` | PHP ≥8.2; Facturapi dep (root) |
 | `config/vertical.php`, `skeleton/config/vertical.php` | `invoicing => false` |
 | `config/invoicing.php`, `skeleton/config/invoicing.php` | Provider map |
-| `config/modules/invoicing.php`, `skeleton/config/modules/invoicing.php` | Module manifest + bootstrap_sql |
-| `config/container.php`, `skeleton/config/container.php` | Gated DI bindings |
+| `config/modules/invoicing.php`, `skeleton/…` | Manifest + `bootstrap_sql` |
+| `config/container.php`, `skeleton/config/container.php` | Gated DI + conditional Issue |
 | `.env.example`, `skeleton/.env.example` | FACTURAPI_* stubs |
 | `database/schema/modules/invoicing.sql` | `inv_events`, `inv_organizations` |
 | `src/Domain/Invoicing/**` | Ports, VOs, enums, exceptions |
-| `src/Application/Invoicing/**` | Factory, registry, use cases, draft validator |
-| `src/Infrastructure/Invoicing/**` | Facturapi adapter, PDO repos, SDK transport |
-| `tests/Invoicing/**` | Module tests |
-| `tests/Kernel/SkeletonPurityTest.php` | Assert `invoicing` OFF |
-| `docs/modules/modulo-invoicing.md` | Consumer connection guide |
-| `docs/ARCHITECTURE-CONSUMER.md` | Ownership row |
-| `docs/core/table-prefix-convention.md` | `inv_` (+ note `pay_`) |
-| `docs/core/vertical-onboarding.md` | Mention `invoicing` toggle |
+| `src/Application/Invoicing/**` | Factory, registry, use cases, validator, reconcile |
+| `src/Infrastructure/Invoicing/**` | Facturapi adapter, PDO repos, transport |
+| `tests/Invoicing/**` | Module tests + contract + smoke |
+| `docs/modules/modulo-invoicing.md` | Consumer guide + runbook |
+| `docs/ARCHITECTURE-CONSUMER.md` | Ownership row + PHP 8.2 note |
+| `docs/core/table-prefix-convention.md` | `inv_` (+ `pay_`) |
+| `docs/core/vertical-onboarding.md` | `invoicing` toggle |
 
 ---
 
-### Task 1: PHP floor, Facturapi dep, vertical/config stubs
+### Task 1: Foundation — PHP floor, Facturapi dep, vertical stubs + spec pointer
 
-**Files:**
-- Modify: `composer.json`
-- Modify: `skeleton/composer.json`
-- Create: `config/invoicing.php`
-- Create: `skeleton/config/invoicing.php`
-- Create: `config/modules/invoicing.php`
-- Create: `skeleton/config/modules/invoicing.php`
-- Modify: `config/vertical.php`
-- Modify: `skeleton/config/vertical.php`
-- Modify: `.env.example`
-- Modify: `skeleton/.env.example`
+**Mission:** Turn on the empty `invoicing` module slot (OFF), raise the PHP floor, and point the design spec at this plan’s amendments so agents do not implement the softer pre-critique spec (D4).
+
+**Why this piece exists:** Later tasks assume vertical/config/Composer gates. The spec pointer prevents dual-source drift from the first commit.
+
+**Depends on:** nothing.  
+**Unblocks:** Tasks 2–14.
+
+**Owns:**
+- Modify: `composer.json`, `skeleton/composer.json`
+- Create: `config/invoicing.php`, `skeleton/config/invoicing.php`
+- Create: `config/modules/invoicing.php`, `skeleton/config/modules/invoicing.php`
+- Modify: `config/vertical.php`, `skeleton/config/vertical.php`
+- Modify: `.env.example`, `skeleton/.env.example`
 - Modify: `tests/Kernel/SkeletonPurityTest.php`
-- Test: `tests/Invoicing/InvoicingConfigTest.php` (create)
+- Create: `tests/Invoicing/InvoicingConfigTest.php`
+- Modify: `docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md` (**header only**: status + “Plan amendments A1–A10 supersede this spec where they disagree” + link to plan)
+- Update: `composer.lock` via composer
 
-**Interfaces:**
-- Consumes: nothing.
-- Produces: `vertical.modules.invoicing=false`; loadable `config/invoicing.php` shape; module manifest with `bootstrap_sql` → `database/schema/modules/invoicing.sql` (file may not exist yet until Task 4 — config test only asserts manifest keys).
+**Contract:**
+- `vertical.modules.invoicing=false`; provider disabled by default; manifest `bootstrap_sql` path set.
+- Spec header explicitly defers to plan amendments (D4).
 
-- [ ] **Step 1: Write failing config + purity tests**
+**Do not:** create `src/**/Invoicing/**`, SQL, or container bindings; do not rewrite the whole spec body.
 
-Create `tests/Invoicing/InvoicingConfigTest.php`:
+- [ ] **Step 1: Write failing tests** — `InvoicingConfigTest`; SkeletonPurity includes `invoicing` OFF; optional docs assert that the spec mentions `Design amendments` or `A1`.
+- [ ] **Step 2: Run** — expect FAIL.
+- [ ] **Step 3: Implement** composer/config/env/vertical + spec header pointer + `composer update facturapi/facturapi-php --with-all-dependencies`.
+- [ ] **Step 4: Run** InvoicingConfig + SkeletonPurity + Payments — PASS.
+- [ ] **Step 5: Commit** `feat(invoicing): PHP 8.2 floor, Facturapi dep, vertical OFF stubs`
 
-```php
-<?php
-declare(strict_types=1);
-
-test('config/modules/invoicing.php es un manifiesto válido', function (): void {
-    $m = require ROOT_PATH . '/config/modules/invoicing.php';
-    assert_same('invoicing', $m['clave']);
-    assert_same(false, $m['obligatorio']);
-    assert_same('database/schema/modules/invoicing.sql', $m['bootstrap_sql']);
-});
-
-test('config/invoicing.php declara provider facturapi deshabilitado por defecto', function (): void {
-    $cfg = require ROOT_PATH . '/config/invoicing.php';
-    assert_same(false, $cfg['providers']['facturapi']['enabled'] ?? null);
-    assert_same('facturapi', $cfg['default'] ?? null);
-});
-
-test('vertical harness tiene invoicing OFF', function (): void {
-    $v = require ROOT_PATH . '/config/vertical.php';
-    assert_same(false, $v['modules']['invoicing'] ?? null);
-});
-```
-
-In `tests/Kernel/SkeletonPurityTest.php`, extend the existing vertical test:
-
-```php
-test('skeleton vertical keeps marketing, payments and invoicing OFF', function () use ($skeleton): void {
-    $vertical = require $skeleton . '/config/vertical.php';
-    assert_same(false, $vertical['modules']['marketing'] ?? null);
-    assert_same(false, $vertical['modules']['payments'] ?? null);
-    assert_same(false, $vertical['modules']['invoicing'] ?? null);
-});
-```
-
-Rename/replace the old test name `skeleton vertical keeps marketing and payments OFF` so there is a single test (delete the old function to avoid duplicate).
-
-- [ ] **Step 2: Run tests to verify they fail**
-
-Run: `php tests/run.php Invoicing/InvoicingConfig`
-Expected: FAIL (missing `config/modules/invoicing.php` or key `invoicing`).
-
-Run: `php tests/run.php Kernel/SkeletonPurity`
-Expected: FAIL on missing `invoicing` key (or assertion false).
-
-- [ ] **Step 3: Implement stubs + composer bump**
-
-`composer.json` — set:
-
-```json
-"require": {
-    "php": ">=8.2",
-    "dompdf/dompdf": "^3.1",
-    "phpmailer/phpmailer": "^7.1",
-    "stripe/stripe-php": "^16.0",
-    "facturapi/facturapi-php": "^4.0"
-}
-```
-
-`skeleton/composer.json` — set `"php": ">=8.2"`.
-
-`config/vertical.php` and `skeleton/config/vertical.php` — add `'invoicing' => false` next to `'payments' => false`.
-
-Create `config/invoicing.php` and identical `skeleton/config/invoicing.php`:
-
-```php
-<?php
-declare(strict_types=1);
-
-use Lebytek\Framework\Kernel\EnvLoader;
-
-return [
-    'providers' => [
-        'facturapi' => [
-            'driver'  => 'facturapi',
-            'enabled' => (bool) EnvLoader::get('FACTURAPI_ENABLED', false),
-            'config'  => [
-                'secret_key' => EnvLoader::get('FACTURAPI_SECRET_KEY', ''),
-                'mode'       => EnvLoader::get('FACTURAPI_MODE', 'test'),
-            ],
-        ],
-    ],
-    'default' => EnvLoader::get('INVOICING_DEFAULT_PROVIDER', 'facturapi'),
-];
-```
-
-Create `config/modules/invoicing.php` and `skeleton/config/modules/invoicing.php`:
-
-```php
-<?php
-declare(strict_types=1);
-
-return [
-    'clave'         => 'invoicing',
-    'nombre'        => 'Facturación',
-    'descripcion'   => 'Puerto de facturación electrónica CFDI (Facturapi v1, tipo I).',
-    'version'       => '1.0.0',
-    'obligatorio'   => false,
-    'requiere'      => ['core'],
-    'migraciones'   => [],
-    'seeds'         => [],
-    'bootstrap_sql' => 'database/schema/modules/invoicing.sql',
-    'cruds'         => [],
-    'permisos'      => [],
-    'menu'          => [],
-    'providers'     => [],
-];
-```
-
-Append to `.env.example` (harness) and `skeleton/.env.example`:
-
-```env
-# ── Invoicing — Facturapi (CFDI) ──
-FACTURAPI_ENABLED=false
-FACTURAPI_SECRET_KEY=
-FACTURAPI_MODE=test
-INVOICING_DEFAULT_PROVIDER=facturapi
-```
-
-Run `composer update facturapi/facturapi-php --with-all-dependencies` (or `composer install`) so lockfile includes the SDK.
-
-- [ ] **Step 4: Run tests to verify they pass**
-
-Run: `php tests/run.php Invoicing/InvoicingConfig`
-Expected: PASS
-
-Run: `php tests/run.php Kernel/SkeletonPurity`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add composer.json composer.lock skeleton/composer.json \
-  config/invoicing.php skeleton/config/invoicing.php \
-  config/modules/invoicing.php skeleton/config/modules/invoicing.php \
-  config/vertical.php skeleton/config/vertical.php \
-  .env.example skeleton/.env.example \
-  tests/Invoicing/InvoicingConfigTest.php tests/Kernel/SkeletonPurityTest.php
-git commit -m "feat(invoicing): PHP 8.2 floor, Facturapi dep, vertical OFF stubs"
-```
+**Done when:** Gates green; spec header points at plan amendments.
 
 ---
 
-### Task 2: Domain value objects, enums, exceptions
+### Task 2: Domain vocabulary — VOs, enums, exceptions
 
-**Files:**
-- Create: `src/Domain/Invoicing/ValueObjects/Money.php`
-- Create: `src/Domain/Invoicing/ValueObjects/Address.php`
-- Create: `src/Domain/Invoicing/ValueObjects/FiscalCustomer.php`
-- Create: `src/Domain/Invoicing/ValueObjects/InvoiceItem.php`
-- Create: `src/Domain/Invoicing/ValueObjects/InvoiceDraft.php`
-- Create: `src/Domain/Invoicing/ValueObjects/IssuedInvoice.php`
-- Create: `src/Domain/Invoicing/ValueObjects/InvoiceCancellation.php`
-- Create: `src/Domain/Invoicing/ValueObjects/OrganizationSettings.php`
-- Create: `src/Domain/Invoicing/InvoiceStatus.php`
-- Create: `src/Domain/Invoicing/PaymentForm.php`
-- Create: `src/Domain/Invoicing/CfdiUse.php`
-- Create: `src/Domain/Invoicing/Exceptions/InvoiceSourceNotFound.php`
-- Create: `src/Domain/Invoicing/Exceptions/InvoiceDraftInvalid.php`
-- Create: `src/Domain/Invoicing/Exceptions/InvoiceProviderException.php`
-- Create: `src/Domain/Invoicing/Exceptions/InvoiceAlreadyProcessed.php`
-- Create: `src/Domain/Invoicing/Exceptions/InvoiceNotCancellable.php`
-- Test: `tests/Invoicing/InvoiceValueObjectsTest.php`
+**Mission:** Define the immutable language (drafts, money, statuses, errors) that ports and use cases share — with no Infrastructure types.
 
-**Interfaces:**
-- Consumes: Task 1 harness.
-- Produces: immutable VOs/enums used by ports and Application.
+**Why this piece exists:** Shared dictionary for all later layers; ports (Task 3) only reference these types.
 
-- [ ] **Step 1: Write failing VO tests**
+**Depends on:** Task 1.  
+**Unblocks:** Tasks 3, 5, 7, 9–12.
 
-```php
-<?php
-declare(strict_types=1);
+**Owns:**
+- Create: `src/Domain/Invoicing/ValueObjects/{Money,Address,FiscalCustomer,InvoiceItem,InvoiceTax,InvoiceDraft,IssuedInvoice,InvoiceCancellation,OrganizationSettings}.php`
+- Create: `src/Domain/Invoicing/{InvoiceStatus,PaymentForm,CfdiUse}.php`
+- Create: `src/Domain/Invoicing/Exceptions/{InvoiceSourceNotFound,InvoiceDraftInvalid,InvoiceProviderException,InvoiceAlreadyProcessed,InvoiceNotCancellable,InvoiceAmbiguousSource,InvoiceNeedsReconcile}.php`
+- Create: `tests/Invoicing/InvoiceValueObjectsTest.php`
 
-use Lebytek\Framework\Domain\Invoicing\CfdiUse;
-use Lebytek\Framework\Domain\Invoicing\InvoiceStatus;
-use Lebytek\Framework\Domain\Invoicing\PaymentForm;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\Address;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\FiscalCustomer;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceDraft;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceItem;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\Money;
+**Contract:**
+- `Money::fromMinor(int, string)`; uppercase currency; **no MXN hard-fail in Money** (A5).
+- `InvoiceItem`: `taxes: InvoiceTax[]`, `taxExempt: bool` (A4).
+- `InvoiceTax`: `rate`, `type` (e.g. `IVA`), `factor` as needed for mapping.
+- `InvoiceStatus`: `Draft`, `Pending`, `Valid`, `Canceled`, `NeedsReconcile`, `Unknown` (A7).
+- `InvoiceNeedsReconcile` exception for Issue path after remote success + local persist failure (A1).
+- `IssuedInvoice` holds provider id, uuid, status, optional folio/urls/sourceRef/meta.
 
-test('Money fromMajor MXN convierte a minor units', function (): void {
-    $m = Money::fromMajor(1375.99, 'MXN');
-    assert_same(137599, $m->amountMinor());
-    assert_same('MXN', $m->currency());
-});
+**Do not:** define ports; do not import SDK; do not write SQL.
 
-test('Money rechaza currency distinta de MXN en v1', function (): void {
-    assert_throws(\InvalidArgumentException::class, fn () => Money::fromMajor(10, 'USD'));
-});
+- [ ] **Step 1: Failing VO tests** (fromMinor; draft defaults; status known+unknown; tax line).
+- [ ] **Step 2: Run** — expect FAIL.
+- [ ] **Step 3: Implement** types.
+- [ ] **Step 4: Run** — PASS.
+- [ ] **Step 5: Commit** `feat(invoicing): domain VOs, enums, and exceptions`
 
-test('InvoiceDraft expone customer items paymentForm y defaults', function (): void {
-    $customer = new FiscalCustomer(
-        legalName: 'ACME SA DE CV',
-        taxId: 'AAA010101AAA',
-        taxSystem: '601',
-        address: new Address(zip: '06600'),
-        email: 'billing@acme.test',
-    );
-    $item = new InvoiceItem(
-        quantity: 1.0,
-        description: 'Servicio',
-        productKey: '80101500',
-        unitPrice: Money::fromMajor(100.0, 'MXN'),
-        unitKey: 'E48',
-    );
-    $draft = new InvoiceDraft(
-        sourceRef: 'order-1',
-        customer: $customer,
-        items: [$item],
-        paymentForm: PaymentForm::TransferenciaElectronica,
-    );
-    assert_same('order-1', $draft->sourceRef());
-    assert_same(CfdiUse::GastosGeneral, $draft->cfdiUse());
-    assert_same('MXN', $draft->currency());
-    assert_same(1, count($draft->items()));
-    assert_same(InvoiceStatus::Valid, InvoiceStatus::fromProvider('valid'));
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `php tests/run.php Invoicing/InvoiceValueObjects`
-Expected: FAIL (class not found).
-
-- [ ] **Step 3: Implement Domain types**
-
-`PaymentForm` (backed string enum — SAT codes used in scaffold):
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Domain\Invoicing;
-
-enum PaymentForm: string
-{
-    case Efectivo = '01';
-    case TransferenciaElectronica = '03';
-    case TarjetaCredito = '04';
-    case TarjetaDebito = '28';
-    case PorDefinir = '99';
-}
-```
-
-`CfdiUse`:
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Domain\Invoicing;
-
-enum CfdiUse: string
-{
-    case GastosGeneral = 'G01';
-    case SinEfectosFiscales = 'S01';
-}
-```
-
-`InvoiceStatus`:
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Domain\Invoicing;
-
-enum InvoiceStatus: string
-{
-    case Draft = 'draft';
-    case Pending = 'pending';
-    case Valid = 'valid';
-    case Canceled = 'canceled';
-
-    public static function fromProvider(string $raw): self
-    {
-        $normalized = strtolower(trim($raw));
-        return match ($normalized) {
-            'draft' => self::Draft,
-            'pending' => self::Pending,
-            'valid' => self::Valid,
-            'canceled', 'cancelled' => self::Canceled,
-            default => self::Pending,
-        };
-    }
-}
-```
-
-`Money` (local VO; uppercase `MXN`):
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Domain\Invoicing\ValueObjects;
-
-final readonly class Money
-{
-    private string $currency;
-
-    public function __construct(
-        private int $amountMinor,
-        string $currency,
-    ) {
-        $normalized = strtoupper($currency);
-        if ($normalized !== 'MXN') {
-            throw new \InvalidArgumentException('v1 invoicing only supports MXN currency');
-        }
-        $this->currency = $normalized;
-    }
-
-    public static function fromMajor(float $amount, string $currency): self
-    {
-        return new self((int) round($amount * 100), $currency);
-    }
-
-    public function amountMinor(): int { return $this->amountMinor; }
-    public function amountMajor(): float { return $this->amountMinor / 100; }
-    public function currency(): string { return $this->currency; }
-}
-```
-
-`Address`:
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Domain\Invoicing\ValueObjects;
-
-final readonly class Address
-{
-    public function __construct(
-        private string $zip,
-        private string $country = 'MEX',
-        private ?string $street = null,
-    ) {
-        if (trim($zip) === '') {
-            throw new \InvalidArgumentException('Address.zip is required');
-        }
-    }
-
-    public function zip(): string { return $this->zip; }
-    public function country(): string { return $this->country; }
-    public function street(): ?string { return $this->street; }
-}
-```
-
-`FiscalCustomer`, `InvoiceItem`, `InvoiceDraft`, `IssuedInvoice`, `InvoiceCancellation`, `OrganizationSettings` — constructors with getters; `InvoiceDraft` defaults `cfdiUse=CfdiUse::GastosGeneral`, `currency='MXN'`, `metadata=[]`; `IssuedInvoice` holds `providerInvoiceId`, `uuid`, `status: InvoiceStatus`, optional `folioNumber`, `sourceRef`, `pdfUrl`, `xmlUrl`, `meta: array`.
-
-Exceptions — each `final class X extends \RuntimeException` in `Exceptions/`.
-
-- [ ] **Step 4: Run tests to verify they pass**
-
-Run: `php tests/run.php Invoicing/InvoiceValueObjects`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/Domain/Invoicing tests/Invoicing/InvoiceValueObjectsTest.php
-git commit -m "feat(invoicing): domain VOs, enums, and exceptions"
-```
+**Done when:** VO tests green; Domain has zero Facturapi imports.
 
 ---
 
-### Task 3: Domain ports (interfaces)
+### Task 3: Domain ports — provider, source, ledger, org settings
 
-**Files:**
+**Mission:** Freeze interfaces, including reconcile read APIs needed by Task 10 (D1).
+
+**Why this piece exists:** Changing signatures after Task 5/7/10 is expensive. Include reconcile surface now so PDO and use cases do not invent ad-hoc queries later.
+
+**Depends on:** Task 2.  
+**Unblocks:** Tasks 5, 6, 7, 9, 10, 11.
+
+**Owns:**
 - Create: `src/Domain/Invoicing/InvoiceProviderInterface.php`
 - Create: `src/Domain/Invoicing/InvoiceableSourceInterface.php`
 - Create: `src/Domain/Invoicing/InvoiceEventLogRepositoryInterface.php`
 - Create: `src/Domain/Invoicing/OrganizationSettingsRepositoryInterface.php`
-- Test: `tests/Invoicing/InvoicePortsTest.php`
+- Create: `tests/Invoicing/InvoicePortsTest.php`
 
-**Interfaces:**
-- Consumes: Task 2 VOs.
-- Produces: exact method signatures for Infrastructure/Application.
+**Contract (method surface):**
 
-- [ ] **Step 1: Write failing reflection test**
+```text
+InvoiceProviderInterface:
+  key(): string
+  createInvoice(InvoiceDraft): IssuedInvoice
+  cancelInvoice(string $providerInvoiceId, InvoiceCancellation): IssuedInvoice
+  downloadPdf(string $providerInvoiceId): string
+  downloadXml(string $providerInvoiceId): string
+  sendByEmail(string $providerInvoiceId, string $email): void
 
-```php
-<?php
-declare(strict_types=1);
+InvoiceableSourceInterface:
+  findDraft(string $sourceRef): ?InvoiceDraft
 
-use Lebytek\Framework\Domain\Invoicing\InvoiceEventLogRepositoryInterface;
-use Lebytek\Framework\Domain\Invoicing\InvoiceProviderInterface;
-use Lebytek\Framework\Domain\Invoicing\InvoiceableSourceInterface;
-use Lebytek\Framework\Domain\Invoicing\OrganizationSettingsRepositoryInterface;
+InvoiceEventLogRepositoryInterface:
+  hasProcessed(provider, idempotencyKey): bool
+    # true when row exists with provider_invoice_id (issued OR needs_reconcile)
+  tryClaim(provider, idempotencyKey, sourceRef, type, meta=[]): bool
+  releaseClaim(provider, idempotencyKey): void
+  markIssued(provider, idempotencyKey, IssuedInvoice): void
+  markNeedsReconcile(provider, idempotencyKey, IssuedInvoice): void
+  findByIdempotencyKey(provider, idempotencyKey): ?IssuedInvoice
+  findIssuedBySourceRef(sourceRef): array   # 0..n; Application enforces A2
+  findNeedsReconcile(provider, limit=100): array  # list IssuedInvoice rows status=needs_reconcile (D1)
 
-test('InvoiceProviderInterface declara operaciones scaffold CFDI I', function (): void {
-    $ref = new ReflectionClass(InvoiceProviderInterface::class);
-    foreach (['key', 'createInvoice', 'cancelInvoice', 'downloadPdf', 'downloadXml', 'sendByEmail'] as $m) {
-        assert_true($ref->hasMethod($m), "missing {$m}");
-    }
-});
-
-test('InvoiceableSourceInterface expone findDraft', function (): void {
-    assert_true((new ReflectionClass(InvoiceableSourceInterface::class))->hasMethod('findDraft'));
-});
-
-test('InvoiceEventLogRepositoryInterface expone claim markIssued y lookups', function (): void {
-    $ref = new ReflectionClass(InvoiceEventLogRepositoryInterface::class);
-    foreach (['hasProcessed', 'tryClaim', 'releaseClaim', 'markIssued', 'findByIdempotencyKey', 'findBySourceRef'] as $m) {
-        assert_true($ref->hasMethod($m), "missing {$m}");
-    }
-});
-
-test('OrganizationSettingsRepositoryInterface expone get y upsert', function (): void {
-    $ref = new ReflectionClass(OrganizationSettingsRepositoryInterface::class);
-    assert_true($ref->hasMethod('get'));
-    assert_true($ref->hasMethod('upsert'));
-});
+OrganizationSettingsRepositoryInterface:
+  get(providerKey, externalOrgId=''): ?OrganizationSettings
+  upsert(OrganizationSettings): void
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+**Do not:** implement PDO/Facturapi; do not add use cases.  
+**Note (D9):** keep provider interface fat for v1; Task 14 documents possible future `SupportsInvoiceDocuments` split.
 
-Run: `php tests/run.php Invoicing/InvoicePorts`
-Expected: FAIL (interfaces missing).
+- [ ] **Step 1: Reflection tests** for methods above (include `findNeedsReconcile`).
+- [ ] **Step 2: Run** — expect FAIL.
+- [ ] **Step 3: Implement** interfaces.
+- [ ] **Step 4: Run** — PASS.
+- [ ] **Step 5: Commit** `feat(invoicing): domain ports for provider, source, and ledger`
 
-- [ ] **Step 3: Implement interfaces**
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Domain\Invoicing;
-
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceCancellation;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceDraft;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
-
-interface InvoiceProviderInterface
-{
-    public function key(): string;
-
-    public function createInvoice(InvoiceDraft $draft): IssuedInvoice;
-
-    public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice;
-
-    public function downloadPdf(string $providerInvoiceId): string;
-
-    public function downloadXml(string $providerInvoiceId): string;
-
-    public function sendByEmail(string $providerInvoiceId, string $email): void;
-}
-```
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Domain\Invoicing;
-
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceDraft;
-
-interface InvoiceableSourceInterface
-{
-    public function findDraft(string $sourceRef): ?InvoiceDraft;
-}
-```
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Domain\Invoicing;
-
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
-
-interface InvoiceEventLogRepositoryInterface
-{
-    public function hasProcessed(string $provider, string $idempotencyKey): bool;
-
-    /**
-     * @param array<string, mixed> $meta
-     */
-    public function tryClaim(
-        string $provider,
-        string $idempotencyKey,
-        string $sourceRef,
-        string $type,
-        array $meta = [],
-    ): bool;
-
-    public function releaseClaim(string $provider, string $idempotencyKey): void;
-
-    public function markIssued(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void;
-
-    public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice;
-
-    public function findBySourceRef(string $sourceRef): ?IssuedInvoice;
-}
-```
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Domain\Invoicing;
-
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\OrganizationSettings;
-
-interface OrganizationSettingsRepositoryInterface
-{
-    public function get(string $providerKey): ?OrganizationSettings;
-
-    public function upsert(OrganizationSettings $settings): void;
-}
-```
-
-- [ ] **Step 4: Run tests to verify they pass**
-
-Run: `php tests/run.php Invoicing/InvoicePorts`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/Domain/Invoicing tests/Invoicing/InvoicePortsTest.php
-git commit -m "feat(invoicing): domain ports for provider, source, and ledger"
-```
+**Done when:** Ports frozen including reconcile reads.
 
 ---
 
-### Task 4: Platform SQL `inv_*`
+### Task 4: Platform SQL — `inv_events` + `inv_organizations`
 
-**Files:**
+**Mission:** Idempotent DDL for ledger + org cache.
+
+**Why this piece exists:** Bootstrap path from Task 1; UNIQUE + status columns underpin A1/A3/A6 and `findNeedsReconcile`.
+
+**Depends on:** Task 1 (manifest); Task 3 preferred for column semantics.  
+**Unblocks:** Task 5.
+
+**Owns:**
 - Create: `database/schema/modules/invoicing.sql`
-- Test: `tests/Invoicing/InvoicingSchemaTest.php`
+- Create: `tests/Invoicing/InvoicingSchemaTest.php`
 
-**Interfaces:**
-- Consumes: Task 1 manifest `bootstrap_sql`.
-- Produces: idempotent DDL for `inv_events` and `inv_organizations`.
-
-- [ ] **Step 1: Write failing schema test**
-
-```php
-<?php
-declare(strict_types=1);
-
-test('invoicing bootstrap SQL crea inv_events e inv_organizations', function (): void {
-    $sql = (string) file_get_contents(ROOT_PATH . '/database/schema/modules/invoicing.sql');
-    assert_true(str_contains($sql, 'CREATE TABLE IF NOT EXISTS `inv_events`'));
-    assert_true(str_contains($sql, 'CREATE TABLE IF NOT EXISTS `inv_organizations`'));
-    assert_true(str_contains($sql, 'UNIQUE KEY `uq_inv_events_provider_idempotency`'));
-    assert_true(str_contains($sql, 'UNIQUE KEY `uq_inv_organizations_provider`'));
-    assert_true(! str_contains($sql, 'dom_'));
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `php tests/run.php Invoicing/InvoicingSchema`
-Expected: FAIL (file missing).
-
-- [ ] **Step 3: Write SQL**
+**Contract:**
 
 ```sql
--- database/schema/modules/invoicing.sql
--- Bootstrap del módulo Invoicing (plataforma). Idempotente.
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
+-- inv_events
+-- status: claimed | issued | needs_reconcile | canceled
+-- UNIQUE (provider, idempotency_key)
+-- INDEX (source_ref)
+-- INDEX (provider, status)  -- supports findNeedsReconcile
+-- provider_invoice_id / uuid / folio_number nullable until mark*
 
-CREATE TABLE IF NOT EXISTS `inv_events` (
-  `id`                   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `provider`             VARCHAR(40)     NOT NULL,
-  `idempotency_key`      VARCHAR(190)    NOT NULL,
-  `source_ref`           VARCHAR(64)     DEFAULT NULL,
-  `type`                 VARCHAR(60)     NOT NULL,
-  `provider_invoice_id`  VARCHAR(190)    DEFAULT NULL,
-  `uuid`                 VARCHAR(50)     DEFAULT NULL,
-  `folio_number`         VARCHAR(40)     DEFAULT NULL,
-  `status`               VARCHAR(40)     DEFAULT NULL,
-  `meta`                 JSON            DEFAULT NULL,
-  `created_at`           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_inv_events_provider_idempotency` (`provider`, `idempotency_key`),
-  KEY `idx_inv_events_source_ref` (`source_ref`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `inv_organizations` (
-  `id`               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `provider_key`     VARCHAR(40)     NOT NULL,
-  `external_org_id`  VARCHAR(190)    DEFAULT NULL,
-  `mode`             VARCHAR(16)     NOT NULL DEFAULT 'test',
-  `label`            VARCHAR(120)    DEFAULT NULL,
-  `meta`             JSON            DEFAULT NULL,
-  `created_at`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_inv_organizations_provider` (`provider_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-SET FOREIGN_KEY_CHECKS = 1;
+-- inv_organizations
+-- UNIQUE (provider_key, external_org_id)
+-- external_org_id VARCHAR NOT NULL DEFAULT ''
+-- mode, label, meta JSON
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+**Do not:** add `dom_*`; do not write PHP repos.
 
-Run: `php tests/run.php Invoicing/InvoicingSchema`
-Expected: PASS
+- [ ] **Step 1: Schema string tests** (tables, uniques, status, index provider+status, no `dom_`).
+- [ ] **Step 2: Run** — expect FAIL.
+- [ ] **Step 3: Write SQL** (MySQL 8 safe).
+- [ ] **Step 4: Run** — PASS.
+- [ ] **Step 5: Commit** `feat(invoicing): platform SQL inv_events and inv_organizations`
 
-Also re-run: `php tests/run.php Invoicing/InvoicingConfig`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add database/schema/modules/invoicing.sql tests/Invoicing/InvoicingSchemaTest.php
-git commit -m "feat(invoicing): platform SQL inv_events and inv_organizations"
-```
+**Done when:** Schema supports claim + reconcile listing.
 
 ---
 
-### Task 5: PDO repositories + in-memory doubles
+### Task 5: Infrastructure persistence — PDO + InMemory + ledger contract suite (D2)
 
-**Files:**
+**Mission:** Implement ledger/org ports and a **shared behavioral contract** so InMemory and PDO cannot diverge on A1 rules.
+
+**Why this piece exists:** Application tests use InMemory; production uses PDO. Without one contract suite, green unit tests can lie (D2).
+
+**Depends on:** Tasks 3 + 4.  
+**Unblocks:** Tasks 9, 10, 12, 13.
+
+**Owns:**
 - Create: `src/Infrastructure/Invoicing/PdoInvoiceEventLogRepository.php`
 - Create: `src/Infrastructure/Invoicing/PdoOrganizationSettingsRepository.php`
-- Test: `tests/Invoicing/InvoiceEventLogClaimDoubleTest.php`
-- Test: `tests/Invoicing/PdoInvoiceReposReflectionTest.php`
+- Create: `tests/Invoicing/Support/InMemoryInvoiceEventLog.php`
+- Create: `tests/Invoicing/Support/InvoiceEventLogContract.php` — `run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $events): void`
+- Create: `tests/Invoicing/InvoiceEventLogClaimDoubleTest.php` — runs contract on InMemory
+- Create: `tests/Invoicing/PdoInvoiceReposReflectionTest.php`
+- Create: `tests/Invoicing/PdoInvoiceEventLogContractTest.php` — runs **same** contract on PDO when DB available; otherwise skip with clear message (document skip condition)
 
-**Interfaces:**
-- Consumes: Task 3 ports, Task 2 `IssuedInvoice` / `OrganizationSettings`.
-- Produces: PDO impls + `InMemoryInvoiceEventLog` in the claim test file for later Application tests to copy/reuse (keep the in-memory class in the test file; Application tests in Task 8 may duplicate a small stub or require the same file’s class — put the in-memory helper in `tests/Invoicing/Support/InMemoryInvoiceEventLog.php` so Task 8 can `require` it… **better:** define `tests/Invoicing/Support/InMemoryInvoiceEventLog.php` and load it from tests that need it via `require_once`).
+**Contract — ledger behavior (must hold for every implementation):**
+- `tryClaim` INSERT `claimed`; duplicate → false.
+- `releaseClaim` DELETE only `claimed` **without** `provider_invoice_id`; no-op/refuse for issued/needs_reconcile.
+- `markIssued` → status `issued`.
+- `markNeedsReconcile` → status `needs_reconcile` with provider id set.
+- `findByIdempotencyKey` returns VO when provider id present (issued **or** needs_reconcile).
+- `findIssuedBySourceRef` returns all with provider id (id ASC).
+- `findNeedsReconcile` returns only `needs_reconcile` rows (limit honored).
+- `hasProcessed` true iff provider id present.
+- Status strings written by repos must be the allowlisted literals above (no free typos).
 
-- [ ] **Step 1: Write failing tests**
+**Do not:** call Facturapi; do not implement use cases.
 
-`tests/Invoicing/PdoInvoiceReposReflectionTest.php`:
+- [ ] **Step 1: Failing contract + reflection tests**.
+- [ ] **Step 2: Run** — expect FAIL.
+- [ ] **Step 3: Implement** PDO + InMemory + shared contract runner.
+- [ ] **Step 4: Run** `php tests/run.php Invoicing` — InMemory contract PASS; PDO contract PASS or intentional skip.
+- [ ] **Step 5: Commit** `feat(invoicing): PDO/InMemory ledger with shared contract tests`
 
-```php
-<?php
-declare(strict_types=1);
-
-test('PdoInvoiceEventLogRepository implementa el puerto de ledger', function (): void {
-    $ref = new ReflectionClass(\Lebytek\Framework\Infrastructure\Invoicing\PdoInvoiceEventLogRepository::class);
-    assert_true($ref->implementsInterface(\Lebytek\Framework\Domain\Invoicing\InvoiceEventLogRepositoryInterface::class));
-});
-
-test('PdoOrganizationSettingsRepository implementa el puerto de org settings', function (): void {
-    $ref = new ReflectionClass(\Lebytek\Framework\Infrastructure\Invoicing\PdoOrganizationSettingsRepository::class);
-    assert_true($ref->implementsInterface(\Lebytek\Framework\Domain\Invoicing\OrganizationSettingsRepositoryInterface::class));
-});
-```
-
-`tests/Invoicing/Support/InMemoryInvoiceEventLog.php` + claim tests mirroring Payments (store rows with optional `IssuedInvoice` after `markIssued`; `findByIdempotencyKey` returns issued only when `providerInvoiceId` set).
-
-- [ ] **Step 2: Run tests to verify they fail**
-
-Run: `php tests/run.php Invoicing/PdoInvoiceRepos`
-Expected: FAIL
-
-- [ ] **Step 3: Implement PDO repos**
-
-`PdoInvoiceEventLogRepository`:
-- `tryClaim`: `INSERT INTO inv_events (provider, idempotency_key, source_ref, type, meta)` — on duplicate key return `false` (same SQLSTATE handling as `PdoPaymentEventLogRepository`).
-- `releaseClaim`: `DELETE FROM inv_events WHERE provider=? AND idempotency_key=?`
-- `markIssued`: `UPDATE … SET provider_invoice_id, uuid, folio_number, status, meta, updated_at`
-- `findByIdempotencyKey` / `findBySourceRef`: map row → `IssuedInvoice` only if `provider_invoice_id` IS NOT NULL; `findBySourceRef` orders `id DESC LIMIT 1`.
-
-`PdoOrganizationSettingsRepository`:
-- `get`: SELECT by `provider_key`
-- `upsert`: `INSERT … ON DUPLICATE KEY UPDATE`
-
-Use `Lebytek\Framework\Kernel\Database\Connection::getInstance()` like Payments.
-
-- [ ] **Step 4: Run tests to verify they pass**
-
-Run: `php tests/run.php Invoicing`
-Expected: claim double + reflection PASS (Application tests not yet present).
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/Infrastructure/Invoicing tests/Invoicing
-git commit -m "feat(invoicing): PDO event log and organization settings repos"
-```
+**Done when:** A1 release/mark rules are asserted by one suite against InMemory; PDO implements the same port and is contract-tested when DB exists.
 
 ---
 
-### Task 6: Factory + registry
+### Task 6: Application — InvoiceProviderRegistry only
 
-**Files:**
+**Mission:** Lazy registry by key from injectable factories — no Facturapi imports.
+
+**Why this piece exists:** Decouples provider existence from SDK details. Task 8 fills it; Tasks 9–11 only call `get()`.
+
+**Depends on:** Task 3.  
+**Unblocks:** Tasks 8–11.
+
+**Owns:**
 - Create: `src/Application/Invoicing/InvoiceProviderRegistry.php`
-- Create: `src/Application/Invoicing/InvoicingFactory.php`
-- Test: `tests/Invoicing/InvoicingFactoryTest.php`
-- Test: `tests/Invoicing/InvoiceProviderRegistryTest.php`
+- Create: `tests/Invoicing/InvoiceProviderRegistryTest.php` (local `FakeInvoiceProvider`)
 
-**Interfaces:**
-- Consumes: `InvoiceProviderInterface`; will construct `FacturapiInvoiceProvider` (Task 7). For Task 6 only, factory `match` may throw `RuntimeException` for `facturapi` until Task 7 lands — **prefer implementing registry first with injectable definitions, then factory in same task after a minimal stub provider OR complete Task 7 before enabling factory match.**
+**Contract:** `has` / `get` (memoized) / `driver`; unknown key → `RuntimeException`.
 
-**Order inside this task:** implement registry + tests with a fake provider closure; factory builds real `FacturapiInvoiceProvider` only after Task 7. **Split:** Task 6 = registry + factory structure that references `FacturapiInvoiceProvider::class` — if class missing, combine factory wiring into Task 7. **Resolved:** Task 6 implements registry + factory with `match` → `new FacturapiInvoiceProvider($cfg)` and Task 7 implements that class first if needed.
+**Do not:** create `InvoicingFactory`; do not reference `FacturapiInvoiceProvider::class`.
 
-Adjust: **Task 6 implements registry only + tests with fake.** **Task 7 implements Facturapi provider + completes InvoicingFactory.**
+- [ ] **Step 1–5:** TDD registry; commit `feat(invoicing): invoice provider registry`
 
-- [ ] **Step 1: Write failing registry test**
-
-```php
-<?php
-declare(strict_types=1);
-
-use Lebytek\Framework\Application\Invoicing\InvoiceProviderRegistry;
-use Lebytek\Framework\Domain\Invoicing\InvoiceProviderInterface;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceCancellation;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceDraft;
-use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
-
-final class FakeInvoiceProvider implements InvoiceProviderInterface
-{
-    public function key(): string { return 'fake'; }
-    public function createInvoice(InvoiceDraft $draft): IssuedInvoice { throw new \RuntimeException('unused'); }
-    public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice { throw new \RuntimeException('unused'); }
-    public function downloadPdf(string $providerInvoiceId): string { return '%PDF'; }
-    public function downloadXml(string $providerInvoiceId): string { return '<xml/>'; }
-    public function sendByEmail(string $providerInvoiceId, string $email): void {}
-}
-
-test('InvoiceProviderRegistry resuelve lazy por key', function (): void {
-    $reg = new InvoiceProviderRegistry([
-        'fake' => [
-            'driver' => 'fake',
-            'factory' => static fn (): InvoiceProviderInterface => new FakeInvoiceProvider(),
-        ],
-    ]);
-    assert_true($reg->has('fake'));
-    assert_same('fake', $reg->get('fake')->key());
-    assert_throws(\RuntimeException::class, fn () => $reg->get('missing'));
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `php tests/run.php Invoicing/InvoiceProviderRegistry`
-Expected: FAIL
-
-- [ ] **Step 3: Implement `InvoiceProviderRegistry`**
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Application\Invoicing;
-
-use Lebytek\Framework\Domain\Invoicing\InvoiceProviderInterface;
-
-final class InvoiceProviderRegistry
-{
-    /** @var array<string, InvoiceProviderInterface> */
-    private array $resolved = [];
-
-    /**
-     * @param array<string, array{driver:string, factory:callable():InvoiceProviderInterface}> $definitions
-     */
-    public function __construct(private readonly array $definitions)
-    {
-    }
-
-    public function has(string $providerKey): bool
-    {
-        return isset($this->definitions[$providerKey]);
-    }
-
-    public function get(string $providerKey): InvoiceProviderInterface
-    {
-        if (!$this->has($providerKey)) {
-            throw new \RuntimeException("Proveedor de facturación no registrado: {$providerKey}");
-        }
-        if (!isset($this->resolved[$providerKey])) {
-            $factory = $this->definitions[$providerKey]['factory'];
-            $this->resolved[$providerKey] = $factory();
-        }
-        return $this->resolved[$providerKey];
-    }
-
-    public function driver(string $providerKey): string
-    {
-        return (string) ($this->definitions[$providerKey]['driver'] ?? 'unknown');
-    }
-}
-```
-
-- [ ] **Step 4: Run tests to verify they pass**
-
-Run: `php tests/run.php Invoicing/InvoiceProviderRegistry`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/Application/Invoicing/InvoiceProviderRegistry.php tests/Invoicing/InvoiceProviderRegistryTest.php
-git commit -m "feat(invoicing): invoice provider registry"
-```
+**Done when:** Registry tests green; zero Infrastructure\Invoicing imports.
 
 ---
 
-### Task 7: Facturapi adapter + factory
+### Task 7: Infrastructure — Facturapi adapter + golden tax fixtures (D5)
 
-**Files:**
+**Mission:** Domain ↔ Facturapi mapping behind a transport seam, with **golden payloads** for IVA 16% and tax-exempt items so tax mapping cannot drift silently.
+
+**Why this piece exists:** Only Infrastructure may know SDK types. Golden fixtures mitigate D5 without a SAT catalog.
+
+**Depends on:** Tasks 2 + 3.  
+**Unblocks:** Tasks 8, 12.
+
+**Owns:**
 - Create: `src/Infrastructure/Invoicing/Facturapi/FacturapiTransportInterface.php`
 - Create: `src/Infrastructure/Invoicing/Facturapi/SdkFacturapiTransport.php`
 - Create: `src/Infrastructure/Invoicing/FacturapiInvoiceProvider.php`
-- Create: `src/Application/Invoicing/InvoicingFactory.php`
-- Test: `tests/Invoicing/FacturapiInvoiceProviderTest.php`
-- Test: `tests/Invoicing/InvoicingFactoryTest.php`
+- Create: `tests/Invoicing/FacturapiInvoiceProviderTest.php`
+- Create: `tests/Invoicing/fixtures/facturapi_payload_iva16.json` (expected outbound shape keys)
+- Create: `tests/Invoicing/fixtures/facturapi_payload_exento.json`
 
-**Interfaces:**
-- Consumes: `InvoiceProviderInterface`, VOs, registry.
-- Produces: working `FacturapiInvoiceProvider` + `InvoicingFactory::registry()`.
+**Contract:**
+- Transport methods: create/cancel/pdf/xml/email (arrays/strings).
+- Provider `key() === 'facturapi'`; implements port; maps taxes + `taxExempt`.
+- Tests capture outbound payload via fake transport and assert against fixtures (stable keys: customer, items[].product, taxes, payment_form, use, currency).
+- Exceptions → `InvoiceProviderException` (no secrets).
 
-- [ ] **Step 1: Write failing provider + factory tests**
+**Do not:** factory/use cases/`inv_*`.
 
-Transport seam:
+- [ ] **Step 1: Failing tests** including fixture assertions.
+- [ ] **Step 2: Run** — expect FAIL.
+- [ ] **Step 3: Implement** adapter + fixtures.
+- [ ] **Step 4: Run** — PASS.
+- [ ] **Step 5: Commit** `feat(invoicing): Facturapi adapter with golden tax fixtures`
 
-```php
-<?php
-declare(strict_types=1);
-
-namespace Lebytek\Framework\Infrastructure\Invoicing\Facturapi;
-
-interface FacturapiTransportInterface
-{
-    /** @param array<string, mixed> $payload @return array<string, mixed> */
-    public function createInvoice(array $payload): array;
-
-    /** @param array<string, mixed> $payload @return array<string, mixed> */
-    public function cancelInvoice(string $invoiceId, array $payload): array;
-
-    public function downloadPdf(string $invoiceId): string;
-
-    public function downloadXml(string $invoiceId): string;
-
-    public function sendByEmail(string $invoiceId, ?string $email = null): void;
-}
-```
-
-Test with a fake transport that returns a fixed invoice array:
-
-```php
-$transport = new class implements FacturapiTransportInterface {
-    public function createInvoice(array $payload): array {
-        return [
-            'id' => 'inv_test_1',
-            'uuid' => 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE',
-            'folio_number' => 12,
-            'status' => 'valid',
-        ];
-    }
-    public function cancelInvoice(string $invoiceId, array $payload): array {
-        return ['id' => $invoiceId, 'uuid' => 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE', 'status' => 'canceled'];
-    }
-    public function downloadPdf(string $invoiceId): string { return '%PDF-fake'; }
-    public function downloadXml(string $invoiceId): string { return '<cfdi/>'; }
-    public function sendByEmail(string $invoiceId, ?string $email = null): void {}
-};
-$provider = new FacturapiInvoiceProvider(['secret_key' => 'sk_test', 'mode' => 'test'], $transport);
-$issued = $provider->createInvoice($validDraft);
-assert_same('inv_test_1', $issued->providerInvoiceId());
-assert_same('facturapi', $provider->key());
-```
-
-Factory test: `buildProviders` skips disabled; throws on unknown driver; enabled `facturapi` returns registry with key.
-
-- [ ] **Step 2: Run tests to verify they fail**
-
-Run: `php tests/run.php Invoicing/FacturapiInvoiceProvider`
-Expected: FAIL
-
-- [ ] **Step 3: Implement adapter + factory**
-
-`SdkFacturapiTransport` wraps `new \Facturapi\Facturapi($apiKey)` and maps:
-- `Invoices->create($payload)` → array via json encode/decode or `(array)` casting of object
-- `Invoices->cancel($id, $payload)`
-- `Invoices->downloadPdf` / `downloadXml`
-- `Invoices->sendByEmail($id, $email ? ['email' => $email] : [])`
-
-`FacturapiInvoiceProvider`:
-- ctor `(array $config, ?FacturapiTransportInterface $transport = null)`
-- Map `InvoiceDraft` → Facturapi payload with **inline** customer + inline product (no pre-created IDs):
-
-```php
-[
-  'customer' => [
-    'legal_name' => ...,
-    'tax_id' => ...,
-    'tax_system' => ...,
-    'email' => ...,
-    'address' => ['zip' => ..., 'country' => ...],
-  ],
-  'items' => [[
-    'quantity' => ...,
-    'product' => [
-      'description' => ...,
-      'product_key' => ...,
-      'price' => $item->unitPrice()->amountMajor(),
-      'unit_key' => ...,
-    ],
-  ]],
-  'payment_form' => $draft->paymentForm()->value,
-  'use' => $draft->cfdiUse()->value,
-  'currency' => $draft->currency(),
-]
-```
-
-Catch `\Facturapi\Exceptions\FacturapiException` → `InvoiceProviderException`.
-
-`InvoicingFactory` — mirror `PaymentsFactory` (`resetCached`, `registry`, `buildProviders`) with driver `facturapi` only; on build, if `OrganizationSettingsRepositoryInterface` is not injected, **skip** org upsert here (wire upsert in container Task 10 via optional call). Factory only builds providers.
-
-- [ ] **Step 4: Run tests to verify they pass**
-
-Run: `php tests/run.php Invoicing/FacturapiInvoiceProvider`
-Run: `php tests/run.php Invoicing/InvoicingFactory`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/Infrastructure/Invoicing src/Application/Invoicing/InvoicingFactory.php tests/Invoicing
-git commit -m "feat(invoicing): Facturapi provider adapter and factory"
-```
+**Done when:** IVA16 + exento fixtures green; Domain still SDK-free.
 
 ---
 
-### Task 8: `IssueInvoiceFromSource` + draft validation
+### Task 8: Application — InvoicingFactory (config → registry)
 
-**Files:**
+**Mission:** Build `InvoiceProviderRegistry` from `config/invoicing.php` (enabled drivers only).
+
+**Why this piece exists:** Connects Task 1 config + Task 6 registry + Task 7 provider for DI (Task 13).
+
+**Depends on:** Tasks 6 + 7.  
+**Unblocks:** Tasks 9–13.
+
+**Owns:**
+- Create: `src/Application/Invoicing/InvoicingFactory.php`
+- Create: `tests/Invoicing/InvoicingFactoryTest.php`
+
+**Contract:**
+- Mirror `PaymentsFactory`: `resetCached()`, `registry()`, `buildProviders()`.
+- Also add **`makeIssueInvoiceFromSource(InvoiceableSourceInterface $source): IssueInvoiceFromSource`** stub? → **No — add in Task 13** once Issue + Reconcile exist, to avoid forward-reference pain. Task 8 only registry building.
+- No org upsert here (Task 13).
+
+**Do not:** bind container; do not implement Issue yet.
+
+- [ ] **Step 1–5:** TDD factory; commit `feat(invoicing): InvoicingFactory builds provider registry`
+
+**Done when:** Enabled facturapi appears; disabled omitted; unknown driver throws.
+
+---
+
+### Task 9: Application — IssueInvoiceFromSource + draft validator (A1)
+
+**Mission:** Claim → source → validate → create → markIssued, with partial-failure safety (never release after remote success).
+
+**Why this piece exists:** Core consumer-facing write path; incorrect A1 = fiscal double-stamp.
+
+**Depends on:** Tasks 2, 3, 5, 6, 8.  
+**Unblocks:** Tasks 10, 12, 14.
+
+**Owns:**
 - Create: `src/Application/Invoicing/InvoiceDraftValidator.php`
 - Create: `src/Application/Invoicing/IssueInvoiceFromSource.php`
-- Test: `tests/Invoicing/IssueInvoiceFromSourceTest.php`
+- Create: `tests/Invoicing/IssueInvoiceFromSourceTest.php`
 
-**Interfaces:**
-- Consumes: `InvoiceableSourceInterface`, `InvoiceEventLogRepositoryInterface`, `InvoiceProviderRegistry`, exceptions, idempotency rules from spec.
-- Produces: `IssueInvoiceFromSource::handle(string $sourceRef, string $idempotencyKey, ?string $providerKey = null): IssuedInvoice`
+**Contract — validator:** `InvoiceDraftInvalid` on bad taxId/zip/legalName/items/qty/productKey; currency ≠ MXN; taxes missing unless `taxExempt`.
 
-- [ ] **Step 1: Write failing orchestration tests**
+**Contract — handle:**
 
-Cover:
-1. Happy path: source returns draft → provider create → markIssued → IssuedInvoice
-2. Source null → `InvoiceSourceNotFound`
-3. Invalid draft (empty taxId) → `InvoiceDraftInvalid` + `releaseClaim`
-4. Second call same idempotency key after success → returns previous IssuedInvoice (no second create)
-5. Claim exists without provider_invoice_id → `InvoiceAlreadyProcessed`
-
-Use `InMemoryInvoiceEventLog` from Support + Fake provider that counts `createInvoice` calls.
-
-- [ ] **Step 2: Run tests to verify they fail**
-
-Run: `php tests/run.php Invoicing/IssueInvoiceFromSource`
-Expected: FAIL
-
-- [ ] **Step 3: Implement validator + use case**
-
-`InvoiceDraftValidator::validate(InvoiceDraft $draft): void` throws `InvoiceDraftInvalid` if:
-- `taxId` empty or shorter than 12 chars
-- `zip` empty
-- `items` empty
-- any item missing `productKey` or non-positive quantity
-- `legalName` empty
-
-`IssueInvoiceFromSource` algorithm (exact):
-
-```php
-public function handle(string $sourceRef, string $idempotencyKey, ?string $providerKey = null): IssuedInvoice
-{
-    $providerKey ??= /* default from Config::get('invoicing.default', 'facturapi') */;
-    $provider = $this->registry->get($providerKey);
-    $claimed = $this->events->tryClaim($provider->key(), $idempotencyKey, $sourceRef, 'issue');
-    if (!$claimed) {
-        $existing = $this->events->findByIdempotencyKey($provider->key(), $idempotencyKey);
-        if ($existing !== null) {
-            return $existing;
-        }
-        throw new InvoiceAlreadyProcessed('Invoice claim in progress or incomplete for key ' . $idempotencyKey);
-    }
-    try {
-        $draft = $this->source->findDraft($sourceRef);
-        if ($draft === null) {
-            throw new InvoiceSourceNotFound('No invoiceable source for ref ' . $sourceRef);
-        }
-        $this->validator->validate($draft);
-        $issued = $provider->createInvoice($draft);
-        $this->events->markIssued($provider->key(), $idempotencyKey, $issued);
-        return $issued;
-    } catch (\Throwable $e) {
-        $this->events->releaseClaim($provider->key(), $idempotencyKey);
-        throw $e;
-    }
-}
+```text
+1. Resolve provider (default Config invoicing.default).
+2. tryClaim…
+   - false + findByIdempotencyKey has provider id → return existing (covers issued AND needs_reconcile replay)
+   - false + no provider id → InvoiceAlreadyProcessed
+3. try: findDraft → validate → createInvoice → markIssued → return
+4. catch:
+     if provider id already observed → markNeedsReconcile + throw InvoiceNeedsReconcile (NO release)
+     else → releaseClaim + rethrow
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+**Do not:** cancel/download; do not bind container; do not implement Reconcile (Task 10).
 
-Run: `php tests/run.php Invoicing/IssueInvoiceFromSource`
-Expected: PASS
+- [ ] **Step 1: Failing tests** including create-then-markIssued-failure.
+- [ ] **Step 2–4:** Implement until PASS.
+- [ ] **Step 5: Commit** `feat(invoicing): IssueInvoiceFromSource with safe idempotent claims`
 
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/Application/Invoicing tests/Invoicing/IssueInvoiceFromSourceTest.php tests/Invoicing/Support
-git commit -m "feat(invoicing): IssueInvoiceFromSource with idempotent claims"
-```
+**Done when:** A1 partial-failure test green; second handle does not call create again.
 
 ---
 
-### Task 9: Cancel, download, send use cases
+### Task 10: Application — ReconcileIssuedInvoice (D1)
 
-**Files:**
+**Mission:** Close the `needs_reconcile` hole with a safe promote/return use case and a list helper for ops — **no second create**.
+
+**Why this piece exists:** A1 without reconcile leaves zombie fiscal rows and invites dangerous Portal retries (D1).
+
+**Depends on:** Tasks 5 + 9.  
+**Unblocks:** Tasks 12, 13, 14 (runbook).
+
+**Owns:**
+- Create: `src/Application/Invoicing/ReconcileIssuedInvoice.php`
+- Create: `tests/Invoicing/ReconcileIssuedInvoiceTest.php`
+
+**Contract:**
+
+```text
+ReconcileIssuedInvoice::handle(string $idempotencyKey, ?string $providerKey = null): IssuedInvoice
+  - Load findByIdempotencyKey
+  - null → InvoiceSourceNotFound (or InvoiceAlreadyProcessed if claim exists without id — document choice: prefer InvoiceAlreadyProcessed for claimed-only)
+  - status issued (Valid/Canceled/etc. already finalized) → return as-is (idempotent)
+  - status needs_reconcile / InvoiceStatus::NeedsReconcile → markIssued (promote local row) → return
+  - NEVER call provider.createInvoice
+
+Optional thin: listNeedsReconcile(providerKey, limit) wrapping events.findNeedsReconcile for docs/ops examples.
+```
+
+**Do not:** call Facturapi retrieve/API sync in v1 (no remote pull); do not add UI/cron.
+
+- [ ] **Step 1: Failing tests** (promote needs_reconcile; replay issued; never create; claimed-only path).
+- [ ] **Step 2: Run** — expect FAIL.
+- [ ] **Step 3: Implement**.
+- [ ] **Step 4: Run** — PASS.
+- [ ] **Step 5: Commit** `feat(invoicing): ReconcileIssuedInvoice closes needs_reconcile safely`
+
+**Done when:** Promote path green; tests prove `createInvoice` is not called.
+
+---
+
+### Task 11: Application — Cancel, download, send (A2)
+
+**Mission:** Thin scaffold ops with strict id resolution (fail closed on ambiguous `source_ref`).
+
+**Why this piece exists:** Completes spec surface without Portal UI; shares `InvoiceIdResolver`.
+
+**Depends on:** Tasks 5, 6, 8, 9.  
+**Unblocks:** Task 13.
+
+**Owns:**
+- Create: `src/Application/Invoicing/InvoiceIdResolver.php`
 - Create: `src/Application/Invoicing/CancelIssuedInvoice.php`
 - Create: `src/Application/Invoicing/DownloadInvoiceDocument.php`
 - Create: `src/Application/Invoicing/SendInvoiceByEmail.php`
-- Test: `tests/Invoicing/InvoiceScaffoldUseCasesTest.php`
+- Create: `tests/Invoicing/InvoiceScaffoldUseCasesTest.php`
 
-**Interfaces:**
-- Consumes: registry, event log, `InvoiceCancellation`.
-- Produces:
-  - `CancelIssuedInvoice::handle(?string $providerInvoiceId, ?string $sourceRef, InvoiceCancellation $cancellation, ?string $providerKey = null): IssuedInvoice`
-  - `DownloadInvoiceDocument::handle(string $format, ?string $providerInvoiceId, ?string $sourceRef, ?string $providerKey = null): string` where `$format` is `pdf`|`xml`
-  - `SendInvoiceByEmail::handle(string $email, ?string $providerInvoiceId, ?string $sourceRef, ?string $providerKey = null): void`
+**Contract — InvoiceIdResolver:** provider id wins; else source_ref → 1 row ok / 0 not found / &gt;1 `InvoiceAmbiguousSource`.  
+Cancel → provider cancel → audit claim best-effort; map not-cancellable. Download pdf|xml. Send delegates.
 
-Resolution helper (private or shared small class `InvoiceIdResolver`): if `providerInvoiceId` null, require `sourceRef` and `findBySourceRef`; if still null throw `InvoiceSourceNotFound`.
+**Do not:** webhooks/UI; do not reconcile here.
 
-Cancel flow (explicit): resolve id → `provider->cancelInvoice` → `tryClaim(provider, 'cancel:'.$id, sourceRef ?: $id, 'cancel')`; if claim succeeds, `markIssued` with canceled `IssuedInvoice`; if claim is false, ignore (audit best-effort). Do not `releaseClaim` on cancel audit failure.
+- [ ] **Step 1–5:** TDD; commit `feat(invoicing): cancel, download, and email scaffold use cases`
 
-- [ ] **Step 1: Write failing tests** for cancel→canceled status, pdf bytes, xml bytes, sendByEmail invokes transport/provider.
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `php tests/run.php Invoicing/InvoiceScaffoldUseCases`
-Expected: FAIL
-
-- [ ] **Step 3: Implement the three use cases**
-
-- [ ] **Step 4: Run tests to verify they pass**
-
-Run: `php tests/run.php Invoicing/InvoiceScaffoldUseCases`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/Application/Invoicing tests/Invoicing/InvoiceScaffoldUseCasesTest.php
-git commit -m "feat(invoicing): cancel, download, and email scaffold use cases"
-```
+**Done when:** Ambiguous source fails closed; cancel/download/email covered.
 
 ---
 
-### Task 10: Container bindings + org settings sync
+### Task 12: Smoke integration — Issue + Reconcile + fake transport (D6)
 
-**Files:**
-- Modify: `config/container.php`
-- Modify: `skeleton/config/container.php`
-- Create: `src/Application/Invoicing/SyncOrganizationSettingsFromConfig.php` (optional thin)
-- Test: `tests/Invoicing/InvoicingContainerBindingsTest.php`
+**Mission:** One harness test file that wires real Application classes together (InMemory ledger + Fake/Facturapi provider with fake transport + Issue + Reconcile) to prove the vertical story end-to-end without MySQL or network.
 
-**Interfaces:**
-- Consumes: factory, repos, use cases, `InvoiceableSourceInterface` **not** bound in Framework harness (consumer binds it). Framework binds:
-  - `InvoiceProviderRegistry`
-  - `InvoiceEventLogRepositoryInterface` → PDO
-  - `OrganizationSettingsRepositoryInterface` → PDO
-  - `IssueInvoiceFromSource`, `CancelIssuedInvoice`, `DownloadInvoiceDocument`, `SendInvoiceByEmail` only if a source is bound — **problem:** IssueInvoiceFromSource needs a source.
+**Why this piece exists:** Tasks 5–11 can each be green while the composition is wrong (D6). This smoke is the pre-DI integration gate.
 
-**Resolved approach:** Framework container binds registry + repos + use cases that do **not** need source. For `IssueInvoiceFromSource`, bind only when consumer registers `InvoiceableSourceInterface`. In harness `config/container.php`, bind registry + repos; document that consumer must bind source + `IssueInvoiceFromSource`.
+**Depends on:** Tasks 7, 9, 10 (and 5, 6).  
+**Unblocks:** Task 13 confidence; Task 14 “verified flow” docs.
 
-Alternatively bind `IssueInvoiceFromSource` with a `NullInvoiceableSource` that always returns null — **reject** (surprising). Prefer: bind registry + event log + org repo + cancel/download/send; leave `IssueInvoiceFromSource` and `InvoiceableSourceInterface` for consumer docs.
+**Owns:**
+- Create: `tests/Invoicing/InvoicingSmokeTest.php`
+- May reuse Support fakes; **do not** add production code unless a tiny test-only helper is required (prefer none).
 
-Also on registry resolution, upsert org settings from config mode:
+**Contract — scenarios:**
+1. Happy issue → issued status → download path optional skip.
+2. Issue with markIssued failure simulation → `InvoiceNeedsReconcile` → `ReconcileIssuedInvoice` promotes → subsequent Issue same key returns issued **without** second create.
+3. Ambiguous source_ref not required here (covered in Task 11).
 
-```php
-$org = new OrganizationSettings(
-    providerKey: 'facturapi',
-    externalOrgId: null,
-    mode: (string) ($cfg['mode'] ?? 'test'),
-    label: 'Facturapi',
-    meta: [],
-);
-$orgRepo->upsert($org);
-```
+**Do not:** hit real Facturapi; do not enable vertical in config.
 
-Call this inside the container singleton factory after building registry (read mode from `Config::get('invoicing.providers.facturapi.config.mode')`).
+- [ ] **Step 1: Write failing smoke tests**.
+- [ ] **Step 2: Run** — expect FAIL if wiring gaps.
+- [ ] **Step 3: Fix only if a prior task left a composability bug** (prefer fix in owning layer + re-smoke).
+- [ ] **Step 4: Run** `php tests/run.php Invoicing/InvoicingSmoke` — PASS.
+- [ ] **Step 5: Commit** `test(invoicing): smoke Issue+Reconcile against fake transport`
 
-- [ ] **Step 1: Write failing test** that `config/container.php` source contains `vertical.modules.invoicing` and `InvoiceProviderRegistry::class`.
-
-```php
-test('harness container.php declara bloque invoicing gated', function (): void {
-    $src = (string) file_get_contents(ROOT_PATH . '/config/container.php');
-    assert_true(str_contains($src, "vertical.modules.invoicing"));
-    assert_true(str_contains($src, 'InvoiceProviderRegistry::class'));
-    assert_true(str_contains($src, 'InvoiceEventLogRepositoryInterface::class'));
-});
-
-test('skeleton container.php declara bloque invoicing gated', function (): void {
-    $src = (string) file_get_contents(ROOT_PATH . '/skeleton/config/container.php');
-    assert_true(str_contains($src, "vertical.modules.invoicing"));
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `php tests/run.php Invoicing/InvoicingContainerBindings`
-Expected: FAIL
-
-- [ ] **Step 3: Add gated bindings** (mirror payments block) in harness + skeleton `container.php`.
-
-- [ ] **Step 4: Run tests to verify they pass**
-
-Run: `php tests/run.php Invoicing/InvoicingContainerBindings`
-Run: `php tests/run.php Kernel/SkeletonPurity`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add config/container.php skeleton/config/container.php \
-  src/Application/Invoicing/SyncOrganizationSettingsFromConfig.php \
-  tests/Invoicing/InvoicingContainerBindingsTest.php
-git commit -m "feat(invoicing): gated container bindings and org settings sync"
-```
+**Done when:** Smoke proves A1 → reconcile → no double create.
 
 ---
 
-### Task 11: Documentation
+### Task 13: Container — gated DI, org sync, conditional Issue bind (D3)
 
-**Files:**
+**Mission:** Wire platform services when vertical ON; bind `IssueInvoiceFromSource` **only if** consumer registered `InvoiceableSourceInterface`; expose factory helper to avoid hand-wired graphs.
+
+**Why this piece exists:** Asymmetric DX (cancel bound, Issue not) causes miswiring debt (D3). Conditional bind + helper keeps Null-source out of harness while making the happy path hard to get wrong.
+
+**Depends on:** Tasks 5, 8, 10, 11.  
+**Unblocks:** Task 14; runtime enablement.
+
+**Owns:**
+- Modify: `config/container.php`, `skeleton/config/container.php`
+- Modify: `src/Application/Invoicing/InvoicingFactory.php` — add `makeIssueInvoiceFromSource(InvoiceableSourceInterface $source): IssueInvoiceFromSource` (and optionally `makeReconcileIssuedInvoice(): ReconcileIssuedInvoice`)
+- Create: `src/Application/Invoicing/SyncOrganizationSettingsFromConfig.php`
+- Create: `tests/Invoicing/InvoicingContainerBindingsTest.php`
+- Create: `tests/Invoicing/InvoicingFactoryIssueHelperTest.php`
+
+**Contract:**
+- Gate: `vertical.modules.invoicing`.
+- Always (when gated): registry, event log PDO, org PDO, validator, Cancel/Download/Send, **ReconcileIssuedInvoice**.
+- Conditional: if container has `InvoiceableSourceInterface`, bind `IssueInvoiceFromSource` via factory helper.
+- Harness: **do not** bind a Null source; tests assert conditional snippet exists in container source.
+- Org upsert default `(facturapi, external_org_id='')` after registry build.
+- Helper unit test: `makeIssueInvoiceFromSource` returns instance wired with registry+events+validator.
+
+**Do not:** enable vertical; no menu/permisos.
+
+- [ ] **Step 1: Failing container string tests + helper test**.
+- [ ] **Step 2: Run** — expect FAIL.
+- [ ] **Step 3: Implement** bindings + helper + sync.
+- [ ] **Step 4: Run** container/helper + SkeletonPurity — PASS.
+- [ ] **Step 5: Commit** `feat(invoicing): gated DI, reconcile bind, conditional Issue helper`
+
+**Done when:** Reconcile bound; Issue conditional; helper tested; purity OFF.
+
+---
+
+### Task 14: Documentation — guide, runbook, release strategy, residuals
+
+**Mission:** Consumer connection docs + ops runbook for `needs_reconcile` + PHP release strategy + explicit accepted debt (D7/D8/D9/D10).
+
+**Why this piece exists:** Module is unusable glue without docs; amendments must live outside the plan archive; release note prevents surprise majors.
+
+**Depends on:** Tasks 1–13 (APIs stable).  
+**Unblocks:** plan closure / consumer enablement.
+
+**Owns:**
 - Create: `docs/modules/modulo-invoicing.md`
 - Modify: `docs/ARCHITECTURE-CONSUMER.md`
 - Modify: `docs/core/table-prefix-convention.md`
 - Modify: `docs/core/vertical-onboarding.md`
-- Modify: `docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md` (status → plan ready / implemented when done)
-- Test: `tests/Invoicing/InvoicingDocsTest.php`
+- Modify: `docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md` (status → plan-ready/implemented; keep amendments pointer)
+- Create: `tests/Invoicing/InvoicingDocsTest.php`
 
-**Interfaces:**
-- Consumes: all prior deliverables.
-- Produces: consumer checklist to implement source → bind → enable vertical → emit in test mode.
-
-- [ ] **Step 1: Write failing docs presence test**
-
-```php
-<?php
-declare(strict_types=1);
-
-test('modulo-invoicing.md documenta source bind y vertical', function (): void {
-    $doc = (string) file_get_contents(ROOT_PATH . '/docs/modules/modulo-invoicing.md');
-    assert_true(str_contains($doc, 'InvoiceableSourceInterface'));
-    assert_true(str_contains($doc, 'vertical.modules.invoicing'));
-    assert_true(str_contains($doc, 'FACTURAPI_SECRET_KEY'));
-    assert_true(str_contains($doc, 'IssueInvoiceFromSource'));
-});
-
-test('ARCHITECTURE-CONSUMER menciona Invoicing', function (): void {
-    $doc = (string) file_get_contents(ROOT_PATH . '/docs/ARCHITECTURE-CONSUMER.md');
-    assert_true(str_contains($doc, 'Invoicing'));
-});
-
-test('table-prefix-convention documenta inv_', function (): void {
-    $doc = (string) file_get_contents(ROOT_PATH . '/docs/core/table-prefix-convention.md');
-    assert_true(str_contains($doc, '`inv_`'));
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `php tests/run.php Invoicing/InvoicingDocs`
-Expected: FAIL
-
-- [ ] **Step 3: Write docs**
-
-`docs/modules/modulo-invoicing.md` must include:
-1. What Framework owns vs consumer
+**Contract — modulo-invoicing.md must include:**
+1. Framework vs consumer ownership (no shared Money with Payments — D8)
 2. Env vars table
-3. Enable vertical + bootstrap SQL note
-4. Minimal `InvoiceableSourceInterface` example class
-5. `container.php` bindings for source + `IssueInvoiceFromSource`
-6. Call sequence for test-mode emission
-7. PHP ≥8.2 requirement
+3. Enable vertical + bootstrap SQL
+4. Minimal `InvoiceableSourceInterface` example
+5. Bind source + rely on conditional `IssueInvoiceFromSource` **or** `InvoicingFactory::makeIssueInvoiceFromSource`
+6. Test-mode emission sequence
+7. **Runbook A1/D1:** on `InvoiceNeedsReconcile` → call `ReconcileIssuedInvoice`; never re-issue with new idempotency key until ops confirms
+8. A2 resolution rules
+9. **Release strategy (D7/A9):** recommend major for PHP ≥8.2; note Facturapi follows Stripe `require` pattern (accepted dep weight)
+10. Future: webhooks / `RefreshInvoiceStatus` (D10); optional ISP split for documents (D9)
+11. Invariants list promoting A1–A3 (survive plan archive)
 
-Update `ARCHITECTURE-CONSUMER.md` ownership table:
+**Do not:** Portal membership/checkout docs.
 
-| Concern | Owner | Namespace / path |
-| Invoicing generic (Facturapi, inv_* ledger, source port) | **Framework** | `Lebytek\Framework\Domain\Invoicing\`, OFF by default |
-| Domain invoice entities, when-to-stamp rules, UI | **Consumer** | `App\…`, `dom_*` |
+- [ ] **Step 1: Failing docs tests** (source bind, reconcile runbook, PHP ≥8.2, `inv_`, Invoicing ownership).
+- [ ] **Step 2: Run** — expect FAIL.
+- [ ] **Step 3: Write/update docs**.
+- [ ] **Step 4: Run** `php tests/run.php Invoicing`, `Kernel/SkeletonPurity`, `Payments` — all PASS.
+- [ ] **Step 5: Commit** `docs(invoicing): module guide, reconcile runbook, release notes`
 
-`table-prefix-convention.md` — add platform module prefixes section:
-
-| Prefijo | Rol |
-| `pay_` | Módulo Payments (p. ej. `pay_events`) |
-| `inv_` | Módulo Invoicing (p. ej. `inv_events`, `inv_organizations`) |
-
-`vertical-onboarding.md` §3 — mention optional modules `payments` / `invoicing` stay `false` until configured.
-
-- [ ] **Step 4: Run full Invoicing suite + purity**
-
-Run: `php tests/run.php Invoicing`
-Expected: all PASS
-
-Run: `php tests/run.php Kernel/SkeletonPurity`
-Expected: PASS
-
-Run: `php tests/run.php Payments`
-Expected: PASS (no regressions)
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add docs/modules/modulo-invoicing.md docs/ARCHITECTURE-CONSUMER.md \
-  docs/core/table-prefix-convention.md docs/core/vertical-onboarding.md \
-  docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md \
-  tests/Invoicing/InvoicingDocsTest.php
-git commit -m "docs(invoicing): module guide and architecture ownership"
-```
+**Done when:** Docs tests green; full Invoicing suite green; Payments untouched.
 
 ---
 
-## Spec coverage checklist (self-review)
+## Spec coverage checklist
 
-| Spec requirement | Task |
-|------------------|------|
+| Requirement | Task |
+|-------------|------|
 | Vertical OFF + config/env | 1 |
-| PHP ≥8.2 + facturapi SDK | 1, 7 |
-| Domain ports + VOs + exceptions | 2, 3 |
-| `inv_events` / `inv_organizations` | 4, 5 |
-| Facturapi create/cancel/pdf/xml/email | 7, 9 |
-| `InvoiceableSourceInterface` + `IssueInvoiceFromSource` | 3, 8 |
-| Idempotency rules | 5, 8 |
-| Factory/registry | 6, 7 |
-| Container gated bindings | 10 |
-| Docs + prefix + ARCHITECTURE | 11 |
-| CFDI I only / no dom_* / no webhooks | enforced by scope of tasks |
-| Skeleton purity | 1, 10 |
-| Tests `Invoicing/*` | 1–11 |
+| Spec amendments pointer (D4) | 1, 14 |
+| PHP ≥8.2 + Facturapi SDK | 1, 7, 14 |
+| Domain VOs/enums/exceptions | 2 |
+| Domain ports + reconcile reads | 3 |
+| `inv_*` SQL + status index | 4 |
+| PDO + InMemory + **contract suite (D2)** | 5 |
+| Registry | 6 |
+| Facturapi + **golden taxes (D5)** | 7 |
+| Factory | 8 |
+| Issue + validator + A1 | 9 |
+| **Reconcile (D1)** | 10 |
+| Cancel/download/email + A2 | 11 |
+| **Smoke composition (D6)** | 12 |
+| Gated DI + **conditional Issue (D3)** | 13 |
+| Docs + runbook + release + residuals | 14 |
+| CFDI I only / no dom_* / no webhooks | scope |
+| Skeleton purity | 1, 13, 14 |
 
 ## Deviations / notes for implementers
 
-1. **`IssueInvoiceFromSource` is not auto-bound** without a consumer `InvoiceableSourceInterface` — documented in Task 10/11 (avoids Null source).
-2. **Org cache v1** stores `mode` from env/config; `external_org_id` remains null until a future Organizations retrieve call.
-3. **Inline customer/product** in Facturapi payload (no separate Customers/Products sync API in v1).
-4. Cloud agents without PHP must install PHP ≥8.2 before running harness steps.
+1. **Consumer must bind `InvoiceableSourceInterface`**; Framework binds Issue only when that port is present (Task 13 helper).
+2. **Org cache v1** uses `external_org_id=''` sentinel; map `null → ''` only in PDO.
+3. **Inline customer/product** in Facturapi payload (no Customers/Products sync in v1).
+4. **A1 + Task 10 reconcile are release blockers** — do not ship Issue without Reconcile + smoke.
+5. **PDO contract tests** may skip without DB; InMemory contract is mandatory in unit harness.
+6. Cloud agents need PHP ≥8.2 before harness steps.
+
+## Estado de ejecución
+
+- **Reconciled:** 2026-08-07 (plan restructured + debt mitigations; not yet executed).
+- **Completed / total:** 0 / 14
+- **Next executable task:** Task 1 (Foundation + spec pointer)
+- **Blockers:** none for Task 1; human chooses execution mode.
+- **Note:** Evolved from PR #91 (11 tasks) → critique restructure (12) → **14 tasks** with D1–D7 mitigations ordered into the critical path.
