@@ -31,9 +31,9 @@
 | SHA Portal inspeccionado | **No verificado** — `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404; `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository». Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-08` |
-| Timestamp UTC | trigger cron `2026-08-08T12:10:00Z` / corrida agente `2026-08-08T12:10:00Z` |
+| Timestamp UTC | trigger cron `2026-08-08T12:10:00Z` / corrida agente `2026-08-08T12:10:00Z` / pase ux `2026-08-08T12:30:00Z` (modo **sin superficie UI**) |
 | Nivel de fuente | **B** — rama `origin/automation/audit-2026-08-08` @ `bf4b7fc`; **no** hubo PR abierto `docs(audit):` elegible (Nivel A vacío). Verificaciones: `merge-base --is-ancestor origin/main bf4b7fc` → exit 0; diff `origin/main...bf4b7fc` → único archivo `docs/audits/2026-08-08-auditoria-tecnica-diaria.md`; ningún commit legacy ancestro del head audit. |
-| PR auditoría fuente | **Ausente** — rama audit sin PR al momento de la corrida |
+| PR auditoría fuente | #104 `docs(audit): auditoría técnica diaria 2026-08-08` |
 | headRefOid fuente | `bf4b7fccf2a93c4b65394638c8df5cc68f30bbe2` (rama audit; no heredada) |
 | `<LEGACY_REF>` | `refs/tags/archive/backoffice-api-integration` @ `4789f953ef746d17bae2e6b50c85504782d306e3` — 53 commits exclusivos; ninguno ancestro de HEAD ni del head audit |
 | Issues abiertos Framework | **0** (`gh issue list --repo Parzival2103/Lebytek_Framework --state open` → vacío) |
@@ -288,6 +288,65 @@ Operaciones rollback producción — **fuera de automation**.
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: sin superficie UI
+
+Este spec trata exclusivamente **publicación semver del paquete Composer** (`git tag`, test gate
+`ReleaseTagPublishedTest`, release notes, retarget planes M3/M4). No introduce ni modifica pantallas
+login/dashboard/CRUD, assets CSS ni layouts admin. **Sin superficie UI en este spec.**
+
+Los requisitos K/U/R siguientes documentan (a) compatibilidad verificada para el alcance release/harness
+y (b) **carry-forward UX** — ítems concretos que el próximo spec con superficie UI debe cubrir, derivados
+de deuda abierta real (M3–M6, D6; **CF1 parcial cubierto** por gate tag publicado; CF6 cubierto spec
+2026-08-06).
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (F1–F6) | Evidencia / carry-forward |
+|------|-------------------|---------------------------|
+| PHP soportado | **Bump explícito ≥8.2** | `composer.json` y `skeleton/composer.json` exigen `>=8.2` (invoicing #99); VPS documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`) — compatible. Consumidores en **8.1 deben subir runtime antes** de bump a `1.2.7`; release notes y fallo `composer update` deben ser explícitos (U3). |
+| Instalación vía `vendor/` | **Alcance principal REL-C1** | Consumidores instalan fixes AuthZ/states **sólo** tras tag `v1.2.7` publicado + bump lock — **no** checkout de rama ni parche en `vendor/`. Contrato: `"lebytek/framework": "^1.2"` o pin `"1.2.7"`. Hoy tag `v1.2.3` @ `041e402` no contiene `64a6877` ni `60477dc`. |
+| Health sin cookie de sesión | Sin alcance (M4 abierto) | `/api/health` público ausente; `/api/ping` exige sesión. Carry-forward **CF7** — spec/plan M4 2026-08-05 (**0/5**). Smoke post-tag no sustituye liveness LB. |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` L53–55 remite `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` a Portal; vars `FACTURAPI_*` son plataforma (vertical OFF). Tag release no introduce env vars Portal. |
+| Navegadores objetivo | N/A en este spec | Carry-forward: Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15 para admin; sin IE11. Baseline `docs/core/ui_ux.md`. |
+
+### UX — flujos operativos release y documentación (alcance de este spec)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | Release notes / CHANGELOG: listan AuthZ C1/C2/C5, states C3, invoicing scaffold **OFF**, PHP ≥8.2, skip explícito `v1.2.4`–`v1.2.6` — operador entiende qué incluye el tag y qué no | F4 |
+| **U2** | `ReleaseTagPublishedTest`: mensaje de fallo cita spec REL-C1, versión en `composer.json` y acción («publicar `git tag vX.Y.Z` desde commit con CI green») | F1 |
+| **U3** | `composer update` en PHP 8.1: mensaje Composer indica require `>=8.2` y acción («actualizar runtime PHP antes de bump a 1.2.7») — no fallo opaco | F4, compat PHP |
+| **U4** | Checklist § `despliegue-y-versionado.md`: pasos ordenados (tests verdes → tag → push → verificar Packagist/VCS) con copy-paste — operador no adivina secuencia | F2 |
+| **U5** | Tabla semver frontera (§ Dependencias): operador distingue «tag publicado» vs «capacidad futura M3/M4 en 1.2.8+» vs «Facturapi prod post-hardening» — evita habilitación prematura INV-E1/E2 | F4, F5 |
+| **U6** | Rollback doc: escenario «tag erróneo» indica **no** force-push tags y acción forward (`v1.2.8` patch) — no sólo «algo falló» | § Rollback |
+
+### Carry-forward UX — próximo spec con superficie UI
+
+Ítems derivados de deuda abierta verificada; **CF1 parcial (tag publicado gate) queda cubierto por este spec**
+— no arrastrar como hueco semver. CF6 (RBAC router CRUD/calendario) cubierto spec 2026-08-06 — no
+arrastrar. CF1–CF2 (trío semver harness + env purge), CF5 parcial (`mkt_leads` spec 2026-08-03) y D7 (CI
+spec 2026-08-04) tampoco se arrastran.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF7 | Health endpoint público | M4 | `GET /api/health` 200 sin cookie; body `{ "status": "ok" }`; checklist VPS — spec/plan 2026-08-05 (**0/5**). |
+| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer — extiende U2 fuera de release gate. |
+| CF11 | Pantalla estado sistema post-tag | O2, D6 | `/admin/sistema/estado` muestra `v1.2.7` legible en 320–768px tras deploy skeleton/staging — verificación manual bloqueada por D6/M6. |
+
+### Responsive
+
+**N/A en este spec** (sin superficie UI). Los ítems **CF3–CF5′** y **CF11** del carry-forward son el
+backlog responsive verificado para el próximo spec con pantallas.
+
+---
+
 ## Criterios de aceptación
 
 ### Framework
@@ -314,6 +373,12 @@ Operaciones rollback producción — **fuera de automation**.
 - [ ] **AC-D1:** CRUD-C4, CRUD-C6 permanecen abiertos — tracked.
 - [ ] **AC-D2:** INV-E1/E2 permanecen abiertos; invoicing OFF — tracked.
 - [ ] **AC-D3:** M3/M4/M5/M6/M10/D6 permanecen abiertos — tracked.
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **sin superficie UI** con requisitos K/U/R verificables para F1–F6 (release semver / docs).
+- [ ] **AC-UX2:** Requisitos U1–U6 (release notes accionables, mensaje test gate, fallo PHP 8.1, checklist copy-paste, tabla semver frontera, rollback forward) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF7–CF11 documentado; CF1 parcial y CF6 no arrastrados (cubiertos por este spec y spec 2026-08-06); CF1–CF2 trío/env, CF5 parcial y D7 no arrastrados (resueltos o cubiertos en specs previos).
 
 ---
 
