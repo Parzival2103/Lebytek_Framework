@@ -55,3 +55,65 @@ test('statesBlockErrors: transition action pointing to an unknown state is repor
     ]);
     assert_same(1, count($errors));
 });
+
+test('statesBlockErrors: states.column en form.fields es error (C3)', function (): void {
+    $errors = CrudConfigValidator::statesBlockErrors([
+        'states' => [
+            'column' => 'status',
+            'values' => [
+                'activo' => ['label' => 'Activo'],
+                'inactivo' => ['label' => 'Inactivo'],
+            ],
+            'transitions' => ['activo' => ['inactivo'], 'inactivo' => ['activo']],
+        ],
+        'form' => [
+            'fields' => [
+                ['name' => 'nombre', 'label' => 'Nombre', 'type' => 'text'],
+                ['name' => 'status', 'label' => 'Estado', 'type' => 'select', 'options' => ['activo' => 'Activo']],
+            ],
+        ],
+    ]);
+    assert_true(
+        in_array("states.column ('status') no puede aparecer en form.fields; use actions type=transition.", $errors, true),
+        'debe reportar colisión states.column ↔ form.fields'
+    );
+});
+
+test('statesBlockErrors: sin form field = states.column pasa (C3)', function (): void {
+    $errors = CrudConfigValidator::statesBlockErrors([
+        'states' => [
+            'column' => 'status',
+            'values' => [
+                'activo' => ['label' => 'Activo'],
+                'inactivo' => ['label' => 'Inactivo'],
+            ],
+            'transitions' => ['activo' => ['inactivo'], 'inactivo' => ['activo']],
+        ],
+        'form' => [
+            'fields' => [
+                ['name' => 'nombre', 'label' => 'Nombre', 'type' => 'text'],
+            ],
+        ],
+        'actions' => ['row' => [
+            ['name' => 'desactivar', 'type' => 'transition', 'to' => 'inactivo'],
+        ]],
+    ]);
+    assert_same([], $errors);
+});
+
+test('statesBlockErrors: colisión usa el nombre real de column (estado)', function (): void {
+    $errors = CrudConfigValidator::statesBlockErrors([
+        'states' => [
+            'column' => 'estado',
+            'values' => ['pendiente' => [], 'confirmada' => []],
+            'transitions' => ['pendiente' => ['confirmada'], 'confirmada' => []],
+        ],
+        'form' => ['fields' => [
+            ['name' => 'estado', 'type' => 'select'],
+        ]],
+    ]);
+    assert_true(
+        in_array("states.column ('estado') no puede aparecer en form.fields; use actions type=transition.", $errors, true),
+        'mensaje debe interpolar estado'
+    );
+});

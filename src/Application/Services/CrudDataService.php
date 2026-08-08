@@ -542,12 +542,16 @@ final class CrudDataService
         $payload = [];
         $errors = [];
         $normalizedByField = [];
+        $stateColumn = $definition->stateMachine()?->column() ?? '';
 
         foreach ($definition->formFields() as $field) {
             if (!$field instanceof CrudFieldDefinition) {
                 continue;
             }
             $name = $field->name();
+            if ($stateColumn !== '' && $name === $stateColumn) {
+                continue;
+            }
             if (in_array($name, self::PROTECTED_COLUMNS, true)) {
                 continue;
             }

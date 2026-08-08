@@ -55,7 +55,6 @@ PLANTILLAS=(
   "config/reportes/productos.json"
   "config/reportes/citas.json"
   "app/Application/Crud/Handlers/AbstractCrudHookHandler.php"
-  "app/Application/Crud/Handlers/DemoProductoToggleStatusHandler.php"
   "app/Application/Crud/Handlers/DemoProductoStateGuard.php"
   "app/Application/Crud/Handlers/DemoPedidoTotalValidator.php"
   "app/Application/Crud/Handlers/DemoPedidoPagarGuard.php"

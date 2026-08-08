@@ -96,11 +96,6 @@
         "validation": { "type": "decimal", "min": 0 },
         "help_text": "Debe ser mayor a cero (validado por regla de negocio)."
       },
-      {
-        "name": "status", "label": "Estado", "type": "select", "required": true, "col": "col-md-4",
-        "options": { "pendiente": "Pendiente", "pagado": "Pagado", "cancelado": "Cancelado" },
-        "default": "pendiente"
-      },
       { "name": "notas", "label": "Notas", "type": "textarea", "required": false, "col": "col-12" }
     ],
     "validators": ["demo_pedido_total"]

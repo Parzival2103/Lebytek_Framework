@@ -604,6 +604,23 @@ final class CrudConfigValidator
             }
         }
 
+        $column = (string) ($states['column'] ?? '');
+        if ($column !== '') {
+            $formFields = is_array($config['form'] ?? null) ? ($config['form']['fields'] ?? null) : null;
+            if (is_array($formFields)) {
+                foreach ($formFields as $field) {
+                    if (!is_array($field)) {
+                        continue;
+                    }
+                    $fieldName = (string) ($field['name'] ?? '');
+                    if ($fieldName !== '' && $fieldName === $column) {
+                        $errors[] = "states.column ('{$column}') no puede aparecer en form.fields; use actions type=transition.";
+                        break;
+                    }
+                }
+            }
+        }
+
         return $errors;
     }
 
