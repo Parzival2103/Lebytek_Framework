@@ -2,6 +2,8 @@
 
 > **Spec / v1 plan:** [`docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md`](../specs/2026-08-07-invoicing-facturapi-design.md) · [`docs/superpowers/plans/2026-08-07-invoicing-facturapi.md`](2026-08-07-invoicing-facturapi.md)  
 > **Amendments:** A11+ in this plan supersede A1/A3/A10 and residual D1/D10 where they disagree (see § Design amendments).  
+> **Plan audit:** [`docs/audits/2026-08-08-auditoria-plan-invoicing-facturapi-hardening.md`](../../audits/2026-08-08-auditoria-plan-invoicing-facturapi-hardening.md) — A21/A22 supersede A12 truncation and optional `listByExternalId`.  
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans. Implement **one task per subagent**. Steps use checkbox (`- [ ]`) syntax.
 
 **Goal:** Close the audited pre-production gaps in the existing Invoicing vertical so CFDI tipo I issue/cancel/reconcile is safe under timeouts, secret leakage, mode/key mismatch, incomplete cancel, missing RBAC contract, and async status — without inventing Portal UI or `dom_*` business.
@@ -57,8 +59,8 @@ Each task is a **self-contained mission**. Before coding, the assigned agent mus
 
 | Prioridad | Archivos clave | Tarea | Test (mínimo) | Criterio de aceptación |
 |-----------|----------------|-------|---------------|------------------------|
-| 1 Timeout / no double stamp | `IssueInvoiceFromSource`, provider `mapDraft`, transport | **3** | Timeout post-create: claim **not** released; second handle does **not** call create | A3 real closed; Facturapi `idempotency_key` sent |
-| 2 Last-resort id + typed exception + remote reconcile | `InvoiceNeedsReconcile`, event log, `ReconcileIssuedInvoice`, retrieve | **4**, **5** | Dual mark failure → typed id recoverable; reconcile retrieves remote before promote | Ops can recover without parsing message strings |
+| 1 Timeout / no double stamp | `IssueInvoiceFromSource`, provider `mapDraft`, transport | **3** | Timeout post-create: claim **not** released; second handle does **not** call create | A3 real closed; Facturapi `idempotency_key` + deterministic `external_id` (A21) sent |
+| 2 Last-resort id + typed exception + remote reconcile + orphan recovery | `InvoiceNeedsReconcile`, event log, `ReconcileIssuedInvoice`, retrieve, `listByExternalId` | **4**, **5** | Dual mark failure → typed id recoverable; reconcile retrieves remote; claimed-without-id recovers via `listByExternalId` before manual ops | Ops can recover without parsing message strings; no second create |
 | 3 Mode ↔ key prefix + empty key | `InvoicingFactory`, `FacturapiInvoiceProvider::fromSecretKey` | **1** | `mode=test` rejects `sk_live_`; empty key + enabled fails fast | Misconfig cannot stamp silently |
 | 4 Cancel complete | `CancelIssuedInvoice`, event log `markCanceled`, `InvoiceCancellation` | **6** | Cancel updates issue row `canceled`; idempotent replay; motive `01` requires substitution | Schema `canceled` written; no blind re-cancel |
 | 5 Secret redact + meta denylist | provider sanitize, PDO `encodeMeta` | **2** | `sk_user_*` / `Bearer` redacted; meta keys stripped | No secret persistence/leak in exceptions/meta |
@@ -76,7 +78,7 @@ These rules are **binding** and supersede softer v1 text where noted:
 | # | Topic | Rule | Supersedes |
 |---|--------|------|------------|
 | A11 | Ambiguous create (timeout/network after request left the process) | If `createInvoice` was **invoked** and failed without a returned `IssuedInvoice`, **do not** `releaseClaim`. Leave claimed-without-id; retry with same key must **not** call create again (`InvoiceAlreadyProcessed` or typed ambiguous-claim error). Only `releaseClaim` when failure happens **before** provider create is called (source missing, validation, registry). | Soft reading of A1/A3 that only protected the “observed id” path |
-| A12 | Remote create idempotency | `FacturapiInvoiceProvider::mapDraft` / create payload **must** send Facturapi `idempotency_key` (= local issue idempotency key) and `external_id` (= `sourceRef`, truncated to Facturapi limit ≤100). Port signature may gain an explicit idempotency argument. | v1 “inline payload only” |
+| A12 | Remote create idempotency | `FacturapiInvoiceProvider::mapDraft` / create payload **must** send Facturapi `idempotency_key` (= local issue idempotency key) and a Facturapi `external_id` (≤100). **Encoding of `external_id` is defined by A21** (do **not** truncate raw `sourceRef`). Port signature may gain an explicit idempotency argument. | v1 “inline payload only” |
 | A13 | Typed `InvoiceNeedsReconcile` | Exception **must** expose `providerInvoiceId(): string` (and preferably `idempotencyKey()`, `providerKey()`). Message may still include the id; typed accessors are authoritative for ops/reconcile. | Empty exception class |
 | A14 | Last-resort persist | After remote success, if `markIssued` fails then `markNeedsReconcile` fails, attempt a final `attachProviderInvoiceId` (or equivalent) that writes `provider_invoice_id` + `needs_reconcile` with stripped meta. If that also fails, still throw typed `InvoiceNeedsReconcile` — never `releaseClaim`. | Message-only recovery |
 | A15 | Reconcile verifies remote | `ReconcileIssuedInvoice` for `NeedsReconcile` **must** `retrieve` remote invoice (when id known) and promote using remote-mapped `IssuedInvoice`. If local row lacks id but typed exception/ops supplies id, attach then retrieve. Do not blindly `markIssued` a stale local VO. | Task 10 v1 “no remote pull” |
@@ -85,6 +87,8 @@ These rules are **binding** and supersede softer v1 text where noted:
 | A18 | Mode/key coupling | When provider enabled: non-empty secret; `mode=test` ⇒ `sk_test_…`; `mode=live` ⇒ `sk_live_…`. Fail in factory/`fromSecretKey`. Keep single `FACTURAPI_SECRET_KEY` (one deployment = one mode); do **not** add dual test/live env keys in this plan (YAGNI; document that staging/prod use separate envs). | Silent empty/mismatched keys |
 | A19 | Webhook ownership | Framework: signature validation + apply-status use case + env/docs. Consumer: HTTP route (CSRF-exempt), raw body, header `Facturapi-Signature`, RBAC not required for signed webhook (shared-secret auth). Never log full fiscal payload. | D10 “out of scope” for async |
 | A20 | RBAC platform contract | Manifest + bootstrap SQL define slugs; docs state consumer **must** protect mutating/download routes with those slugs. No Portal UI in this plan. | Empty `permisos` |
+| A21 | Deterministic `external_id` (no truncación) | Facturapi **no** impone unicidad de `external_id` y el filtro de list es exact match ≤100. **Prohibido** `substr(sourceRef, 0, 100)`. Computar siempre: `lebytek:invoice:{hex(sha256(sourceRef))[0:40]}` (prefijo fijo + 40 hex = 56 chars ≤100). Misma función en create y en list/reconcile. Persistir el valor enviado en `meta.external_id` (y opcionalmente `meta.source_ref` ya en ledger). Colisiones de truncado entre `sourceRef` largos con prefijo común quedan cerradas. | A12 wording that equated `external_id` with truncated `sourceRef` |
+| A22 | Orphan recovery by `external_id` is required | Tras create ambiguo (A11) sin `provider_invoice_id` observado, la recuperación automatizada **antes** de intervención manual es: `listByExternalId(A21(sourceRef))` → 1 hit → `attachProviderInvoiceId` + retrieve/reconcile; 0 hits → mantener claim / `InvoiceAmbiguousCreate` (no create); >1 hits → error tipado fail-closed (no elegir id). `listByExternalId` en transport/provider es **obligatorio** en Task 5, no opcional. | D11 “optional list if cheap”; Task 5 optional seam |
 
 ---
 
@@ -94,7 +98,7 @@ These rules are **binding** and supersede softer v1 text where noted:
 |----|------|----------|-------------------------|---------------------|
 | D1 | `needs_reconcile` without remote verify | High | **Tasks 4–5** typed id + retrieve + remote reconcile | No auto cron worker |
 | D10 | Async status / webhooks | High→Med | **Task 9** mínimo seguro (signature + apply + docs) | No Framework HTTP controller; no dashboard of webhook deliveries; no live Facturapi CI |
-| D11 | Claimed-without-id after timeout (orphan claim) | High | **Task 3** keep claim + Facturapi idempotency_key; optional list-by-`external_id` helper if cheap in Task 5 | Manual ops attach id if remote id unknown and list ambiguous |
+| D11 | Claimed-without-id after timeout (orphan claim) | High | **Task 3** keep claim + `idempotency_key` + A21 `external_id`; **Task 5** required `listByExternalId` recovery (A22) | Manual ops only if list returns 0 after reasonable wait / Facturapi outage, or attach fails; >1 is fail-closed bug path |
 | D12 | Pending coerced to Valid on hydrate | High | **Task 5** A16 | Full provider_status column index optional later |
 | D13 | Cancel does not update issue row / claim-after | High | **Task 6** | Cancellation receipt download still out of scope |
 | D14 | Secret/`Bearer`/`sk_user` leak surface | High | **Task 2** | SDK may still hold secrets in memory |
@@ -112,7 +116,7 @@ Task 1  Mode/key fail-fast                          ← first executable
 Task 2  Secret redact + meta denylist               ← parallel-safe with 1
 Task 3  A11/A12 issue timeout + remote idempotency  ← depends 1 (factory stable)
 Task 4  Typed InvoiceNeedsReconcile + last-resort attach
-Task 5  retrieve + pending hydrate + remote reconcile  ← depends 4
+Task 5  retrieve + listByExternalId orphan recovery + pending hydrate + remote reconcile  ← depends 4
 Task 6  Cancel complete (claim-before, markCanceled, motives)
 Task 7  CFDI validator/mapping extras                 ← parallel-safe after 3
 Task 8  RBAC slugs + SQL + docs contract              ← parallel-safe with 7
@@ -124,13 +128,14 @@ Task 10 Docs/runbook/debt closure + full suite gate   ← last
 
 ```
 IssueInvoiceFromSource
-  tryClaim → validate → create(idempotency_key, external_id)
-  success → markIssued (preserve provider_status in meta)
+  tryClaim → validate → create(idempotency_key, external_id=A21(sourceRef))
+  success → markIssued (preserve provider_status + meta.external_id)
   observed success + local fail → markNeedsReconcile / attachProviderInvoiceId → InvoiceNeedsReconcile(typed id)
-  create attempted + ambiguous fail → KEEP claim → typed error (no release)
+  create attempted + ambiguous fail → KEEP claim → InvoiceAmbiguousCreate (no release)
 
 ReconcileIssuedInvoice
-  load local → retrieve(remote) → markIssued from remote VO
+  NeedsReconcile + id → retrieve(remote) → markIssued|markCanceled from remote VO
+  claimed-without-id → listByExternalId(A21) → attach (1 hit) → retrieve → promote; 0 keep; >1 fail-closed
 
 CancelIssuedInvoice
   resolve id → tryClaim(cancel:id) → validate motive → cancel remote → markCanceled(issue row)
@@ -170,7 +175,8 @@ Consumer webhook
 | `src/Application/Invoicing/InvoiceDraftValidator.php` | tax_system / unit_key / payment_method |
 | `src/Application/Invoicing/InvoicingFactory.php` | Mode/key enforcement; webhook secret wiring |
 | `src/Application/Invoicing/ApplyInvoiceProviderEvent.php` (new) | Webhook apply use case |
-| `src/Infrastructure/Invoicing/Facturapi/*` | `retrieve`, optional `listByExternalId`, webhook validate seam |
+| `src/Infrastructure/Invoicing/Facturapi/*` | `retrieve`, **required** `listByExternalId`, webhook validate seam |
+| `src/Infrastructure/Invoicing/FacturapiExternalId.php` (new) | A21 encoder: `lebytek:invoice:{sha256(sourceRef) hex[:40]}` |
 | `src/Infrastructure/Invoicing/FacturapiInvoiceProvider.php` | map retrieve/cancel/idempotency; redact; parseWebhook or delegate |
 | `src/Infrastructure/Invoicing/FacturapiWebhookSignature.php` (new) | Local HMAC validate (SDK or pure PHP) |
 | `src/Infrastructure/Invoicing/PdoInvoiceEventLogRepository.php` | attach/markCanceled/hydrate pending; meta denylist |
@@ -265,8 +271,10 @@ Consumer webhook
 - Modify: `IssueInvoiceFromSource.php`
 - Modify: `InvoiceProviderInterface` + all implementers/fakes in tests (`createInvoice` signature — prefer `createInvoice(InvoiceDraft $draft, string $idempotencyKey = ''): IssuedInvoice`)
 - Modify: `FacturapiInvoiceProvider::createInvoice` / `mapDraft`
-- Modify: golden fixtures `tests/Invoicing/fixtures/facturapi_payload_*.json` (add `idempotency_key` + `external_id`)
+- Create: `src/Infrastructure/Invoicing/FacturapiExternalId.php` (A21 encoder; unit-tested)
+- Modify: golden fixtures `tests/Invoicing/fixtures/facturapi_payload_*.json` (add `idempotency_key` + A21 `external_id`)
 - Modify: `tests/Invoicing/IssueInvoiceFromSourceTest.php`
+- Create: `tests/Invoicing/FacturapiExternalIdTest.php` (prefix collision + length ≤100)
 - Create: `src/Domain/Invoicing/Exceptions/InvoiceAmbiguousCreate.php` (or reuse `InvoiceAlreadyProcessed` with distinct message — prefer **new typed** exception for clarity)
 - Update: `InvoicePortsTest` for new method signature
 
@@ -285,17 +293,17 @@ try:
 replay same key while claimed-without-id → InvoiceAlreadyProcessed / AmbiguousCreate (NO create)
 ```
 
-**Contract — payload:** Facturapi create body includes `idempotency_key` and `external_id` (`sourceRef` truncated ≤100).
+**Contract — payload:** Facturapi create body includes `idempotency_key` (= local issue key) and `external_id` = **A21** `FacturapiExternalId::fromSourceRef($sourceRef)` — **never** raw/truncated `sourceRef`. Golden fixtures must use the hashed form for sample sourceRefs. Persist `meta.external_id` on the claim/issue row when available.
 
-**Do not:** implement retrieve yet (Task 5); do not change cancel.
+**Do not:** implement retrieve/list yet (Task 5); do not change cancel; do not truncate `sourceRef` into `external_id`.
 
-- [ ] **Step 1: Failing test** — fake provider throws after “create attempted” flag; assert `releaseCalls === 0`, second handle `createCalls` still 1; fixture asserts idempotency/external fields.
+- [ ] **Step 1: Failing test** — fake provider throws after “create attempted” flag; assert `releaseCalls === 0`, second handle `createCalls` still 1; fixture asserts `idempotency_key` + A21 `external_id` (two long sourceRefs with shared 100-char prefix produce **distinct** external_ids).
 - [ ] **Step 2: Run** `php tests/run.php Invoicing/IssueInvoiceFromSource` — FAIL.
-- [ ] **Step 3: Implement** A11/A12.
+- [ ] **Step 3: Implement** A11/A12/A21 encoder + mapDraft fields.
 - [ ] **Step 4: Run** Issue + Facturapi provider + ports — PASS.
 - [ ] **Step 5: Commit** `fix(invoicing): keep claim on ambiguous create and send Facturapi idempotency_key`
 
-**Done when:** Audit test (1) green: timeout post-create does not release; no second create.
+**Done when:** Audit test (1) green: timeout post-create does not release; no second create; `external_id` is A21-stable and ≤100.
 
 ---
 
@@ -334,46 +342,54 @@ replay same key while claimed-without-id → InvoiceAlreadyProcessed / Ambiguous
 
 ---
 
-### Task 5: `retrieve` port + pending hydrate + remote reconcile
+### Task 5: `retrieve` + required `listByExternalId` orphan recovery + pending hydrate + remote reconcile
 
-**Mission:** Add provider retrieve; preserve `pending`; make `ReconcileIssuedInvoice` verify remote state before promote; support ops attach-from-typed-id.
+**Mission:** Add provider retrieve and **required** list-by-`external_id`; preserve `pending`; make `ReconcileIssuedInvoice` verify remote state before promote; recover claimed-without-id via A21/A22 before requiring manual intervention.
 
-**Why this piece exists:** A10/D10/D1 — local-only promote can mark issued while remote is still `pending`/`canceled`; hydrate currently forces Valid.
+**Why this piece exists:** A10/D10/D1/D11 — local-only promote can mark issued while remote is still `pending`/`canceled`; hydrate currently forces Valid; ambiguous create without observed id needs automated attach via `external_id`.
 
-**Depends on:** Task 4.  
+**Depends on:** Task 4 (and Task 3 A21 encoder).  
 **Unblocks:** Task 9 (webhooks apply status), safer cancel idempotency checks.
 
 **Owns:**
 - Modify: `InvoiceProviderInterface` + transport + `SdkFacturapiTransport::retrieve` → `$client->Invoices->retrieve($id)`
+- Modify: transport + provider — **required** `listByExternalId(string $externalId): array` (0..n `IssuedInvoice`; SDK list/filter `external_id` exact match)
 - Modify: `FacturapiInvoiceProvider::retrieveInvoice` mapping via existing `mapIssuedInvoice`
-- Modify: PDO/InMemory `hydrate`/`mark` to store `meta.provider_status` from `IssuedInvoice::status()->value` and restore via `InvoiceStatus::fromProvider` when ledger status is `issued`/`needs_reconcile` (A16)
-- Modify: `ReconcileIssuedInvoice::handle` — if NeedsReconcile and id present → `registry->get()->retrieveInvoice` → `markIssued` with remote VO; if canceled remotely → `markCanceled` (method may land in Task 6 — if missing, set status canceled via interim repo API agreed in this task: prefer calling Task 6’s `markCanceled` **or** implement thin `markCanceled` here first)
-- Optional: `listByExternalId` on transport for orphan recovery — **include if ≤ small seam**; otherwise residual D11
+- Create/use: `FacturapiExternalId` (A21) shared with Task 3 mapper
+- Modify: PDO/InMemory `hydrate`/`mark` to store `meta.provider_status` from `IssuedInvoice::status()->value` and restore via `InvoiceStatus::fromProvider` when ledger status is `issued`/`needs_reconcile` (A16); keep `meta.external_id`
+- Modify: event log port — **implement thin `markCanceled` here** (PDO + InMemory). Task 6 owns claim-before cancel + motives on top of this API (do not defer markCanceled ownership).
+- Modify: `ReconcileIssuedInvoice::handle` — see contract below (includes orphan path)
 - Modify: `ReconcileIssuedInvoiceTest`, `InvoiceEventLogContract`, provider tests, ports tests
-- Add: pending round-trip test (audit test 3)
+- Add: pending round-trip test (audit test 3); orphan recovery tests (A22)
 
 **Contract — Reconcile:**
 
 ```text
 findByIdempotencyKey
-  null + no id → InvoiceSourceNotFound / AmbiguousCreate guidance
-  status not NeedsReconcile → return as-is (idempotent)
-  NeedsReconcile:
+  null → InvoiceSourceNotFound (or documented AmbiguousCreate guidance)
+  status Issued/Canceled (terminal) → return as-is (idempotent)
+  NeedsReconcile + provider_invoice_id present:
     remote = provider.retrieveInvoice(id)
     if remote.status Canceled → markCanceled + return
     else markIssued(remote) → return reloaded
+  claimed / NeedsReconcile + provider_invoice_id empty (orphan / AmbiguousCreate):
+    external_id = FacturapiExternalId::fromSourceRef(sourceRef from row)
+    matches = provider.listByExternalId(external_id)
+    0 → throw InvoiceAmbiguousCreate (keep claim; NEVER createInvoice)
+    1 → attachProviderInvoiceId → retrieve → markIssued|markCanceled as above
+    >1 → throw typed fail-closed (do not pick an id; A21 should make this unreachable)
 NEVER createInvoice
 ```
 
-**Do not:** webhook HTTP; do not full SAT catalog.
+**Do not:** webhook HTTP; do not full SAT catalog; do not treat `listByExternalId` as optional residual.
 
-- [ ] **Step 1: Failing tests** — retrieve mapping; pending survive markIssued+find; reconcile calls retrieve (spy); canceled remote does not become Valid.
+- [ ] **Step 1: Failing tests** — retrieve mapping; pending survive markIssued+find; reconcile calls retrieve (spy); canceled remote does not become Valid; orphan claimed-without-id: list returns 1 → attach + no create; list 0 → AmbiguousCreate keep claim; list >1 → fail-closed.
 - [ ] **Step 2: Run** — FAIL.
 - [ ] **Step 3: Implement**.
 - [ ] **Step 4: Run** Invoicing reconcile/provider/contract — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): retrieve invoices and reconcile against remote status`
+- [ ] **Step 5: Commit** `feat(invoicing): retrieve invoices, listByExternalId orphan recovery, reconcile against remote`
 
-**Done when:** Audit tests (2 continuity) + (3) green; Reconcile never creates.
+**Done when:** Audit tests (2 continuity) + (3) green; A22 orphan path green; Reconcile never creates.
 
 **Note / plan B:** SDK `retrieve` confirmed on FacturAPI/facturapi-php `Invoices::retrieve`. If composer lock pins an older build without it, bump within `^4` in this task and record in commit body.
 
@@ -385,11 +401,12 @@ NEVER createInvoice
 
 **Why this piece exists:** Schema documents `canceled` but nobody writes it; claim-after-success races; motive `01` without substitution is invalid per Facturapi.
 
-**Depends on:** Task 5 (retrieve helps idempotent “already canceled” detection).  
+**Depends on:** Task 5 (`markCanceled` port + retrieve for “already canceled” detection).  
 **Unblocks:** Task 10 cancel runbook.
 
 **Owns:**
 - Modify: `InvoiceCancellation` — validate motive ∈ {01,02,03,04}; if `01` require non-empty substitution; throw `InvoiceDraftInvalid` or new `InvoiceCancellationInvalid`
+- Use Task 5’s `markCanceled` (do not invent a second shape)
 - Modify: `CancelIssuedInvoice` flow:
 
 ```text
@@ -404,7 +421,7 @@ else:
   mark cancel claim issued/canceled meta
 ```
 
-- Modify: event log port + PDO + InMemory: `markCanceled(string $provider, string $providerInvoiceId, IssuedInvoice $invoice): void` (UPDATE by `provider_invoice_id`, set status `canceled`)
+- Extend cancel-claim / motive wiring around existing `markCanceled` from Task 5 if signature needs cancel meta
 - Modify: `InvoiceScaffoldUseCasesTest` + contract tests for canceled status
 - Tests for audit items (4)(5)(6)
 
@@ -546,7 +563,7 @@ never log raw body / customer / items
 **Unblocks:** plan closure / production enablement checklist.
 
 **Owns:**
-- Modify: `docs/modules/modulo-invoicing.md` — A11–A20 runbook; typed reconcile; cancel motives; RBAC hard rule; webhook wiring; env `FACTURAPI_WEBHOOK_SECRET`; pending status; **never re-issue** on ambiguous create
+- Modify: `docs/modules/modulo-invoicing.md` — A11–A22 runbook; A21 `external_id` algorithm; A22 orphan list recovery; typed reconcile; cancel motives; RBAC hard rule; webhook wiring; env `FACTURAPI_WEBHOOK_SECRET`; pending status; **never re-issue** on ambiguous create
 - Modify: `docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md` header — point to hardening plan amendments A11+
 - Modify: `docs/superpowers/plans/2026-08-07-invoicing-facturapi.md` debt rows D1/D10 → superseded pointer (short note only; do not rewrite v1 tasks)
 - Modify: `tests/Invoicing/InvoicingDocsTest.php` assertions for new mandatory phrases
@@ -555,12 +572,13 @@ never log raw body / customer / items
 **Contract — docs must state:**
 1. Ambiguous create → do not release / do not new idempotency key
 2. `InvoiceNeedsReconcile::providerInvoiceId()`
-3. Reconcile retrieves remote
-4. Cancel claim-before + motives
-5. RBAC slugs mandatory on consumer routes
-6. Webhook consumer wiring + no fiscal payload logs
-7. Mode/key prefix rule
-8. Residuals: full SAT catalog, Framework HTTP webhook controller, live Facturapi CI, cron worker
+3. Reconcile retrieves remote; orphan claimed-without-id uses `listByExternalId(A21)` before manual ops
+4. `external_id` = `lebytek:invoice:{sha256(sourceRef) hex[:40]}` — never truncated raw sourceRef
+5. Cancel claim-before + motives
+6. RBAC slugs mandatory on consumer routes
+7. Webhook consumer wiring + no fiscal payload logs
+8. Mode/key prefix rule
+9. Residuals: full SAT catalog, Framework HTTP webhook controller, live Facturapi CI, cron worker
 
 **Do not:** Portal pages; do not enable vertical in harness.
 
@@ -578,8 +596,8 @@ never log raw body / customer / items
 
 | 🔥 Requirement | Task(s) | Out of scope? |
 |----------------|----------|---------------|
-| 1 Double stamp timeout (A3 real) | 3 (+12 remote idempotency) | — |
-| 2 Last-resort id + typed exception + remote reconcile | 4, 5 | — |
+| 1 Double stamp timeout (A3 real) | 3 (+A12/A21 remote idempotency + hashed external_id) | — |
+| 2 Last-resort id + typed exception + remote reconcile + orphan list recovery | 4, 5 (A22) | — |
 | 3 Mode ↔ key + empty rejection | 1 | Dual env keys rejected (A18) |
 | 4 Cancel complete | 6 | Cancellation receipt files |
 | 5 Secret redact + meta denylist | 2 | — |
@@ -596,7 +614,9 @@ never log raw body / customer / items
 2. Changing `InvoiceProviderInterface` is a **semver-significant** surface for anyone who already implemented the port in a consumer — treat release notes accordingly (still inside Invoicing vertical early adoption).
 3. Golden fixtures must be updated whenever `mapDraft` gains fields — keep Task 3 and Task 7 coordinated if parallelized incorrectly.
 4. InMemory ledger **must** mirror PDO hydrate/attach/markCanceled or D2 returns.
-5. Do not “fix” timeout by guessing remote ids from exception messages unless FacturapiException exposes structured id (prefer attach only when `IssuedInvoice` observed or ops/list-by-external_id).
+5. Do not “fix” timeout by guessing remote ids from exception messages unless FacturapiException exposes structured id (prefer attach when `IssuedInvoice` observed, else **A22** `listByExternalId`).
+6. **Plan audit 2026-08-08:** do **not** implement A12 as truncated `sourceRef`. Use **A21**. Do **not** skip `listByExternalId` as “optional if cheap” — **A22** makes it required for Task 5 Done when.
+7. Facturapi does not enforce `external_id` uniqueness; our encoder makes collisions astronomically unlikely so list cardinality >1 is treated as fail-closed corruption/misuse, not normal ops.
 
 ## Verification commands (executor)
 
@@ -610,8 +630,8 @@ Expected: all PASS after Task 10.
 
 ## Estado de ejecución
 
-- **Reconciled:** 2026-08-08 (plan authored; not executed).
+- **Reconciled:** 2026-08-08 (plan authored; plan-audit amendments A21/A22 applied; not executed).
 - **Completed / total:** 0 / 10
 - **Next executable task:** Task 1 (mode/key fail-fast); Task 2 parallel-safe.
-- **Blockers:** none for Task 1; Facturapi SDK retrieve/validateSignature confirmed via upstream package sources.
-- **Human ops residual:** configure `FACTURAPI_WEBHOOK_SECRET` and consumer route; assign RBAC roles.
+- **Blockers:** none for Task 1 after A21/A22; do not execute pre-amendment A12 truncation wording.
+- **Human ops residual:** configure `FACTURAPI_WEBHOOK_SECRET` and consumer route; assign RBAC roles; orphan path only if list returns 0 after outage/wait.
