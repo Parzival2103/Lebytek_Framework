@@ -450,7 +450,7 @@ Fuente: auditoría `docs/audits/2026-08-08-auditoria-tecnica-diaria.md` (PR #104
 | `docs/superpowers/plans/2026-08-08-invoicing-facturapi-production-hardening.md` | 0/50 | Pendiente — bloquea prod fiscal |
 | `docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md` | 0/5 | Pendiente — target obsoleto `1.2.5` |
 | `docs/superpowers/plans/2026-08-05-audit-api-health-public.md` | 0/5 | Pendiente — target obsoleto `1.2.4` |
-| `docs/superpowers/plans/2026-08-04-audit-platform-ci-gates.md` | 5/5 | **Cerrado** — workflow presente (D7 resuelto) |
+| `docs/superpowers/plans/2026-08-04-audit-platform-ci-gates.md` | — | **Cerrado en código** — workflow @ `.github/workflows/platform-tests.yml` (D7 resuelto); plan file no presente en rama spec |
 
 ### No verificados (declarados explícitamente)
 
