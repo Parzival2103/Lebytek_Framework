@@ -200,3 +200,19 @@ Task 3: complete (Portal 210896e + bd9f434 composer.lock; FW 3166bc1 CUTOVER-POR
 - [x] NO gh repo create / push / merge / deploy / SSH / DNS executed
 - FPS roadmap Plans 00–08: **documentation and local separation complete**
 - Next: explicit user order for GitHub publish + VPS cutover ops plan
+
+
+## Plan — CRUD P02 states-form-options (2026-08-07)
+
+Plan: `docs/superpowers/plans/2026-08-07-crud-p02-states-form-options.md`
+Branch: `cursor/crud-p02-states-form-options-f492`
+Base: `21edf2640157eb815c0017b8397d635bacb05d13` (origin/main)
+Work directory: `/workspace`
+
+Task 1: complete (commits 21edf26..199d0fd, review clean)
+Task 2: complete (commits 199d0fd..0c06f17, review clean)
+Task 3: complete (commits 0c06f17..4a323bb, review clean; minor: test sets nullable props null explicitly)
+Task 4: complete (commits 4a323bb..4088cc3, review clean; minors: stale build-vertical-kit.sh path; structural removal tests)
+Task 5: complete (commits 4088cc3..aaf6b63, review clean)
+Task 6: complete (commits aaf6b63..76eaca5, review clean)
+Final review: With fixes → fixed in 8de26ec (drop toggle from build-vertical-kit.sh); Ready to merge (release note: audit Portal form states before tag v1.2.7)
