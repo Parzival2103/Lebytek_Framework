@@ -39,6 +39,7 @@
 | Issues abiertos Framework | **0** (`gh issue list --repo Parzival2103/Lebytek_Framework --state open` → vacío) |
 | Issues abiertos Portal | **No verificable** — mismo bloqueador gh 404 (M6) |
 | PRs abiertos Framework (contexto) | **0** |
+| Pase deuda técnica | UTC `2026-08-08T13:01:00Z` · `origin/main` @ `5bf0863f45116b3e574a085c0dca2bed46ed983a` · modo **normal** |
 
 ---
 
@@ -181,6 +182,8 @@ main tip (89a1a89, declara 1.2.7)
 - Publicar tags retroactivos `v1.2.4`–`v1.2.6` salvo decisión excepcional documentada fuera de este spec.
 - Merge `feature/backoffice-api-integration` → `main`.
 - Cierre del PR/rama de auditoría — responsabilidad AUTOMATION-03.
+- Cierre de deuda CRUD-C4, CRUD-C6, INV-E1/E2, M3, M4, M5, M10, D6 — tracked en § Deuda técnica; sólo retarget semver M3/M4 (F5).
+- Resolución D7 (CI Actions) — ya mergeada en `main`; no reimplementar workflow.
 
 ---
 
@@ -273,6 +276,10 @@ assert_same(0, $code, "Published release must have git tag {$tag} matching compo
 | Publicar tag desde commit no verde CI | Alta | Exigir CI success en commit taggeado (evidencia run `31235093747` en tip) |
 | M6 impide verificar lock Portal real | Media | Marcar P1/P2 no verificados; no asumir estado prod |
 | Retro-tag múltiple (enfoque B) | Media | Rechazado — usar enfoque A |
+| Gate semver actual no detecta tag ausente | **Alta** | `PlatformVersionSemverTest` valida trío interno; `ReleaseTagPublishedTest` **ausente** (`rg 'ReleaseTag\|tag.*published' tests/` → 0 @ `5bf0863`) — REL-C1 invisible hasta F1 |
+| Planes M3/M4 citan tags obsoletos (`1.2.4`/`1.2.5`) | Media | F5 retarget `1.2.8+`; documentar skip en release notes (U5) |
+| CI `composer validate --no-check-lock` enmascara drift lock | Baja | H1 — ejecutar `--strict` en release train humano; no bloquea tag REL-C1 |
+| Consumidor asume «resuelto en main» = instalable | **Alta** | Release notes + U5: CRUD-C1/C2/C5/C3 requieren tag `v1.2.7`, no checkout de rama |
 
 ---
 
@@ -370,9 +377,10 @@ backlog responsive verificado para el próximo spec con pantallas.
 
 ### Deuda carry-forward (registro, no cierre en este spec)
 
-- [ ] **AC-D1:** CRUD-C4, CRUD-C6 permanecen abiertos — tracked.
-- [ ] **AC-D2:** INV-E1/E2 permanecen abiertos; invoicing OFF — tracked.
-- [ ] **AC-D3:** M3/M4/M5/M6/M10/D6 permanecen abiertos — tracked.
+- [ ] **AC-D1:** Sección **Deuda técnica** lista abiertos verificados @ `origin/main` `5bf0863` con evidencia ruta/línea (REL-C1, CRUD-C4/C6, INV-E1/E2, M3–M5, M10, D6, D-PLAN-DRIFT).
+- [ ] **AC-D2:** D7, CRUD-C1/C2/C5/C3 reconciliados como **resueltos** (D7 merge CI; CRUD fixes en tip — consumo bloqueado por REL-C1 hasta tag).
+- [ ] **AC-D3:** M6, P1, P2, D14, D15, H1 marcados **no verificados** con acción concreta.
+- [ ] **AC-D4:** **1 heredado cerrado** (D7); **0 reabiertos**; verificado sin deuda nueva de capas/migraciones/TODO en `src/`.
 
 ### Compatibilidad, UX y responsive
 
@@ -392,6 +400,78 @@ backlog responsive verificado para el próximo spec con pantallas.
 | Bump Portal `composer.lock` | No (M6) | Manual | Manual post-QA |
 | Habilitar Facturapi | **Prohibido** | Tras hardening futuro | Tras hardening futuro |
 | Deploy VPS Portal | No | Manual | Manual |
+
+---
+
+## Deuda técnica
+
+Fuente: auditoría `docs/audits/2026-08-08-auditoria-tecnica-diaria.md` (PR #104 @ `5bf0863`); reconciliación con inventarios spec `2026-08-06` (pase deuda @ `ddc55ec`), `2026-08-05` (@ `42c3a0a`) y `2026-08-04` (@ `c78e672`); tip `origin/main` @ `5bf0863f45116b3e574a085c0dca2bed46ed983a` (pase deuda 2026-08-08).
+
+### Reconciliación heredada (cerrados)
+
+| ID | Tema | Estado | Resolución |
+|----|------|--------|------------|
+| **D7** | Sin pipeline GitHub Actions | **Resuelto** | `.github/workflows/platform-tests.yml` @ `5bf0863`; `tests/Docs/CiWorkflowPresentTest.php` presente; job `platform-fast-gates` en PR/push `main` |
+| **CRUD-C1/C2/C5** | AuthZ multi-canal IDOR / acciones / Reportes | **Resuelto** (código) | PR #95 @ `64a6877` — **pendiente tag** (REL-C1); `git tag --contains 64a6877` → vacío @ `5bf0863` |
+| **CRUD-C3** | Columna states editable + demo toggle | **Resuelto** (código) | PR #100 @ `60477dc` — **pendiente tag** (REL-C1); `git tag --contains 60477dc` → vacío |
+| **M1** | Sync semver trío | **Resuelto** (declaración) | `composer.json` L6, `config/app.php` L7, `skeleton/config/app.php` L7 → `1.2.7`; `PlatformVersionSemverTest` PASS — **tag publicado ausente** → ver REL-C1 |
+| **M2** | `.env.example` vars Portal | **Resuelto** | Root `.env.example` L53–55 remite `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` a Portal; `FACTURAPI_*` plataforma OFF |
+| **M7/M8/M9, D1–D5, D13, C1, C2** | Históricos | **Resuelto** | Sin regresión verificada @ `5bf0863` |
+
+**Cierres desde corrida anterior (2026-08-06 pase deuda @ `ddc55ec`):** **1** — **D7** (CI Actions mergeado post-#84). CRUD-C1/C2/C5/C3 cerrados en código desde #95/#100 (intervalo `ddc55ec..5bf0863`).
+
+### Alcance principal de este spec (REL-C1 — abierto, verificado)
+
+| ID | Hallazgo | Evidencia (`main` @ `5bf0863`) | Impacto | Capa | Owner | Acción |
+|----|----------|----------------------------------|---------|------|-------|--------|
+| **REL-C1** | Tip `1.2.7` sin tag Git publicado | `composer.json` L6 `"version": "1.2.7"`; `git tag -l 'v1.2.*'` → sólo `v1.2.0`…`v1.2.3`; `git tag --contains 64a6877` / `60477dc` → vacío; último tag `v1.2.3` @ `041e402` | Fixes AuthZ/states **no instalables** vía Composer; product truth rota | Release / package | Framework / release ops | F1–F6: `ReleaseTagPublishedTest` + `git tag v1.2.7` + push + release notes |
+| **D-REL-GATE** | Gate tag publicado ausente | `rg 'ReleaseTag\|tag.*published' tests/` → **0**; `PlatformVersionSemverTest` no valida tag Git | REL-C1 invisible al CI/docs gate actual | `tests/Docs/` | Framework | F1 `ReleaseTagPublishedTest` (TDD) |
+
+### Backlog Framework verificado (fuera alcance F1–F6 salvo F5 retarget)
+
+| ID | Hallazgo | Evidencia (`main` @ `5bf0863`) | Impacto | Capa | Owner | Acción |
+|----|----------|----------------------------------|---------|------|-------|--------|
+| **CRUD-C4** | Transitions sin CAS / TOCTOU | `CrudTransitionService.php` L104–108 — `updateRecord` directo sin compare-and-swap sobre columna estado; sin PR remediación post-#90 | Carreras concurrentes en transiciones de estado | `Application` | Framework | Spec/plan futuro programa CRUD #90 orden 2 |
+| **CRUD-C6** | Uploads sin allowlist obligatoria + path sin normalizar | `UploadValidator.php` L63–68 — acepta cuando `$allowedExtensions` null/vacío; `tests/Security/UploadValidatorTest.php` L20–24 test «acepta cuando no hay lista blanca»; `FileUploadService.php` L62–63 — `PUBLIC_PATH . '/' . trim($cfg->directorio)` sin `realpath`/bloqueo `..` | Upload de extensiones arbitrarias; path traversal potencial | `Application` / `Infrastructure` | Framework | Spec futuro programa CRUD orden 3 |
+| **INV-E1** | Doble timbrado tras timeout post-create | `IssueInvoiceFromSource.php` L52–73 — `releaseClaim` en catch genérico; create remoto puede duplicar si timeout ambiguo | Doble CFDI si vertical ON sin hardening | `Application` | Framework | Plan `2026-08-08-invoicing-facturapi-production-hardening.md` (**0/50**); mantener `vertical.invoicing=false` |
+| **INV-E2** | Fallo dual markIssued/markNeedsReconcile | `IssueInvoiceFromSource.php` L53–59 — `markNeedsReconcile` en catch anidado; id remoto irrecuperable si ambos fallan | Ledger inconsistente | `Application` | Framework | Mismo plan hardening 0/50 |
+| **M3** | CRUD/Calendario sin `RbacMiddleware` router | `routes/web.php` L114–125 — `/crud/{resource}*`, `/calendario/{key}*` sin RBAC router; contraste L127+ (pdf-kit/reportes **sí**); `skeleton/routes/web.php` espejo | 403 inconsistentes HTML/JSON | `Presentation` / `routes/` | Framework | Plan `2026-08-06-audit-crud-rbac-router.md` (**0/5**); retarget semver F5 |
+| **M4** | `/api/*` sesión; sin health público | `routes/api.php` L14–16 grupo `AuthMiddleware`; L23 `/api/ping` dentro del grupo; `rg '/health' routes/` → **0** | LB/cron no verifican liveness sin cookie | `Presentation` / `routes/` | Framework | Plan `2026-08-05-audit-api-health-public.md` (**0/5**); retarget semver F5 |
+| **M5** | `permisos.gestionar` ausente en seeds | `routes/web.php` L61–65 — comentario + workaround `administracion.ver`; `rg permisos.gestionar database/` → **0** | Catálogo RBAC acoplado a permiso amplio | `Domain` RBAC | Framework | Spec futuro CF8 |
+| **D6** | `skeleton.lebytek.com` pendiente | `docs/ENVIRONMENTS.md` L7, L13, L34, L66 — «pendiente de implementar» | LAB package no desplegado; O2/CF11 bloqueados | Ops | Framework/Ops | Plan `2026-07-26-skeleton-package-staging.md` Tasks 6–8 |
+| **M10** | Hueco auditorías 2026-08-03..05 | `docs/audits/` sin `2026-08-03`/`04`/`05`-auditoria-tecnica-diaria.md @ `5bf0863`; cadena 06–08 restaurada | Specs 03–05 sin ancla audit diaria | Proceso | Ops/automation | Corrida AUTOMATION-00 + `AuditArtifactFreshnessTest` |
+| **D-PLAN-DRIFT** | Planes M3/M4 reservan semver obsoleto | `docs/superpowers/plans/2026-08-05-audit-api-health-public.md` L54–55 → `1.2.4`; `2026-08-06-audit-crud-rbac-router.md` L56 → `1.2.5`; tip ya `1.2.7` | Operadores reservan tags inexistentes | Docs / plan | Framework | F5 retarget `1.2.8+`; release notes skip 1.2.4–1.2.6 |
+
+### Planes activos — estado ejecución real
+
+| Plan | Tareas | Estado @ `5bf0863` |
+|------|--------|-------------------|
+| `docs/superpowers/plans/2026-08-08-audit-release-semver-tag-REL-C1.md` (derivado) | TBD | Pendiente — F1–F6 este spec |
+| `docs/superpowers/plans/2026-08-08-invoicing-facturapi-production-hardening.md` | 0/50 | Pendiente — bloquea prod fiscal |
+| `docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md` | 0/5 | Pendiente — target obsoleto `1.2.5` |
+| `docs/superpowers/plans/2026-08-05-audit-api-health-public.md` | 0/5 | Pendiente — target obsoleto `1.2.4` |
+| `docs/superpowers/plans/2026-08-04-audit-platform-ci-gates.md` | 5/5 | **Cerrado** — workflow presente (D7 resuelto) |
+
+### No verificados (declarados explícitamente)
+
+| ID | Hallazgo | Motivo | Acción |
+|----|----------|--------|--------|
+| **M6** | Portal SHA / `composer.lock` | `gh api repos/Parzival2103/Lebytek_Portal` → HTTP 404 | Ops: conceder lectura Portal al token automation |
+| **P1/P2** | Portal lock / smoke AuthZ+states | Repo Portal inaccesible | Bump lock + QA manual post-tag `v1.2.7` |
+| **D14** | Stripe subscription QA Portal | Portal inaccesible; Framework `vertical.payments=false` | Portal QA antes de checkout ON |
+| **D15** | Bootstrap marketing Portal | Re-scopeado `Lebytek_Portal#4` | Portal issue #4 |
+| **H1** | `composer validate` lock content-hash | CI usa `--no-check-lock` @ `.github/workflows/platform-tests.yml` L24–25 | Release train humano con `--strict` |
+
+### Verificado sin deuda nueva
+
+- **Migraciones ↔ manifiesto:** 3 SQL en `database/migrations/` ↔ entradas en `config/modules/{core,crud-engine,pdf-kit}.php`; invoicing usa `bootstrap_sql` @ `config/modules/invoicing.php` L12 — patrón documentado, sin drift.
+- **`src/`:** `rg 'TODO|FIXME' src/` → **0** con impacto; sin Marketing/`LebytekApiClient`.
+- **Capas:** Domain sin deps Presentation/Infrastructure; hooks en Application.
+- **Legacy operativo:** referencias vivas a `feature/backoffice-api-integration` en `scripts/` y `docs/composer-setup.md` → **0** (sólo tag archive canónico L128 `composer-setup.md`); `AGENTS.md`/`CLAUDE.md` registro histórico permitido.
+- **Payments bootstrap:** `vertical.payments=false`; requisitos Stripe documentados como gate ops Portal (D14), no auto-fix en `src/`.
+- **CI:** D7 resuelto; tip CI success documentado en auditoría @ `89a1a89` (run `31235093747`).
+
+**Conteo:** **12 abiertos verificados** (REL-C1, D-REL-GATE, CRUD-C4, CRUD-C6, INV-E1, INV-E2, M3, M4, M5, D6, M10, D-PLAN-DRIFT); **6 no verificados** (M6, P1, P2, D14, D15, H1); **1 heredado cerrado** (D7); **4 resueltos código pendiente tag** (CRUD-C1/C2/C5/C3 → REL-C1).
 
 ---
 
