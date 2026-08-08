@@ -827,7 +827,7 @@ Tag `v1.2.6` **solo post-merge** en `main` (operador / release); no taggear desd
 | Siguiente tarea ejecutable | ninguna (punto 1 cerrado) |
 | Prerrequisitos | Cumplidos |
 | Bloqueos | ninguno |
-| Estado | completo en main |
-| Evidencia | PR plan [#93](https://github.com/Parzival2103/Lebytek_Framework/pull/93) merged; PR impl [#95](https://github.com/Parzival2103/Lebytek_Framework/pull/95) merge commit `64a6877b8dd9c78a05bb9c871bf199ad7e2c9098`; en tip: `CrudScopeResolver::recordMatchesConditions`, `CrudActionService::resolveExecutablePermission`, `CrudReporteDataSource::assertCanViewResource`, tests `Security/CrudActionOwnership`, `Crud/Action/CrudActionPermission`, `Reporte/CrudReporteDataSourceAuthz`, semver trío `1.2.6` |
-
-**Nota de reconciliación (AUTOMATION-04 Parte A):** checkboxes marcados tras verificar entregables en `origin/main` @ `b57bd60` (ancestro `64a6877`). No se archiva aún: el programa de remediación 12 puntos mantiene el path bajo `docs/superpowers/plans/` hasta cierre del programa (estructura §7).
+| Reconciliación UTC | 2026-08-08T12:40:00Z |
+| Framework `origin/main` verificado | `5bf0863f45116b3e574a085c0dca2bed46ed983a` |
+| Estado | **completo** — archivado |
+| Evidencia | PR plan [#93](https://github.com/Parzival2103/Lebytek_Framework/pull/93) merged; PR impl [#95](https://github.com/Parzival2103/Lebytek_Framework/pull/95) merge commit `64a6877b8dd9c78a05bb9c871bf199ad7e2c9098`; en tip: `CrudScopeResolver::recordMatchesConditions`, `CrudActionService::resolveExecutablePermission`, `CrudReporteDataSource::assertCanViewResource`, tests `Security/CrudActionOwnership`, `Crud/Action/CrudActionPermission`, `Reporte/CrudReporteDataSourceAuthz`, semver trío absorbido en `1.2.7` |

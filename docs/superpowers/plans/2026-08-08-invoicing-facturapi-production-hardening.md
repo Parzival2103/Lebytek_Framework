@@ -1,6 +1,6 @@
 # Invoicing (Facturapi) Production Hardening Plan
 
-> **Spec / v1 plan:** [`docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md`](../specs/2026-08-07-invoicing-facturapi-design.md) · [`docs/superpowers/plans/2026-08-07-invoicing-facturapi.md`](2026-08-07-invoicing-facturapi.md)  
+> **Spec / v1 plan:** [`docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md`](../specs/2026-08-07-invoicing-facturapi-design.md) · [`docs/archive/superpowers/plans/2026-08-07-invoicing-facturapi.md`](../archive/superpowers/plans/2026-08-07-invoicing-facturapi.md)  
 > **Amendments:** A11+ in this plan supersede A1/A3/A10 and residual D1/D10 where they disagree (see § Design amendments).  
 > **Plan audit:** [`docs/audits/2026-08-08-auditoria-plan-invoicing-facturapi-hardening.md`](../../audits/2026-08-08-auditoria-plan-invoicing-facturapi-hardening.md) — A21/A22 supersede A12 truncation and optional `listByExternalId`; **A23–A27** (review of PR #103) fix the `external_id` identity, the orphan lookup port, and the reconcile branch table.  
 
@@ -682,8 +682,13 @@ Expected: all PASS after Task 10.
 
 ## Estado de ejecución
 
-- **Reconciled:** 2026-08-08 (plan authored; plan-audit amendments A21/A22 applied; **review de PR #103 → A23–A27 applied**; not executed).
-- **Completed / total:** 0 / 10
-- **Next executable task:** Task 1 (mode/key fail-fast); Task 2 parallel-safe.
-- **Blockers:** none for Task 1. Para Tasks 3/5/6 rige **A23–A27**: no ejecutar la redacción previa de A21 (`fromSourceRef`), ni el contrato de Reconcile basado en `findByIdempotencyKey` / `IssuedInvoice::status()`.
-- **Human ops residual:** configure `FACTURAPI_WEBHOOK_SECRET` and consumer route; assign RBAC roles; programar el barrido `findOrphanClaims` (no hay cron en Framework); `forceReissueOrphanClaim` (A26) es siempre decisión humana con RBAC `invoicing.reconciliar`.
+| Campo | Valor |
+|-------|-------|
+| Reconciliación UTC | 2026-08-08T12:40:00Z |
+| Framework `origin/main` verificado | `5bf0863f45116b3e574a085c0dca2bed46ed983a` |
+| Tareas completadas / totales | 0 / 10 |
+| Siguiente tarea ejecutable | **Task 1** (mode/key fail-fast); Task 2 parallel-safe |
+| Prerrequisitos | v1 scaffold completo en main (PR #99 @ `21edf26`); plan v1 archivado |
+| Bloqueos | ninguno para Task 1. Tasks 3/5/6: aplicar **A23–A27** (no `fromSourceRef`, no reconcile vía `findByIdempotencyKey` / `IssuedInvoice::status()`). |
+| Evidencia ausencia hardening | `rg 'externalIdForIssue\|findClaimByIdempotencyKey\|InvoiceClaimRow' src/` → 0 en tip |
+| Human ops residual | `FACTURAPI_WEBHOOK_SECRET` + ruta consumer; RBAC roles; barrido `findOrphanClaims`; `forceReissueOrphanClaim` (A26) siempre manual |

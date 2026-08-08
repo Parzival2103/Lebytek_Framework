@@ -2,7 +2,7 @@
 
 > **Spec:** [`docs/superpowers/specs/2026-08-07-invoicing-facturapi-design.md`](../specs/2026-08-07-invoicing-facturapi-design.md)  
 > **Amendments:** this plan supersedes the spec where the two disagree (see § Design amendments).  
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans. Implement **one task per subagent**. Steps use checkbox (`- [ ]`) syntax.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans. Implement **one task per subagent**. Steps use checkbox (`- [x]`) syntax.
 
 **Goal:** Ship an optional Framework `invoicing` vertical (OFF by default) with Domain ports, Facturapi CFDI tipo I scaffold (create/cancel/PDF/XML/email), `InvoiceableSourceInterface` orchestration, `inv_*` platform tables, consumer connection docs — **safe under partial failure** (no double-stamp), with contracts that stay extensible, and **explicit mitigations** for the highest-risk technical debt.
 
@@ -162,11 +162,11 @@ Consumer InvoiceableSourceInterface
 
 **Do not:** create `src/**/Invoicing/**`, SQL, or container bindings; do not rewrite the whole spec body.
 
-- [ ] **Step 1: Write failing tests** — `InvoicingConfigTest`; SkeletonPurity includes `invoicing` OFF; optional docs assert that the spec mentions `Design amendments` or `A1`.
-- [ ] **Step 2: Run** — expect FAIL.
-- [ ] **Step 3: Implement** composer/config/env/vertical + spec header pointer + `composer update facturapi/facturapi-php --with-all-dependencies`.
-- [ ] **Step 4: Run** InvoicingConfig + SkeletonPurity + Payments — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): PHP 8.2 floor, Facturapi dep, vertical OFF stubs`
+- [x] **Step 1: Write failing tests** — `InvoicingConfigTest`; SkeletonPurity includes `invoicing` OFF; optional docs assert that the spec mentions `Design amendments` or `A1`.
+- [x] **Step 2: Run** — expect FAIL.
+- [x] **Step 3: Implement** composer/config/env/vertical + spec header pointer + `composer update facturapi/facturapi-php --with-all-dependencies`.
+- [x] **Step 4: Run** InvoicingConfig + SkeletonPurity + Payments — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): PHP 8.2 floor, Facturapi dep, vertical OFF stubs`
 
 **Done when:** Gates green; spec header points at plan amendments.
 
@@ -197,11 +197,11 @@ Consumer InvoiceableSourceInterface
 
 **Do not:** define ports; do not import SDK; do not write SQL.
 
-- [ ] **Step 1: Failing VO tests** (fromMinor; draft defaults; status known+unknown; tax line).
-- [ ] **Step 2: Run** — expect FAIL.
-- [ ] **Step 3: Implement** types.
-- [ ] **Step 4: Run** — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): domain VOs, enums, and exceptions`
+- [x] **Step 1: Failing VO tests** (fromMinor; draft defaults; status known+unknown; tax line).
+- [x] **Step 2: Run** — expect FAIL.
+- [x] **Step 3: Implement** types.
+- [x] **Step 4: Run** — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): domain VOs, enums, and exceptions`
 
 **Done when:** VO tests green; Domain has zero Facturapi imports.
 
@@ -256,11 +256,11 @@ OrganizationSettingsRepositoryInterface:
 **Do not:** implement PDO/Facturapi; do not add use cases.  
 **Note (D9):** keep provider interface fat for v1; Task 14 documents possible future `SupportsInvoiceDocuments` split.
 
-- [ ] **Step 1: Reflection tests** for methods above (include `findNeedsReconcile`).
-- [ ] **Step 2: Run** — expect FAIL.
-- [ ] **Step 3: Implement** interfaces.
-- [ ] **Step 4: Run** — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): domain ports for provider, source, and ledger`
+- [x] **Step 1: Reflection tests** for methods above (include `findNeedsReconcile`).
+- [x] **Step 2: Run** — expect FAIL.
+- [x] **Step 3: Implement** interfaces.
+- [x] **Step 4: Run** — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): domain ports for provider, source, and ledger`
 
 **Done when:** Ports frozen including reconcile reads.
 
@@ -297,11 +297,11 @@ OrganizationSettingsRepositoryInterface:
 
 **Do not:** add `dom_*`; do not write PHP repos.
 
-- [ ] **Step 1: Schema string tests** (tables, uniques, status, index provider+status, no `dom_`).
-- [ ] **Step 2: Run** — expect FAIL.
-- [ ] **Step 3: Write SQL** (MySQL 8 safe).
-- [ ] **Step 4: Run** — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): platform SQL inv_events and inv_organizations`
+- [x] **Step 1: Schema string tests** (tables, uniques, status, index provider+status, no `dom_`).
+- [x] **Step 2: Run** — expect FAIL.
+- [x] **Step 3: Write SQL** (MySQL 8 safe).
+- [x] **Step 4: Run** — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): platform SQL inv_events and inv_organizations`
 
 **Done when:** Schema supports claim + reconcile listing.
 
@@ -338,11 +338,11 @@ OrganizationSettingsRepositoryInterface:
 
 **Do not:** call Facturapi; do not implement use cases.
 
-- [ ] **Step 1: Failing contract + reflection tests**.
-- [ ] **Step 2: Run** — expect FAIL.
-- [ ] **Step 3: Implement** PDO + InMemory + shared contract runner.
-- [ ] **Step 4: Run** `php tests/run.php Invoicing` — InMemory contract PASS; PDO contract PASS or intentional skip.
-- [ ] **Step 5: Commit** `feat(invoicing): PDO/InMemory ledger with shared contract tests`
+- [x] **Step 1: Failing contract + reflection tests**.
+- [x] **Step 2: Run** — expect FAIL.
+- [x] **Step 3: Implement** PDO + InMemory + shared contract runner.
+- [x] **Step 4: Run** `php tests/run.php Invoicing` — InMemory contract PASS; PDO contract PASS or intentional skip.
+- [x] **Step 5: Commit** `feat(invoicing): PDO/InMemory ledger with shared contract tests`
 
 **Done when:** A1 release/mark rules are asserted by one suite against InMemory; PDO implements the same port and is contract-tested when DB exists.
 
@@ -365,7 +365,7 @@ OrganizationSettingsRepositoryInterface:
 
 **Do not:** create `InvoicingFactory`; do not reference `FacturapiInvoiceProvider::class`.
 
-- [ ] **Step 1–5:** TDD registry; commit `feat(invoicing): invoice provider registry`
+- [x] **Step 1–5:** TDD registry; commit `feat(invoicing): invoice provider registry`
 
 **Done when:** Registry tests green; zero Infrastructure\Invoicing imports.
 
@@ -396,11 +396,11 @@ OrganizationSettingsRepositoryInterface:
 
 **Do not:** factory/use cases/`inv_*`.
 
-- [ ] **Step 1: Failing tests** including fixture assertions.
-- [ ] **Step 2: Run** — expect FAIL.
-- [ ] **Step 3: Implement** adapter + fixtures.
-- [ ] **Step 4: Run** — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): Facturapi adapter with golden tax fixtures`
+- [x] **Step 1: Failing tests** including fixture assertions.
+- [x] **Step 2: Run** — expect FAIL.
+- [x] **Step 3: Implement** adapter + fixtures.
+- [x] **Step 4: Run** — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): Facturapi adapter with golden tax fixtures`
 
 **Done when:** IVA16 + exento fixtures green; Domain still SDK-free.
 
@@ -426,7 +426,7 @@ OrganizationSettingsRepositoryInterface:
 
 **Do not:** bind container; do not implement Issue yet.
 
-- [ ] **Step 1–5:** TDD factory; commit `feat(invoicing): InvoicingFactory builds provider registry`
+- [x] **Step 1–5:** TDD factory; commit `feat(invoicing): InvoicingFactory builds provider registry`
 
 **Done when:** Enabled facturapi appears; disabled omitted; unknown driver throws.
 
@@ -463,9 +463,9 @@ OrganizationSettingsRepositoryInterface:
 
 **Do not:** cancel/download; do not bind container; do not implement Reconcile (Task 10).
 
-- [ ] **Step 1: Failing tests** including create-then-markIssued-failure.
-- [ ] **Step 2–4:** Implement until PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): IssueInvoiceFromSource with safe idempotent claims`
+- [x] **Step 1: Failing tests** including create-then-markIssued-failure.
+- [x] **Step 2–4:** Implement until PASS.
+- [x] **Step 5: Commit** `feat(invoicing): IssueInvoiceFromSource with safe idempotent claims`
 
 **Done when:** A1 partial-failure test green; second handle does not call create again.
 
@@ -499,11 +499,11 @@ Optional thin: listNeedsReconcile(providerKey, limit) wrapping events.findNeedsR
 
 **Do not:** call Facturapi retrieve/API sync in v1 (no remote pull); do not add UI/cron.
 
-- [ ] **Step 1: Failing tests** (promote needs_reconcile; replay issued; never create; claimed-only path).
-- [ ] **Step 2: Run** — expect FAIL.
-- [ ] **Step 3: Implement**.
-- [ ] **Step 4: Run** — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): ReconcileIssuedInvoice closes needs_reconcile safely`
+- [x] **Step 1: Failing tests** (promote needs_reconcile; replay issued; never create; claimed-only path).
+- [x] **Step 2: Run** — expect FAIL.
+- [x] **Step 3: Implement**.
+- [x] **Step 4: Run** — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): ReconcileIssuedInvoice closes needs_reconcile safely`
 
 **Done when:** Promote path green; tests prove `createInvoice` is not called.
 
@@ -530,7 +530,7 @@ Cancel → provider cancel → audit claim best-effort; map not-cancellable. Dow
 
 **Do not:** webhooks/UI; do not reconcile here.
 
-- [ ] **Step 1–5:** TDD; commit `feat(invoicing): cancel, download, and email scaffold use cases`
+- [x] **Step 1–5:** TDD; commit `feat(invoicing): cancel, download, and email scaffold use cases`
 
 **Done when:** Ambiguous source fails closed; cancel/download/email covered.
 
@@ -556,11 +556,11 @@ Cancel → provider cancel → audit claim best-effort; map not-cancellable. Dow
 
 **Do not:** hit real Facturapi; do not enable vertical in config.
 
-- [ ] **Step 1: Write failing smoke tests**.
-- [ ] **Step 2: Run** — expect FAIL if wiring gaps.
-- [ ] **Step 3: Fix only if a prior task left a composability bug** (prefer fix in owning layer + re-smoke).
-- [ ] **Step 4: Run** `php tests/run.php Invoicing/InvoicingSmoke` — PASS.
-- [ ] **Step 5: Commit** `test(invoicing): smoke Issue+Reconcile against fake transport`
+- [x] **Step 1: Write failing smoke tests**.
+- [x] **Step 2: Run** — expect FAIL if wiring gaps.
+- [x] **Step 3: Fix only if a prior task left a composability bug** (prefer fix in owning layer + re-smoke).
+- [x] **Step 4: Run** `php tests/run.php Invoicing/InvoicingSmoke` — PASS.
+- [x] **Step 5: Commit** `test(invoicing): smoke Issue+Reconcile against fake transport`
 
 **Done when:** Smoke proves A1 → reconcile → no double create.
 
@@ -592,11 +592,11 @@ Cancel → provider cancel → audit claim best-effort; map not-cancellable. Dow
 
 **Do not:** enable vertical; no menu/permisos.
 
-- [ ] **Step 1: Failing container string tests + helper test**.
-- [ ] **Step 2: Run** — expect FAIL.
-- [ ] **Step 3: Implement** bindings + helper + sync.
-- [ ] **Step 4: Run** container/helper + SkeletonPurity — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): gated DI, reconcile bind, conditional Issue helper`
+- [x] **Step 1: Failing container string tests + helper test**.
+- [x] **Step 2: Run** — expect FAIL.
+- [x] **Step 3: Implement** bindings + helper + sync.
+- [x] **Step 4: Run** container/helper + SkeletonPurity — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): gated DI, reconcile bind, conditional Issue helper`
 
 **Done when:** Reconcile bound; Issue conditional; helper tested; purity OFF.
 
@@ -634,11 +634,11 @@ Cancel → provider cancel → audit claim best-effort; map not-cancellable. Dow
 
 **Do not:** Portal membership/checkout docs.
 
-- [ ] **Step 1: Failing docs tests** (source bind, reconcile runbook, PHP ≥8.2, `inv_`, Invoicing ownership).
-- [ ] **Step 2: Run** — expect FAIL.
-- [ ] **Step 3: Write/update docs**.
-- [ ] **Step 4: Run** `php tests/run.php Invoicing`, `Kernel/SkeletonPurity`, `Payments` — all PASS.
-- [ ] **Step 5: Commit** `docs(invoicing): module guide, reconcile runbook, release notes`
+- [x] **Step 1: Failing docs tests** (source bind, reconcile runbook, PHP ≥8.2, `inv_`, Invoicing ownership).
+- [x] **Step 2: Run** — expect FAIL.
+- [x] **Step 3: Write/update docs**.
+- [x] **Step 4: Run** `php tests/run.php Invoicing`, `Kernel/SkeletonPurity`, `Payments` — all PASS.
+- [x] **Step 5: Commit** `docs(invoicing): module guide, reconcile runbook, release notes`
 
 **Done when:** Docs tests green; full Invoicing suite green; Payments untouched.
 
@@ -678,8 +678,15 @@ Cancel → provider cancel → audit claim best-effort; map not-cancellable. Dow
 
 ## Estado de ejecución
 
-- **Reconciled:** 2026-08-07 (plan restructured + debt mitigations; not yet executed).
-- **Completed / total:** 0 / 14
-- **Next executable task:** Task 1 (Foundation + spec pointer)
-- **Blockers:** none for Task 1; human chooses execution mode.
-- **Note:** Evolved from PR #91 (11 tasks) → critique restructure (12) → **14 tasks** with D1–D7 mitigations ordered into the critical path.
+| Campo | Valor |
+|-------|-------|
+| Reconciliación UTC | 2026-08-08T12:40:00Z |
+| Framework `origin/main` verificado | `5bf0863f45116b3e574a085c0dca2bed46ed983a` |
+| Tareas completadas / totales | 14 / 14 |
+| Siguiente tarea ejecutable | ninguna — plan completo |
+| Prerrequisitos | Cumplidos |
+| Bloqueos | ninguno |
+| Estado | **completo** — archivado |
+| Evidencia | PR [#99](https://github.com/Parzival2103/Lebytek_Framework/pull/99) merge `21edf26`; módulo en `src/Domain/Invoicing/`, `src/Application/Invoicing/`, `src/Infrastructure/Invoicing/`, SQL `database/schema/modules/invoicing.sql`, suite `tests/Invoicing/**` (14 tasks Tasks 1–14 verificados en tip) |
+
+**Nota:** Continuación de hardening en plan `2026-08-08-invoicing-facturapi-production-hardening.md` (0/10).
