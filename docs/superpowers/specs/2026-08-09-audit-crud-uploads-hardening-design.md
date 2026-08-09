@@ -33,9 +33,9 @@
 | SHA Portal inspeccionado | **No verificado** — `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository»; `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404. Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-09` |
-| Timestamp UTC | trigger cron `2026-08-09T12:10:00Z` / corrida agente `2026-08-09T12:10:00Z` |
+| Timestamp UTC | trigger cron `2026-08-09T12:10:00Z` / corrida agente `2026-08-09T12:10:00Z` / pase ux `2026-08-09T12:30:00Z` (modo **normal**) |
 | Nivel de fuente | **B** — no existe PR abierto `docs(audit):*` (`gh pr list --search "docs(audit):"` → vacío). Rama `origin/automation/audit-2026-08-09` con único diff `docs/audits/2026-08-09-auditoria-tecnica-diaria.md`; ancestry limpia; ningún commit legacy ancestro del head. **PR de auditoría faltaba.** |
-| PR auditoría fuente | *(ninguno — rama sin PR al momento de la corrida)* |
+| PR auditoría fuente | #106 — https://github.com/Parzival2103/Lebytek_Framework/pull/106 (abierto al pase ux) |
 | headRefOid fuente | `e5ec12003b1f840926b700f2f258a25a8b8e1463` (rama audit; **no heredada**) |
 | `<LEGACY_REF>` | `refs/tags/archive/backoffice-api-integration` @ `4789f953ef746d17bae2e6b50c85504782d306e3` — 53 commits exclusivos; ninguno ancestro de HEAD ni del head audit |
 | Issues abiertos Framework | **0** (`gh issue list --repo Parzival2103/Lebytek_Framework --state open` → vacío) |
@@ -230,7 +230,84 @@ main (AuthZ #95 + states #100 ya mergeados)
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: normal
+
+Este spec endurece **uploads CRUD** (allowlist, path jail, validación de config). Superficie UI
+verificable: campos `type: "file"` en formularios admin (`form.php` L100–105), mensajes
+`ValidationException` bajo el campo (`invalid-feedback`), y errores de config al cargar JSON CRUD
+(`CrudConfigException` — operador/despliegue). No modifica login, dashboard nav ni listados; esas
+superficies permanecen carry-forward.
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (C6) | Evidencia / carry-forward |
+|------|----------------|---------------------------|
+| PHP soportado | Sin cambio runtime | `composer.json` exige `>=8.2`; VPS documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`) — compatible; `realpath`/`str_starts_with` disponibles en 8.2+. |
+| Instalación vía `vendor/` | Contrato paquete semver | Consumidores obtienen fix tras tag **`v1.2.8`** + bump lock — **no** parche en `vendor/`. Prerrequisito tag **`v1.2.7`** (REL-C1, PR `#105`). Portal JSON `dom_*` con uploads ON debe declarar `allowed_extensions` antes del bump (**no verificado** M6). |
+| Health sin cookie de sesión | Carry-forward **M4** | `routes/api.php` — `/api/ping` exige sesión; smoke LB: **no** usar ping. Backlog `GET /api/health` público (spec 2026-08-05, plan 0/5). |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` L55 remite `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` a Portal; uploads CRUD no introducen env vars nuevas. |
+| Navegadores objetivo | Superficie formulario file + errores | Baseline `docs/core/ui_ux.md`: admin breakpoint **992px (`lg`)**. Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15; sin IE11. Input `type="file"` nativo debe ser usable en **320–768px** sin overflow horizontal del form card. |
+
+### UX — flujos admin CRUD uploads (C6)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | Rechazo por extensión no allowlisted: mensaje existente «Extensión de archivo no permitida para {label}.» se muestra bajo el campo (`invalid-feedback`) — **no** error genérico de página | C6 runtime |
+| **U2** | Copy accionable post-C6: cuando el validador conoce la allowlist, el mensaje indica extensiones permitidas (p. ej. «Usa: pdf, jpg, png») — qué falló + qué hacer; conservar tono español del CRUD Engine | C6 runtime, CF10 parcial |
+| **U3** | Rechazo MIME/contenido: mensajes actuales («El contenido del archivo… no coincide con su extensión», «supera el tamaño máximo») permanecen bajo el campo — operador distingue extensión vs MIME vs tamaño | C6 runtime |
+| **U4** | Error de config (`CrudConfigException` al load): mensaje en español indica recurso, campo file y acción («añade validation.allowed_extensions con al menos una extensión» o «corrige uploads.public_path — debe empezar por uploads/») — **no** sólo «config inválida» | C6 validator |
+| **U5** | Distinción config vs runtime: fallo en arranque/deploy por JSON mal configurado **no** se confunde con error de upload en formulario POST — operador sabe si editar JSON o reintentar archivo | C6 validator + runtime |
+| **U6** | `help_text` en JSON CRUD para campos file: doc § uploads recomienda listar extensiones permitidas visibles al usuario final (p. ej. «Solo PDF, máx. 5 MB») — alineado a allowlist declarada | Doc C6 |
+| **U7** | Tests Security/Archivos/Crud Upload: mensaje de fallo pre-fix cita spec C6, archivo bajo test y acción («implementar allowlist obligatoria» / «registrar uploadsBlockErrors») | C6 tests |
+| **U8** | Avatares (`avatar_manager.php`): sin regresión — mismos mensajes de rechazo bajo input; allowlist explícita ya cumple C6 | C6 compat avatares |
+
+### UX — instalación y operaciones (Portal / staging)
+
+| Requisito | Criterio | Estado |
+|-----------|----------|--------|
+| **U9** | Checklist migración Portal (§ Migración segura): operador audita JSON antes de bump — mensaje CLI/log al detectar config rechazada indica archivo y regla violada | P1–P3 |
+| **U10** | Bump Framework a `1.2.8` fallido por semver: Composer indica versión mínima y secuencia (`1.2.7` tag REL-C1 primero) | REL-C1 carry-forward |
+
+### Responsive — smoke en superficies tocadas
+
+Referencia: `docs/core/ui_ux.md` §542 — breakpoint admin **992px (`lg`)**; formularios apilan campos en móvil (§12).
+
+| Superficie | Verificación post-merge | Rango |
+|------------|-------------------------|-------|
+| Formulario CRUD con campo file | `form-control` file input ancho completo; label + `help_text` + `invalid-feedback` legibles; botones acción en `flex-column flex-sm-row` sin solapamiento | **320–768px** |
+| Mensajes de error upload | Texto de error no desborda card; sin scroll horizontal en `.ct-form-card` | **320–768px** |
+| Listado CRUD (sin cambio directo) | Sin regresión: `table-responsive` en listados con columna de archivo/adjunto | **320–768px** |
+| Login / dashboard nav (sin alcance directo) | Carry-forward CF3–CF4 — smoke opcional post-merge | **320–768px** |
+
+### Carry-forward UX — próximo spec con superficie UI más amplia
+
+Ítems derivados de deuda abierta; **C6 uploads queda cubierto por este spec** — no arrastrar como hueco
+allowlist/path. CF6 (RBAC router), CF1 parcial (REL-C1 tag) y CF5 parcial (`mkt_leads`) tampoco se
+arrastran (specs 2026-08-06, 2026-08-08, 2026-08-03).
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF7 | Health endpoint público | M4 | `GET /api/health` 200 sin cookie; body `{ "status": "ok" }`; checklist VPS — spec/plan 2026-08-05 (**0/5**). |
+| CF8 | Permisos admin catálogo | M5 | Slug `permisos.gestionar` en seeds; UI permisos sin workaround `administracion.ver`. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección — más allá de U2. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer — extiende U2 fuera de uploads. |
+| CF11 | Pantalla estado sistema post-tag | O2, D6 | `/admin/sistema/estado` muestra semver legible en 320–768px tras deploy skeleton/staging — verificación manual bloqueada por D6/M6. |
+
+---
+
 ## Criterios de aceptación
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **normal** con requisitos K/U/R verificables para C6 (formularios file admin, mensajes upload/config).
+- [ ] **AC-UX2:** Requisitos U1–U8 (mensajes bajo campo, copy accionable con allowlist, distinción config vs runtime, help_text, hints test gate, avatares sin regresión) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF7–CF11 documentado; C6 no arrastrado (cubierto por este spec); CF6, CF1 parcial REL-C1, CF5 parcial y D7 no arrastrados (cubiertos en specs previos).
+- [ ] **AC-UX4:** Smoke responsive en **320–768px** para formulario CRUD con campo file y mensajes de error post-implementación (sin regresión `table-responsive` en listados).
 
 ### Tests que deben **fallar antes** de implementar (TDD)
 
