@@ -41,6 +41,7 @@
 | Issues abiertos Framework | **0** (`gh issue list --repo Parzival2103/Lebytek_Framework --state open` → vacío) |
 | Issues abiertos Portal | **No verificable** — mismo bloqueador gh 404 (M6) |
 | PRs abiertos Framework (contexto) | `#105` REL-C1 spec/plan (`MERGEABLE`, no en tip `main`) |
+| Pase deuda | `2026-08-09T13:02:06Z` — modo **normal** — `origin/main` @ `487ccd8132e7c42eabd2a0e3b335b075ccc123e1` |
 
 ---
 
@@ -141,14 +142,18 @@ Implementar **Enfoque A** como release PATCH **`1.2.8`** (después de publicar t
 
 ## No-alcance
 
-- Punto 4 CAS/TOCTOU (CRUD-C4, G13, G1, G14).
-- RBAC router CRUD (M3 / spec 2026-08-06).
-- API health público (M4).
-- Invoicing Facturapi hardening (INV-E1/E2).
+- Punto 4 CAS/TOCTOU (CRUD-C4, G13, G1, G14) — backlog verificado § Deuda técnica; plan p04 pendiente.
+- RBAC router CRUD (M3 / spec 2026-08-06) — plan `2026-08-06-audit-crud-rbac-router.md` **0/40**.
+- API health público (M4) — plan `2026-08-05-audit-api-health-public.md` **0/38**.
+- Release semver REL-C1 (tag `v1.2.7`) — spec/plan PR `#105` pendiente merge; prerrequisito de tag `v1.2.8` C6.
+- Invoicing Facturapi hardening (INV-E1/E2) — plan `2026-08-08-invoicing-facturapi-production-hardening.md` **0/50**; vertical OFF.
+- Deploy LAB `skeleton.lebytek.com` (D6) — plan humano `2026-07-26-skeleton-package-staging.md`.
+- Retarget semver obsoleto en planes M3/M4 (`1.2.4`/`1.2.5`) — acción AUTOMATION-07, no bloquea C6.
 - Migrar uploads a disco private + controller de descarga (Enfoque C).
-- Cambios en `Lebytek_Portal` JSON de negocio (solo documentar checklist consumidor).
+- Cambios en `Lebytek_Portal` JSON de negocio (solo documentar checklist consumidor; P1–P3 **no verificados** M6).
 - Operaciones de producción (deploy VPS, bump lock Portal prod, SSH).
 - Merge o referencia a `feature/backoffice-api-integration` como base.
+- Auto-fix de deuda documentada (Payments bootstrap, Portal marketing) en `app/`/`src/` — requisitos quedan como gates ops consumidor.
 
 ---
 
@@ -216,6 +221,12 @@ main (AuthZ #95 + states #100 ya mergeados)
 | `realpath` falla si `PUBLIC_PATH` no existe | Baja | Crear jail root en install; test con `PUBLIC_PATH` temporal |
 | Falso positivo MIME (docx/zip) | Baja | Mantener mapa MIME existente; no ampliar denylist MIME agresiva en C6 |
 | Portal SHA desconocido (M6) | Media (visibilidad) | Marcar requisitos Portal como **no verificados** |
+| CRUD-C4 TOCTOU sin CAS | Alta (integridad estado) | Fuera alcance C6; plan p04 CAS/bulk — § Deuda técnica |
+| INV-E1/E2 si se habilita Facturapi | Alta (producción) | Vertical `invoicing=false`; no activar hasta plan hardening **0/50** |
+| Config Portal legacy sin allowlist post-bump | Alta (disponibilidad) | Checklist § Migración segura; U4/U5 UX |
+| Planes M3/M4 citan tags saltados (`1.2.4`/`1.2.5`) | Baja–Media (release train) | Retarget ≥`1.2.8` al implementar; no bloquea diseño C6 |
+| Hueco auditorías 2026-08-03..05 (M10) | Media (proceso) | Cadena specs 03–09 sin ancla audit diaria esos días |
+| `composer validate` lock content-hash (H1) | Baja (hygiene) | CI usa `--no-check-lock`; corregir en release train humano |
 
 ---
 
@@ -309,6 +320,13 @@ arrastran (specs 2026-08-06, 2026-08-08, 2026-08-03).
 - [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF7–CF11 documentado; C6 no arrastrado (cubierto por este spec); CF6, CF1 parcial REL-C1, CF5 parcial y D7 no arrastrados (cubiertos en specs previos).
 - [ ] **AC-UX4:** Smoke responsive en **320–768px** para formulario CRUD con campo file y mensajes de error post-implementación (sin regresión `table-responsive` en listados).
 
+### Deuda técnica (inventario)
+
+- [ ] **AC-D1:** Sección **Deuda técnica** lista abiertos verificados (CRUD-C6, REL-C1, CRUD-C4, INV-E1/E2, M3–M5, D6, M10) con evidencia ruta/línea en `main` @ `487ccd8`.
+- [ ] **AC-D2:** M1, M2, M7–M9, D7, CRUD-C1/C2/C3/C5 reconciliados como **resueltos en tip** (release AuthZ/states pendiente REL-C1); no re-listados como abiertos.
+- [ ] **AC-D3:** P1–P3, M6/D3, D14, D15, H1 marcados **no verificados**; acción concreta documentada.
+- [ ] **AC-D4:** Verificado sin deuda nueva — migraciones 3 SQL ↔ 3 entradas manifiesto; `src/` sin `TODO`/`FIXME`; referencias operativas vivas a `feature/backoffice-api-integration` ausentes fuera registro histórico; Payments bootstrap documentado como gate ops.
+
 ### Tests que deben **fallar antes** de implementar (TDD)
 
 | Test (nuevo o invertido) | Fallo esperado pre-fix | Motivo |
@@ -381,6 +399,84 @@ Conservar generación de nombre seguro y ledger `core_archivos` sin cambio de sc
 | Bump Portal lock | — | CI/staging manual | Operador |
 | Auditar JSON CRUD Portal | — | Recomendado | Obligatorio antes de bump |
 | Deploy VPS | — | — | **Fuera de corrida desatendida** |
+
+---
+
+## Deuda técnica
+
+Fuente: auditoría `docs/audits/2026-08-09-auditoria-tecnica-diaria.md` (merge `#106` @ `487ccd8`); reconciliación con inventario spec `2026-08-06-audit-crud-rbac-router-design.md` (pase deuda @ `ddc55ec`) y corrida `2026-08-07` (authz — commit `0d0db79` en rama `automation/spec-2026-08-07`, artefacto no mergeado a `main`; cierres verificados en tip `487ccd8`).
+
+### Reconciliación heredada (cerrados)
+
+| ID | Tema | Estado | Resolución |
+|----|------|--------|------------|
+| **D7** | CI GitHub Actions | **Resuelto** | PR #88 @ `8e6ed48` — `.github/workflows/platform-tests.yml` presente; `tests/Docs/CiWorkflowPresentTest.php` verde @ `487ccd8` |
+| **CRUD-C1** | IDOR `scope_handler` | **Resuelto en tip** | PR #95 @ `64a6877` — consumo Composer pendiente REL-C1 |
+| **CRUD-C2** | Acción sin `permission` | **Resuelto en tip** | PR #95 @ `64a6877` — consumo Composer pendiente REL-C1 |
+| **CRUD-C5** | `CrudReporteDataSource` sin `{resource}.ver` | **Resuelto en tip** | PR #95 @ `64a6877` — consumo Composer pendiente REL-C1 |
+| **CRUD-C3** | Columna states editable + demo toggle | **Resuelto en tip** | PR #100 @ `60477dc` — consumo Composer pendiente REL-C1 |
+| **M1** | Sync semver trío | **Resuelto en tip** | `composer.json` L6, `config/app.php` L7, `skeleton/config/app.php` L7 → `1.2.7` @ `487ccd8`; tag publicado pendiente (REL-C1) |
+| **M2** | `.env.example` vars Portal | **Resuelto** | #62 — root `.env.example` L55 remite keys Portal; activas `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` = **0** |
+| **M7–M9** | Audit lifecycle / ops / dompdf | **Resuelto** | #54/#56/#57/#74 — sin regresión @ `487ccd8` |
+| **C1** | Scripts `vps-deploy-*` | **Resuelto** | PR #36; `DeployScriptsRemovedTest` verde |
+| **C2** | Stripe subscription (Framework) | **Resuelto** Framework | PR #42 + tags `v1.2.1`…`v1.2.3`; QA Portal **no verificado** (M6) |
+
+**Cierres desde corrida anterior (2026-08-07 pase deuda @ `da3ab58`):** **4** — CRUD-C1, CRUD-C2, CRUD-C5 (#95 @ `64a6877`); CRUD-C3 (#100 @ `60477dc`). Intervalo `da3ab58..487ccd8` incluye merges código AuthZ/states + audits/invoicing docs; D7 ya estaba cerrado (#88 antes de `da3ab58`).
+
+### Alcance principal de este spec (CRUD-C6 — abierto, verificado)
+
+| ID | Hallazgo | Evidencia (`main` @ `487ccd8`) | Impacto | Capa | Owner | Acción |
+|----|----------|--------------------------------|---------|------|-------|--------|
+| **CRUD-C6** | Uploads sin allowlist obligatoria + path sin jail | `UploadValidator.php` L63–68 — allowlist `null`/`[]` no rechaza; `tests/Security/UploadValidatorTest.php` L20 — test «acepta cuando no hay lista blanca» **PASS**; `FileUploadService.php` L62–63 — concatena `PUBLIC_PATH` sin `realpath`/bloqueo `..`; `CrudDataService.php` L705–719 — `allowedExtensions: … null` si falta `validation.allowed_extensions`; `CrudConfigValidator.php` — **sin** `uploadsBlockErrors`; `UploadValidator.php` L31 — `svg` en `MIME_BY_EXT` (XSS almacenado si servido inline) | Vector webshell / path traversal / XSS; superficie escritura disco | `Application` | Framework | Enfoque A § Comportamiento esperado + plan `2026-08-09-audit-crud-uploads-hardening.md`; tag **`v1.2.8`** post REL-C1 |
+
+### Backlog Framework verificado (fuera alcance C6)
+
+| ID | Hallazgo | Evidencia (`main` @ `487ccd8`) | Impacto | Capa | Owner | Acción |
+|----|----------|--------------------------------|---------|------|-------|--------|
+| **REL-C1** | Tip `1.2.7` sin tags `v1.2.6`/`v1.2.7` | `composer.json` L6 = `1.2.7`; `git tag -l 'v1.2.*'` → sólo hasta `v1.2.3` @ `041e402`; `git tag --contains 64a6877` / `60477dc` → vacío; spec/plan PR `#105` **no** en tip | AuthZ/states no consumibles por Composer lock | Release ops | Framework | Merge/ejecutar plan `2026-08-08-audit-release-semver-tag.md`; publicar tag mínimo `v1.2.7` |
+| **CRUD-C4** | Transitions sin CAS / TOCTOU | `CrudTransitionService.php` L104–108 — `updateRecord` sin predicado `WHERE estado = :from`; audit crítica #90 § C4 | Carreras concurrentes en máquina de estados | `Application` | Framework | Plan p04 CAS/bulk (**no existe**); spec programa punto 4 |
+| **INV-E1** | Doble timbrado tras timeout post-create | `IssueInvoiceFromSource.php` L73 — `releaseClaim` si create remoto ambiguo; audit invoicing #101 E1 | Doble CFDI si vertical ON | `Application` Invoicing | Framework | Plan hardening **0/50**; mantener `FACTURAPI_ENABLED=false` |
+| **INV-E2** | Fallo dual markIssued/markNeedsReconcile | `IssueInvoiceFromSource.php` L57–62 — `catch` traga fallo `markNeedsReconcile`; id remoto irrecuperable localmente | Reconciliación manual | `Application` Invoicing | Framework | Mismo plan hardening **0/50** |
+| **M3** | CRUD/Calendario sin `RbacMiddleware` router | `routes/web.php` L114–125 — `/crud/{resource}*`, `/calendario/{key}*` sin RBAC router; contraste L127+ pdf-kit/reportes **sí** usan `RbacMiddleware`; `skeleton/routes/web.php` espejo; plan **0/40** | Defensa en profundidad débil; 403 inconsistentes | `Presentation` / `routes/` | Framework | Spec/plan 2026-08-06; retarget tag ≥`1.2.8` |
+| **M4** | `/api/*` sesión; sin health público | `routes/api.php` L14–16 — grupo `AuthMiddleware`; L23 `/api/ping` dentro del grupo; `rg '/health' routes/` → **0**; plan **0/38** | LB/cron no liveness sin cookie | `Presentation` / `routes/` | Framework | Spec/plan 2026-08-05 |
+| **M5** | Slug `permisos.gestionar` ausente | `routes/web.php` L61–65 — workaround `administracion.ver`; `rg permisos.gestionar database/` → **0** | Catálogo RBAC acoplado | `Domain` RBAC | Framework | CF8 — seed + rutas futuro |
+| **D6** | `skeleton.lebytek.com` pendiente | `docs/ENVIRONMENTS.md` L7, L13, L31 — «pendiente de implementar»; plan staging **0/10** deploy | LAB package puro no desplegado | Ops | Framework/Ops | Plan humano Tasks 6–8 |
+| **M10** | Hueco auditorías 2026-08-03..05 | `docs/audits/` sin `2026-08-0{3,4,5}-auditoria-tecnica-diaria.md`; cadena 06–09 en curso | Specs 03–05 sin ancla audit diaria | Proceso automation | Ops/automation | Corrida AUTOMATION-00 retroactiva o aceptar hueco documentado |
+
+### Planes activos — estado ejecución real
+
+| Plan | Tareas | Estado @ `487ccd8` |
+|------|--------|-------------------|
+| `docs/superpowers/plans/2026-08-09-audit-crud-uploads-hardening.md` | 0/N | Pendiente — Task 1 tests Security (este spec C6) |
+| `docs/superpowers/plans/2026-08-08-audit-release-semver-tag.md` | 0/N | Pendiente — PR `#105`; tag `v1.2.7` no publicado |
+| `docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md` | 0/40 | Pendiente — M3 |
+| `docs/superpowers/plans/2026-08-05-audit-api-health-public.md` | 0/38 | Pendiente — M4 |
+| `docs/superpowers/plans/2026-08-08-invoicing-facturapi-production-hardening.md` | 0/50 | Pendiente — INV-E1/E2 |
+| `docs/superpowers/plans/2026-08-07-crud-p04-cas-bulk-equality.md` | — | **No existe** — CRUD-C4 |
+
+### No verificados (declarados explícitamente)
+
+| ID | Hallazgo | Motivo | Acción |
+|----|----------|--------|--------|
+| **P1** | Portal lock ≥ `v1.2.3` / JSON uploads `dom_*` | `gh repo view Parzival2103/Lebytek_Portal` → GraphQL fail; última evidencia `v1.1.0` @ `a79d3ad` | Auditar `config/cruds/` antes bump `1.2.8` cuando M6 resuelva |
+| **P2** | Portal merge CRUD / wiring post-tag | Clone Portal inaccesible | Operador valida staging post REL-C1 |
+| **P3** | Portal CRUD `permission_prefix` / uploads ON | Repo Portal inaccesible | Checklist § Migración segura |
+| **M6 / D3** | Portal SHA / `composer.lock` | `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404 | Ops: conceder lectura Portal al token automation |
+| **D14** | Stripe subscription QA Portal | Repo Portal inaccesible; Framework `vertical.payments=false` | Portal QA checkout antes de habilitar |
+| **D15** | Bootstrap marketing Portal | Re-scopeado `Lebytek_Portal#4` | Portal issue #4 |
+| **H1** | `composer validate` lock content-hash | No re-ejecutado en este pase; audit #104 documenta exit **2** con lock drift | `composer update --lock` en release train; CI `--no-check-lock` |
+
+### Verificado sin deuda nueva
+
+- **Migraciones ↔ manifiesto:** 3 archivos `database/migrations/` ↔ 3 entradas `config/modules/{core,crud-engine,pdf-kit}.php` L15–16 — sin drift.
+- **`src/`:** `rg TODO\|FIXME src/` → **0** con impacto; sin `LebytekApiClient` ni Marketing.
+- **Capas:** uploads en `Application`; Domain sin deps Presentation/Infrastructure; hook `afterListRows` sin violación.
+- **Legacy operativo:** referencias vivas a `feature/backoffice-api-integration` **ausentes** en `scripts/`, `docs/composer-setup.md` (L128 cita tag archive como histórico), `docs/integration/`; menciones en `docs/automation/` = registro de proceso, no runbook deploy.
+- **Payments bootstrap:** `config/vertical.php` — `payments=false`, `invoicing=false`; root `.env.example` keys Stripe OFF — requisitos Stripe = gate ops Portal (D14), no auto-fix `src/`.
+- **`.env.example` root vs skeleton:** drift `APP_NAME`/`DB_DATABASE`/keys `PAYMENTS_*`/`STRIPE_*` — **intencional** (harness plataforma vs tenant mínimo); no reabre M2.
+- **CI:** `platform-tests.yml` + `CiWorkflowPresentTest` — D7 permanece resuelto.
+
+**Conteo:** **10 abiertos verificados** (CRUD-C6 alcance spec + REL-C1, CRUD-C4, INV-E1, INV-E2, M3, M4, M5, D6, M10); **7 no verificados** (P1, P2, P3, M6/D3, D14, D15, H1); **4 heredados cerrados** esta corrida (CRUD-C1, CRUD-C2, CRUD-C5, CRUD-C3 en tip).
 
 ---
 
