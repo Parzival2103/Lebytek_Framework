@@ -682,8 +682,14 @@ Expected: all PASS after Task 10.
 
 ## Estado de ejecución
 
-- **Reconciled:** 2026-08-08 (plan authored; plan-audit amendments A21/A22 applied; **review de PR #103 → A23–A27 applied**; not executed).
-- **Completed / total:** 0 / 10
-- **Next executable task:** Task 1 (mode/key fail-fast); Task 2 parallel-safe.
-- **Blockers:** none for Task 1. Para Tasks 3/5/6 rige **A23–A27**: no ejecutar la redacción previa de A21 (`fromSourceRef`), ni el contrato de Reconcile basado en `findByIdempotencyKey` / `IssuedInvoice::status()`.
-- **Human ops residual:** configure `FACTURAPI_WEBHOOK_SECRET` and consumer route; assign RBAC roles; programar el barrido `findOrphanClaims` (no hay cron en Framework); `forceReissueOrphanClaim` (A26) es siempre decisión humana con RBAC `invoicing.reconciliar`.
+| Campo | Valor |
+|-------|-------|
+| **Reconciliación UTC** | 2026-08-09 |
+| **`origin/main` verificado** | `487ccd8132e7c42eabd2a0e3b335b075ccc123e1` |
+| **Completadas / totales** | 0 / 10 |
+| **Siguiente tarea ejecutable** | Task 1 (mode/key fail-fast); Task 2 parallel-safe con Task 1 |
+| **Prerrequisitos** | Módulo Invoicing scaffold en main (PR #99 @ `21edf26`); plan enmiendas A23–A27 (PR #103); vertical `invoicing` OFF por defecto |
+| **Bloqueos** | Ninguno para Task 1. Tasks 3/5/6: aplicar **A23–A27** (no `fromSourceRef`, no reconcile vía `findByIdempotencyKey` / `IssuedInvoice::status()`). Tag Composer `v1.2.7` (REL-C1, PR #105) aún no publicado — no bloquea código Invoicing pero sí release semver del hardening. |
+| **Evidencia verificación (ninguna tarea completada en main)** | Sin `InvoiceAmbiguousCreate`, `FacturapiExternalId`, `findClaimByIdempotencyKey`, `listByExternalId` en port, mode/key fail-fast en `InvoicingFactory`, ni slugs RBAC en `config/modules/invoicing.php` @ `487ccd8` |
+| **Estado** | Pendiente de implementación |
+| **Ops humano residual** | `FACTURAPI_WEBHOOK_SECRET`, ruta webhook consumidor, roles RBAC, barrido `findOrphanClaims`, `forceReissueOrphanClaim` (A26) |
