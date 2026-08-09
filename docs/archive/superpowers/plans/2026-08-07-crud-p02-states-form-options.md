@@ -105,7 +105,7 @@
 - Consumes: `CrudConfigValidator::statesBlockErrors`
 - Produces: rechazo de colisión `states.column` ∈ `form.fields[*].name`
 
-- [ ] **Step 1: Escribir el test que falla** — añadir al final de `tests/Crud/State/CrudConfigValidatorStatesTest.php`:
+- [x] **Step 1: Escribir el test que falla** — añadir al final de `tests/Crud/State/CrudConfigValidatorStatesTest.php`:
 
 ```php
 test('statesBlockErrors: states.column en form.fields es error (C3)', function (): void {
@@ -171,12 +171,12 @@ test('statesBlockErrors: colisión usa el nombre real de column (estado)', funct
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo**
+- [x] **Step 2: Ejecutar el test y comprobar el fallo**
 
 Run: `php tests/run.php Crud/State/CrudConfigValidatorStates`  
 Expected: FAIL — al menos el test C3 de colisión (hoy `statesBlockErrors` no inspecciona `form.fields`).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `CrudConfigValidator::statesBlockErrors`, **después** de validar `values`/`transitions`/`actions.row` transition `to` y **antes** del `return $errors`, añadir:
+- [x] **Step 3: Implementar el cambio mínimo** — en `CrudConfigValidator::statesBlockErrors`, **después** de validar `values`/`transitions`/`actions.row` transition `to` y **antes** del `return $errors`, añadir:
 
 ```php
         $column = (string) ($states['column'] ?? '');
@@ -199,17 +199,17 @@ Expected: FAIL — al menos el test C3 de colisión (hoy `statesBlockErrors` no 
 
 No modificar `PROTECTED_COLUMNS`. No tocar `actionsBlockErrors` (p01).
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php Crud/State/CrudConfigValidatorStates`  
 Expected: PASS
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Crud/State/CrudConfigValidatorStates Crud/Action/CrudConfigValidatorActions`  
 Expected: PASS (C2 permission sigue intacto)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/Crud/State/CrudConfigValidatorStatesTest.php src/Application/Services/CrudConfigValidator.php
@@ -236,7 +236,7 @@ git commit -m "fix(crud): reject states.column in form.fields (C3)"
 - Consumes: `CrudConfigValidator::statesBlockErrors` sobre JSON decodificado de demos
 - Produces: demos cargables sin colisión C3; create sigue válido vía DEFAULT SQL (`activo` / `pendiente`)
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Crud/State/CrudDemoStatesFormLockTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Crud/State/CrudDemoStatesFormLockTest.php`:
 
 ```php
 <?php
@@ -298,12 +298,12 @@ test('demo_citas: form no incluye states.column estado (C3)', function (): void 
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo**
+- [x] **Step 2: Ejecutar el test y comprobar el fallo**
 
 Run: `php tests/run.php Crud/State/CrudDemoStatesFormLock`  
 Expected: FAIL — demos actuales aún declaran el campo form de estado (y tras Task 1, `statesBlockErrors` no sería `[]` sobre esos JSON).
 
-- [ ] **Step 3: Implementar el cambio mínimo**
+- [x] **Step 3: Implementar el cambio mínimo**
 
 En **cada** uno de los 6 JSON (harness + skeleton):
 
@@ -323,17 +323,17 @@ Expected: exit 0 en los tres.
 
 No tocar schema SQL: `dom_demo_productos.status` DEFAULT `'activo'`, `dom_demo_pedidos.status` DEFAULT `'pendiente'`, `dom_demo_citas.estado` DEFAULT `'pendiente'` ya cubren el create sin campo form.
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php Crud/State/CrudDemoStatesFormLock Crud/State/CrudConfigValidatorStates`  
 Expected: PASS
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Crud/State`  
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add config/cruds/demo_productos.json config/cruds/demo_pedidos.json config/cruds/demo_citas.json \
@@ -357,7 +357,7 @@ git commit -m "fix(crud): remove state column from demo forms (C3)"
 - Consumes: `CrudResourceDefinition::stateMachine()`, `CrudStateMachine::column()`, reflexión sobre `buildPayload` privado (mismo patrón que `tests/Crud/Upload/CrudUploadLedgerTest.php`)
 - Produces: payload sin clave de columna de estados aunque el field exista en la definition de prueba
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Crud/State/CrudDataServiceStateColumnWriteTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Crud/State/CrudDataServiceStateColumnWriteTest.php`:
 
 ```php
 <?php
@@ -429,12 +429,12 @@ test('buildPayload omite states.column aunque venga en form+input (C3 defensa)',
 
 **Nota de wiring:** `validatePayload` ignora fields ausentes en `$normalizedByField` (así el skip de `status` no dispara `required`). `dbConstraintValidator` y `handlerRegistry` son nullable y quedan null con `newInstanceWithoutConstructor`. El strip debe calcular `$stateColumn` **una vez** antes del primer `foreach ($definition->formFields() as $field)` y hacer `continue` al inicio del loop tras resolver `$name`. Si la reflexión sobre `buildPayload` completo resultara frágil en el entorno del ejecutor, fallback permitido: extraer `private static function isStateMachineColumn(CrudResourceDefinition $definition, string $name): bool` y testearlo en unidad + llamarlo desde `buildPayload` (sin refactor amplio).
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo**
+- [x] **Step 2: Ejecutar el test y comprobar el fallo**
 
 Run: `php tests/run.php Crud/State/CrudDataServiceStateColumnWrite`  
 Expected: FAIL — hoy `status` entra al payload.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `CrudDataService::buildPayload`, justo antes del `foreach ($definition->formFields() as $field)`:
+- [x] **Step 3: Implementar el cambio mínimo** — en `CrudDataService::buildPayload`, justo antes del `foreach ($definition->formFields() as $field)`:
 
 ```php
         $stateColumn = $definition->stateMachine()?->column() ?? '';
@@ -448,17 +448,17 @@ Y dentro del foreach, inmediatamente después de resolver `$name` y **antes** de
             }
 ```
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php Crud/State/CrudDataServiceStateColumnWrite`  
 Expected: PASS
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Crud/State Crud/Upload/CrudUploadLedger`  
 Expected: PASS (patrón reflexión upload intacto)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Application/Services/CrudDataService.php tests/Crud/State/CrudDataServiceStateColumnWriteTest.php
@@ -484,7 +484,7 @@ git commit -m "fix(crud): strip state machine column from form payload (C3)"
 - Consumes: paths de registry/JSON/clase
 - Produces: superficie demo sin bypass de SM; transitions `activar`/`desactivar` permanecen
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Crud/Action/DemoProductoToggleRemovedTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Crud/Action/DemoProductoToggleRemovedTest.php`:
 
 ```php
 <?php
@@ -528,12 +528,12 @@ test('demo_productos JSON no declara action toggle (G15)', function (): void {
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo**
+- [x] **Step 2: Ejecutar el test y comprobar el fallo**
 
 Run: `php tests/run.php Crud/Action/DemoProductoToggleRemoved`  
 Expected: FAIL — clase/archivo/registry/JSON aún presentes.
 
-- [ ] **Step 3: Implementar el cambio mínimo**
+- [x] **Step 3: Implementar el cambio mínimo**
 
 1. Borrar `src/Application/Crud/Handlers/DemoProductoToggleStatusHandler.php`.
 2. En `config/crud_handlers.php` y `skeleton/config/crud_handlers.php`, eliminar la línea:
@@ -546,17 +546,17 @@ Expected: FAIL — clase/archivo/registry/JSON aún presentes.
 
 No reescribir el toggle para llamar a `CrudTransitionService` (sin DI = G5; bulk transitions no existen en `runBulk`).
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php Crud/Action/DemoProductoToggleRemoved Crud/State/CrudDemoStatesFormLock`  
 Expected: PASS
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Crud/Action Crud/State/CrudTransitionService`  
 Expected: PASS — transitions y C2 permission intactos; ningún test debe referenciar `demo_producto_toggle` (si alguno lo hace, actualizarlo a `activar`/`desactivar`).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -u src/Application/Crud/Handlers/DemoProductoToggleStatusHandler.php \
@@ -581,7 +581,7 @@ git commit -m "fix(crud): remove demo status toggle bypassing state machine (G15
 - Consumes: `CrudFieldDefinition::fromArray`, `CrudFieldValidationService::validateValue`
 - Produces: deny de valores fuera de `options` / `validation.in` para `type=select`
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Crud/Validation/CrudFieldSelectOptionsTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Crud/Validation/CrudFieldSelectOptionsTest.php`:
 
 ```php
 <?php
@@ -670,12 +670,12 @@ test('relation no usa options del field como in automático (G6 scope)', functio
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo**
+- [x] **Step 2: Ejecutar el test y comprobar el fallo**
 
 Run: `php tests/run.php Crud/Validation/CrudFieldSelectOptions`  
 Expected: FAIL — primer test (hoy no hay allowlist desde `options`).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `CrudFieldValidationService::validateValue`, **reemplazar** el bloque actual de `rules['in']` (líneas ~236–240) por:
+- [x] **Step 3: Implementar el cambio mínimo** — en `CrudFieldValidationService::validateValue`, **reemplazar** el bloque actual de `rules['in']` (líneas ~236–240) por:
 
 ```php
         $allowed = null;
@@ -694,17 +694,17 @@ Expected: FAIL — primer test (hoy no hay allowlist desde `options`).
 
 No inyectar `CrudRelationService` aquí (punto 7 / exists cubre FK; auto-in solo `select`).
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php Crud/Validation/CrudFieldSelectOptions`  
 Expected: PASS
 
-- [ ] **Step 5: Regresión relevante**
+- [x] **Step 5: Regresión relevante**
 
 Run: `php tests/run.php Crud/Validation`  
 Expected: PASS (`CrudFieldMessages` y constraints intactos)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Application/Services/CrudFieldValidationService.php tests/Crud/Validation/CrudFieldSelectOptionsTest.php
@@ -726,7 +726,7 @@ git commit -m "fix(crud): enforce select options allowlist on server (G6)"
 - Consumes: trío semver @ `1.2.6`
 - Produces: trío @ `1.2.7`; docs alineadas a C3/G15
 
-- [ ] **Step 1: Escribir el test que falla** — N/A para semver hasta editar. Primero confirmar baseline:
+- [x] **Step 1: Escribir el test que falla** — N/A para semver hasta editar. Primero confirmar baseline:
 
 ```bash
 rg -n "version" composer.json config/app.php skeleton/config/app.php | head -20
@@ -734,12 +734,12 @@ rg -n "version" composer.json config/app.php skeleton/config/app.php | head -20
 
 Expected: `1.2.6` en los tres (o anotar tip real).
 
-- [ ] **Step 2: Ejecutar regresión funcional antes del bump**
+- [x] **Step 2: Ejecutar regresión funcional antes del bump**
 
 Run: `php tests/run.php Crud/State Crud/Validation/CrudFieldSelectOptions Crud/Action/DemoProductoToggleRemoved Security/CrudActionOwnership Crud/Action/CrudActionPermission Reporte/CrudReporteDataSourceAuthz`  
 Expected: PASS
 
-- [ ] **Step 3: Implementar docs + bump**
+- [x] **Step 3: Implementar docs + bump**
 
 En `docs/modules/crud/modulo-crud-engine.md`, sección **Fase 2 — Estados / transiciones**, actualizar el bullet de `column` y el párrafo Demo:
 
@@ -759,12 +759,12 @@ Bump semver a la **misma** versión en:
 
 Si el tip ya es `≥1.2.7`, usar el siguiente PATCH libre en los tres.
 
-- [ ] **Step 4: Verificación enfocada**
+- [x] **Step 4: Verificación enfocada**
 
 Run: `php tests/run.php PlatformVersionSemver`  
 Expected: PASS @ `1.2.7`
 
-- [ ] **Step 5: Regresión relevante (gate final del punto)**
+- [x] **Step 5: Regresión relevante (gate final del punto)**
 
 Run: `php tests/run.php Security Crud/Scope Crud/Action Crud/State Crud/Validation Reporte PlatformVersionSemver Kernel/SkeletonPurity`  
 Expected: PASS — 0 failed.
@@ -782,7 +782,7 @@ rg -n 'demo_producto_toggle' config skeleton || true
 
 Expected: `cmp` exit 0; archivo handler ausente; `rg` sin matches de `demo_producto_toggle`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docs/modules/crud/modulo-crud-engine.md composer.json config/app.php skeleton/config/app.php
@@ -795,16 +795,16 @@ Tag `v1.2.7` **solo post-merge** en `main` (operador / release); no taggear desd
 
 ## Criterios de aceptación (punto 2)
 
-- [ ] **C3:** `statesBlockErrors` rechaza configs con `states.column` igual a algún `form.fields[].name` (mensaje exacto).
-- [ ] **C3:** Demos `demo_productos` / `demo_pedidos` / `demo_citas` (harness + skeleton) no exponen la columna de estados en el form; list/detail/transitions siguen.
-- [ ] **C3:** `buildPayload` no escribe la columna de la SM aunque un field mal configurado la declare.
-- [ ] **G15:** No existe `DemoProductoToggleStatusHandler` ni clave `demo_producto_toggle`; JSON sin action `toggle`; transitions `activar`/`desactivar` vivas.
-- [ ] **G6:** `type=select` con `options` no vacías rechaza valores fuera de las claves; `validation.in` explícito manda; `relation` no usa auto-in de options del field.
-- [ ] Tests nuevos del plan en verde.
-- [ ] No regresión p01: `Security/CrudActionOwnership`, `Crud/Action/CrudActionPermission`, `Reporte/CrudReporteDataSourceAuthz` PASS.
-- [ ] Semver trío @ `1.2.7` + `PlatformVersionSemver` PASS.
-- [ ] `SkeletonPurity` PASS; espejos `cmp` OK.
-- [ ] Diff **sin** CAS (C4/G13), uploads (C6), router RBAC (G4), bulk equality (G1/G14), Portal business.
+- [x] **C3:** `statesBlockErrors` rechaza configs con `states.column` igual a algún `form.fields[].name` (mensaje exacto).
+- [x] **C3:** Demos `demo_productos` / `demo_pedidos` / `demo_citas` (harness + skeleton) no exponen la columna de estados en el form; list/detail/transitions siguen.
+- [x] **C3:** `buildPayload` no escribe la columna de la SM aunque un field mal configurado la declare.
+- [x] **G15:** No existe `DemoProductoToggleStatusHandler` ni clave `demo_producto_toggle`; JSON sin action `toggle`; transitions `activar`/`desactivar` vivas.
+- [x] **G6:** `type=select` con `options` no vacías rechaza valores fuera de las claves; `validation.in` explícito manda; `relation` no usa auto-in de options del field.
+- [x] Tests nuevos del plan en verde.
+- [x] No regresión p01: `Security/CrudActionOwnership`, `Crud/Action/CrudActionPermission`, `Reporte/CrudReporteDataSourceAuthz` PASS.
+- [x] Semver trío @ `1.2.7` + `PlatformVersionSemver` PASS.
+- [x] `SkeletonPurity` PASS; espejos `cmp` OK.
+- [x] Diff **sin** CAS (C4/G13), uploads (C6), router RBAC (G4), bulk equality (G1/G14), Portal business.
 
 ## Fuera de alcance
 
@@ -849,10 +849,11 @@ Tag `v1.2.7` **solo post-merge** en `main` (operador / release); no taggear desd
 
 | Campo | Valor |
 |-------|-------|
-| Plan creado UTC | 2026-08-07T15:34:20Z |
-| Framework `origin/main` referencia al planificar | `b57bd6068b2cf8031b263f3ae73fdef1c913b570` |
-| Tareas completadas / totales | 0 / 6 |
-| Siguiente tarea ejecutable | Task 1 |
-| Prerrequisitos | Punto 1 completo en main (`64a6877` / semver `1.2.6`); PHP ≥8.1 |
-| Bloqueos | Ninguno al planificar. PHP CLI puede faltar en algunos agentes cloud — el ejecutor debe usar entorno con PHP. |
-| Estado | Pendiente de implementación |
+| **Reconciliación UTC** | 2026-08-09 |
+| **`origin/main` verificado** | `487ccd8132e7c42eabd2a0e3b335b075ccc123e1` |
+| **Completadas / totales** | 6 / 6 |
+| **Implementación** | PR [#100](https://github.com/Parzival2103/Lebytek_Framework/pull/100) merge @ `60477dcf` — `fix(crud): P02 states form lock + select options + remove demo toggle (C3/G15/G6)` |
+| **Evidencia por tarea** | Task 1: `CrudConfigValidator::statesBlockErrors` L617 + `tests/Crud/State/CrudConfigValidatorStatesTest.php` · Task 2: demos JSON sin form state column + `CrudDemoStatesFormLockTest.php` · Task 3: `CrudDataService::buildPayload` L545–554 + `CrudDataServiceStateColumnWriteTest.php` · Task 4: handler borrado + `DemoProductoToggleRemovedTest.php` · Task 5: `CrudFieldValidationService` L239–247 + `CrudFieldSelectOptionsTest.php` · Task 6: semver trío `1.2.7` + docs `modulo-crud-engine.md` |
+| **Siguiente tarea ejecutable** | N/A — plan completo |
+| **Bloqueos** | Tag Composer `v1.2.7` (REL-C1) aún no publicado en GitHub — semver en tip pero consumidores en `v1.2.3` |
+| **Estado** | **Completo** — archivado 2026-08-09 |
