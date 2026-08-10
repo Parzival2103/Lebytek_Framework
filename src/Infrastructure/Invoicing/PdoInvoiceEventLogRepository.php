@@ -240,11 +240,14 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
             'SELECT '.self::CLAIM_ROW_COLUMNS.'
              FROM inv_events
              WHERE provider = :provider
+               AND type <> :cancel_type
                AND provider_invoice_id = :provider_invoice_id
+             ORDER BY id ASC
              LIMIT 1'
         );
         $stmt->execute([
             'provider' => $provider,
+            'cancel_type' => 'cancel',
             'provider_invoice_id' => $providerInvoiceId,
         ]);
 

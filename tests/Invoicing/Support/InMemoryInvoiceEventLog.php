@@ -178,6 +178,7 @@ class InMemoryInvoiceEventLog implements InvoiceEventLogRepositoryInterface
         foreach ($this->rows as $row) {
             if (
                 $row['provider'] === $provider
+                && $row['type'] !== 'cancel'
                 && $row['providerInvoiceId'] !== null
                 && (string) $row['providerInvoiceId'] === $providerInvoiceId
             ) {

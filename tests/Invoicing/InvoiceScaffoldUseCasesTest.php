@@ -6,7 +6,9 @@ use Lebytek\Framework\Application\Invoicing\DownloadInvoiceDocument;
 use Lebytek\Framework\Application\Invoicing\InvoiceIdResolver;
 use Lebytek\Framework\Application\Invoicing\InvoiceProviderRegistry;
 use Lebytek\Framework\Application\Invoicing\SendInvoiceByEmail;
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceAlreadyProcessed;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceAmbiguousSource;
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceDraftInvalid;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceNotCancellable;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceProviderException;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceSourceNotFound;
@@ -17,10 +19,20 @@ use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceCancellation;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceDraft;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
 
+require_once __DIR__ . '/Support/InMemoryInvoiceEventLog.php';
+
+final class Task11Trace
+{
+    /** @var list<string> */
+    public array $events = [];
+}
+
 final class Task11Provider implements InvoiceProviderInterface
 {
     /** @var list<string> */
     public array $cancelCalls = [];
+    /** @var list<string> */
+    public array $retrieveCalls = [];
     /** @var list<string> */
     public array $downloadPdfCalls = [];
     /** @var list<string> */
@@ -28,6 +40,12 @@ final class Task11Provider implements InvoiceProviderInterface
     /** @var list<array{id: string, email: string}> */
     public array $emailCalls = [];
     public ?Throwable $cancelFailure = null;
+    /** @var array<string, IssuedInvoice> */
+    public array $retrievedInvoices = [];
+
+    public function __construct(private readonly ?Task11Trace $trace = null)
+    {
+    }
 
     public function key(): string
     {
@@ -46,7 +64,13 @@ final class Task11Provider implements InvoiceProviderInterface
 
     public function retrieveInvoice(string $providerInvoiceId): IssuedInvoice
     {
-        return task11_invoice($providerInvoiceId, InvoiceStatus::Valid, sourceRef: null);
+        $this->retrieveCalls[] = $providerInvoiceId;
+        if ($this->trace !== null) {
+            $this->trace->events[] = 'provider.retrieve:' . $providerInvoiceId;
+        }
+
+        return $this->retrievedInvoices[$providerInvoiceId]
+            ?? task11_invoice($providerInvoiceId, InvoiceStatus::Valid, sourceRef: null);
     }
 
     public function listByExternalId(string $externalId): array
@@ -57,6 +81,9 @@ final class Task11Provider implements InvoiceProviderInterface
     public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice
     {
         $this->cancelCalls[] = $providerInvoiceId;
+        if ($this->trace !== null) {
+            $this->trace->events[] = 'provider.cancel:' . $providerInvoiceId;
+        }
         if ($this->cancelFailure !== null) {
             throw $this->cancelFailure;
         }
@@ -84,7 +111,7 @@ final class Task11Provider implements InvoiceProviderInterface
     }
 }
 
-final class Task11EventLog implements InvoiceEventLogRepositoryInterface
+final class Task11EventLog extends InMemoryInvoiceEventLog implements InvoiceEventLogRepositoryInterface
 {
     /** @var array<string, IssuedInvoice[]> */
     public array $issuedBySourceRef = [];
@@ -92,11 +119,12 @@ final class Task11EventLog implements InvoiceEventLogRepositoryInterface
     public array $findSourceCalls = [];
     /** @var list<array{provider: string, idempotencyKey: string, sourceRef: string, type: string, meta: array<string, mixed>}> */
     public array $claims = [];
+    /** @var list<string> */
+    public array $canceledMarks = [];
     public bool $throwOnTryClaim = false;
 
-    public function hasProcessed(string $provider, string $idempotencyKey): bool
+    public function __construct(private readonly ?Task11Trace $trace = null)
     {
-        return false;
     }
 
     public function tryClaim(
@@ -110,6 +138,10 @@ final class Task11EventLog implements InvoiceEventLogRepositoryInterface
             throw new RuntimeException('audit ledger down');
         }
 
+        if ($this->trace !== null) {
+            $this->trace->events[] = 'events.tryClaim:' . $idempotencyKey;
+        }
+
         $this->claims[] = [
             'provider' => $provider,
             'idempotencyKey' => $idempotencyKey,
@@ -118,63 +150,57 @@ final class Task11EventLog implements InvoiceEventLogRepositoryInterface
             'meta' => $meta,
         ];
 
-        return true;
-    }
-
-    public function releaseClaim(string $provider, string $idempotencyKey): void
-    {
+        return parent::tryClaim($provider, $idempotencyKey, $sourceRef, $type, $meta);
     }
 
     public function markIssued(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
     {
-    }
-
-    public function markNeedsReconcile(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
-    {
+        if ($this->trace !== null) {
+            $this->trace->events[] = 'events.markIssued:' . $idempotencyKey;
+        }
+        parent::markIssued($provider, $idempotencyKey, $invoice);
     }
 
     public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
     {
-    }
-
-    public function attachProviderInvoiceId(
-        string $provider,
-        string $idempotencyKey,
-        string $providerInvoiceId,
-        array $meta = [],
-    ): void {
-    }
-
-    public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
-    {
-        return null;
+        if ($this->trace !== null) {
+            $this->trace->events[] = 'events.markCanceled:' . $idempotencyKey;
+        }
+        $this->canceledMarks[] = $idempotencyKey;
+        parent::markCanceled($provider, $idempotencyKey, $invoice);
     }
 
     public function findIssuedBySourceRef(string $sourceRef): array
     {
         $this->findSourceCalls[] = $sourceRef;
 
-        return $this->issuedBySourceRef[$sourceRef] ?? [];
-    }
-
-    public function findNeedsReconcile(string $provider, int $limit = 100): array
-    {
-        return [];
-    }
-
-    public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
-    {
-        return null;
+        return $this->issuedBySourceRef[$sourceRef] ?? parent::findIssuedBySourceRef($sourceRef);
     }
 
     public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
     {
-        return null;
+        if ($this->trace !== null) {
+            $this->trace->events[] = 'events.findIssue:' . $providerInvoiceId;
+        }
+
+        return parent::findIssueByProviderInvoiceId($provider, $providerInvoiceId);
     }
 
-    public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
+    public function seedIssued(
+        string $provider,
+        string $idempotencyKey,
+        IssuedInvoice $invoice,
+        string $type = 'membership',
+    ): void {
+        parent::tryClaim($provider, $idempotencyKey, $invoice->sourceRef() ?? '', $type);
+        parent::markIssued($provider, $idempotencyKey, $invoice);
+    }
+
+    public function seedCancelClaim(string $provider, string $providerInvoiceId): void
     {
-        return [];
+        parent::tryClaim($provider, 'cancel:' . $providerInvoiceId, '', 'cancel', [
+            'providerInvoiceId' => $providerInvoiceId,
+        ]);
     }
 }
 
@@ -231,10 +257,22 @@ test('InvoiceIdResolver resuelve source_ref unico y falla cerrado con cero o mul
     assert_throws(InvoiceAmbiguousSource::class, fn () => $resolver->resolve(null, 'order:ambiguous'));
 });
 
-test('CancelIssuedInvoice cancela en proveedor y registra audit claim best-effort', function (): void {
-    $events = new Task11EventLog();
-    $events->issuedBySourceRef['order:cancel'] = [task11_invoice('inv_cancel', sourceRef: 'order:cancel')];
-    $provider = new Task11Provider();
+test('InvoiceCancellation valida motivos SAT y sustitucion requerida', function (): void {
+    $valid = new InvoiceCancellation(' 02 ');
+
+    assert_same('02', $valid->motive());
+    assert_null($valid->substitution());
+    assert_throws(InvoiceDraftInvalid::class, fn () => new InvoiceCancellation('05'));
+    assert_throws(InvoiceDraftInvalid::class, fn () => new InvoiceCancellation('01'));
+    assert_throws(InvoiceDraftInvalid::class, fn () => new InvoiceCancellation('01', '   '));
+    assert_same('uuid-substitution', (new InvoiceCancellation('01', ' uuid-substitution '))->substitution());
+});
+
+test('CancelIssuedInvoice reclama antes de cancelar y marca la fila de issue como canceled', function (): void {
+    $trace = new Task11Trace();
+    $events = new Task11EventLog($trace);
+    $events->seedIssued('facturapi', 'issue-key-cancel', task11_invoice('inv_cancel', sourceRef: 'order:cancel'));
+    $provider = new Task11Provider($trace);
     $useCase = new CancelIssuedInvoice(
         registry: task11_registry($provider),
         resolver: task11_resolver($events),
@@ -246,20 +284,97 @@ test('CancelIssuedInvoice cancela en proveedor y registra audit claim best-effor
 
     assert_same(InvoiceStatus::Canceled, $canceled->status());
     assert_same(['inv_cancel'], $provider->cancelCalls);
+    assert_same([
+        'events.findIssue:inv_cancel',
+        'events.tryClaim:cancel:inv_cancel',
+        'provider.cancel:inv_cancel',
+        'events.markCanceled:issue-key-cancel',
+        'events.markIssued:cancel:inv_cancel',
+    ], $trace->events);
     assert_same('cancel:inv_cancel', $events->claims[0]['idempotencyKey'] ?? null);
     assert_same('order:cancel', $events->claims[0]['sourceRef'] ?? null);
     assert_same('cancel', $events->claims[0]['type'] ?? null);
     assert_same('inv_cancel', $events->claims[0]['meta']['providerInvoiceId'] ?? null);
+    assert_same('02', $events->claims[0]['meta']['motive'] ?? null);
+    assert_same(['issue-key-cancel'], $events->canceledMarks);
 
-    $events->throwOnTryClaim = true;
-    $second = $useCase->handle(new InvoiceCancellation('02'), providerInvoiceId: 'inv_direct');
+    $issueRow = $events->findIssueByProviderInvoiceId('facturapi', 'inv_cancel');
+    assert_true($issueRow !== null, 'canceled issue row must be findable by provider invoice id');
+    assert_same('issue-key-cancel', $issueRow->idempotencyKey());
+    assert_same('canceled', $issueRow->ledgerStatus());
 
-    assert_same('inv_direct', $second->providerInvoiceId());
-    assert_same(['inv_cancel', 'inv_direct'], $provider->cancelCalls);
+    $cancelClaim = $events->findClaimByIdempotencyKey('facturapi', 'cancel:inv_cancel');
+    assert_true($cancelClaim !== null, 'cancel audit claim must be recorded');
+    assert_same('issued', $cancelClaim->ledgerStatus(), 'cancel audit row records success without markCanceled');
+});
+
+test('CancelIssuedInvoice replay localmente cancelado no llama de nuevo al proveedor', function (): void {
+    $events = new Task11EventLog();
+    $events->seedIssued('facturapi', 'issue-key-replay', task11_invoice('inv_replay', sourceRef: 'order:replay'));
+    $provider = new Task11Provider();
+    $useCase = new CancelIssuedInvoice(
+        registry: task11_registry($provider),
+        resolver: task11_resolver($events),
+        events: $events,
+        defaultProviderKey: 'facturapi',
+    );
+
+    $first = $useCase->handle(new InvoiceCancellation('02'), sourceRef: 'order:replay');
+    $second = $useCase->handle(new InvoiceCancellation('02'), providerInvoiceId: 'inv_replay');
+
+    assert_same(InvoiceStatus::Canceled, $first->status());
+    assert_same(InvoiceStatus::Canceled, $second->status());
+    assert_same(['inv_replay'], $provider->cancelCalls);
+    assert_same([], $provider->retrieveCalls);
+});
+
+test('CancelIssuedInvoice con claim de cancelacion existente solo retorna si remoto ya esta cancelado', function (): void {
+    $events = new Task11EventLog();
+    $events->seedIssued('facturapi', 'issue-key-remote-canceled', task11_invoice('inv_remote_canceled'));
+    $events->seedCancelClaim('facturapi', 'inv_remote_canceled');
+    $provider = new Task11Provider();
+    $provider->retrievedInvoices['inv_remote_canceled'] = task11_invoice(
+        'inv_remote_canceled',
+        InvoiceStatus::Canceled,
+        sourceRef: null,
+        uuid: 'uuid_remote_canceled',
+    );
+    $useCase = new CancelIssuedInvoice(
+        registry: task11_registry($provider),
+        resolver: task11_resolver($events),
+        events: $events,
+        defaultProviderKey: 'facturapi',
+    );
+
+    $canceled = $useCase->handle(new InvoiceCancellation('02'), providerInvoiceId: 'inv_remote_canceled');
+
+    assert_same(InvoiceStatus::Canceled, $canceled->status());
+    assert_same([], $provider->cancelCalls);
+    assert_same(['inv_remote_canceled'], $provider->retrieveCalls);
+    assert_same(['issue-key-remote-canceled'], $events->canceledMarks);
+
+    $events = new Task11EventLog();
+    $events->seedIssued('facturapi', 'issue-key-inflight', task11_invoice('inv_inflight'));
+    $events->seedCancelClaim('facturapi', 'inv_inflight');
+    $provider = new Task11Provider();
+    $useCase = new CancelIssuedInvoice(
+        registry: task11_registry($provider),
+        resolver: task11_resolver($events),
+        events: $events,
+        defaultProviderKey: 'facturapi',
+    );
+
+    assert_throws(
+        InvoiceAlreadyProcessed::class,
+        fn () => $useCase->handle(new InvoiceCancellation('02'), providerInvoiceId: 'inv_inflight'),
+    );
+    assert_same([], $provider->cancelCalls);
+    assert_same(['inv_inflight'], $provider->retrieveCalls);
 });
 
 test('CancelIssuedInvoice mapea errores provider not-cancellable al dominio', function (): void {
     $events = new Task11EventLog();
+    $events->seedIssued('facturapi', 'issue-key-locked', task11_invoice('inv_locked'));
     $provider = new Task11Provider();
     $provider->cancelFailure = new InvoiceProviderException('Invoice is not cancellable');
     $useCase = new CancelIssuedInvoice(
@@ -273,7 +388,8 @@ test('CancelIssuedInvoice mapea errores provider not-cancellable al dominio', fu
         InvoiceNotCancellable::class,
         fn () => $useCase->handle(new InvoiceCancellation('02'), providerInvoiceId: 'inv_locked'),
     );
-    assert_same([], $events->claims);
+    assert_same('cancel:inv_locked', $events->claims[0]['idempotencyKey'] ?? null);
+    assert_same(['inv_locked'], $provider->cancelCalls);
 });
 
 test('DownloadInvoiceDocument delega pdf y xml despues de resolver id', function (): void {
