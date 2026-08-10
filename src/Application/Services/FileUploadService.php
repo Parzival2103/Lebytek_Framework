@@ -59,12 +59,8 @@ final class FileUploadService
             $filename .= '.' . $extension;
         }
 
-        $publicRelative = trim($cfg->directorio, '/');
-        $publicAbsolute = PUBLIC_PATH . '/' . $publicRelative;
-
-        if (!is_dir($publicAbsolute) && !mkdir($publicAbsolute, 0775, true) && !is_dir($publicAbsolute)) {
-            throw new ValidationException('No fue posible crear el directorio de uploads.');
-        }
+        $publicRelative = trim(str_replace('\\', '/', $cfg->directorio), '/');
+        $publicAbsolute = $this->resolvePublicUploadDirectory($cfg->directorio);
 
         $destination = $publicAbsolute . '/' . $filename;
         if (!move_uploaded_file($tmpName, $destination)) {
@@ -99,5 +95,36 @@ final class FileUploadService
         }
 
         return $this->archivos->buscarPorId($id) ?? $archivo;
+    }
+
+    private function resolvePublicUploadDirectory(string $directorio): string
+    {
+        $root = realpath(PUBLIC_PATH);
+        if ($root === false) {
+            throw new ValidationException('No fue posible resolver el directorio público de uploads.');
+        }
+
+        $relative = trim(str_replace('\\', '/', $directorio), '/');
+        if ($relative === '' || str_contains($relative, '..')) {
+            throw new ValidationException('El directorio de uploads no es válido.');
+        }
+
+        if (!str_starts_with($relative, 'uploads/')) {
+            throw new ValidationException('El directorio de uploads debe comenzar con uploads/.');
+        }
+
+        $absolute = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+
+        if (!is_dir($absolute) && !mkdir($absolute, 0775, true) && !is_dir($absolute)) {
+            throw new ValidationException('No fue posible crear el directorio de uploads.');
+        }
+
+        $resolved = realpath($absolute);
+        $jailRoot = realpath($root . DIRECTORY_SEPARATOR . 'uploads');
+        if ($resolved === false || $jailRoot === false || !str_starts_with($resolved, $jailRoot . DIRECTORY_SEPARATOR)) {
+            throw new ValidationException('El directorio de uploads está fuera del área permitida.');
+        }
+
+        return $resolved;
     }
 }

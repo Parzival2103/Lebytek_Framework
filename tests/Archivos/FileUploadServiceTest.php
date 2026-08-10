@@ -52,7 +52,7 @@ function upload_config(string $directorio, array $overrides = []): FileUploadCon
         maxBytes:          $overrides['maxBytes'] ?? 1024 * 1024,
         entidadId:         array_key_exists('entidadId', $overrides) ? $overrides['entidadId'] : 3,
         coleccion:         $overrides['coleccion'] ?? 'avatar',
-        allowedExtensions: $overrides['allowedExtensions'] ?? null,
+        allowedExtensions: $overrides['allowedExtensions'] ?? ['txt'],
         esActual:          $overrides['esActual'] ?? false,
         creadoPor:         $overrides['creadoPor'] ?? 9
     );
@@ -127,7 +127,7 @@ test('FileUploadService conserva el mensaje de extensión no permitida', functio
         $service->handle($file, upload_config($dir, ['allowedExtensions' => ['png', 'jpg']]), 'Foto');
         assert_true(false, 'debió lanzar ValidationException');
     } catch (ValidationException $e) {
-        assert_same('Extensión de archivo no permitida para Foto.', $e->getMessage());
+        assert_same('Extensión de archivo no permitida para Foto. Usa: png, jpg.', $e->getMessage());
     } finally {
         @unlink($file['tmp_name']);
         upload_cleanup($dir);
@@ -165,4 +165,44 @@ test('FileUploadService sanea nombres con caracteres raros', function (): void {
     } finally {
         upload_cleanup($dir);
     }
+});
+
+test('FileUploadService rechaza directorio con .. fuera del jail uploads (C6)', function (): void {
+    $service = new FileUploadService(new ImageProcessor(), new FakeArchivoRepository());
+    $evilDir = 'uploads/../outside_jail_' . bin2hex(random_bytes(3));
+    $file    = upload_file_array('x.txt', 'data');
+
+    try {
+        $service->handle(
+            $file,
+            upload_config($evilDir, ['allowedExtensions' => ['txt']]),
+            'Doc'
+        );
+        assert_true(false, 'debió lanzar ValidationException');
+    } catch (ValidationException $e) {
+        assert_true(
+            str_contains($e->getMessage(), 'directorio') || str_contains($e->getMessage(), 'uploads'),
+            'mensaje debe indicar path inválido: ' . $e->getMessage()
+        );
+    } finally {
+        @unlink($file['tmp_name']);
+        $abs = PUBLIC_PATH . '/outside_jail_' . substr($evilDir, -7);
+        if (is_dir($abs)) {
+            @unlink($abs . '/x.txt');
+            @rmdir($abs);
+        }
+    }
+});
+
+test('FileUploadService rechaza directorio absoluto fuera de uploads/', function (): void {
+    $service = new FileUploadService(new ImageProcessor(), new FakeArchivoRepository());
+    $file    = upload_file_array('x.txt', 'data');
+    assert_throws(ValidationException::class, function () use ($service, $file): void {
+        $service->handle(
+            $file,
+            upload_config('storage/private', ['allowedExtensions' => ['txt']]),
+            'Doc'
+        );
+    });
+    @unlink($file['tmp_name']);
 });
