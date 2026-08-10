@@ -11,3 +11,15 @@ test('despliegue-y-versionado documents three-file semver sync on release', func
     assert_true(str_contains($src, 'PlatformVersionSemver'), 'checklist must reference PlatformVersionSemver test');
     assert_true(str_contains($src, 'config/app.php'), 'checklist must mention harness config/app.php');
 });
+
+test('release checklist references ReleaseTagPublishedTest gate', function () use ($root): void {
+    $src = (string) file_get_contents($root . '/docs/core/despliegue-y-versionado.md');
+    assert_true(
+        str_contains($src, 'ReleaseTagPublishedTest'),
+        'checklist must reference ReleaseTagPublishedTest before tagging (REL-C1 U4)'
+    );
+    assert_true(
+        str_contains($src, 'git push origin v'),
+        'checklist must include copy-paste tag push command'
+    );
+});

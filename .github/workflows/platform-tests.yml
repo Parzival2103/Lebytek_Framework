@@ -55,6 +55,14 @@ jobs:
           git fetch --no-tags origin tag archive/backoffice-api-integration
           git rev-parse --verify --quiet 'refs/tags/archive/backoffice-api-integration^{commit}'
 
+      # REL-C1: ReleaseTagPublishedTest needs the declared composer version tag locally.
+      # Missing remote tag → intentional FAIL until ops publish vX.Y.Z (Task 6).
+      - name: Fetch declared release tag for Docs version gate (REL-C1)
+        run: |
+          VERSION=$(php -r 'echo json_decode(file_get_contents("composer.json"), true)["version"];')
+          git fetch --no-tags origin "refs/tags/v${VERSION}:refs/tags/v${VERSION}" \
+            || echo "REL-C1: remote tag v${VERSION} not published yet (ReleaseTagPublishedTest will fail until Task 6)"
+
       - name: Docs tests
         run: php tests/run.php Docs
 

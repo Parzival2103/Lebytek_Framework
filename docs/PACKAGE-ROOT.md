@@ -29,3 +29,11 @@ Tras un tag nuevo, `composer update lebytek/framework` en el consumidor deja de
 traer esas carpetas. Un `prefer-source` (clone completo) sí las verá — usar dist.
 
 Deuda aceptada A7: el harness permanece hasta CI contra `skeleton/` instalado.
+
+## Release policy (REL-C1)
+
+The semver in `composer.json` / `config/app.php` / `skeleton/config/app.php` is the **declared**
+platform version. Consumers installing via Composer tags must use a **published** Git tag
+`vX.Y.Z` matching that declaration. `PlatformVersionSemverTest` validates internal sync only;
+`ReleaseTagPublishedTest` validates the tag exists before release. Do not merge semver bumps
+without scheduling tag publication in the same release train.

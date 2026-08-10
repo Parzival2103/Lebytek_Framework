@@ -1,12 +1,14 @@
 # Public API Health Endpoint (M4) Implementation Plan
 
+> **REL-C1 retarget (2026-08-08):** Tags `v1.2.4`–`v1.2.6` were not published (skip). This plan ships in **`v1.2.8+`** after REL-C1 tag `v1.2.7`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development`
 > (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Exponer `GET /api/health` como endpoint JSON público de liveness (200 `{ "status": "ok" }` sin sesión), manteniendo `GET /api/ping` autenticado para smoke interno post-login.
 
-**Architecture:** Enfoque A del spec — registrar la ruta **antes** del `$router->group` con `AuthMiddleware` en `routes/api.php` (harness) y `skeleton/routes/api.php` (plantilla). Extender `HealthController` en Presentation con método `health()` de payload mínimo fijo. Tests TDD en suites Docs (contrato de rutas) y Kernel (dispatch/controlador sin MySQL). Tag semver patch `v1.2.4` tras merge.
+**Architecture:** Enfoque A del spec — registrar la ruta **antes** del `$router->group` con `AuthMiddleware` en `routes/api.php` (harness) y `skeleton/routes/api.php` (plantilla). Extender `HealthController` en Presentation con método `health()` de payload mínimo fijo. Tests TDD en suites Docs (contrato de rutas) y Kernel (dispatch/controlador sin MySQL). Tag semver patch `v1.2.8` tras merge.
 
 **Tech Stack:** PHP 8.1+ (`composer.json`), harness `tests/run.php` + `tests/lib/microtest.php`, `Lebytek\Framework\Kernel\Http\Router`, `AuthMiddleware`, `HealthController`, sin extensiones nuevas ni migraciones SQL.
 
@@ -23,7 +25,7 @@
 - **No** incluir versión semver, checks de BD ni secretos en el body de `/api/health`.
 - **No** secrets de producción ni cambios VPS/LB en automation — operador manual (P2).
 - Portal `Parzival2103/Lebytek_Portal`: bump lock y merge de ruta — **fuera de alcance** (M6/gh 404); documentar en PR Framework.
-- Semver: nueva ruta HTTP pública → **PATCH** `1.2.3` → **`1.2.4`**; tag `v1.2.4` post-merge.
+- Semver: nueva ruta HTTP pública → **PATCH** `1.2.3` → **`1.2.8`**; tag `v1.2.8` post-merge.
 
 ## Requisitos → tareas (matriz)
 
@@ -35,7 +37,7 @@
 | F4 `ApiHealthPublicRouteTest` | Framework | Task 1 | TDD rojo→verde |
 | F5 `ApiHealthPublicDispatchTest` | Framework | Task 2 | TDD rojo→verde |
 | F6 doc § Monitoreo | Framework | Task 4 | `despliegue-y-versionado.md` |
-| Semver + tag | Framework | Task 5 | `PlatformVersionSemverTest` + tag `v1.2.4` |
+| Semver + tag | Framework | Task 5 | `PlatformVersionSemverTest` + tag `v1.2.8` |
 | P1 bump Portal lock | Portal | **Fuera de alcance** | post-tag manual |
 | P2 checklist VPS Portal | Portal/Ops | **Fuera de alcance** | operador manual |
 | U1–U6 UX operativa | Framework | Task 4 + tests | curl copy-paste, mensajes gate |
@@ -51,9 +53,9 @@
 | `tests/Docs/ApiHealthPublicRouteTest.php` | Gate contrato rutas + método |
 | `tests/Kernel/ApiHealthPublicDispatchTest.php` | Gate dispatch/controlador sin sesión |
 | `docs/core/despliegue-y-versionado.md` | Nueva sección «Monitoreo / health checks» |
-| `composer.json` | `"version": "1.2.4"` |
-| `config/app.php` | `'version' => '1.2.4'` |
-| `skeleton/config/app.php` | `'version' => '1.2.4'` |
+| `composer.json` | `"version": "1.2.8"` |
+| `config/app.php` | `'version' => '1.2.8'` |
+| `skeleton/config/app.php` | `'version' => '1.2.8'` |
 
 **Interfaces producidas:**
 
@@ -393,7 +395,7 @@ Sin cookie, un `302` hacia `/login` es **esperado** — no indica caída del sit
 
 ---
 
-### Task 5: Semver sync, tag `v1.2.4`, PR y evidencia (AC7, AC8)
+### Task 5: Semver sync, tag `v1.2.8`, PR y evidencia (AC7, AC8)
 
 **Repository:** `Parzival2103/Lebytek_Framework`
 
@@ -402,25 +404,25 @@ Sin cookie, un `302` hacia `/login` es **esperado** — no indica caída del sit
 **Depends on:** Task 4
 
 **Files:**
-- Modify: `composer.json` (`"version": "1.2.4"`)
-- Modify: `config/app.php` (`'version' => '1.2.4'`)
-- Modify: `skeleton/config/app.php` (`'version' => '1.2.4'`)
+- Modify: `composer.json` (`"version": "1.2.8"`)
+- Modify: `config/app.php` (`'version' => '1.2.8'`)
+- Modify: `skeleton/config/app.php` (`'version' => '1.2.8'`)
 - Test: suite completa relevante
 
 **Interfaces:**
 - Consumes: Tasks 1–4
-- Produces: tag Git `v1.2.4`; PR hacia `main`
+- Produces: tag Git `v1.2.8`; PR hacia `main`
 
 - [ ] **Step 1: Escribir el test que falla** — N/A.
 
 - [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` **antes** del bump / Expected: PASS @ `1.2.3` (baseline).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — actualizar **los tres** archivos al mismo valor `1.2.4`:
+- [ ] **Step 3: Implementar el cambio mínimo** — actualizar **los tres** archivos al mismo valor `1.2.8`:
 
 ```bash
-# composer.json → "version": "1.2.4"
-# config/app.php → 'version' => '1.2.4',
-# skeleton/config/app.php → 'version' => '1.2.4',
+# composer.json → "version": "1.2.8"
+# config/app.php → 'version' => '1.2.8',
+# skeleton/config/app.php → 'version' => '1.2.8',
 ```
 
 No modificar `composer.lock` del paquete library (no aplica en package source).
@@ -443,8 +445,8 @@ Distinción entorno: si PHP CLI ausente en agente cloud, ejecutar en runner loca
 Post-merge (operador o agente con git tag):
 
 ```bash
-git tag -a v1.2.4 -m "Public GET /api/health liveness endpoint (M4)"
-git push origin v1.2.4
+git tag -a v1.2.8 -m "Public GET /api/health liveness endpoint (M4)"
+git push origin v1.2.8
 ```
 
 Push rama y PR:
@@ -458,14 +460,14 @@ gh pr create --base main --title "feat(api): public GET /api/health liveness (M4
 - /api/ping autenticado preservado
 - ApiHealthPublicRouteTest + ApiHealthPublicDispatchTest
 - docs/core/despliegue-y-versionado.md § Monitoreo
-- semver 1.2.4
+- semver 1.2.8
 
 Spec: docs/superpowers/specs/2026-08-05-audit-api-health-public-design.md
 Audit: #67 (M4)
 Plan: docs/superpowers/plans/2026-08-05-audit-api-health-public.md"
 ```
 
-- [ ] **Step 6: Commit / tag** — commit semver: `chore(release): bump platform version to 1.2.4 for /api/health`; tag post-merge en `main`.
+- [ ] **Step 6: Commit / tag** — commit semver: `chore(release): bump platform version to 1.2.8 for /api/health`; tag post-merge en `main`.
 
 **Requiere operador humano:** sí — reconfigurar LB/cron de `/api/ping` → `/api/health` en VPS (P2); bump `composer.lock` Portal post-tag (P1/M6).
 
@@ -493,7 +495,7 @@ Plan: docs/superpowers/plans/2026-08-05-audit-api-health-public.md"
 - [ ] `php tests/run.php Kernel/ApiHealthPublicDispatch` PASS (AC4).
 - [ ] `skeleton/routes/api.php` espeja harness (AC5).
 - [ ] § Monitoreo documentado (AC6).
-- [ ] Tag `v1.2.4`; tres fuentes semver sincronizadas; `PlatformVersionSemverTest` PASS (AC7).
+- [ ] Tag `v1.2.8`; tres fuentes semver sincronizadas; `PlatformVersionSemverTest` PASS (AC7).
 - [ ] Diff sin lógica Marketing/Portal en `src/` (AC8).
 
 ## Riesgos y rollback
@@ -512,7 +514,7 @@ Plan: docs/superpowers/plans/2026-08-05-audit-api-health-public.md"
 
 - Salida `php tests/run.php Docs/ApiHealthPublicRoute Kernel/ApiHealthPublicDispatch`.
 - Salida `curl -sf http://localhost:8000/api/health` local.
-- Número PR Framework y URL tag `v1.2.4`.
+- Número PR Framework y URL tag `v1.2.8`.
 
 ---
 
@@ -528,4 +530,5 @@ Plan: docs/superpowers/plans/2026-08-05-audit-api-health-public.md"
 | Siguiente tarea ejecutable | **Task 1** — `ApiHealthPublicRouteTest` (TDD rojo) |
 | Prerrequisitos | Ninguno — `HealthController::ping()` existe @ `ddc55ec`; `/api/health` ausente; tests `ApiHealthPublicRouteTest` / `ApiHealthPublicDispatchTest` ausentes; semver `1.2.3` |
 | Bloqueos | PHP CLI ausente en agente cloud (verificado 2026-08-06) — ejecutor debe correr gates en entorno PHP ≥8.1; Portal P1/P2 requiere operador (M6 gh 404); rama `feature/api-health-public-m4` no existe aún (creable desde `main`) |
+| REL-C1 | REL-C1 retarget → semver **1.2.8+**; tags v1.2.4–v1.2.6 skip |
 | Estado | **Pendiente de implementación** |
