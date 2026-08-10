@@ -261,6 +261,16 @@ Cancelacion hardening A17:
 - La fila fiscal de issue se localiza con `findIssueByProviderInvoiceId` y esa
   fila cambia a `canceled`; la fila `cancel:*` solo audita la operacion.
 
+Residual ops (A17 cancel): si un claim `cancel:{providerInvoiceId}` queda
+atascado tras un fallo transitorio del provider (`InvoiceProviderException` que
+no sea "not cancellable"), el Framework conserva el claim a proposito
+(fail-closed); reintentos ciegos devuelven `InvoiceAlreadyProcessed`. No
+reintentar cancel sin verificar: (1) recuperar estado remoto con
+`retrieveInvoice`; (2) si la factura sigue vigente, liberar o reparar la fila
+`cancel:*` en el ledger bajo ops auditado antes de reintentar cancel; (3) si ya
+esta cancelada remotamente, reconciliar con `markCanceled` en la fila de issue
+y dejar el claim como auditoria.
+
 ## RBAC obligatorio en consumidores
 
 Consumer routes must enforce RBAC slugs en cualquier ruta admin/API que invoque

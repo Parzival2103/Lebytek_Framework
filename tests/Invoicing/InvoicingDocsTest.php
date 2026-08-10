@@ -58,6 +58,7 @@ test('modulo invoicing documenta runbook de hardening productivo A11-A27', funct
         'external id algorithm' => 'external_id = `lebytek:invoice:{hex(sha256(providerKey."\\x1f".idempotencyKey))[0:40]}`',
         'external id per attempt' => 'por intento, nunca derivado de `sourceRef` ni truncado',
         'cancel claim before' => 'claim-before',
+        'stuck cancel claim ops' => 'Residual ops (A17 cancel)',
         'find issue row for cancel' => 'findIssueByProviderInvoiceId',
         'rbac hard rule' => 'Consumer routes must enforce RBAC slugs',
         'webhook wiring' => 'FacturapiInvoiceProvider::parseWebhook',
