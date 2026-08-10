@@ -26,9 +26,27 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
     }
 
     /** @param array<string, mixed> $sdkConfig */
-    public static function fromSecretKey(string $secretKey, array $sdkConfig = []): self
+    public static function fromSecretKey(string $secretKey, array $sdkConfig = [], string $mode = 'test'): self
     {
+        self::assertSecretKeyMatchesMode($secretKey, $mode);
+
         return new self(SdkFacturapiTransport::fromSecretKey($secretKey, $sdkConfig));
+    }
+
+    public static function assertSecretKeyMatchesMode(string $secretKey, string $mode): void
+    {
+        $secret = trim($secretKey);
+        if ($secret === '') {
+            throw new InvoiceProviderException('Facturapi secret_key vacío con proveedor habilitado.');
+        }
+
+        $normalizedMode = strtolower(trim($mode)) === 'live' ? 'live' : 'test';
+        $expectedPrefix = $normalizedMode === 'live' ? 'sk_live_' : 'sk_test_';
+        if (! str_starts_with($secret, $expectedPrefix)) {
+            throw new InvoiceProviderException(
+                "Facturapi secret_key no coincide con mode={$normalizedMode} (se espera prefijo {$expectedPrefix})."
+            );
+        }
     }
 
     public function key(): string

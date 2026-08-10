@@ -27,7 +27,7 @@ test('InvoicingFactory incluye facturapi habilitado', function (): void {
         'facturapi' => [
             'driver'  => 'facturapi',
             'enabled' => true,
-            'config'  => ['secret_key' => 'sk_test', 'mode' => 'test'],
+            'config'  => ['secret_key' => 'sk_test_unit', 'mode' => 'test'],
         ],
     ]);
     assert_true(isset($providers['facturapi']));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Lebytek\Framework\Infrastructure\Invoicing\Facturapi;
 
 use Facturapi\Facturapi;
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceProviderException;
 
 final readonly class SdkFacturapiTransport implements FacturapiTransportInterface
 {
@@ -14,6 +15,10 @@ final readonly class SdkFacturapiTransport implements FacturapiTransportInterfac
     /** @param array<string, mixed> $config */
     public static function fromSecretKey(string $secretKey, array $config = []): self
     {
+        if (trim($secretKey) === '') {
+            throw new InvoiceProviderException('Facturapi secret_key vacío con proveedor habilitado.');
+        }
+
         return new self(new Facturapi($secretKey, $config !== [] ? $config : null));
     }
 
