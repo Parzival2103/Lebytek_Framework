@@ -14,6 +14,8 @@ use Lebytek\Framework\Domain\Exceptions\ValidationException;
  */
 final class UploadValidator
 {
+    private const GLOBAL_DENIED_EXTENSIONS = ['php', 'phtml', 'phar', 'htaccess', 'svg'];
+
     /**
      * MIME esperados por extensión conocida. Si una extensión NO está aquí, la
      * verificación MIME se omite (no se bloquea), preservando la capacidad de
@@ -60,11 +62,20 @@ final class UploadValidator
         $original = (string) ($file['name'] ?? '');
         $extension = strtolower(pathinfo($original, PATHINFO_EXTENSION));
 
-        if (is_array($allowedExtensions) && $allowedExtensions !== []) {
-            $allowedLower = array_map(static fn($x): string => strtolower((string) $x), $allowedExtensions);
-            if ($extension === '' || !in_array($extension, $allowedLower, true)) {
-                throw new ValidationException('Extensión de archivo no permitida para ' . $label . '.');
-            }
+        if (in_array($extension, self::GLOBAL_DENIED_EXTENSIONS, true)) {
+            throw new ValidationException('Extensión de archivo no permitida para ' . $label . '.');
+        }
+
+        if ($allowedExtensions === null || $allowedExtensions === []) {
+            throw new ValidationException('Extensión de archivo no permitida para ' . $label . '.');
+        }
+
+        $allowedLower = array_map(static fn($x): string => strtolower((string) $x), $allowedExtensions);
+        if ($extension === '' || !in_array($extension, $allowedLower, true)) {
+            $hint = implode(', ', $allowedLower);
+            throw new ValidationException(
+                'Extensión de archivo no permitida para ' . $label . '. Usa: ' . $hint . '.'
+            );
         }
 
         if ($detectedMime !== null && $extension !== '' && isset(self::MIME_BY_EXT[$extension])) {
