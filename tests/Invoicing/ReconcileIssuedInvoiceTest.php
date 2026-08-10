@@ -537,6 +537,7 @@ function task10_draft(string $sourceRef): InvoiceDraft
                 productKey: '80101500',
                 unitPrice: \Lebytek\Framework\Domain\Invoicing\ValueObjects\Money::fromMinor(100000, 'MXN'),
                 taxes: [new \Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceTax(type: 'IVA', rate: 0.16, factor: 'Tasa')],
+                unitKey: 'E48',
             ),
         ],
         paymentForm: \Lebytek\Framework\Domain\Invoicing\PaymentForm::Transferencia,

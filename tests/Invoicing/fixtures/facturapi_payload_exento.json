@@ -32,6 +32,7 @@
     }
   ],
   "payment_form": "99",
+  "payment_method": "PUE",
   "use": "G01",
   "currency": "MXN"
 }

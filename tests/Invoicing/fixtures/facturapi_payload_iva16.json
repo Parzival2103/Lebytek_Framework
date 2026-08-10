@@ -34,6 +34,7 @@
     }
   ],
   "payment_form": "03",
+  "payment_method": "PUE",
   "use": "G03",
   "currency": "MXN"
 }

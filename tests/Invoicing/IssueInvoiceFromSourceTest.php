@@ -30,11 +30,12 @@ function task9_valid_customer(
     string $taxId = 'ACM010101ABC',
     string $legalName = 'ACME SA DE CV',
     string $zip = '01000',
+    string $taxSystem = '601',
 ): FiscalCustomer {
     return new FiscalCustomer(
         legalName: $legalName,
         taxId: $taxId,
-        taxSystem: '601',
+        taxSystem: $taxSystem,
         address: new Address(zip: $zip),
     );
 }
@@ -45,6 +46,7 @@ function task9_valid_item(
     string $productKey = '80101500',
     ?array $taxes = null,
     bool $taxExempt = false,
+    ?string $unitKey = 'E48',
 ): InvoiceItem {
     return new InvoiceItem(
         quantity: $quantity,
@@ -53,6 +55,7 @@ function task9_valid_item(
         unitPrice: Money::fromMinor(100000, 'MXN'),
         taxes: $taxes ?? [new InvoiceTax(type: 'IVA', rate: 0.16, factor: 'Tasa')],
         taxExempt: $taxExempt,
+        unitKey: $unitKey,
     );
 }
 
@@ -475,11 +478,42 @@ test('InvoiceDraftValidator rechaza drafts fiscales inválidos', function (): vo
         task9_valid_draft(items: [task9_valid_item(productKey: 'bad')]),
         task9_valid_draft(currency: 'USD'),
         task9_valid_draft(items: [task9_valid_item(taxes: [])]),
+        task9_valid_draft(customer: task9_valid_customer(taxSystem: '60')),
+        task9_valid_draft(customer: task9_valid_customer(taxSystem: '6012')),
+        task9_valid_draft(customer: task9_valid_customer(taxSystem: 'abc')),
+        task9_valid_draft(items: [task9_valid_item(unitKey: null)]),
+        task9_valid_draft(items: [task9_valid_item(unitKey: '  ')]),
     ];
 
     foreach ($invalidDrafts as $draft) {
         assert_throws(InvoiceDraftInvalid::class, fn () => $validator->validate($draft));
     }
+});
+
+test('InvoiceDraftValidator rechaza tax_system inválido con path customer.taxSystem', function (): void {
+    $validator = new InvoiceDraftValidator();
+
+    try {
+        $validator->validate(task9_valid_draft(customer: task9_valid_customer(taxSystem: 'XX')));
+    } catch (InvoiceDraftInvalid $exception) {
+        assert_true(str_contains($exception->getMessage(), 'customer.taxSystem'));
+        return;
+    }
+
+    throw new RuntimeException('expected InvoiceDraftInvalid');
+});
+
+test('InvoiceDraftValidator rechaza unitKey vacío con path items.0.unitKey', function (): void {
+    $validator = new InvoiceDraftValidator();
+
+    try {
+        $validator->validate(task9_valid_draft(items: [task9_valid_item(unitKey: '')]));
+    } catch (InvoiceDraftInvalid $exception) {
+        assert_true(str_contains($exception->getMessage(), 'items.0.unitKey'));
+        return;
+    }
+
+    throw new RuntimeException('expected InvoiceDraftInvalid');
 });
 
 test('InvoiceDraftValidator permite item exento sin impuestos', function (): void {

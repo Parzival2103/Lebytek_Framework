@@ -5,6 +5,7 @@ namespace Lebytek\Framework\Domain\Invoicing\ValueObjects;
 
 use Lebytek\Framework\Domain\Invoicing\CfdiUse;
 use Lebytek\Framework\Domain\Invoicing\PaymentForm;
+use Lebytek\Framework\Domain\Invoicing\PaymentMethod;
 
 final readonly class InvoiceDraft
 {
@@ -18,6 +19,7 @@ final readonly class InvoiceDraft
         private CfdiUse $cfdiUse = CfdiUse::G01,
         private string $currency = 'MXN',
         private array $metadata = [],
+        private PaymentMethod $paymentMethod = PaymentMethod::Pue,
     ) {}
 
     public function sourceRef(): string
@@ -39,6 +41,11 @@ final readonly class InvoiceDraft
     public function paymentForm(): PaymentForm
     {
         return $this->paymentForm;
+    }
+
+    public function paymentMethod(): PaymentMethod
+    {
+        return $this->paymentMethod;
     }
 
     public function cfdiUse(): CfdiUse

@@ -6,6 +6,7 @@ use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceNeedsReconcile;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceProviderIdConflict;
 use Lebytek\Framework\Domain\Invoicing\InvoiceStatus;
 use Lebytek\Framework\Domain\Invoicing\PaymentForm;
+use Lebytek\Framework\Domain\Invoicing\PaymentMethod;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\Address;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\FiscalCustomer;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceDraft;
@@ -43,6 +44,7 @@ test('InvoiceDraft aplica defaults cfdiUse G01 y currency MXN', function (): voi
         productKey: '80101500',
         unitPrice: Money::fromMinor(100000, 'MXN'),
         taxes: [new InvoiceTax(type: 'IVA', rate: 0.16, factor: 'Tasa')],
+        unitKey: 'E48',
     );
     $draft = new InvoiceDraft(
         sourceRef: 'order:01JABCDEF',
@@ -53,6 +55,32 @@ test('InvoiceDraft aplica defaults cfdiUse G01 y currency MXN', function (): voi
     assert_same(CfdiUse::G01, $draft->cfdiUse());
     assert_same('MXN', $draft->currency());
     assert_same('order:01JABCDEF', $draft->sourceRef());
+    assert_same(PaymentMethod::Pue, $draft->paymentMethod());
+});
+
+test('InvoiceDraft acepta paymentMethod PPD explícito', function (): void {
+    $customer = new FiscalCustomer(
+        legalName: 'Acme SA de CV',
+        taxId: 'ACM010101ABC',
+        taxSystem: '601',
+        address: new Address(zip: '01000'),
+    );
+    $item = new InvoiceItem(
+        quantity: 1.0,
+        description: 'Servicio mensual',
+        productKey: '80101500',
+        unitPrice: Money::fromMinor(100000, 'MXN'),
+        taxes: [new InvoiceTax(type: 'IVA', rate: 0.16, factor: 'Tasa')],
+        unitKey: 'E48',
+    );
+    $draft = new InvoiceDraft(
+        sourceRef: 'order:ppd',
+        customer: $customer,
+        items: [$item],
+        paymentForm: PaymentForm::Transferencia,
+        paymentMethod: PaymentMethod::Ppd,
+    );
+    assert_same(PaymentMethod::Ppd, $draft->paymentMethod());
 });
 
 test('InvoiceStatus fromProvider mapea estados conocidos', function (): void {

@@ -154,6 +154,7 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
             'customer' => $this->mapCustomer($draft->customer()),
             'items' => array_map(fn (InvoiceItem $item): array => $this->mapItem($item), $draft->items()),
             'payment_form' => $draft->paymentForm()->value,
+            'payment_method' => $draft->paymentMethod()->value,
             'use' => $draft->cfdiUse()->value,
             'currency' => $draft->currency(),
         ]);
@@ -195,10 +196,8 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
         $product = [
             'description' => $item->description(),
             'product_key' => $item->productKey(),
+            'unit_key' => $item->unitKey(),
         ];
-        if ($item->unitKey() !== null) {
-            $product['unit_key'] = $item->unitKey();
-        }
         $product['price'] = $this->majorAmount($item->unitPrice());
         $product['tax_included'] = false;
         $product['taxability'] = '02';
