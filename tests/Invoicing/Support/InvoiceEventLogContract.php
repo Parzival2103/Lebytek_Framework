@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceProviderIdConflict;
 use Lebytek\Framework\Domain\Invoicing\InvoiceEventLogRepositoryInterface;
 use Lebytek\Framework\Domain\Invoicing\InvoiceStatus;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
@@ -70,11 +71,21 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     $attachMismatchKey = 'attach-mismatch-'.$suffix;
     assert_true($events->tryClaim($provider, $attachMismatchKey, $sourceRef.'-attach-mismatch', 'membership'));
     $events->attachProviderInvoiceId($provider, $attachMismatchKey, 'inv_attach_locked_'.$suffix);
-    assert_throws(RuntimeException::class, fn () => $events->attachProviderInvoiceId(
-        $provider,
-        $attachMismatchKey,
-        'inv_attach_conflict_'.$suffix,
-    ), 'attachProviderInvoiceId must not overwrite a different provider invoice id');
+    assert_throws(InvoiceProviderIdConflict::class, function () use ($events, $provider, $attachMismatchKey, $suffix): void {
+        try {
+            $events->attachProviderInvoiceId(
+                $provider,
+                $attachMismatchKey,
+                'inv_attach_conflict_'.$suffix,
+            );
+        } catch (InvoiceProviderIdConflict $e) {
+            assert_same($provider, $e->providerKey());
+            assert_same($attachMismatchKey, $e->idempotencyKey());
+            assert_same('inv_attach_locked_'.$suffix, $e->existingId());
+            assert_same('inv_attach_conflict_'.$suffix, $e->attemptedId());
+            throw $e;
+        }
+    }, 'attachProviderInvoiceId must not overwrite a different provider invoice id');
     $attachedAfterConflict = $events->findByIdempotencyKey($provider, $attachMismatchKey);
     assert_true($attachedAfterConflict instanceof IssuedInvoice, 'attach conflict row remains findable');
     assert_same('inv_attach_locked_'.$suffix, $attachedAfterConflict->providerInvoiceId(), 'attach conflict preserves provider invoice id');

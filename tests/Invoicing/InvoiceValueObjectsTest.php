@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use Lebytek\Framework\Domain\Invoicing\CfdiUse;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceNeedsReconcile;
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceProviderIdConflict;
 use Lebytek\Framework\Domain\Invoicing\InvoiceStatus;
 use Lebytek\Framework\Domain\Invoicing\PaymentForm;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\Address;
@@ -81,6 +82,23 @@ test('InvoiceItem expone líneas de impuesto y taxExempt', function (): void {
     assert_same(0.16, $item->taxes()[0]->rate());
     assert_same('Tasa', $item->taxes()[0]->factor());
     assert_false($item->taxExempt());
+});
+
+test('InvoiceProviderIdConflict es excepción de dominio instanciable', function (): void {
+    $ex = new InvoiceProviderIdConflict(
+        'provider invoice id conflict',
+        'facturapi',
+        'idem:attach-conflict',
+        'inv_existing',
+        'inv_attempted',
+    );
+
+    assert_true($ex instanceof \RuntimeException);
+    assert_same('provider invoice id conflict', $ex->getMessage());
+    assert_same('facturapi', $ex->providerKey());
+    assert_same('idem:attach-conflict', $ex->idempotencyKey());
+    assert_same('inv_existing', $ex->existingId());
+    assert_same('inv_attempted', $ex->attemptedId());
 });
 
 test('InvoiceNeedsReconcile es excepción de dominio instanciable', function (): void {

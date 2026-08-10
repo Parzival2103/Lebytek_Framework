@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceProviderIdConflict;
 use Lebytek\Framework\Domain\Invoicing\InvoiceEventLogRepositoryInterface;
 use Lebytek\Framework\Domain\Invoicing\InvoiceStatus;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
@@ -93,13 +94,19 @@ final class InMemoryInvoiceEventLog implements InvoiceEventLogRepositoryInterfac
             $currentProviderInvoiceId !== null
             && (string) $currentProviderInvoiceId !== $providerInvoiceId
         ) {
-            throw new RuntimeException(sprintf(
-                'Cannot attach provider invoice id for provider "%s" and idempotency key "%s": existing provider_invoice_id "%s" differs from "%s".',
+            throw new InvoiceProviderIdConflict(
+                sprintf(
+                    'Cannot attach provider invoice id for provider "%s" and idempotency key "%s": existing provider_invoice_id "%s" differs from "%s".',
+                    $provider,
+                    $idempotencyKey,
+                    (string) $currentProviderInvoiceId,
+                    $providerInvoiceId,
+                ),
                 $provider,
                 $idempotencyKey,
                 (string) $currentProviderInvoiceId,
                 $providerInvoiceId,
-            ));
+            );
         }
 
         $this->rows[$key]['providerInvoiceId'] = $providerInvoiceId;
