@@ -75,6 +75,8 @@ final class PdoOrganizationSettingsRepository implements OrganizationSettingsRep
      */
     private function encodeMeta(array $meta): ?string
     {
+        $meta = InvoiceSecretScrubber::scrubMetaSecrets($meta);
+
         return $meta === [] ? null : json_encode($meta, JSON_THROW_ON_ERROR);
     }
 

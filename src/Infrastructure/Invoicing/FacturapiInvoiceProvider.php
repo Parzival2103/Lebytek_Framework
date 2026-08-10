@@ -250,8 +250,6 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
 
     private function sanitizeSecretTokens(string $message): string
     {
-        $sanitized = preg_replace('/sk_(test|live)_[A-Za-z0-9]+/', '[redacted]', $message);
-
-        return is_string($sanitized) ? $sanitized : $message;
+        return InvoiceSecretScrubber::sanitizeSecretTokens($message);
     }
 }

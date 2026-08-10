@@ -60,12 +60,13 @@ function make_facturapi_fake_provider(): array
         /** @var array<int, array{id: string, email: string}> */
         public array $emailCalls = [];
         public bool $throwOnCreate = false;
+        public string $throwOnCreateMessage = 'Facturapi rejected request for sk_test_SECRET';
 
         /** @param array<string, mixed> $payload */
         public function create(array $payload): array
         {
             if ($this->throwOnCreate) {
-                throw new RuntimeException('Facturapi rejected request for sk_test_SECRET');
+                throw new RuntimeException($this->throwOnCreateMessage);
             }
 
             $this->createdPayloads[] = $payload;
@@ -221,6 +222,36 @@ test('FacturapiInvoiceProvider envuelve errores del transporte sin filtrar secre
     } catch (InvoiceProviderException $exception) {
         assert_true(str_contains($exception->getMessage(), 'Facturapi create invoice failed'));
         assert_no_secret_leak($exception, ['sk_test', 'SECRET']);
+        return;
+    }
+
+    throw new RuntimeException('expected InvoiceProviderException');
+});
+
+test('FacturapiInvoiceProvider redacta sk_user en la cadena de excepciones', function (): void {
+    [$provider, $transport] = make_facturapi_fake_provider();
+    $transport->throwOnCreate = true;
+    $transport->throwOnCreateMessage = 'Facturapi rejected request for sk_user_ABC123';
+
+    try {
+        $provider->createInvoice(facturapi_iva16_draft());
+    } catch (InvoiceProviderException $exception) {
+        assert_no_secret_leak($exception, ['sk_user_ABC123', 'ABC123']);
+        return;
+    }
+
+    throw new RuntimeException('expected InvoiceProviderException');
+});
+
+test('FacturapiInvoiceProvider redacta Bearer en la cadena de excepciones', function (): void {
+    [$provider, $transport] = make_facturapi_fake_provider();
+    $transport->throwOnCreate = true;
+    $transport->throwOnCreateMessage = 'Unauthorized Bearer eyJhbGciOiJIUzI1NiJ9.payload.signature';
+
+    try {
+        $provider->createInvoice(facturapi_iva16_draft());
+    } catch (InvoiceProviderException $exception) {
+        assert_no_secret_leak($exception, ['Bearer eyJhbGciOiJIUzI1NiJ9', 'eyJhbGciOiJIUzI1NiJ9']);
         return;
     }
 
