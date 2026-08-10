@@ -123,6 +123,14 @@ final class Task11EventLog implements InvoiceEventLogRepositoryInterface
     {
     }
 
+    public function attachProviderInvoiceId(
+        string $provider,
+        string $idempotencyKey,
+        string $providerInvoiceId,
+        array $meta = [],
+    ): void {
+    }
+
     public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
     {
         return null;

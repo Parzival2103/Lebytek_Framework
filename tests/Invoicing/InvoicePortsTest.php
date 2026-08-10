@@ -107,6 +107,12 @@ test('InvoiceEventLogRepositoryInterface expone ledger incluyendo reconcile (D1)
         ['name' => 'idempotencyKey', 'type' => 'string'],
         ['name' => 'invoice', 'type' => IssuedInvoice::class],
     ], 'void');
+    assert_interface_method($ref, 'attachProviderInvoiceId', [
+        ['name' => 'provider', 'type' => 'string'],
+        ['name' => 'idempotencyKey', 'type' => 'string'],
+        ['name' => 'providerInvoiceId', 'type' => 'string'],
+        ['name' => 'meta', 'type' => 'array', 'optional' => true, 'default' => []],
+    ], 'void');
     assert_interface_method($ref, 'findByIdempotencyKey', [
         ['name' => 'provider', 'type' => 'string'],
         ['name' => 'idempotencyKey', 'type' => 'string'],

@@ -169,6 +169,9 @@ function task9_failing_mark_needs_reconcile_log(InMemoryInvoiceEventLog $inner):
     return new class($inner) implements InvoiceEventLogRepositoryInterface {
         public int $releaseCalls = 0;
         public int $markNeedsReconcileCalls = 0;
+        public int $attachCalls = 0;
+        /** @var list<array{provider: string, idempotencyKey: string, providerInvoiceId: string, meta: array<string, mixed>}> */
+        public array $attached = [];
 
         public function __construct(private readonly InMemoryInvoiceEventLog $inner)
         {
@@ -205,6 +208,22 @@ function task9_failing_mark_needs_reconcile_log(InMemoryInvoiceEventLog $inner):
             $this->markNeedsReconcileCalls++;
 
             throw new RuntimeException('simulated markNeedsReconcile failure');
+        }
+
+        public function attachProviderInvoiceId(
+            string $provider,
+            string $idempotencyKey,
+            string $providerInvoiceId,
+            array $meta = [],
+        ): void {
+            $this->attachCalls++;
+            $this->attached[] = [
+                'provider' => $provider,
+                'idempotencyKey' => $idempotencyKey,
+                'providerInvoiceId' => $providerInvoiceId,
+                'meta' => $meta,
+            ];
+            $this->inner->attachProviderInvoiceId($provider, $idempotencyKey, $providerInvoiceId, $meta);
         }
 
         public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
@@ -267,6 +286,15 @@ function task9_failing_mark_issued_log(InMemoryInvoiceEventLog $inner): InvoiceE
         {
             $this->markNeedsReconcileCalls++;
             $this->inner->markNeedsReconcile($provider, $idempotencyKey, $invoice);
+        }
+
+        public function attachProviderInvoiceId(
+            string $provider,
+            string $idempotencyKey,
+            string $providerInvoiceId,
+            array $meta = [],
+        ): void {
+            $this->inner->attachProviderInvoiceId($provider, $idempotencyKey, $providerInvoiceId, $meta);
         }
 
         public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
@@ -337,6 +365,15 @@ function task9_spy_event_log(InMemoryInvoiceEventLog $inner): InvoiceEventLogRep
         public function markNeedsReconcile(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
         {
             $this->inner->markNeedsReconcile($provider, $idempotencyKey, $invoice);
+        }
+
+        public function attachProviderInvoiceId(
+            string $provider,
+            string $idempotencyKey,
+            string $providerInvoiceId,
+            array $meta = [],
+        ): void {
+            $this->inner->attachProviderInvoiceId($provider, $idempotencyKey, $providerInvoiceId, $meta);
         }
 
         public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
@@ -572,7 +609,15 @@ test('IssueInvoiceFromSource lanza InvoiceNeedsReconcile aunque markNeedsReconci
 
     assert_true($thrown instanceof InvoiceNeedsReconcile);
     assert_true(str_contains($thrown->getMessage(), 'inv_reconcile_fail'));
+    assert_same('inv_reconcile_fail', $thrown->providerInvoiceId());
+    assert_same('facturapi', $thrown->providerKey());
+    assert_same('idem:reconcile-fails', $thrown->idempotencyKey());
     assert_same(1, $provider->createCalls);
     assert_same(1, $events->markNeedsReconcileCalls);
+    assert_same(1, $events->attachCalls);
+    assert_same('inv_reconcile_fail', $events->attached[0]['providerInvoiceId'] ?? null);
+    assert_same('fake-external:idem:reconcile-fails', $events->attached[0]['meta']['external_id'] ?? null);
+    assert_same('inv_reconcile_fail', $inner->findByIdempotencyKey('facturapi', 'idem:reconcile-fails')?->providerInvoiceId());
+    assert_same(InvoiceStatus::NeedsReconcile, $inner->findByIdempotencyKey('facturapi', 'idem:reconcile-fails')?->status());
     assert_same(0, $events->releaseCalls);
 });

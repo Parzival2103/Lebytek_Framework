@@ -73,6 +73,43 @@ final class InMemoryInvoiceEventLog implements InvoiceEventLogRepositoryInterfac
         $this->mark($provider, $idempotencyKey, $invoice, self::STATUS_NEEDS_RECONCILE);
     }
 
+    public function attachProviderInvoiceId(
+        string $provider,
+        string $idempotencyKey,
+        string $providerInvoiceId,
+        array $meta = [],
+    ): void {
+        $key = $this->key($provider, $idempotencyKey);
+        if (! isset($this->rows[$key])) {
+            throw new RuntimeException(sprintf(
+                'Cannot attach provider invoice id for provider "%s" and idempotency key "%s": claim row not found.',
+                $provider,
+                $idempotencyKey,
+            ));
+        }
+
+        $currentProviderInvoiceId = $this->rows[$key]['providerInvoiceId'];
+        if (
+            $currentProviderInvoiceId !== null
+            && (string) $currentProviderInvoiceId !== $providerInvoiceId
+        ) {
+            throw new RuntimeException(sprintf(
+                'Cannot attach provider invoice id for provider "%s" and idempotency key "%s": existing provider_invoice_id "%s" differs from "%s".',
+                $provider,
+                $idempotencyKey,
+                (string) $currentProviderInvoiceId,
+                $providerInvoiceId,
+            ));
+        }
+
+        $this->rows[$key]['providerInvoiceId'] = $providerInvoiceId;
+        $this->rows[$key]['status'] = self::STATUS_NEEDS_RECONCILE;
+        $this->rows[$key]['meta'] = $this->mergeMetaPreservingExternalId(
+            is_array($this->rows[$key]['meta']) ? $this->rows[$key]['meta'] : [],
+            $meta,
+        );
+    }
+
     public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
     {
         $row = $this->rows[$this->key($provider, $idempotencyKey)] ?? null;
@@ -112,6 +149,21 @@ final class InMemoryInvoiceEventLog implements InvoiceEventLogRepositoryInterfac
             fn (array $row): IssuedInvoice => $this->hydrate($row),
             array_slice($matches, 0, $limit)
         );
+    }
+
+    /**
+     * @param array<string, mixed> $existing
+     * @param array<string, mixed> $incoming
+     * @return array<string, mixed>
+     */
+    private function mergeMetaPreservingExternalId(array $existing, array $incoming): array
+    {
+        $merged = array_merge($existing, $incoming);
+        if (array_key_exists('external_id', $existing)) {
+            $merged['external_id'] = $existing['external_id'];
+        }
+
+        return $merged;
     }
 
     private function mark(string $provider, string $idempotencyKey, IssuedInvoice $invoice, string $status): void

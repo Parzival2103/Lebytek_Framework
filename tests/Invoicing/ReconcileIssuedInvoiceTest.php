@@ -138,6 +138,15 @@ test('ReconcileIssuedInvoice devuelve facturas ya finalizadas as-is', function (
         {
         }
 
+        public function attachProviderInvoiceId(
+            string $provider,
+            string $idempotencyKey,
+            string $providerInvoiceId,
+            array $meta = [],
+        ): void {
+            throw new RuntimeException('finalized invoice must not be attached');
+        }
+
         public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
         {
             return $this->invoice;

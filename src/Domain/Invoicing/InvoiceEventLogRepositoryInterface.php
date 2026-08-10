@@ -32,6 +32,16 @@ interface InvoiceEventLogRepositoryInterface
 
     public function markNeedsReconcile(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void;
 
+    /**
+     * @param array<string, mixed> $meta
+     */
+    public function attachProviderInvoiceId(
+        string $provider,
+        string $idempotencyKey,
+        string $providerInvoiceId,
+        array $meta = [],
+    ): void;
+
     public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice;
 
     /** @return IssuedInvoice[] */

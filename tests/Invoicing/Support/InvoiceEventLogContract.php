@@ -29,6 +29,11 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
             InvoiceStatus::NeedsReconcile,
         ),
     ), 'markNeedsReconcile must fail closed when claim row is missing');
+    assert_throws(RuntimeException::class, fn () => $events->attachProviderInvoiceId(
+        $provider,
+        'missing-attach-'.$suffix,
+        'inv_missing_attach_'.$suffix,
+    ), 'attachProviderInvoiceId must fail closed when claim row is missing');
 
     $claimKey = 'claim-'.$suffix;
     assert_false($events->hasProcessed($provider, $claimKey), 'new claim must not be processed');
@@ -40,6 +45,39 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     $events->releaseClaim($provider, $claimKey);
     assert_false($events->hasProcessed($provider, $claimKey), 'released claim must not be processed');
     assert_true($events->tryClaim($provider, $claimKey, $sourceRef, 'membership'));
+
+    $attachKey = 'attach-'.$suffix;
+    assert_true($events->tryClaim($provider, $attachKey, $sourceRef.'-attach', 'membership', [
+        'external_id' => 'ext-preserved-'.$suffix,
+        'claimed' => true,
+    ]));
+    $events->attachProviderInvoiceId($provider, $attachKey, 'inv_attached_'.$suffix, [
+        'external_id' => 'ext-overwrite-'.$suffix,
+        'attached' => true,
+    ]);
+    $attached = $events->findByIdempotencyKey($provider, $attachKey);
+    assert_true($attached instanceof IssuedInvoice, 'attached provider id must hydrate');
+    assert_same('inv_attached_'.$suffix, $attached->providerInvoiceId());
+    assert_same(InvoiceStatus::NeedsReconcile, $attached->status());
+    assert_same('ext-preserved-'.$suffix, $attached->meta()['external_id'] ?? null, 'attach must preserve claim external_id');
+    assert_true($attached->meta()['claimed'] ?? false, 'attach must merge existing meta');
+    assert_true($attached->meta()['attached'] ?? false, 'attach must merge new meta');
+    $events->attachProviderInvoiceId($provider, $attachKey, 'inv_attached_'.$suffix, ['same' => true]);
+    $attachedAgain = $events->findByIdempotencyKey($provider, $attachKey);
+    assert_true($attachedAgain instanceof IssuedInvoice, 'same provider id attach remains findable');
+    assert_true($attachedAgain->meta()['same'] ?? false, 'same provider id attach can merge additional meta');
+
+    $attachMismatchKey = 'attach-mismatch-'.$suffix;
+    assert_true($events->tryClaim($provider, $attachMismatchKey, $sourceRef.'-attach-mismatch', 'membership'));
+    $events->attachProviderInvoiceId($provider, $attachMismatchKey, 'inv_attach_locked_'.$suffix);
+    assert_throws(RuntimeException::class, fn () => $events->attachProviderInvoiceId(
+        $provider,
+        $attachMismatchKey,
+        'inv_attach_conflict_'.$suffix,
+    ), 'attachProviderInvoiceId must not overwrite a different provider invoice id');
+    $attachedAfterConflict = $events->findByIdempotencyKey($provider, $attachMismatchKey);
+    assert_true($attachedAfterConflict instanceof IssuedInvoice, 'attach conflict row remains findable');
+    assert_same('inv_attach_locked_'.$suffix, $attachedAfterConflict->providerInvoiceId(), 'attach conflict preserves provider invoice id');
 
     $issuedKey = 'issued-'.$suffix;
     assert_true($events->tryClaim($provider, $issuedKey, $sourceRef, 'membership'));
@@ -155,13 +193,15 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
         ));
     }
 
-    $needsReconcile = $events->findNeedsReconcile($provider, 2);
-    assert_same(2, count($needsReconcile), 'findNeedsReconcile honors limit');
+    $needsReconcile = $events->findNeedsReconcile($provider, 4);
+    assert_same(4, count($needsReconcile), 'findNeedsReconcile honors limit');
     foreach ($needsReconcile as $invoice) {
         assert_same(InvoiceStatus::NeedsReconcile, $invoice->status(), 'findNeedsReconcile returns only reconcile rows');
     }
-    assert_same('inv_reconcile_'.$suffix, $needsReconcile[0]->providerInvoiceId(), 'findNeedsReconcile is id ASC');
-    assert_same('inv_extra-a_'.$suffix, $needsReconcile[1]->providerInvoiceId(), 'findNeedsReconcile limit keeps id order');
+    assert_same('inv_attached_'.$suffix, $needsReconcile[0]->providerInvoiceId(), 'findNeedsReconcile includes attached rows in id ASC');
+    assert_same('inv_attach_locked_'.$suffix, $needsReconcile[1]->providerInvoiceId(), 'findNeedsReconcile keeps attached conflict row in id ASC');
+    assert_same('inv_reconcile_'.$suffix, $needsReconcile[2]->providerInvoiceId(), 'findNeedsReconcile keeps marked reconcile row in id ASC');
+    assert_same('inv_extra-a_'.$suffix, $needsReconcile[3]->providerInvoiceId(), 'findNeedsReconcile limit keeps id order');
 
     $events->releaseClaim($provider, $issuedKey);
     assert_true($events->hasProcessed($provider, $issuedKey), 'releaseClaim must not delete issued rows');

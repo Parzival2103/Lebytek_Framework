@@ -68,7 +68,16 @@ final class IssueInvoiceFromSource
                 try {
                     $this->events->markNeedsReconcile($resolvedProviderKey, $idempotencyKey, $observedInvoice);
                 } catch (Throwable) {
-                    // Local reconcile mark failed; still surface InvoiceNeedsReconcile for the remote invoice.
+                    try {
+                        $this->events->attachProviderInvoiceId(
+                            $resolvedProviderKey,
+                            $idempotencyKey,
+                            $observedInvoice->providerInvoiceId(),
+                            array_merge($observedInvoice->meta(), ['external_id' => $externalId]),
+                        );
+                    } catch (Throwable) {
+                        // Last-resort attach failed; keep the claim and surface typed reconciliation data.
+                    }
                 }
 
                 throw new InvoiceNeedsReconcile(
@@ -76,6 +85,9 @@ final class IssueInvoiceFromSource
                         'Invoice "%s" was created remotely but local issue mark failed.',
                         $observedInvoice->providerInvoiceId(),
                     ),
+                    $observedInvoice->providerInvoiceId(),
+                    $resolvedProviderKey,
+                    $idempotencyKey,
                     previous: $e,
                 );
             }

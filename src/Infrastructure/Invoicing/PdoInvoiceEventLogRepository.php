@@ -96,6 +96,43 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
         $this->mark($provider, $idempotencyKey, $invoice, self::STATUS_NEEDS_RECONCILE);
     }
 
+    public function attachProviderInvoiceId(
+        string $provider,
+        string $idempotencyKey,
+        string $providerInvoiceId,
+        array $meta = [],
+    ): void {
+        $pdo = Connection::getInstance();
+        $existingMeta = $this->assertCanAttachProviderInvoiceId($pdo, $provider, $idempotencyKey, $providerInvoiceId);
+        $mergedMeta = $this->mergeMetaPreservingExternalId($existingMeta, $meta);
+
+        $stmt = $pdo->prepare(
+            'UPDATE inv_events
+             SET provider_invoice_id = :provider_invoice_id,
+                 status = :status,
+                 meta = :meta,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE provider = :provider
+               AND idempotency_key = :idempotency_key
+               AND (
+                   provider_invoice_id IS NULL
+                   OR provider_invoice_id = :same_provider_invoice_id
+               )'
+        );
+        $stmt->execute([
+            'provider_invoice_id' => $providerInvoiceId,
+            'same_provider_invoice_id' => $providerInvoiceId,
+            'status' => self::STATUS_NEEDS_RECONCILE,
+            'meta' => $this->encodeMeta($mergedMeta),
+            'provider' => $provider,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
+        if ($stmt->rowCount() === 0) {
+            $this->assertCanAttachProviderInvoiceId($pdo, $provider, $idempotencyKey, $providerInvoiceId);
+        }
+    }
+
     public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
     {
         $pdo = Connection::getInstance();
@@ -205,6 +242,55 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function assertCanAttachProviderInvoiceId(
+        PDO $pdo,
+        string $provider,
+        string $idempotencyKey,
+        string $providerInvoiceId,
+    ): array {
+        $stmt = $pdo->prepare(
+            'SELECT provider_invoice_id, meta
+             FROM inv_events
+             WHERE provider = :provider
+               AND idempotency_key = :idempotency_key
+             LIMIT 1'
+        );
+        $stmt->execute([
+            'provider' => $provider,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (! is_array($row)) {
+            throw new RuntimeException(sprintf(
+                'Cannot attach provider invoice id for provider "%s" and idempotency key "%s": claim row not found.',
+                $provider,
+                $idempotencyKey,
+            ));
+        }
+
+        $currentProviderInvoiceId = $row['provider_invoice_id'] !== null
+            ? (string) $row['provider_invoice_id']
+            : null;
+        if (
+            $currentProviderInvoiceId !== null
+            && $currentProviderInvoiceId !== $providerInvoiceId
+        ) {
+            throw new RuntimeException(sprintf(
+                'Cannot attach provider invoice id for provider "%s" and idempotency key "%s": existing provider_invoice_id "%s" differs from "%s".',
+                $provider,
+                $idempotencyKey,
+                $currentProviderInvoiceId,
+                $providerInvoiceId,
+            ));
+        }
+
+        return $this->decodeMeta($row['meta'] ?? null);
+    }
+
     private function assertCanMark(PDO $pdo, string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
     {
         $stmt = $pdo->prepare(
@@ -259,6 +345,21 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
             $row['source_ref'] !== null ? (string) $row['source_ref'] : null,
             meta: $this->decodeMeta($row['meta'] ?? null),
         );
+    }
+
+    /**
+     * @param array<string, mixed> $existing
+     * @param array<string, mixed> $incoming
+     * @return array<string, mixed>
+     */
+    private function mergeMetaPreservingExternalId(array $existing, array $incoming): array
+    {
+        $merged = array_merge($existing, $incoming);
+        if (array_key_exists('external_id', $existing)) {
+            $merged['external_id'] = $existing['external_id'];
+        }
+
+        return $merged;
     }
 
     /**

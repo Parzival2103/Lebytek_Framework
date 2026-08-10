@@ -123,6 +123,15 @@ final class Task12FailFirstMarkIssuedEventLog implements InvoiceEventLogReposito
         $this->inner->markNeedsReconcile($provider, $idempotencyKey, $invoice);
     }
 
+    public function attachProviderInvoiceId(
+        string $provider,
+        string $idempotencyKey,
+        string $providerInvoiceId,
+        array $meta = [],
+    ): void {
+        $this->inner->attachProviderInvoiceId($provider, $idempotencyKey, $providerInvoiceId, $meta);
+    }
+
     public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
     {
         return $this->inner->findByIdempotencyKey($provider, $idempotencyKey);

@@ -84,7 +84,19 @@ test('InvoiceItem expone líneas de impuesto y taxExempt', function (): void {
 });
 
 test('InvoiceNeedsReconcile es excepción de dominio instanciable', function (): void {
-    $ex = new InvoiceNeedsReconcile('remote issued but local persist failed');
+    $previous = new RuntimeException('local persist failed');
+    $ex = new InvoiceNeedsReconcile(
+        'remote issued but local persist failed',
+        'inv_needs_reconcile',
+        'facturapi',
+        'idem:needs-reconcile',
+        $previous,
+    );
+
     assert_true($ex instanceof \RuntimeException);
     assert_same('remote issued but local persist failed', $ex->getMessage());
+    assert_same('inv_needs_reconcile', $ex->providerInvoiceId());
+    assert_same('facturapi', $ex->providerKey());
+    assert_same('idem:needs-reconcile', $ex->idempotencyKey());
+    assert_same($previous, $ex->getPrevious());
 });
