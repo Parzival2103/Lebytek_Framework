@@ -54,9 +54,9 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
         return 'facturapi';
     }
 
-    public function createInvoice(InvoiceDraft $draft): IssuedInvoice
+    public function createInvoice(InvoiceDraft $draft, string $idempotencyKey = ''): IssuedInvoice
     {
-        $payload = $this->mapDraft($draft);
+        $payload = $this->mapDraft($draft, $idempotencyKey);
 
         try {
             $response = $this->transport->create($payload);
@@ -65,6 +65,11 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
         }
 
         return $this->mapIssuedInvoice($response, $draft->sourceRef());
+    }
+
+    public function externalIdForIssue(string $idempotencyKey): string
+    {
+        return FacturapiExternalId::forIssueClaim($this->key(), $idempotencyKey);
     }
 
     public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice
@@ -111,16 +116,24 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
     }
 
     /** @return array<string, mixed> */
-    private function mapDraft(InvoiceDraft $draft): array
+    private function mapDraft(InvoiceDraft $draft, string $idempotencyKey): array
     {
-        return [
+        $payload = [
             'type' => 'I',
+        ];
+
+        if ($idempotencyKey !== '') {
+            $payload['idempotency_key'] = $idempotencyKey;
+            $payload['external_id'] = $this->externalIdForIssue($idempotencyKey);
+        }
+
+        return array_merge($payload, [
             'customer' => $this->mapCustomer($draft->customer()),
             'items' => array_map(fn (InvoiceItem $item): array => $this->mapItem($item), $draft->items()),
             'payment_form' => $draft->paymentForm()->value,
             'use' => $draft->cfdiUse()->value,
             'currency' => $draft->currency(),
-        ];
+        ]);
     }
 
     /** @return array<string, mixed> */

@@ -34,9 +34,14 @@ final class Task11Provider implements InvoiceProviderInterface
         return 'facturapi';
     }
 
-    public function createInvoice(InvoiceDraft $draft): IssuedInvoice
+    public function createInvoice(InvoiceDraft $draft, string $idempotencyKey = ''): IssuedInvoice
     {
         throw new RuntimeException('Task 11 must not create invoices');
+    }
+
+    public function externalIdForIssue(string $idempotencyKey): string
+    {
+        return 'fake-external:' . $idempotencyKey;
     }
 
     public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice

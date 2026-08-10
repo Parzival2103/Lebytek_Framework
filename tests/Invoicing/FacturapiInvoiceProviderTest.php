@@ -174,10 +174,19 @@ test('FacturapiInvoiceProvider expone key facturapi', function (): void {
     assert_same('facturapi', $provider->key());
 });
 
+test('FacturapiInvoiceProvider externalIdForIssue usa algoritmo A23', function (): void {
+    [$provider] = make_facturapi_fake_provider();
+
+    assert_same(
+        'lebytek:invoice:' . substr(hash('sha256', "facturapi\x1fidem:iva16"), 0, 40),
+        $provider->externalIdForIssue('idem:iva16'),
+    );
+});
+
 test('FacturapiInvoiceProvider mapea IVA 16 a payload golden y convierte Money a precio mayor', function (): void {
     [$provider, $transport] = make_facturapi_fake_provider();
 
-    $issued = $provider->createInvoice(facturapi_iva16_draft());
+    $issued = $provider->createInvoice(facturapi_iva16_draft(), 'idem:iva16');
 
     assert_same('fact_inv_123', $issued->providerInvoiceId());
     assert_same('39c85a3f-275b-4341-b259-e8971d9f8a94', $issued->uuid());
@@ -190,7 +199,7 @@ test('FacturapiInvoiceProvider mapea IVA 16 a payload golden y convierte Money a
 test('FacturapiInvoiceProvider mapea taxExempt a IVA Exento en payload golden', function (): void {
     [$provider, $transport] = make_facturapi_fake_provider();
 
-    $provider->createInvoice(facturapi_exento_draft());
+    $provider->createInvoice(facturapi_exento_draft(), 'idem:exento');
 
     assert_facturapi_payload(facturapi_fixture('facturapi_payload_exento'), $transport->createdPayloads[0] ?? null);
 });

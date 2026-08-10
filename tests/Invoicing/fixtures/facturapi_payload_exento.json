@@ -1,5 +1,7 @@
 {
   "type": "I",
+  "idempotency_key": "idem:exento",
+  "external_id": "lebytek:invoice:e16d3b32fcc214c2f49b7ea15fa4648012b8ef5e",
   "customer": {
     "legal_name": "SERVICIOS EXENTOS SA DE CV",
     "tax_id": "SEX0101019A0",

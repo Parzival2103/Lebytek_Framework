@@ -49,7 +49,11 @@ test('InvoiceProviderInterface expone métodos del contrato v1', function (): vo
     assert_interface_method($ref, 'key', [], 'string');
     assert_interface_method($ref, 'createInvoice', [
         ['name' => 'draft', 'type' => InvoiceDraft::class],
+        ['name' => 'idempotencyKey', 'type' => 'string', 'optional' => true, 'default' => ''],
     ], IssuedInvoice::class);
+    assert_interface_method($ref, 'externalIdForIssue', [
+        ['name' => 'idempotencyKey', 'type' => 'string'],
+    ], 'string');
     assert_interface_method($ref, 'cancelInvoice', [
         ['name' => 'providerInvoiceId', 'type' => 'string'],
         ['name' => 'cancellation', 'type' => InvoiceCancellation::class],

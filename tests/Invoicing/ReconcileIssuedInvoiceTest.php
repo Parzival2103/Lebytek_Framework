@@ -23,11 +23,16 @@ function task10_provider(): InvoiceProviderInterface
             return 'facturapi';
         }
 
-        public function createInvoice(InvoiceDraft $draft): IssuedInvoice
+        public function createInvoice(InvoiceDraft $draft, string $idempotencyKey = ''): IssuedInvoice
         {
             $this->createCalls++;
 
             return new IssuedInvoice('inv_unexpected', 'uuid_unexpected', InvoiceStatus::Valid, sourceRef: $draft->sourceRef());
+        }
+
+        public function externalIdForIssue(string $idempotencyKey): string
+        {
+            return 'fake-external:' . $idempotencyKey;
         }
 
         public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice

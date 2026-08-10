@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Lebytek\Framework\Application\Invoicing;
 
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceAlreadyProcessed;
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceAmbiguousCreate;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceNeedsReconcile;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceSourceNotFound;
 use Lebytek\Framework\Domain\Invoicing\InvoiceableSourceInterface;
@@ -27,8 +28,15 @@ final class IssueInvoiceFromSource
     {
         $resolvedProviderKey = $this->resolveProviderKey($providerKey);
         $provider = $this->registry->get($resolvedProviderKey);
+        $externalId = $provider->externalIdForIssue($idempotencyKey);
 
-        if (! $this->events->tryClaim($resolvedProviderKey, $idempotencyKey, $sourceRef, 'invoice')) {
+        if (! $this->events->tryClaim(
+            $resolvedProviderKey,
+            $idempotencyKey,
+            $sourceRef,
+            'invoice',
+            ['external_id' => $externalId],
+        )) {
             $existing = $this->events->findByIdempotencyKey($resolvedProviderKey, $idempotencyKey);
             if ($existing !== null && $existing->providerInvoiceId() !== '') {
                 return $existing;
@@ -42,6 +50,7 @@ final class IssueInvoiceFromSource
         }
 
         $observedInvoice = null;
+        $createInvoked = false;
         try {
             $draft = $this->source->findDraft($sourceRef);
             if ($draft === null) {
@@ -49,7 +58,8 @@ final class IssueInvoiceFromSource
             }
 
             $this->validator->validate($draft);
-            $observedInvoice = $provider->createInvoice($draft);
+            $createInvoked = true;
+            $observedInvoice = $provider->createInvoice($draft, $idempotencyKey);
             $this->events->markIssued($resolvedProviderKey, $idempotencyKey, $observedInvoice);
 
             return $observedInvoice;
@@ -68,6 +78,10 @@ final class IssueInvoiceFromSource
                     ),
                     previous: $e,
                 );
+            }
+
+            if ($createInvoked) {
+                throw new InvoiceAmbiguousCreate($resolvedProviderKey, $idempotencyKey, $sourceRef, $e);
             }
 
             $this->events->releaseClaim($resolvedProviderKey, $idempotencyKey);
