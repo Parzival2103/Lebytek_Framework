@@ -236,13 +236,14 @@ Consumer webhook
 
 **Do not:** change issue/cancel logic; do not enable vertical; do not add webhook secret yet (Task 9).
 
-- [ ] **Step 1: Write failing tests** — enabled + empty key; `mode=test` + `sk_live_x`; `mode=live` + `sk_test_x`; happy `sk_test_` + test.
-- [ ] **Step 2: Run** `php tests/run.php Invoicing/InvoicingFactory` (and new file) — expect FAIL.
-- [ ] **Step 3: Implement** validation in factory before registering factory closure **and** in `fromSecretKey` (defense in depth).
-- [ ] **Step 4: Run** focused tests — PASS.
-- [ ] **Step 5: Commit** `fix(invoicing): enforce Facturapi mode/key prefix and reject empty secrets`
+- [x] **Step 1: Write failing tests** — enabled + empty key; `mode=test` + `sk_live_x`; `mode=live` + `sk_test_x`; happy `sk_test_` + test.
+- [x] **Step 2: Run** `php tests/run.php Invoicing/InvoicingFactory` (and new file) — expect FAIL.
+- [x] **Step 3: Implement** validation in factory before registering factory closure **and** in `fromSecretKey` (defense in depth).
+- [x] **Step 4: Run** focused tests — PASS.
+- [x] **Step 5: Commit** `fix(invoicing): enforce Facturapi mode/key prefix and reject empty secrets`
 
-**Done when:** Mismatch/empty fail fast; valid test key still builds registry entry.
+**Done when:** Mismatch/empty fail fast; valid test key still builds registry entry.  
+**Completed:** 2026-08-10 — PR #109 (`cursor/invoicing-hardening-p01-mode-key-c292`); `InvoiceProviderException` (no secret in message).
 
 ---
 
@@ -682,8 +683,8 @@ Expected: all PASS after Task 10.
 
 ## Estado de ejecución
 
-- **Reconciled:** 2026-08-08 (plan authored; plan-audit amendments A21/A22 applied; **review de PR #103 → A23–A27 applied**; not executed).
-- **Completed / total:** 0 / 10
-- **Next executable task:** Task 1 (mode/key fail-fast); Task 2 parallel-safe.
-- **Blockers:** none for Task 1. Para Tasks 3/5/6 rige **A23–A27**: no ejecutar la redacción previa de A21 (`fromSourceRef`), ni el contrato de Reconcile basado en `findByIdempotencyKey` / `IssuedInvoice::status()`.
+- **Reconciled:** 2026-08-10 — Task 1 implemented on PR #109 (rebased onto main post-#111).
+- **Completed / total:** 1 / 10
+- **Next executable task:** Task 2 (secret redaction + meta denylist; parallel-safe) or Task 3 (depends on Task 1 ✅).
+- **Blockers:** none for Task 2. Para Tasks 3/5/6 rige **A23–A27**: no ejecutar la redacción previa de A21 (`fromSourceRef`), ni el contrato de Reconcile basado en `findByIdempotencyKey` / `IssuedInvoice::status()`.
 - **Human ops residual:** configure `FACTURAPI_WEBHOOK_SECRET` and consumer route; assign RBAC roles; programar el barrido `findOrphanClaims` (no hay cron en Framework); `forceReissueOrphanClaim` (A26) es siempre decisión humana con RBAC `invoicing.reconciliar`.
