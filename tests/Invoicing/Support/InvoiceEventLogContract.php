@@ -42,10 +42,22 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     assert_false($events->tryClaim($provider, $claimKey, $sourceRef, 'membership'));
     assert_false($events->hasProcessed($provider, $claimKey), 'claimed without provider id is not processed');
     assert_null($events->findByIdempotencyKey($provider, $claimKey), 'claimed without provider id is not findable as issued invoice');
+    $claimRow = $events->findClaimByIdempotencyKey($provider, $claimKey);
+    assert_true($claimRow !== null, 'claim lookup must see orphan claim rows');
+    assert_same($provider, $claimRow->provider());
+    assert_same($claimKey, $claimRow->idempotencyKey());
+    assert_same($sourceRef, $claimRow->sourceRef());
+    assert_same('membership', $claimRow->type());
+    assert_same('claimed', $claimRow->ledgerStatus());
+    assert_null($claimRow->providerInvoiceId(), 'claim lookup must not require provider_invoice_id');
+    assert_same('claim', $claimRow->meta()['step'] ?? null);
+    assert_null($events->findClaimByIdempotencyKey($provider, 'missing-claim-'.$suffix), 'claim lookup misses unknown idempotency key');
 
     $events->releaseClaim($provider, $claimKey);
     assert_false($events->hasProcessed($provider, $claimKey), 'released claim must not be processed');
     assert_true($events->tryClaim($provider, $claimKey, $sourceRef, 'membership'));
+    $events->releaseClaim($provider, $claimKey);
+    assert_null($events->findClaimByIdempotencyKey($provider, $claimKey), 'released reclaimed orphan is removed');
 
     $attachKey = 'attach-'.$suffix;
     assert_true($events->tryClaim($provider, $attachKey, $sourceRef.'-attach', 'membership', [
@@ -67,6 +79,13 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     $attachedAgain = $events->findByIdempotencyKey($provider, $attachKey);
     assert_true($attachedAgain instanceof IssuedInvoice, 'same provider id attach remains findable');
     assert_true($attachedAgain->meta()['same'] ?? false, 'same provider id attach can merge additional meta');
+    $attachedClaim = $events->findIssueByProviderInvoiceId($provider, 'inv_attached_'.$suffix);
+    assert_true($attachedClaim !== null, 'provider invoice lookup must find attached row');
+    assert_same($attachKey, $attachedClaim->idempotencyKey());
+    assert_same('needs_reconcile', $attachedClaim->ledgerStatus());
+    assert_same('inv_attached_'.$suffix, $attachedClaim->providerInvoiceId());
+    assert_null($events->findIssueByProviderInvoiceId($provider, 'inv_missing_'.$suffix), 'provider invoice lookup misses unknown invoice id');
+    assert_null($events->findIssueByProviderInvoiceId('other-provider', 'inv_attached_'.$suffix), 'provider invoice lookup is provider scoped');
 
     $attachMismatchKey = 'attach-mismatch-'.$suffix;
     assert_true($events->tryClaim($provider, $attachMismatchKey, $sourceRef.'-attach-mismatch', 'membership'));
@@ -108,6 +127,54 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     assert_same('uuid-issued-'.$suffix, $issued->uuid());
     assert_same(InvoiceStatus::Valid, $issued->status());
     assert_same($sourceRef, $issued->sourceRef());
+    $issuedClaim = $events->findIssueByProviderInvoiceId($provider, 'inv_issued_'.$suffix);
+    assert_true($issuedClaim !== null, 'provider invoice lookup must find issued row');
+    assert_same($issuedKey, $issuedClaim->idempotencyKey());
+    assert_same('issued', $issuedClaim->ledgerStatus());
+
+    $canceledKey = 'canceled-'.$suffix;
+    assert_true($events->tryClaim($provider, $canceledKey, $sourceRef.'-canceled', 'membership', [
+        'external_id' => 'ext-canceled-'.$suffix,
+        'provider_status' => 'valid',
+        'first' => true,
+    ]));
+    $events->markIssued($provider, $canceledKey, new IssuedInvoice(
+        'inv_canceled_'.$suffix,
+        'uuid-canceled-issued-'.$suffix,
+        InvoiceStatus::Valid,
+        'F-150',
+        $sourceRef.'-canceled',
+        meta: [
+            'external_id' => 'ext-canceled-overwrite-'.$suffix,
+            'provider_status' => 'pending',
+            'second' => true,
+        ],
+    ));
+    $events->markCanceled($provider, $canceledKey, new IssuedInvoice(
+        'inv_canceled_'.$suffix,
+        'uuid-canceled-final-'.$suffix,
+        InvoiceStatus::Canceled,
+        'F-151',
+        $sourceRef.'-canceled',
+        meta: [
+            'external_id' => 'ext-canceled-final-'.$suffix,
+            'provider_status' => 'canceled',
+            'third' => true,
+        ],
+    ));
+    $canceled = $events->findByIdempotencyKey($provider, $canceledKey);
+    assert_true($canceled instanceof IssuedInvoice, 'canceled row must hydrate');
+    assert_same('inv_canceled_'.$suffix, $canceled->providerInvoiceId());
+    assert_same('uuid-canceled-final-'.$suffix, $canceled->uuid());
+    assert_same(InvoiceStatus::Canceled, $canceled->status());
+    assert_same('ext-canceled-'.$suffix, $canceled->meta()['external_id'] ?? null, 'mark() must preserve original meta.external_id');
+    assert_same('valid', $canceled->meta()['provider_status'] ?? null, 'mark() must preserve original meta.provider_status');
+    assert_true($canceled->meta()['second'] ?? false, 'mark() must merge intermediate meta');
+    assert_true($canceled->meta()['third'] ?? false, 'markCanceled must merge final meta');
+    $canceledClaim = $events->findIssueByProviderInvoiceId($provider, 'inv_canceled_'.$suffix);
+    assert_true($canceledClaim !== null, 'provider invoice lookup must find canceled row');
+    assert_same($canceledKey, $canceledClaim->idempotencyKey());
+    assert_same('canceled', $canceledClaim->ledgerStatus());
 
     $reconcileKey = 'reconcile-'.$suffix;
     assert_true($events->tryClaim($provider, $reconcileKey, $sourceRef, 'membership'));
@@ -130,6 +197,25 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     assert_same(2, count($bySource), 'source lookup returns rows with provider ids only');
     assert_same('inv_issued_'.$suffix, $bySource[0]->providerInvoiceId(), 'source lookup is id ASC');
     assert_same('inv_reconcile_'.$suffix, $bySource[1]->providerInvoiceId(), 'source lookup includes reconcile row');
+
+    foreach (['orphan-old-a', 'orphan-old-b', 'orphan-fresh', 'orphan-other-provider'] as $name) {
+        $orphanProvider = $name === 'orphan-other-provider' ? 'other-provider' : $provider;
+        assert_true($events->tryClaim(
+            $orphanProvider,
+            $name.'-'.$suffix,
+            $sourceRef.'-'.$name,
+            'membership',
+            ['orphan' => $name],
+        ));
+    }
+    $eligibleOrphans = $events->findOrphanClaims($provider, 0, 2);
+    assert_same(2, count($eligibleOrphans), 'findOrphanClaims honors limit');
+    assert_same('orphan-old-a-'.$suffix, $eligibleOrphans[0]->idempotencyKey(), 'findOrphanClaims orders by id ASC');
+    assert_same('orphan-old-b-'.$suffix, $eligibleOrphans[1]->idempotencyKey(), 'findOrphanClaims keeps id order under limit');
+    assert_same('claimed', $eligibleOrphans[0]->ledgerStatus(), 'findOrphanClaims returns claimed rows');
+    assert_null($eligibleOrphans[0]->providerInvoiceId(), 'findOrphanClaims returns only rows without provider invoice id');
+    assert_same([], $events->findOrphanClaims($provider, 60, 10), 'findOrphanClaims excludes fresh claims younger than min age');
+    assert_same([], $events->findOrphanClaims($provider, 0, 0), 'findOrphanClaims honors non-positive limit');
 
     $issuedMismatchKey = 'issued-mismatch-'.$suffix;
     assert_true($events->tryClaim($provider, $issuedMismatchKey, $sourceRef.'-issued-mismatch', 'membership'));

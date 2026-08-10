@@ -468,6 +468,9 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
         if (array_key_exists('external_id', $existing)) {
             $merged['external_id'] = $existing['external_id'];
         }
+        if (array_key_exists('provider_status', $existing)) {
+            $merged['provider_status'] = $existing['provider_status'];
+        }
 
         return $merged;
     }
