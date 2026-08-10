@@ -175,10 +175,14 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
             'SELECT provider_invoice_id, uuid, folio_number, source_ref, status, meta
              FROM inv_events
              WHERE source_ref = :source_ref
+               AND type <> :cancel_type
                AND provider_invoice_id IS NOT NULL
              ORDER BY id ASC'
         );
-        $stmt->execute(['source_ref' => $sourceRef]);
+        $stmt->execute([
+            'source_ref' => $sourceRef,
+            'cancel_type' => 'cancel',
+        ]);
 
         return array_map(
             fn (array $row): IssuedInvoice => $this->hydrate($row),

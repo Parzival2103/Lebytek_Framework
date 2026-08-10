@@ -215,6 +215,22 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     assert_same('inv_issued_'.$suffix, $bySource[0]->providerInvoiceId(), 'source lookup is id ASC');
     assert_same('inv_reconcile_'.$suffix, $bySource[1]->providerInvoiceId(), 'source lookup includes reconcile row');
 
+    $cancelAuditKey = 'cancel-audit-'.$suffix;
+    assert_true($events->tryClaim($provider, $cancelAuditKey, $sourceRef, 'cancel', [
+        'providerInvoiceId' => 'inv_issued_'.$suffix,
+    ]));
+    $events->markIssued($provider, $cancelAuditKey, new IssuedInvoice(
+        'inv_issued_'.$suffix,
+        'uuid-cancel-audit-'.$suffix,
+        InvoiceStatus::Canceled,
+        null,
+        $sourceRef,
+    ));
+    $bySourceAfterCancelAudit = $events->findIssuedBySourceRef($sourceRef);
+    assert_same(2, count($bySourceAfterCancelAudit), 'source lookup excludes cancel-type audit rows sharing source_ref');
+    assert_same('inv_issued_'.$suffix, $bySourceAfterCancelAudit[0]->providerInvoiceId(), 'source lookup keeps issue row after cancel audit');
+    assert_same('inv_reconcile_'.$suffix, $bySourceAfterCancelAudit[1]->providerInvoiceId(), 'source lookup keeps reconcile row after cancel audit');
+
     foreach (['orphan-old-a', 'orphan-old-b', 'orphan-fresh', 'orphan-other-provider'] as $name) {
         $orphanProvider = $name === 'orphan-other-provider' ? 'other-provider' : $provider;
         assert_true($events->tryClaim(

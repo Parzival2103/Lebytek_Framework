@@ -306,6 +306,9 @@ test('CancelIssuedInvoice reclama antes de cancelar y marca la fila de issue com
     $cancelClaim = $events->findClaimByIdempotencyKey('facturapi', 'cancel:inv_cancel');
     assert_true($cancelClaim !== null, 'cancel audit claim must be recorded');
     assert_same('issued', $cancelClaim->ledgerStatus(), 'cancel audit row records success without markCanceled');
+
+    $resolvedAfterCancel = task11_resolver($events)->resolve(null, 'order:cancel');
+    assert_same('inv_cancel', $resolvedAfterCancel, 'source_ref resolution must ignore cancel audit rows');
 });
 
 test('CancelIssuedInvoice replay localmente cancelado no llama de nuevo al proveedor', function (): void {

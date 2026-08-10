@@ -139,7 +139,9 @@ class InMemoryInvoiceEventLog implements InvoiceEventLogRepositoryInterface
     {
         $matches = array_filter(
             $this->rows,
-            static fn (array $row): bool => $row['sourceRef'] === $sourceRef && $row['providerInvoiceId'] !== null
+            static fn (array $row): bool => $row['sourceRef'] === $sourceRef
+                && $row['type'] !== 'cancel'
+                && $row['providerInvoiceId'] !== null
         );
         usort($matches, static fn (array $a, array $b): int => $a['id'] <=> $b['id']);
 
