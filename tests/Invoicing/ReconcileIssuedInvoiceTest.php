@@ -158,6 +158,32 @@ test('ReconcileIssuedInvoice promueve needs_reconcile a issued verificando remot
     assert_same(InvoiceStatus::Valid, $events->findByIdempotencyKey('facturapi', 'idem:partial')?->status());
 });
 
+test('ReconcileIssuedInvoice actualiza provider_status al promover remote pending a valid (A16/A25)', function (): void {
+    $events = new InMemoryInvoiceEventLog();
+    assert_true($events->tryClaim('facturapi', 'idem:pending-to-valid', 'order:task10:pending-to-valid', 'invoice'));
+    $events->markNeedsReconcile('facturapi', 'idem:pending-to-valid', new IssuedInvoice(
+        providerInvoiceId: 'inv_pending_to_valid',
+        uuid: 'uuid_pending_to_valid_initial',
+        status: InvoiceStatus::Pending,
+        sourceRef: 'order:task10:pending-to-valid',
+        meta: ['provider_status' => 'pending'],
+    ));
+    $provider = task10_provider();
+    $provider->retrieveResponses['inv_pending_to_valid'] = new IssuedInvoice(
+        'inv_pending_to_valid',
+        'uuid_pending_to_valid_remote',
+        InvoiceStatus::Valid,
+        meta: ['provider_status' => 'valid'],
+    );
+    $useCase = task10_use_case($events, $provider);
+
+    $reconciled = $useCase->handle('idem:pending-to-valid');
+
+    assert_same(InvoiceStatus::Valid, $reconciled->status(), 'remote valid must replace stale pending provider_status');
+    assert_same('valid', $reconciled->meta()['provider_status'] ?? null);
+    assert_same(InvoiceStatus::Valid, $events->findByIdempotencyKey('facturapi', 'idem:pending-to-valid')?->status());
+});
+
 test('ReconcileIssuedInvoice preserva pending remoto sin coaccionar a Valid (A16/A27)', function (): void {
     $events = new InMemoryInvoiceEventLog();
     assert_true($events->tryClaim('facturapi', 'idem:pending', 'order:task10:pending', 'invoice'));

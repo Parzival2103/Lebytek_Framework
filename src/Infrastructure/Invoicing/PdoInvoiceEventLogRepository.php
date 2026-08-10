@@ -285,7 +285,7 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
     {
         $pdo = Connection::getInstance();
         $existingMeta = $this->assertCanMark($pdo, $provider, $idempotencyKey, $invoice);
-        $mergedMeta = $this->mergeMetaPreservingExternalId($existingMeta, $invoice->meta());
+        $mergedMeta = $this->mergeMetaPreservingExternalId($existingMeta, $this->metaForMark($invoice));
 
         $stmt = $pdo->prepare(
             'UPDATE inv_events
@@ -465,14 +465,27 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
     private function mergeMetaPreservingExternalId(array $existing, array $incoming): array
     {
         $merged = array_merge($existing, $incoming);
-        if (array_key_exists('external_id', $existing)) {
+        if (! array_key_exists('external_id', $merged) && array_key_exists('external_id', $existing)) {
             $merged['external_id'] = $existing['external_id'];
         }
-        if (array_key_exists('provider_status', $existing)) {
+        if (! array_key_exists('provider_status', $merged) && array_key_exists('provider_status', $existing)) {
             $merged['provider_status'] = $existing['provider_status'];
         }
 
         return $merged;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function metaForMark(IssuedInvoice $invoice): array
+    {
+        $meta = $invoice->meta();
+        if (! array_key_exists('provider_status', $meta)) {
+            $meta['provider_status'] = $invoice->status()->value;
+        }
+
+        return $meta;
     }
 
     /**

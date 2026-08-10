@@ -60,6 +60,7 @@ test('InvoiceStatus fromProvider mapea estados conocidos', function (): void {
     assert_same(InvoiceStatus::Pending, InvoiceStatus::fromProvider('pending'));
     assert_same(InvoiceStatus::Valid, InvoiceStatus::fromProvider('valid'));
     assert_same(InvoiceStatus::Canceled, InvoiceStatus::fromProvider('canceled'));
+    assert_same(InvoiceStatus::NeedsReconcile, InvoiceStatus::fromProvider('needs_reconcile'));
 });
 
 test('InvoiceStatus fromProvider devuelve Unknown para strings desconocidos', function (): void {

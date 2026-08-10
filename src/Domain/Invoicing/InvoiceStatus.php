@@ -21,6 +21,7 @@ enum InvoiceStatus: string
             'pending' => self::Pending,
             'valid' => self::Valid,
             'canceled', 'cancelled' => self::Canceled,
+            'needs_reconcile' => self::NeedsReconcile,
             default => self::Unknown,
         };
     }

@@ -649,7 +649,8 @@ test('IssueInvoiceFromSource marca needs_reconcile si markIssued falla tras crea
     $replayed = $useCase->handle('order:task9', 'idem:partial');
 
     assert_same('inv_remote_observed', $replayed->providerInvoiceId());
-    assert_same(InvoiceStatus::NeedsReconcile, $replayed->status());
+    assert_same(InvoiceStatus::Valid, $replayed->status(), 'A16 keeps the fiscal provider status even while ledger needs reconcile');
+    assert_same('needs_reconcile', $inner->findClaimByIdempotencyKey('facturapi', 'idem:partial')?->ledgerStatus());
     assert_same(1, $provider->createCalls);
 });
 

@@ -65,14 +65,13 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
         'claimed' => true,
     ]));
     $events->attachProviderInvoiceId($provider, $attachKey, 'inv_attached_'.$suffix, [
-        'external_id' => 'ext-overwrite-'.$suffix,
         'attached' => true,
     ]);
     $attached = $events->findByIdempotencyKey($provider, $attachKey);
     assert_true($attached instanceof IssuedInvoice, 'attached provider id must hydrate');
     assert_same('inv_attached_'.$suffix, $attached->providerInvoiceId());
     assert_same(InvoiceStatus::NeedsReconcile, $attached->status());
-    assert_same('ext-preserved-'.$suffix, $attached->meta()['external_id'] ?? null, 'attach must preserve claim external_id');
+    assert_same('ext-preserved-'.$suffix, $attached->meta()['external_id'] ?? null, 'attach must preserve claim external_id when incoming meta omits it');
     assert_true($attached->meta()['claimed'] ?? false, 'attach must merge existing meta');
     assert_true($attached->meta()['attached'] ?? false, 'attach must merge new meta');
     $events->attachProviderInvoiceId($provider, $attachKey, 'inv_attached_'.$suffix, ['same' => true]);
@@ -127,6 +126,7 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     assert_same('uuid-issued-'.$suffix, $issued->uuid());
     assert_same(InvoiceStatus::Valid, $issued->status());
     assert_same($sourceRef, $issued->sourceRef());
+    assert_same('valid', $issued->meta()['provider_status'] ?? null, 'mark() must derive missing provider_status from IssuedInvoice status');
     $issuedClaim = $events->findIssueByProviderInvoiceId($provider, 'inv_issued_'.$suffix);
     assert_true($issuedClaim !== null, 'provider invoice lookup must find issued row');
     assert_same($issuedKey, $issuedClaim->idempotencyKey());
@@ -145,7 +145,6 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
         'F-150',
         $sourceRef.'-canceled',
         meta: [
-            'external_id' => 'ext-canceled-overwrite-'.$suffix,
             'provider_status' => 'pending',
             'second' => true,
         ],
@@ -157,7 +156,6 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
         'F-151',
         $sourceRef.'-canceled',
         meta: [
-            'external_id' => 'ext-canceled-final-'.$suffix,
             'provider_status' => 'canceled',
             'third' => true,
         ],
@@ -168,13 +166,32 @@ function run_invoice_event_log_contract(InvoiceEventLogRepositoryInterface $even
     assert_same('uuid-canceled-final-'.$suffix, $canceled->uuid());
     assert_same(InvoiceStatus::Canceled, $canceled->status());
     assert_same('ext-canceled-'.$suffix, $canceled->meta()['external_id'] ?? null, 'mark() must preserve original meta.external_id');
-    assert_same('valid', $canceled->meta()['provider_status'] ?? null, 'mark() must preserve original meta.provider_status');
+    assert_same('canceled', $canceled->meta()['provider_status'] ?? null, 'mark() must let incoming meta.provider_status win');
     assert_true($canceled->meta()['second'] ?? false, 'mark() must merge intermediate meta');
     assert_true($canceled->meta()['third'] ?? false, 'markCanceled must merge final meta');
     $canceledClaim = $events->findIssueByProviderInvoiceId($provider, 'inv_canceled_'.$suffix);
     assert_true($canceledClaim !== null, 'provider invoice lookup must find canceled row');
     assert_same($canceledKey, $canceledClaim->idempotencyKey());
     assert_same('canceled', $canceledClaim->ledgerStatus());
+
+    $preservedMetaKey = 'preserved-meta-'.$suffix;
+    assert_true($events->tryClaim($provider, $preservedMetaKey, $sourceRef.'-preserved-meta', 'membership', [
+        'external_id' => 'ext-preserved-meta-'.$suffix,
+        'provider_status' => 'pending',
+    ]));
+    $events->markIssued($provider, $preservedMetaKey, new IssuedInvoice(
+        'inv_preserved_meta_'.$suffix,
+        'uuid-preserved-meta-'.$suffix,
+        InvoiceStatus::Pending,
+        null,
+        $sourceRef.'-preserved-meta',
+        meta: ['marked' => true],
+    ));
+    $preservedMeta = $events->findByIdempotencyKey($provider, $preservedMetaKey);
+    assert_true($preservedMeta instanceof IssuedInvoice, 'mark without identity meta must hydrate');
+    assert_same('ext-preserved-meta-'.$suffix, $preservedMeta->meta()['external_id'] ?? null, 'mark() must preserve meta.external_id when incoming meta omits it');
+    assert_same('pending', $preservedMeta->meta()['provider_status'] ?? null, 'mark() must preserve meta.provider_status when incoming meta omits it');
+    assert_true($preservedMeta->meta()['marked'] ?? false, 'mark() must merge non-identity incoming meta');
 
     $reconcileKey = 'reconcile-'.$suffix;
     assert_true($events->tryClaim($provider, $reconcileKey, $sourceRef, 'membership'));

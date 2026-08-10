@@ -218,10 +218,10 @@ class InMemoryInvoiceEventLog implements InvoiceEventLogRepositoryInterface
     private function mergeMetaPreservingExternalId(array $existing, array $incoming): array
     {
         $merged = array_merge($existing, $incoming);
-        if (array_key_exists('external_id', $existing)) {
+        if (! array_key_exists('external_id', $merged) && array_key_exists('external_id', $existing)) {
             $merged['external_id'] = $existing['external_id'];
         }
-        if (array_key_exists('provider_status', $existing)) {
+        if (! array_key_exists('provider_status', $merged) && array_key_exists('provider_status', $existing)) {
             $merged['provider_status'] = $existing['provider_status'];
         }
 
@@ -261,7 +261,18 @@ class InMemoryInvoiceEventLog implements InvoiceEventLogRepositoryInterface
         $this->rows[$key]['folioNumber'] = $invoice->folioNumber();
         $this->rows[$key]['status'] = $status;
         $this->rows[$key]['sourceRef'] = $invoice->sourceRef() ?? $this->rows[$key]['sourceRef'];
-        $this->rows[$key]['meta'] = $this->mergeMetaPreservingExternalId($existingMeta, $invoice->meta());
+        $this->rows[$key]['meta'] = $this->mergeMetaPreservingExternalId($existingMeta, $this->metaForMark($invoice));
+    }
+
+    /** @return array<string, mixed> */
+    private function metaForMark(IssuedInvoice $invoice): array
+    {
+        $meta = $invoice->meta();
+        if (! array_key_exists('provider_status', $meta)) {
+            $meta['provider_status'] = $invoice->status()->value;
+        }
+
+        return $meta;
     }
 
     /** @param array<string, mixed> $row */
