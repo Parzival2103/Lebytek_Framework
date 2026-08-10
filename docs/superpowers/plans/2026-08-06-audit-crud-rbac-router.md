@@ -1,5 +1,7 @@
 # CRUD/Calendario RBAC Router Middleware (M3) Implementation Plan
 
+> **REL-C1 retarget (2026-08-08):** Tags `v1.2.4`–`v1.2.6` were not published (skip). This plan ships in **`v1.2.8+`** after REL-C1 tag `v1.2.7`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development`
 > (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -8,7 +10,7 @@
 
 **Architecture:** Enfoque A del spec — `CrudRoutePermissionResolver` (Application) mapea URI + verbo HTTP → slug `{permission_prefix}.{acción}` leyendo JSON en `config/cruds/` y `config/calendars/`; `CrudRbacMiddleware` (Presentation) replica el contrato de respuesta de `RbacMiddleware` con slug explícito (U1–U3). Registro espejado en `routes/web.php` y `skeleton/routes/web.php`. Sin eliminar checks en servicios (defensa doble, AC4).
 
-**Tech Stack:** PHP 8.1+ (`composer.json`), harness `tests/run.php` + `tests/lib/microtest.php`, `CrudConfigLoader`, `CalendarConfigLoader`, `RbacPolicy`, `Router` con middlewares por ruta, semver patch → **`1.2.5`** (M4 health plan reservado `1.2.4` @ plan 2026-08-05, aún 0/5).
+**Tech Stack:** PHP 8.1+ (`composer.json`), harness `tests/run.php` + `tests/lib/microtest.php`, `CrudConfigLoader`, `CalendarConfigLoader`, `RbacPolicy`, `Router` con middlewares por ruta, semver patch → **`1.2.8`** (M4 health plan reservado `1.2.8` @ plan 2026-08-05, aún 0/5).
 
 **Source spec:** `docs/superpowers/specs/2026-08-06-audit-crud-rbac-router-design.md`  ·  **Modo:** normal
 
@@ -23,7 +25,7 @@
 - **No** editar `vendor/` ni código Marketing/Portal en `src/`.
 - Recurso/key inválido → `ValidationException` pasa al controlador (U4); **no** convertir en 403 RBAC.
 - Portal P1–P3, O1–O2 producción → **fuera de alcance** (M6 gh 404).
-- Semver: middleware RBAC aditivo + 403 temprano → **PATCH** `1.2.3` → **`1.2.5`**; tag `v1.2.5` post-merge (coordinar con plan M4 si mergea antes y publica `v1.2.4`).
+- Semver: middleware RBAC aditivo + 403 temprano → **PATCH** `1.2.3` → **`1.2.8`**; tag `v1.2.8` post-merge (coordinar con plan M4 si mergea antes y publica `v1.2.8`).
 
 ## Requisitos → tareas (matriz)
 
@@ -53,7 +55,7 @@
 | `tests/Kernel/CrudRbacMiddlewareTest.php` | Gate 403 con slug antes de controlador |
 | `config/rbac_route_permissions.php` | Documentar middleware dinámico CRUD + slugs estáticos faltantes |
 | `docs/core/auth_rbac_seguridad_v0.1.md` | §5 actualizado: `CrudRbacMiddleware` vs servicio |
-| `composer.json`, `config/app.php`, `skeleton/config/app.php` | semver `1.2.5` |
+| `composer.json`, `config/app.php`, `skeleton/config/app.php` | semver `1.2.8` |
 
 **Interfaces producidas:**
 
@@ -571,7 +573,7 @@ Expected: **PASS** — 4 + 7 + 3 tests, 0 failed.
 
 ---
 
-### Task 5: Documentación F5, semver `1.2.5`, tag y PR (F5, F6)
+### Task 5: Documentación F5, semver `1.2.8`, tag y PR (F5, F6)
 
 **Repository:** `Parzival2103/Lebytek_Framework`
 
@@ -582,12 +584,12 @@ Expected: **PASS** — 4 + 7 + 3 tests, 0 failed.
 **Files:**
 - Modify: `config/rbac_route_permissions.php`
 - Modify: `docs/core/auth_rbac_seguridad_v0.1.md` (§5 tabla rutas)
-- Modify: `composer.json`, `config/app.php`, `skeleton/config/app.php` → `1.2.5`
+- Modify: `composer.json`, `config/app.php`, `skeleton/config/app.php` → `1.2.8`
 - Test: suites M3 + `PlatformVersionSemver`
 
 **Interfaces:**
 - Consumes: Task 4
-- Produces: doc § RBAC CRUD router; tag `v1.2.5`; PR hacia `main`
+- Produces: doc § RBAC CRUD router; tag `v1.2.8`; PR hacia `main`
 
 - [ ] **Step 1: Escribir el test que falla** — N/A (doc/semver).
 
@@ -634,7 +636,7 @@ En `docs/core/auth_rbac_seguridad_v0.1.md` §5, reemplazar fila CRUD por:
 
 Añadir subsección **§5.1 RBAC dinámico CRUD/calendario** con diagrama de flujo Auth → CrudRbacMiddleware → Controller → Service (defensa doble) y referencia a `scripts/rbac_integrity_report.php`.
 
-Bump semver en tres archivos a **`1.2.5`**.
+Bump semver en tres archivos a **`1.2.8`**.
 
 - [ ] **Step 4: Verificación enfocada** — Run:
 
@@ -654,8 +656,8 @@ Distinción entorno: si PHP CLI ausente en agente cloud (bloqueador verificado 2
 Post-merge tag:
 
 ```bash
-git tag -a v1.2.5 -m "CrudRbacMiddleware for CRUD/calendario router RBAC (M3)"
-git push origin v1.2.5
+git tag -a v1.2.8 -m "CrudRbacMiddleware for CRUD/calendario router RBAC (M3)"
+git push origin v1.2.8
 ```
 
 Push rama y PR:
@@ -669,14 +671,14 @@ gh pr create --base main --title "feat(rbac): CrudRbacMiddleware for CRUD/calend
 - Registro harness/skeleton routes/web.php
 - Tests CrudRbacRouter / CrudRoutePermissionResolver / CrudRbacMiddleware
 - docs/core/auth_rbac_seguridad_v0.1.md §5.1
-- semver 1.2.5
+- semver 1.2.8
 
 Spec: docs/superpowers/specs/2026-08-06-audit-crud-rbac-router-design.md
 Audit: #84 (M3)
 Plan: docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md"
 ```
 
-- [ ] **Step 6: Commit / tag** — commit doc/config: `docs(rbac): document CrudRbacMiddleware router layer (M3)`; commit semver: `chore(release): bump platform version to 1.2.5 for CRUD router RBAC`; tag post-merge en `main`.
+- [ ] **Step 6: Commit / tag** — commit doc/config: `docs(rbac): document CrudRbacMiddleware router layer (M3)`; commit semver: `chore(release): bump platform version to 1.2.8 for CRUD router RBAC`; tag post-merge en `main`.
 
 **Requiere operador humano:** sí — smoke O1 staging con rol restringido; bump Portal lock P1 (M6); QA responsive 403 en 320–768px (AC-UX4).
 
@@ -705,7 +707,7 @@ Plan: docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md"
 - [ ] `php tests/run.php Docs/CrudRbacRouter` PASS (AC5).
 - [ ] `php tests/run.php Kernel/CrudRbacMiddleware` PASS (AC6).
 - [ ] Doc § RBAC + `rbac_route_permissions.php` actualizados (AC7, U8).
-- [ ] Tag `v1.2.5`; trío semver sincronizado; `PlatformVersionSemverTest` PASS (AC8).
+- [ ] Tag `v1.2.8`; trío semver sincronizado; `PlatformVersionSemverTest` PASS (AC8).
 - [ ] Diff sin Marketing/Portal en `src/`; `SkeletonPurityTest` PASS (AC9).
 - [ ] AC-UX1–AC-UX4: modo normal documentado; U1–U8; carry-forward CF3–CF4, CF5′, CF7–CF10; smoke responsive 403.
 
@@ -717,7 +719,7 @@ Plan: docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md"
 | Doble 403 middleware + servicio | Idempotente; mismo slug |
 | Recurso inválido vs RBAC | ValidationException → `$next` (U4) |
 | Portal no mergea rutas P2 | Documentado; bump semver |
-| Orden release vs M4 | Numeración `1.2.5` asume M4 → `1.2.4` primero |
+| Orden release vs M4 | Numeración `1.2.8` asume M4 → `1.2.8` primero |
 | PHP ausente en cloud agent | Verificar en entorno PHP ≥8.1 |
 
 **Rollback:** revertir PR — middleware desaparece; RBAC vuelve a sólo servicio (estado @ `ddc55ec`).
@@ -726,7 +728,7 @@ Plan: docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md"
 
 - Salida `php tests/run.php Docs/CrudRbacRouter Kernel/CrudRoutePermissionResolver Kernel/CrudRbacMiddleware`.
 - Captura 403 HTML con slug `demo_clientes.ver` (usuario autenticado sin permiso).
-- Número PR Framework y URL tag `v1.2.5`.
+- Número PR Framework y URL tag `v1.2.8`.
 
 ---
 
@@ -742,4 +744,5 @@ Plan: docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md"
 | Siguiente tarea ejecutable | **Task 1** — `CrudRbacRouterTest` (TDD rojo) |
 | Prerrequisitos | Ninguno — rutas CRUD/calendario existen sin middleware @ `2d4bc7a`; `demo_clientes` / `demo_citas` JSON verificados |
 | Bloqueos | AUTOMATION-07 no ejecutado (06 BLOCKED B1); Portal P1/P2 (M6); rama `feature/crud-rbac-router-m3` no existe aún (creable desde `main`) |
+| REL-C1 | REL-C1 retarget → semver **1.2.8+**; tags v1.2.4–v1.2.6 skip |
 | Estado | **Pendiente de implementación** |
