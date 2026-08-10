@@ -189,7 +189,14 @@ Al publicar un release del paquete `lebytek/framework`, sincronizar **en el mism
 1. Actualizar `"version"` en `composer.json` (semver sin prefijo `v`, p. ej. `1.2.1`).
 2. Actualizar `'version'` en `config/app.php` (harness) y `skeleton/config/app.php` (plantilla) al **mismo** valor.
 3. Ejecutar `php tests/run.php PlatformVersionSemver` — debe pasar.
-4. Crear y publicar el tag Git `vX.Y.Z` apuntando a ese commit.
+3b. Ejecutar `php tests/run.php Docs/ReleaseTagPublished` (`ReleaseTagPublishedTest`) — debe pasar **antes** de crear el tag (falla si el tag aún no existe; crear tag solo tras merge de este gate en CI verde).
+4. Crear y publicar el tag Git `vX.Y.Z` apuntando a ese commit:
+
+```bash
+git tag -a vX.Y.Z -m "Platform release X.Y.Z"
+git push origin vX.Y.Z
+```
+
 5. Post-deploy smoke: `/admin/sistema/estado` muestra `vX.Y.Z` y `php scripts/status.php` imprime `Plataforma: vX.Y.Z`.
 
 La versión mostrada en UI y CLI proviene de `config/app.php` → `Config::get('app.version')`, **no** de `git describe` ni de `InstalledVersions` en runtime.
