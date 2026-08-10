@@ -65,14 +65,15 @@ final class InvoicingFactory
                 throw new \RuntimeException("Driver de proveedor no soportado: {$driver}");
             }
             $cfg = (array) ($def['config'] ?? []);
+            $secret = (string) ($cfg['secret_key'] ?? '');
+            $mode = (string) ($cfg['mode'] ?? 'test');
+            FacturapiInvoiceProvider::assertSecretKeyMatchesMode($secret, $mode);
+            $sdkSlice = array_intersect_key($cfg, array_flip(['apiVersion', 'timeout', 'httpClient']));
             $out[$key] = [
                 'driver' => $driver,
-                'factory' => static function () use ($driver, $cfg): InvoiceProviderInterface {
+                'factory' => static function () use ($driver, $secret, $sdkSlice, $mode): InvoiceProviderInterface {
                     return match ($driver) {
-                        'facturapi' => FacturapiInvoiceProvider::fromSecretKey(
-                            (string) ($cfg['secret_key'] ?? ''),
-                            array_intersect_key($cfg, array_flip(['apiVersion', 'timeout', 'httpClient']))
-                        ),
+                        'facturapi' => FacturapiInvoiceProvider::fromSecretKey($secret, $sdkSlice, $mode),
                         default => throw new \RuntimeException("Driver de proveedor no soportado: {$driver}"),
                     };
                 },
