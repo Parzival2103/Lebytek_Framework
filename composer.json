@@ -3,7 +3,7 @@
     "description": "Lebytek Framework — reusable PHP platform (Kernel, RBAC, CRUD Engine, Payments OFF by default)",
     "type": "library",
     "license": "proprietary",
-    "version": "1.2.7",
+    "version": "1.2.8",
     "require": {
         "php": ">=8.2",
         "dompdf/dompdf": "^3.1",
