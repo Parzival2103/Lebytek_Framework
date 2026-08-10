@@ -682,8 +682,30 @@ Expected: all PASS after Task 10.
 
 ## Estado de ejecución
 
-- **Reconciled:** 2026-08-08 (plan authored; plan-audit amendments A21/A22 applied; **review de PR #103 → A23–A27 applied**; not executed).
-- **Completed / total:** 0 / 10
-- **Next executable task:** Task 1 (mode/key fail-fast); Task 2 parallel-safe.
-- **Blockers:** none for Task 1. Para Tasks 3/5/6 rige **A23–A27**: no ejecutar la redacción previa de A21 (`fromSourceRef`), ni el contrato de Reconcile basado en `findByIdempotencyKey` / `IssuedInvoice::status()`.
-- **Human ops residual:** configure `FACTURAPI_WEBHOOK_SECRET` and consumer route; assign RBAC roles; programar el barrido `findOrphanClaims` (no hay cron en Framework); `forceReissueOrphanClaim` (A26) es siempre decisión humana con RBAC `invoicing.reconciliar`.
+| Campo | Valor |
+|-------|-------|
+| Reconciliación UTC | 2026-08-10 |
+| Framework `origin/main` verificado | `487ccd8132e7c42eabd2a0e3b335b075ccc123e1` |
+| Tareas completadas / totales | 0 / 10 |
+| Siguiente tarea ejecutable | **Task 1** (mode/key fail-fast); **Task 2** parallel-safe |
+| Prerrequisitos | Scaffold v1 mergeado (#99 @ `21edf26`); plan hardening mergeado (#101 @ `f07c6d1`); enmiendas A23–A27 aplicadas (#103 @ `89a1a89`) |
+| Bloqueos código | Ninguno para Task 1. Tasks 3/5/6: regir **A23–A27** (no `fromSourceRef`, no Reconcile vía `findByIdempotencyKey` / `IssuedInvoice::status()`) |
+| Bloqueos release | Tag `v1.2.7` (REL-C1, PR #105) no publicado — no bloquea rama feature de hardening |
+| Plan diario continuación | `docs/superpowers/plans/2026-08-10-audit-invoicing-hardening-task1.md` |
+
+### Verificación por tarea (2026-08-10 @ `487ccd8`)
+
+| Task | Entregable esperado | Estado en main | Evidencia |
+|------|---------------------|----------------|-----------|
+| 1 | Validación mode/key + secret no vacío en factory/`fromSecretKey` | pendiente | `InvoicingFactory::buildProviders` L72–75 no valida `mode` ni prefijo; test L30 acepta `sk_test` sin `_` |
+| 2 | Redact `sk_user_`/`Bearer` + meta denylist | pendiente | `sanitizeSecretTokens` L235 sólo `sk_(test\|live)_`; PDO `encodeMeta` sin denylist |
+| 3 | A11 keep-claim + `idempotency_key`/`external_id` A23 | pendiente | Sin `FacturapiExternalId`, `InvoiceAmbiguousCreate`, ni meta en `tryClaim` |
+| 4 | Typed `InvoiceNeedsReconcile` + `attachProviderInvoiceId` | pendiente | `InvoiceNeedsReconcile.php` vacío; sin `attachProviderInvoiceId` en port |
+| 5 | `retrieve` + `listByExternalId` + `InvoiceClaimRow` + reconcile A27 | pendiente | Port sin `retrieveInvoice`/`listByExternalId`; sin `InvoiceClaimRow` |
+| 6 | Cancel claim-before + `markCanceled` + motives | pendiente | `CancelIssuedInvoice` sin claim-before ni `markCanceled` |
+| 7 | `tax_system`/`unit_key`/`payment_method` validator | pendiente | Sin enum `PaymentMethod`; validator incompleto |
+| 8 | RBAC slugs manifest + SQL | pendiente | `config/modules/invoicing.php` `'permisos' => []` |
+| 9 | Webhook signature + `ApplyInvoiceProviderEvent` | pendiente | Sin `FacturapiWebhookSignature` ni apply UC |
+| 10 | Docs runbook + suite gate | pendiente | Docs pre-hardening; gate no aplicable hasta Tasks 1–9 |
+
+**Human ops residual:** configure `FACTURAPI_WEBHOOK_SECRET` and consumer route; assign RBAC roles; programar el barrido `findOrphanClaims` (no hay cron en Framework); `forceReissueOrphanClaim` (A26) es siempre decisión humana con RBAC `invoicing.reconciliar`.
