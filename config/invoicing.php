@@ -16,4 +16,5 @@ return [
         ],
     ],
     'default' => EnvLoader::get('INVOICING_DEFAULT_PROVIDER', 'facturapi'),
+    'reconcile_min_claim_age_seconds' => (int) EnvLoader::get('INVOICING_RECONCILE_MIN_CLAIM_AGE_SECONDS', 120),
 ];

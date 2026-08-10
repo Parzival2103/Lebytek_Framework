@@ -13,13 +13,15 @@ final class InvoiceAmbiguousCreate extends RuntimeException
         private readonly string $idempotencyKey,
         private readonly string $sourceRef,
         ?Throwable $previous = null,
+        private readonly ?string $reason = null,
     ) {
         parent::__construct(
             sprintf(
-                'Invoice create is ambiguous for provider "%s", idempotency key "%s" and source "%s"; keep the claim and reconcile before retrying.',
+                'Invoice create is ambiguous for provider "%s", idempotency key "%s" and source "%s"; keep the claim and reconcile before retrying.%s',
                 $providerKey,
                 $idempotencyKey,
                 $sourceRef,
+                $reason !== null ? ' Reason: ' . $reason : '',
             ),
             0,
             $previous,
@@ -39,5 +41,10 @@ final class InvoiceAmbiguousCreate extends RuntimeException
     public function sourceRef(): string
     {
         return $this->sourceRef;
+    }
+
+    public function reason(): ?string
+    {
+        return $this->reason;
     }
 }

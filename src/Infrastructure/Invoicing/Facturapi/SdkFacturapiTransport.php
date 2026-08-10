@@ -27,6 +27,19 @@ final readonly class SdkFacturapiTransport implements FacturapiTransportInterfac
         return $this->normalizeArray($this->client->Invoices->create($payload));
     }
 
+    public function retrieve(string $providerInvoiceId): array
+    {
+        return $this->normalizeArray($this->client->Invoices->retrieve($providerInvoiceId));
+    }
+
+    public function listByExternalId(string $externalId): array
+    {
+        $response = $this->normalizeArray($this->client->Invoices->all(['external_id' => $externalId]));
+        $data = $response['data'] ?? $response;
+
+        return is_array($data) ? array_values($data) : [];
+    }
+
     public function cancel(string $providerInvoiceId, array $payload): array
     {
         return $this->normalizeArray($this->client->Invoices->cancel($providerInvoiceId, $payload));

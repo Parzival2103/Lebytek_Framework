@@ -72,6 +72,29 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
         return FacturapiExternalId::forIssueClaim($this->key(), $idempotencyKey);
     }
 
+    public function retrieveInvoice(string $providerInvoiceId): IssuedInvoice
+    {
+        try {
+            $response = $this->transport->retrieve($providerInvoiceId);
+        } catch (Throwable $exception) {
+            $this->fail('retrieve invoice', $exception);
+        }
+
+        return $this->mapIssuedInvoice($response);
+    }
+
+    /** @return IssuedInvoice[] */
+    public function listByExternalId(string $externalId): array
+    {
+        try {
+            $rows = $this->transport->listByExternalId($externalId);
+        } catch (Throwable $exception) {
+            $this->fail('list invoices by external id', $exception);
+        }
+
+        return array_map(fn (array $row): IssuedInvoice => $this->mapIssuedInvoice($row), $rows);
+    }
+
     public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice
     {
         $payload = ['motive' => $cancellation->motive()];

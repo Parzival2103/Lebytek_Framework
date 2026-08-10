@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace Lebytek\Framework\Infrastructure\Invoicing;
 
+use DateTimeImmutable;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceProviderIdConflict;
 use Lebytek\Framework\Domain\Invoicing\InvoiceEventLogRepositoryInterface;
 use Lebytek\Framework\Domain\Invoicing\InvoiceStatus;
+use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
 use Lebytek\Framework\Kernel\Database\Connection;
 use PDO;
@@ -17,6 +19,9 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
     private const STATUS_CLAIMED = 'claimed';
     private const STATUS_ISSUED = 'issued';
     private const STATUS_NEEDS_RECONCILE = 'needs_reconcile';
+    private const STATUS_CANCELED = 'canceled';
+
+    private const CLAIM_ROW_COLUMNS = 'provider, idempotency_key, source_ref, type, status, provider_invoice_id, meta, created_at';
 
     public function hasProcessed(string $provider, string $idempotencyKey): bool
     {
@@ -95,6 +100,11 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
     public function markNeedsReconcile(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
     {
         $this->mark($provider, $idempotencyKey, $invoice, self::STATUS_NEEDS_RECONCILE);
+    }
+
+    public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+    {
+        $this->mark($provider, $idempotencyKey, $invoice, self::STATUS_CANCELED);
     }
 
     public function attachProviderInvoiceId(
@@ -203,10 +213,79 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
         );
     }
 
+    public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?InvoiceClaimRow
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT '.self::CLAIM_ROW_COLUMNS.'
+             FROM inv_events
+             WHERE provider = :provider
+               AND idempotency_key = :idempotency_key
+             LIMIT 1'
+        );
+        $stmt->execute([
+            'provider' => $provider,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $this->hydrateClaimRow($row) : null;
+    }
+
+    public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?InvoiceClaimRow
+    {
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT '.self::CLAIM_ROW_COLUMNS.'
+             FROM inv_events
+             WHERE provider = :provider
+               AND provider_invoice_id = :provider_invoice_id
+             LIMIT 1'
+        );
+        $stmt->execute([
+            'provider' => $provider,
+            'provider_invoice_id' => $providerInvoiceId,
+        ]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $this->hydrateClaimRow($row) : null;
+    }
+
+    public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
+    {
+        if ($limit <= 0) {
+            return [];
+        }
+
+        $pdo = Connection::getInstance();
+        $stmt = $pdo->prepare(
+            'SELECT '.self::CLAIM_ROW_COLUMNS.'
+             FROM inv_events
+             WHERE provider = :provider
+               AND status = :status
+               AND provider_invoice_id IS NULL
+               AND created_at <= NOW() - INTERVAL :min_age_seconds SECOND
+             ORDER BY id ASC
+             LIMIT '.max(1, $limit)
+        );
+        $stmt->bindValue('provider', $provider, PDO::PARAM_STR);
+        $stmt->bindValue('status', self::STATUS_CLAIMED, PDO::PARAM_STR);
+        $stmt->bindValue('min_age_seconds', max(0, $minAgeSeconds), PDO::PARAM_INT);
+        $stmt->execute();
+
+        return array_map(
+            fn (array $row): InvoiceClaimRow => $this->hydrateClaimRow($row),
+            $stmt->fetchAll(PDO::FETCH_ASSOC)
+        );
+    }
+
     private function mark(string $provider, string $idempotencyKey, IssuedInvoice $invoice, string $status): void
     {
         $pdo = Connection::getInstance();
-        $this->assertCanMark($pdo, $provider, $idempotencyKey, $invoice);
+        $existingMeta = $this->assertCanMark($pdo, $provider, $idempotencyKey, $invoice);
+        $mergedMeta = $this->mergeMetaPreservingExternalId($existingMeta, $invoice->meta());
 
         $stmt = $pdo->prepare(
             'UPDATE inv_events
@@ -233,7 +312,7 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
             'folio_number' => $invoice->folioNumber(),
             'source_ref' => $invoice->sourceRef(),
             'status' => $status,
-            'meta' => $this->encodeMeta($invoice->meta()),
+            'meta' => $this->encodeMeta($mergedMeta),
             'provider' => $provider,
             'idempotency_key' => $idempotencyKey,
         ]);
@@ -298,10 +377,13 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
         return $this->decodeMeta($row['meta'] ?? null);
     }
 
-    private function assertCanMark(PDO $pdo, string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+    /**
+     * @return array<string, mixed> existing meta, so callers can merge on top (A25)
+     */
+    private function assertCanMark(PDO $pdo, string $provider, string $idempotencyKey, IssuedInvoice $invoice): array
     {
         $stmt = $pdo->prepare(
-            'SELECT provider_invoice_id
+            'SELECT provider_invoice_id, meta
              FROM inv_events
              WHERE provider = :provider
                AND idempotency_key = :idempotency_key
@@ -337,6 +419,8 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
                 $invoice->providerInvoiceId(),
             ));
         }
+
+        return $this->decodeMeta($row['meta'] ?? null);
     }
 
     /**
@@ -344,13 +428,32 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
      */
     private function hydrate(array $row): IssuedInvoice
     {
+        $meta = $this->decodeMeta($row['meta'] ?? null);
+
         return new IssuedInvoice(
             (string) $row['provider_invoice_id'],
             (string) ($row['uuid'] ?? ''),
-            $this->domainStatus((string) $row['status']),
+            $this->domainStatus((string) $row['status'], $meta),
             $row['folio_number'] !== null ? (string) $row['folio_number'] : null,
             $row['source_ref'] !== null ? (string) $row['source_ref'] : null,
-            meta: $this->decodeMeta($row['meta'] ?? null),
+            meta: $meta,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function hydrateClaimRow(array $row): InvoiceClaimRow
+    {
+        return new InvoiceClaimRow(
+            (string) $row['provider'],
+            (string) $row['idempotency_key'],
+            $row['source_ref'] !== null ? (string) $row['source_ref'] : null,
+            (string) $row['type'],
+            (string) $row['status'],
+            $row['provider_invoice_id'] !== null ? (string) $row['provider_invoice_id'] : null,
+            $this->decodeMeta($row['meta'] ?? null),
+            new DateTimeImmutable((string) $row['created_at']),
         );
     }
 
@@ -393,12 +496,25 @@ final class PdoInvoiceEventLogRepository implements InvoiceEventLogRepositoryInt
         return is_array($decoded) ? $decoded : [];
     }
 
-    private function domainStatus(string $status): InvoiceStatus
+    /**
+     * A16: ledger status `issued`/`needs_reconcile` must not coerce a provider
+     * `pending`/`unknown` status into `Valid`; restore fidelity from `meta.provider_status`.
+     *
+     * @param array<string, mixed> $meta
+     */
+    private function domainStatus(string $status, array $meta): InvoiceStatus
     {
+        if ($status === self::STATUS_ISSUED || $status === self::STATUS_NEEDS_RECONCILE) {
+            $providerStatus = $meta['provider_status'] ?? null;
+            if (is_string($providerStatus) && $providerStatus !== '') {
+                return InvoiceStatus::fromProvider($providerStatus);
+            }
+
+            return $status === self::STATUS_ISSUED ? InvoiceStatus::Valid : InvoiceStatus::NeedsReconcile;
+        }
+
         return match ($status) {
-            self::STATUS_ISSUED => InvoiceStatus::Valid,
-            self::STATUS_NEEDS_RECONCILE => InvoiceStatus::NeedsReconcile,
-            'canceled' => InvoiceStatus::Canceled,
+            self::STATUS_CANCELED => InvoiceStatus::Canceled,
             default => InvoiceStatus::Unknown,
         };
     }

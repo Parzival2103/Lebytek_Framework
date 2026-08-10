@@ -15,6 +15,11 @@ interface InvoiceProviderInterface
 
     public function externalIdForIssue(string $idempotencyKey): string;
 
+    public function retrieveInvoice(string $providerInvoiceId): IssuedInvoice;
+
+    /** @return IssuedInvoice[] */
+    public function listByExternalId(string $externalId): array;
+
     public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice;
 
     public function downloadPdf(string $providerInvoiceId): string;

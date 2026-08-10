@@ -41,6 +41,8 @@ final class Task12FakeFacturapiTransport implements FacturapiTransportInterface
 {
     /** @var array<int, array<string, mixed>> */
     public array $createdPayloads = [];
+    /** @var array<int, array<string, mixed>> */
+    public array $createdResponses = [];
 
     /** @param array<string, mixed> $payload */
     public function create(array $payload): array
@@ -48,12 +50,38 @@ final class Task12FakeFacturapiTransport implements FacturapiTransportInterface
         $this->createdPayloads[] = $payload;
         $sequence = count($this->createdPayloads);
 
-        return [
+        $response = [
             'id' => 'fact_smoke_' . $sequence,
             'uuid' => 'uuid-smoke-' . $sequence,
             'status' => 'valid',
             'folio_number' => 1200 + $sequence,
         ];
+        $this->createdResponses[] = $response;
+
+        return $response;
+    }
+
+    public function retrieve(string $providerInvoiceId): array
+    {
+        foreach ($this->createdResponses as $response) {
+            if (($response['id'] ?? null) === $providerInvoiceId) {
+                return $response;
+            }
+        }
+
+        throw new RuntimeException('invoice not found: ' . $providerInvoiceId);
+    }
+
+    public function listByExternalId(string $externalId): array
+    {
+        $matches = [];
+        foreach ($this->createdPayloads as $i => $payload) {
+            if (($payload['external_id'] ?? null) === $externalId) {
+                $matches[] = $this->createdResponses[$i];
+            }
+        }
+
+        return $matches;
     }
 
     /** @param array<string, mixed> $payload */
@@ -123,6 +151,11 @@ final class Task12FailFirstMarkIssuedEventLog implements InvoiceEventLogReposito
         $this->inner->markNeedsReconcile($provider, $idempotencyKey, $invoice);
     }
 
+    public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+    {
+        $this->inner->markCanceled($provider, $idempotencyKey, $invoice);
+    }
+
     public function attachProviderInvoiceId(
         string $provider,
         string $idempotencyKey,
@@ -145,6 +178,21 @@ final class Task12FailFirstMarkIssuedEventLog implements InvoiceEventLogReposito
     public function findNeedsReconcile(string $provider, int $limit = 100): array
     {
         return $this->inner->findNeedsReconcile($provider, $limit);
+    }
+
+    public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+    {
+        return $this->inner->findClaimByIdempotencyKey($provider, $idempotencyKey);
+    }
+
+    public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+    {
+        return $this->inner->findIssueByProviderInvoiceId($provider, $providerInvoiceId);
+    }
+
+    public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
+    {
+        return $this->inner->findOrphanClaims($provider, $minAgeSeconds, $limit);
     }
 }
 
@@ -238,7 +286,10 @@ test('Invoicing smoke reconcilia markIssued fallido y replay no crea otra factur
         fn () => $issue->handle($sourceRef, 'idem:task12:reconcile'),
     );
     assert_same(1, count($transport->createdPayloads));
-    assert_same(InvoiceStatus::NeedsReconcile, $inner->findByIdempotencyKey('facturapi', 'idem:task12:reconcile')?->status());
+    // A16: IssuedInvoice::status() reflects the real remote fiscal status (meta.provider_status),
+    // not the local ledger state; the ledger row itself is what still needs reconciling.
+    assert_same('needs_reconcile', $inner->findClaimByIdempotencyKey('facturapi', 'idem:task12:reconcile')?->ledgerStatus());
+    assert_same(InvoiceStatus::Valid, $inner->findByIdempotencyKey('facturapi', 'idem:task12:reconcile')?->status());
 
     $reconciled = $reconcile->handle('idem:task12:reconcile');
     $replayed = $issue->handle($sourceRef, 'idem:task12:reconcile');

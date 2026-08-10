@@ -40,12 +40,18 @@ final class InvoicingFactory
         );
     }
 
-    public static function makeReconcileIssuedInvoice(): ReconcileIssuedInvoice
+    /**
+     * `$source`/validator are only required for the ops-only `forceReissueOrphanClaim`
+     * (A26); pass a source when wiring reconcile for that flow, omit it otherwise.
+     */
+    public static function makeReconcileIssuedInvoice(?InvoiceableSourceInterface $source = null): ReconcileIssuedInvoice
     {
         return new ReconcileIssuedInvoice(
             events: new PdoInvoiceEventLogRepository(),
             registry: self::registry(),
             defaultProviderKey: self::defaultProviderKey(),
+            source: $source,
+            validator: $source !== null ? new InvoiceDraftValidator() : null,
         );
     }
 

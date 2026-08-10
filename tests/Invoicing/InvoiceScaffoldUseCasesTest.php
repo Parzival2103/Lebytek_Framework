@@ -44,6 +44,16 @@ final class Task11Provider implements InvoiceProviderInterface
         return 'fake-external:' . $idempotencyKey;
     }
 
+    public function retrieveInvoice(string $providerInvoiceId): IssuedInvoice
+    {
+        return task11_invoice($providerInvoiceId, InvoiceStatus::Valid, sourceRef: null);
+    }
+
+    public function listByExternalId(string $externalId): array
+    {
+        return [];
+    }
+
     public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice
     {
         $this->cancelCalls[] = $providerInvoiceId;
@@ -123,6 +133,10 @@ final class Task11EventLog implements InvoiceEventLogRepositoryInterface
     {
     }
 
+    public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+    {
+    }
+
     public function attachProviderInvoiceId(
         string $provider,
         string $idempotencyKey,
@@ -144,6 +158,21 @@ final class Task11EventLog implements InvoiceEventLogRepositoryInterface
     }
 
     public function findNeedsReconcile(string $provider, int $limit = 100): array
+    {
+        return [];
+    }
+
+    public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+    {
+        return null;
+    }
+
+    public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+    {
+        return null;
+    }
+
+    public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
     {
         return [];
     }

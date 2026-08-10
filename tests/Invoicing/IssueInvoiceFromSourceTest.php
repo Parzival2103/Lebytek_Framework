@@ -136,6 +136,16 @@ function task9_provider(
             return $externalId;
         }
 
+        public function retrieveInvoice(string $providerInvoiceId): IssuedInvoice
+        {
+            return new IssuedInvoice($providerInvoiceId, 'uuid_task9', InvoiceStatus::Valid);
+        }
+
+        public function listByExternalId(string $externalId): array
+        {
+            return [];
+        }
+
         public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice
         {
             return new IssuedInvoice($providerInvoiceId, 'uuid_cancelled', InvoiceStatus::Canceled);
@@ -210,6 +220,11 @@ function task9_failing_mark_needs_reconcile_log(InMemoryInvoiceEventLog $inner):
             throw new RuntimeException('simulated markNeedsReconcile failure');
         }
 
+        public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            $this->inner->markCanceled($provider, $idempotencyKey, $invoice);
+        }
+
         public function attachProviderInvoiceId(
             string $provider,
             string $idempotencyKey,
@@ -239,6 +254,21 @@ function task9_failing_mark_needs_reconcile_log(InMemoryInvoiceEventLog $inner):
         public function findNeedsReconcile(string $provider, int $limit = 100): array
         {
             return $this->inner->findNeedsReconcile($provider, $limit);
+        }
+
+        public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findClaimByIdempotencyKey($provider, $idempotencyKey);
+        }
+
+        public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findIssueByProviderInvoiceId($provider, $providerInvoiceId);
+        }
+
+        public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
+        {
+            return $this->inner->findOrphanClaims($provider, $minAgeSeconds, $limit);
         }
     };
 }
@@ -288,6 +318,11 @@ function task9_failing_mark_issued_log(InMemoryInvoiceEventLog $inner): InvoiceE
             $this->inner->markNeedsReconcile($provider, $idempotencyKey, $invoice);
         }
 
+        public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            $this->inner->markCanceled($provider, $idempotencyKey, $invoice);
+        }
+
         public function attachProviderInvoiceId(
             string $provider,
             string $idempotencyKey,
@@ -310,6 +345,21 @@ function task9_failing_mark_issued_log(InMemoryInvoiceEventLog $inner): InvoiceE
         public function findNeedsReconcile(string $provider, int $limit = 100): array
         {
             return $this->inner->findNeedsReconcile($provider, $limit);
+        }
+
+        public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findClaimByIdempotencyKey($provider, $idempotencyKey);
+        }
+
+        public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findIssueByProviderInvoiceId($provider, $providerInvoiceId);
+        }
+
+        public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
+        {
+            return $this->inner->findOrphanClaims($provider, $minAgeSeconds, $limit);
         }
     };
 }
@@ -367,6 +417,11 @@ function task9_spy_event_log(InMemoryInvoiceEventLog $inner): InvoiceEventLogRep
             $this->inner->markNeedsReconcile($provider, $idempotencyKey, $invoice);
         }
 
+        public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            $this->inner->markCanceled($provider, $idempotencyKey, $invoice);
+        }
+
         public function attachProviderInvoiceId(
             string $provider,
             string $idempotencyKey,
@@ -389,6 +444,21 @@ function task9_spy_event_log(InMemoryInvoiceEventLog $inner): InvoiceEventLogRep
         public function findNeedsReconcile(string $provider, int $limit = 100): array
         {
             return $this->inner->findNeedsReconcile($provider, $limit);
+        }
+
+        public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findClaimByIdempotencyKey($provider, $idempotencyKey);
+        }
+
+        public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findIssueByProviderInvoiceId($provider, $providerInvoiceId);
+        }
+
+        public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
+        {
+            return $this->inner->findOrphanClaims($provider, $minAgeSeconds, $limit);
         }
     };
 }
