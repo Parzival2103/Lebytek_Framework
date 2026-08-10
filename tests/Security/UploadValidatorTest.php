@@ -17,10 +17,35 @@ test('UploadValidator acepta extensión permitida y devuelve la extensión', fun
     assert_same('png', $ext);
 });
 
-test('UploadValidator acepta cuando no hay lista blanca declarada', function (): void {
+test('UploadValidator rechaza allowlist null (C6 fail-closed)', function (): void {
     $v = new UploadValidator(10 * 1024 * 1024);
-    $ext = $v->assertValid(up_file('doc.pdf', 2048), 'Doc', null, 'application/pdf');
-    assert_same('pdf', $ext);
+    assert_throws(ValidationException::class, function () use ($v): void {
+        $v->assertValid(up_file('doc.pdf', 2048), 'Doc', null, 'application/pdf');
+    });
+});
+
+test('UploadValidator rechaza allowlist vacía (C6 fail-closed)', function (): void {
+    $v = new UploadValidator(10 * 1024 * 1024);
+    assert_throws(ValidationException::class, function () use ($v): void {
+        $v->assertValid(up_file('doc.pdf', 2048), 'Doc', [], 'application/pdf');
+    });
+});
+
+test('UploadValidator rechaza extensión en denylist global aunque esté en allowlist', function (): void {
+    $v = new UploadValidator(10 * 1024 * 1024);
+    assert_throws(ValidationException::class, function () use ($v): void {
+        $v->assertValid(up_file('shell.php', 128), 'Adjunto', ['php', 'pdf'], null);
+    });
+});
+
+test('UploadValidator mensaje accionable lista extensiones permitidas (U2)', function (): void {
+    $v = new UploadValidator(10 * 1024 * 1024);
+    try {
+        $v->assertValid(up_file('malware.exe', 1024), 'Adjunto', ['pdf', 'jpg'], null);
+        assert_true(false, 'debió lanzar');
+    } catch (ValidationException $e) {
+        assert_same('Extensión de archivo no permitida para Adjunto. Usa: pdf, jpg.', $e->getMessage());
+    }
 });
 
 test('UploadValidator omite verificación MIME cuando no se provee MIME', function (): void {

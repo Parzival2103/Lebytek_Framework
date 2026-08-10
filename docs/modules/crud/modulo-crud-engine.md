@@ -271,6 +271,32 @@ Estructura mínima:
 }
 ```
 
+### Uploads seguros (C6)
+
+Si `uploads.enabled` es `true` (`"uploads": { "enabled": true }`):
+
+1. `public_path` **obligatorio**, formato `uploads/<colección>` (solo `[a-z0-9_/]`, sin `..`).
+2. Cada campo `form.fields[]` con `"type": "file"` **debe** incluir `validation.allowed_extensions` (array no vacío, minúsculas, sin punto).
+3. Extensiones prohibidas en plataforma: `php`, `phtml`, `phar`, `htaccess`, `svg`.
+4. El motor rechaza configs inválidas al cargar (`CrudConfigValidator`) y rechaza uploads runtime sin allowlist.
+
+Ejemplo mínimo:
+
+```json
+"uploads": { "enabled": true, "public_path": "uploads/cruds/contratos" },
+"form": { "fields": [
+  {
+    "name": "pdf_contrato",
+    "label": "Contrato PDF",
+    "type": "file",
+    "help_text": "Solo PDF, máx. 5 MB",
+    "validation": { "allowed_extensions": ["pdf"] }
+  }
+]}
+```
+
+Consumidores (`Lebytek_Portal`, tenants): auditar `config/cruds/**/*.json` antes de bump a Framework `>=1.2.8`.
+
 ---
 
 ## 14. HANDLERS (LÓGICA EXTERNA)

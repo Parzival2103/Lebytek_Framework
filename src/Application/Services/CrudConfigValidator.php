@@ -23,6 +23,10 @@ final class CrudConfigValidator
 
     private const BLOCKED_PREFIXES = ['auth_', 'cfg_', 'core_', 'log_'];
 
+    private const UPLOAD_PUBLIC_PATH_PATTERN = '#^uploads/[a-z0-9_/]+$#';
+
+    private const UPLOAD_DENIED_EXTENSIONS = ['php', 'phtml', 'phar', 'htaccess', 'svg'];
+
     public function __construct(
         private readonly GenericCrudRepository $repository,
         private readonly CrudHandlerRegistry $handlerRegistry
@@ -163,6 +167,10 @@ final class CrudConfigValidator
 
         foreach (self::statesBlockErrors($config) as $stateError) {
             $errors[] = $stateError;
+        }
+
+        foreach (self::uploadsBlockErrors($config) as $uploadError) {
+            $errors[] = $uploadError;
         }
 
         foreach (self::validationConstraintShapeErrors($config) as $constraintError) {
@@ -528,6 +536,60 @@ final class CrudConfigValidator
                 if ($view === '' || str_contains($view, '..') || str_starts_with($view, '/')) {
                     $errors[] = "detail.tabs[{$i}] (component) tiene una vista con ruta inválida.";
                 }
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Validación del bloque uploads (CRUD-C6): public_path bajo uploads/ y
+     * allowlist obligatoria en campos file cuando uploads.enabled=true.
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
+    public static function uploadsBlockErrors(array $config): array
+    {
+        $errors = [];
+        $uploads = $config['uploads'] ?? null;
+        if (!is_array($uploads)) {
+            return $errors;
+        }
+        $enabled = (bool) ($uploads['enabled'] ?? false);
+        if (!$enabled) {
+            return $errors;
+        }
+
+        $publicPath = trim(str_replace('\\', '/', (string) ($uploads['public_path'] ?? '')));
+        if ($publicPath === '' || str_contains($publicPath, '..') || !preg_match(self::UPLOAD_PUBLIC_PATH_PATTERN, $publicPath)) {
+            $errors[] = 'uploads.public_path debe comenzar con uploads/ y usar solo minúsculas, números, guiones y barras (sin ..).';
+        }
+
+        foreach (($config['form']['fields'] ?? []) as $index => $field) {
+            if (!is_array($field) || ($field['type'] ?? '') !== 'file') {
+                continue;
+            }
+            $name = (string) ($field['name'] ?? "fields[{$index}]");
+            $validation = is_array($field['validation'] ?? null) ? $field['validation'] : [];
+            $exts = $validation['allowed_extensions'] ?? null;
+            if (!is_array($exts) || $exts === []) {
+                $errors[] = "El recurso tiene uploads habilitados pero el campo file '{$name}' debe declarar validation.allowed_extensions con al menos una extensión.";
+                continue;
+            }
+            $seen = [];
+            foreach ($exts as $ext) {
+                $norm = strtolower(ltrim((string) $ext, '.'));
+                if ($norm === '' || !preg_match('/^[a-z0-9]+$/', $norm)) {
+                    $errors[] = "form.fields[{$index}].validation.allowed_extensions contiene un valor inválido.";
+                }
+                if (in_array($norm, self::UPLOAD_DENIED_EXTENSIONS, true)) {
+                    $errors[] = "form.fields[{$index}].validation.allowed_extensions no puede incluir '{$norm}'.";
+                }
+                if (isset($seen[$norm])) {
+                    $errors[] = "form.fields[{$index}].validation.allowed_extensions contiene duplicados.";
+                }
+                $seen[$norm] = true;
             }
         }
 
