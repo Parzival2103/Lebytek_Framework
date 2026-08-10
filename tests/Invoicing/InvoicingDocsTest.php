@@ -66,3 +66,22 @@ test('spec invoicing queda marcada plan-ready implementada con puntero a enmiend
     assert_doc_contains($spec, 'Plan amendments A1-A10 supersede this spec where they disagree', 'amendments pointer');
     assert_doc_contains($spec, 'docs/superpowers/plans/2026-08-07-invoicing-facturapi.md', 'plan link');
 });
+
+test('contrato RBAC invoicing: manifest y SQL alineados con los cinco slugs operativos', function (): void {
+    $expected = [
+        'invoicing.emitir',
+        'invoicing.cancelar',
+        'invoicing.descargar',
+        'invoicing.enviar',
+        'invoicing.reconciliar',
+    ];
+    $mod = require ROOT_PATH . '/config/modules/invoicing.php';
+    $skel = require ROOT_PATH . '/skeleton/config/modules/invoicing.php';
+    $sql = (string) file_get_contents(ROOT_PATH . '/database/schema/modules/invoicing.sql');
+
+    foreach ($expected as $slug) {
+        assert_true(in_array($slug, $mod['permisos'] ?? [], true), "manifest missing {$slug}");
+        assert_true(in_array($slug, $skel['permisos'] ?? [], true), "skeleton manifest missing {$slug}");
+        assert_true(str_contains($sql, $slug), "SQL missing {$slug}");
+    }
+});

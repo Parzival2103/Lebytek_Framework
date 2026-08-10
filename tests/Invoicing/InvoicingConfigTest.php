@@ -23,6 +23,20 @@ test('module manifest invoicing bootstrap_sql apunta a invoicing.sql', function 
     assert_same('database/schema/modules/invoicing.sql', $skel['bootstrap_sql'] ?? null);
 });
 
+test('module manifest invoicing declara permisos RBAC de operaciones', function (): void {
+    $expected = [
+        'invoicing.emitir',
+        'invoicing.cancelar',
+        'invoicing.descargar',
+        'invoicing.enviar',
+        'invoicing.reconciliar',
+    ];
+    $mod = require ROOT_PATH . '/config/modules/invoicing.php';
+    assert_same($expected, $mod['permisos'] ?? null);
+    $skel = require ROOT_PATH . '/skeleton/config/modules/invoicing.php';
+    assert_same($expected, $skel['permisos'] ?? null);
+});
+
 test('composer exige PHP >=8.2 y facturapi/facturapi-php', function (): void {
     $composer = json_decode((string) file_get_contents(ROOT_PATH . '/composer.json'), true);
     assert_same('>=8.2', $composer['require']['php'] ?? null);

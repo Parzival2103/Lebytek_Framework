@@ -34,3 +34,19 @@ test('invoicing bootstrap SQL no define tablas dom_', function (): void {
     $sql = (string) file_get_contents(ROOT_PATH . '/database/schema/modules/invoicing.sql');
     assert_true(! str_contains($sql, 'dom_'));
 });
+
+test('invoicing bootstrap SQL inserta permisos RBAC idempotente y grant administrador', function (): void {
+    $sql = (string) file_get_contents(ROOT_PATH . '/database/schema/modules/invoicing.sql');
+    assert_true(str_contains($sql, 'INSERT IGNORE INTO `auth_permisos`'), 'inserta permisos idempotente');
+    assert_true(str_contains($sql, 'INSERT IGNORE INTO `auth_roles_permisos`'), 'grant idempotente a rol');
+    foreach ([
+        'invoicing.emitir',
+        'invoicing.cancelar',
+        'invoicing.descargar',
+        'invoicing.enviar',
+        'invoicing.reconciliar',
+    ] as $slug) {
+        assert_true(str_contains($sql, $slug), "schema must include slug {$slug}");
+    }
+    assert_true(str_contains($sql, "WHERE `r`.`slug` = 'administrador'"), 'grant slugs to administrador');
+});
