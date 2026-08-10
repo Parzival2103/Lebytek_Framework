@@ -48,7 +48,7 @@ These rules are **binding for implementation** even if the original spec is soft
 
 | ID | Debt | Severity | Mitigation in this plan | Residual (accepted) |
 |----|------|----------|-------------------------|---------------------|
-| D1 | `needs_reconcile` without close path | High | **Task 10** `ReconcileIssuedInvoice` + `findNeedsReconcile` | No auto job / webhook |
+| D1 | `needs_reconcile` without close path | High | **Task 10** `ReconcileIssuedInvoice` + `findNeedsReconcile` | D1 superseded by production hardening A15/A22/A24/A26/A27; no auto job / webhook |
 | D2 | InMemory ≠ PDO behavior drift | High | **Task 5** shared ledger contract suite | Full MySQL suite still needs integration env |
 | D3 | Issue use case unbound / easy to miswire | High | **Task 13** factory helper + conditional DI | Consumer still must bind `InvoiceableSourceInterface` |
 | D4 | Spec vs plan dual source of truth | Med | **Task 1** amendments pointer on spec | Spec body not fully rewritten |
@@ -57,7 +57,7 @@ These rules are **binding for implementation** even if the original spec is soft
 | D7 | PHP 8.2 + module in one bag | Med | **Task 14** explicit release strategy note | Consumers without invoicing still pay floor when they upgrade |
 | D8 | Dual Money / dual ledgers vs Payments | Low | Docs “do not share” (**Task 14**) | No shared abstraction in v1 |
 | D9 | Fat `InvoiceProviderInterface` | Low | Doc note future ISP (**Task 14**) | No split in v1 |
-| D10 | Async status / webhooks | Low | A10 + future name in docs | Out of scope |
+| D10 | Async status / webhooks | Low | A10 + future name in docs | D10 superseded by production hardening A19; HTTP controller and delivery UI remain out of scope |
 
 ---
 

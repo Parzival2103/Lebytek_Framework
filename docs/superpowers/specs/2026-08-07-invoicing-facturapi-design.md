@@ -3,6 +3,7 @@
 **Fecha:** 2026-08-07  
 **Estado:** plan-ready / implemented — plan en [`docs/superpowers/plans/2026-08-07-invoicing-facturapi.md`](../plans/2026-08-07-invoicing-facturapi.md)
 **Plan amendments:** Plan amendments A1-A10 supersede this spec where they disagree — ver [Design amendments](../plans/2026-08-07-invoicing-facturapi.md#design-amendments-post-pr-91-critique) en el plan.
+**Production hardening:** Production hardening amendments A11-A27 supersede the v1 plan where they disagree — ver [`docs/superpowers/plans/2026-08-08-invoicing-facturapi-production-hardening.md`](../plans/2026-08-08-invoicing-facturapi-production-hardening.md).
 **Módulo:** `invoicing` (vertical OFF by default)  
 **Proveedor v1:** Facturapi (SDK oficial `facturapi/facturapi-php`)
 

@@ -26,8 +26,14 @@ acoplar ciclos fiscales a eventos de cobro.
 |----------|-----------|---------|-----|
 | `FACTURAPI_ENABLED` | Si se emite | `false` | Habilita el provider `facturapi` en `config/invoicing.php`. |
 | `FACTURAPI_SECRET_KEY` | Si `FACTURAPI_ENABLED=true` | vacio | Secret key de Facturapi. No registrar en logs ni docs operativas. |
+| `FACTURAPI_WEBHOOK_SECRET` | Si se expone webhook | vacio | Shared secret para validar `Facturapi-Signature` antes de aplicar eventos. |
 | `FACTURAPI_MODE` | No | `test` | Modo de organizacion cacheada (`test` o `live`). |
 | `INVOICING_DEFAULT_PROVIDER` | No | `facturapi` | Provider usado por los casos de uso si no se pasa uno explicito. |
+| `INVOICING_RECONCILE_MIN_CLAIM_AGE_SECONDS` | No | `120` | Guarda de edad para reconciliar o barrer huerfanos con `reconcile_min_claim_age_seconds`. |
+
+Regla de modo/llave (A18): FACTURAPI_MODE=test requiere `sk_test_`; `live` requiere `sk_live_`.
+Mantener una sola `FACTURAPI_SECRET_KEY` por despliegue; staging y produccion
+usan ambientes separados.
 
 ## Habilitar vertical y bootstrap SQL
 
@@ -64,6 +70,7 @@ namespace App\Infrastructure\Invoicing;
 
 use Lebytek\Framework\Domain\Invoicing\CfdiUse;
 use Lebytek\Framework\Domain\Invoicing\InvoiceableSourceInterface;
+use Lebytek\Framework\Domain\Invoicing\PaymentMethod;
 use Lebytek\Framework\Domain\Invoicing\PaymentForm;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\Address;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\FiscalCustomer;
@@ -102,6 +109,7 @@ final class DomOrderInvoiceSource implements InvoiceableSourceInterface
                 ),
             ],
             paymentForm: PaymentForm::Transferencia,
+            paymentMethod: PaymentMethod::Pue,
             cfdiUse: CfdiUse::G03,
             metadata: ['source_ref' => $sourceRef],
         );
@@ -169,13 +177,73 @@ el `markIssued`.
 
 1. Registrar incidente con provider, idempotency key, `source_ref` y mensaje
    seguro.
-2. Consultar pendientes con `ReconcileIssuedInvoice->listNeedsReconcile()`.
-3. Ejecutar `ReconcileIssuedInvoice->handle($idempotencyKey)`.
-4. Confirmar que `inv_events.status` paso de `needs_reconcile` a `issued`.
-5. Si no aparece fila reconciliable, escalar a ops para revisar Facturapi y DB.
+2. Leer el id tipado con `InvoiceNeedsReconcile::providerInvoiceId()`; no
+   parsear mensajes.
+3. Consultar pendientes con `ReconcileIssuedInvoice->listNeedsReconcile()`.
+4. Ejecutar `ReconcileIssuedInvoice->handle($idempotencyKey)`.
+5. ReconcileIssuedInvoice recupera la factura remota con `retrieveInvoice` y
+   promueve la fila local segun el estado remoto.
+6. Confirmar que `inv_events.status` paso de `needs_reconcile` a `issued` o
+   `canceled`; si Facturapi devuelve pendiente, conservar
+   `provider_status=pending` en meta sin forzar `Valid`.
+7. Si no aparece fila reconciliable, usar el runbook de huerfanos antes de
+   considerar accion manual.
 
 Regla critica: nunca re-emitir con una idempotency key nueva hasta que ops
 confirme el estado remoto y local. Re-emitir puede duplicar el timbrado.
+
+## Runbook hardening A11-A27
+
+### Ambiguous create (A11)
+
+Ambiguous create (A11): no liberar el claim cuando `createInvoice` ya fue
+invocado y el proceso no sabe si Facturapi timbro. La fila queda en `claimed`
+sin `provider_invoice_id` para impedir retries ciegos. En este estado no crear una `idempotencyKey` nueva; todo retry usa la misma key o falla cerrado hasta que reconcile determine el estado remoto.
+
+### `external_id` A23
+
+El `external_id` de Facturapi identifica el intento fiscal, no el `sourceRef`:
+
+```text
+external_id = `lebytek:invoice:{hex(sha256(providerKey."\x1f".idempotencyKey))[0:40]}`
+```
+
+Es por intento, nunca derivado de `sourceRef` ni truncado. Un mismo `sourceRef`
+puede tener varias facturas legitimas por sustitucion o re-emision con una
+`idempotencyKey` nueva; por eso el hash usa `providerKey`, separador `\x1f` e
+`idempotencyKey`.
+
+### Reconcile remoto, huerfanos y barrido
+
+Para un huerfano `claimed` sin id, `handle()` aplica A22/A27:
+
+1. Respeta `reconcile_min_claim_age_seconds`; si el claim es mas joven, falla
+   con "claim too fresh" porque podria haber un issue en vuelo.
+2. Calcula el `external_id` A23 y consulta `listByExternalId(A23)` antes de
+   cualquier operacion manual.
+3. Con 1 hit, adjunta el `provider_invoice_id` de forma condicional y luego
+   recupera remoto con `retrieveInvoice`.
+4. Con mas de 1 hit, falla cerrado; con A23 eso indica corrupcion o duplicidad
+   remota inesperada.
+5. Con 0 hits, mantiene el claim y solo deja abierta la salida A26.
+
+El barrido ops debe invocar `findOrphanClaims` con la misma guarda de edad; el
+Framework no agenda cron por si mismo.
+
+### A26: re-emision forzada de huerfano 0 hits
+
+`forceReissueOrphanClaim` es un procedimiento ops separado de `handle()`;
+requiere `invoicing.reconciliar` y estas 3 precondiciones obligatorias:
+
+1. `listByExternalId devuelve 0 hits` para el `external_id` A23.
+2. La edad del claim supera `reconcile_min_claim_age_seconds`.
+3. Hay invocacion explicita de ops; nunca se ejecuta desde el barrido ni desde
+   `handle()`.
+
+Reusa la misma `idempotencyKey` y el mismo `external_id`; no genera claves
+nuevas. Es seguro y no puede doble-timbrar porque 0 hits prueba que no existe
+factura remota para ese intento y Facturapi mantiene idempotencia remota para la
+misma key.
 
 ## Reglas de resolucion A2
 
@@ -183,6 +251,53 @@ Cancelacion, descarga PDF/XML y email reciben `providerInvoiceId` o resuelven po
 `source_ref`. Si el `source_ref` no tiene exactamente una factura issued, el
 Framework falla cerrado con `InvoiceAmbiguousSource` o equivalente; no elige la
 fila mas reciente de forma silenciosa.
+
+Cancelacion hardening A17:
+
+- `CancelIssuedInvoice` hace claim-before con `cancel:{providerInvoiceId}` antes
+  de llamar a Facturapi.
+- El motivo SAT debe ser `01`, `02`, `03` o `04`; motivo `01` requiere
+  sustitucion no vacia.
+- La fila fiscal de issue se localiza con `findIssueByProviderInvoiceId` y esa
+  fila cambia a `canceled`; la fila `cancel:*` solo audita la operacion.
+
+## RBAC obligatorio en consumidores
+
+Consumer routes must enforce RBAC slugs en cualquier ruta admin/API que invoque
+casos de uso mutantes o de descarga:
+
+| Slug | Uso |
+|------|-----|
+| `invoicing.emitir` | Emitir CFDI |
+| `invoicing.cancelar` | Cancelar CFDI |
+| `invoicing.descargar` | Descargar PDF/XML |
+| `invoicing.enviar` | Enviar por email |
+| `invoicing.reconciliar` | Reconcile, `findOrphanClaims` y A26 |
+
+El Framework publica slugs en manifiesto y SQL; no registra rutas HTTP ni menus
+Portal. El consumidor debe asignar roles antes de produccion.
+
+## Webhooks Facturapi
+
+El Framework valida firma y aplica eventos, pero el consumidor expone la ruta:
+
+```text
+POST /webhooks/facturapi  (CSRF exempt)
+raw body + header Facturapi-Signature
+provider = InvoicingFactory/InvoiceProviderRegistry -> Facturapi concrete
+event = FacturapiInvoiceProvider::parseWebhook(rawBody, signature)
+ApplyInvoiceProviderEvent->handle(event)
+responder 200 rapido
+```
+
+`FacturapiInvoiceProvider::parseWebhook` vive en el provider concreto, no en el
+port `InvoiceProviderInterface`. Los consumidores que necesiten webhooks deben
+obtener el provider Facturapi concreto por el patron existente de
+factory/registry usado para Facturapi; no anadir un metodo nuevo al port solo
+para parsear webhooks. Configurar `FACTURAPI_WEBHOOK_SECRET`, validar
+`Facturapi-Signature` y no registrar payload fiscal completo (RFC, conceptos,
+customer/items, PDF/XML o body crudo). El webhook firmado usa shared-secret auth,
+no RBAC.
 
 ## Estrategia de release D7/A9
 
@@ -197,10 +312,17 @@ v1 y debe aparecer en las notas de release del tag.
 
 ## Futuro y residual aceptado
 
-- webhooks / `RefreshInvoiceStatus` para estados asincronos (D10).
+- webhooks / `RefreshInvoiceStatus` para estados asincronos (D10) evolucionan
+  desde `ApplyInvoiceProviderEvent`; el HTTP queda en consumidor.
 - Posible ISP split para documentos (D9): separar create/cancel de
   download/email si aparecen providers con capacidades parciales.
-- No catalogo SAT completo ni CI live contra Facturapi en v1.
+- Residual: catalogo SAT completo.
+- Residual: controlador HTTP de webhook en Framework.
+- Residual: CI live contra Facturapi.
+- Residual: cron worker para `findOrphanClaims`.
+- Operaciones residuales antes de produccion: configurar
+  `FACTURAPI_WEBHOOK_SECRET`, proteger rutas con RBAC, asignar roles y programar
+  el barrido externo.
 
 ## Invariantes A1-A3
 
@@ -210,6 +332,9 @@ v1 y debe aparecer en las notas de release del tag.
   operaciones posteriores requieren provider id o una unica fila issued.
 - A3: claims sin `provider_invoice_id` son incompletos; no hay retry ciego de
   create despues de timeout.
+- A11-A27: create ambiguo conserva claim; remote reconcile verifica Facturapi;
+  huerfanos usan A23 `external_id`; A26 es manual con RBAC; pending fiscal se
+  conserva como `provider_status=pending`.
 
 ## Pruebas
 
