@@ -10,7 +10,7 @@ use Lebytek\Framework\Domain\Entities\CrudResourceDefinition;
 require_once __DIR__ . '/../../fixtures/archivo_repos.php';
 
 /**
- * CrudDataService es final y depende de GenericCrudRepository (final, con BD),
+ * CrudDataService es final y depende de GenericCrudRepository (con BD),
  * así que se instancia sin constructor y se inyecta por reflexión solo la
  * dependencia que usa handleUpload (mismo alcance que el método migrado).
  */

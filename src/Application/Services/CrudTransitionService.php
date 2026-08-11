@@ -153,6 +153,7 @@ final class CrudTransitionService
             if ($updated === 0) {
                 throw new ValidationException('El registro cambió; recarga e inténtalo de nuevo.');
             }
+            $from = $fromRetry;
             $ctx = $ctxRetry;
         }
 
