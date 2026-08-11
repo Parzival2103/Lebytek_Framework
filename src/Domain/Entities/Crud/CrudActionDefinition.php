@@ -77,6 +77,12 @@ final class CrudActionDefinition
     public function to(): ?string { return $this->to; }
     public function guard(): ?string { return $this->guard; }
 
+    /** @return array<string, mixed> */
+    public function visibleWhen(): array { return $this->visibleWhen; }
+
+    /** @return array<string, mixed> */
+    public function enabledWhen(): array { return $this->enabledWhen; }
+
     public function isBuiltin(): bool { return $this->type === 'builtin'; }
     public function isHandler(): bool { return $this->type === 'handler'; }
     public function isLink(): bool { return $this->type === 'link'; }

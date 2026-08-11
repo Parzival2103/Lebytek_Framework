@@ -61,6 +61,9 @@ final class CrudDataService
 
         $selectColumns[] = $definition->primaryKey();
         $selectColumns[] = 'deleted';
+        foreach ($definition->actionConditionColumnNames() as $condCol) {
+            $selectColumns[] = $condCol;
+        }
         $selectColumns = array_values(array_filter(array_unique($selectColumns)));
 
         $pagina  = max(1, (int) ($query['pagina'] ?? 1));
