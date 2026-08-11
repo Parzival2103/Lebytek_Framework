@@ -52,3 +52,20 @@ php tests/run.php Invoicing
   so `markCanceled(provider, issueIdempotencyKey, invoice)` can update the correct issue row and avoid
   untracked remote cancels.
 - Scope intentionally excludes Portal UI, cancellation receipt download, Task 7+ work.
+
+## Review fix — cancel audit rows in sourceRef lookup
+
+Commit: `dee2da2` — `fix(invoicing): exclude cancel audit rows from sourceRef lookup`
+
+After cancel, `markCancelClaimIssued` writes a `type='cancel'` audit row sharing `source_ref` and
+`provider_invoice_id` with the issue row. `findIssuedBySourceRef` now excludes `type='cancel'` in PDO and
+InMemory (mirroring the Task 6 guard on `findIssueByProviderInvoiceId`), so `InvoiceIdResolver` no longer
+throws `InvoiceAmbiguousSource` on a unique issue.
+
+Contract coverage: simulated cancel audit row in `InvoiceEventLogContract`; integration assertion in
+`CancelIssuedInvoice` test that `resolve(null, sourceRef)` succeeds post-cancel.
+
+```text
+php tests/run.php Invoicing
+98 passed, 0 failed
+```
