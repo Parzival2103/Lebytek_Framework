@@ -36,7 +36,8 @@
 | SHA Portal inspeccionado | **No verificado** — `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository»; `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404. Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde auditoría 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-11` |
-| Timestamp UTC | trigger cron `2026-08-11T12:10:00Z` / corrida agente `2026-08-11T12:10:00Z` / pase ux `2026-08-11T12:30:01Z` (modo **normal**) |
+| Timestamp UTC | trigger cron `2026-08-11T12:10:00Z` / corrida agente `2026-08-11T12:10:00Z` / pase ux `2026-08-11T12:30:01Z` (modo **normal**) / pase deuda `2026-08-11T13:04:00Z` (modo **normal**) |
+| SHA `origin/main` pase deuda | `23e1dd219d5b2383ac6cbb02ca6681ad01638932` (#115 audit mergeado en `main`) |
 | Nivel de fuente | **A** — PR #115 abierto, título `docs(audit): auditoría técnica diaria 2026-08-11`, `baseRefName=main`, `mergeable=MERGEABLE`. Diff único: `docs/audits/2026-08-11-auditoria-tecnica-diaria.md`. Ancestry limpia; ningún commit legacy ancestro del head audit. |
 | PR auditoría fuente | #115 — https://github.com/Parzival2103/Lebytek_Framework/pull/115 |
 | headRefOid fuente | `c4c57e15a03fa007a10bd2c0b0eabf6e6531a18e` (rama audit; **no heredada**) |
@@ -186,6 +187,8 @@ Implementar **Enfoque A** en los tres frentes como release PATCH **`1.2.11`** de
 - Operaciones producción: deploy VPS, bump lock Portal prod, SSH, `.env`.
 - Reabrir REL-C1, C6, INV, M3, M4 ya cerrados.
 - Legacy `feature/backoffice-api-integration` → `main`.
+- Auto-fix de backlog M5 (`permisos.gestionar`), D6 (`skeleton.lebytek.com`), M10 (proceso audits) — spec futuro u ops humano.
+- Hygiene doc D9/D11 sin bloquear release `v1.2.11`.
 
 ---
 
@@ -249,11 +252,14 @@ main @ 1.2.10 (C1–C3, C6, M3, M4, INV ya tagueados)
 |--------|-----------|----------------------|
 | Usuarios legítimos ven más errores «recarga» bajo concurrencia real | Media | Mensaje claro; idempotencia de transiciones inválidas |
 | Bulk más lento (re-check + posible re-fetch) | Baja | MAX_BULK_IDS existente acota |
-| G13 parcial si otros paths UPDATE omiten `deleted=0` | Media | Inventario grep `updateRecord` en implementación; test regresión |
-| Portal sin bump sigue vulnerable C4 | Alta (consumo) | Documentar dependencia tag; M6 bloquea verificación lock |
+| G13 parcial si otros paths UPDATE omiten `deleted=0` | Media | Inventario grep `updateRecord` en implementación; test regresión (ver AC-G13) |
+| Portal sin bump / consumidores sin lock ≥ `v1.2.10` | Alta (consumo) | Documentar dependencia tag; M6 bloquea verificación lock Portal |
 | M11 fix enmascara tests que **dependían** de sesión cruzada | Baja | Revisar tests Auth que asuman estado previo — usar setup explícito por test |
 | Falso positivo CAS si collation/trim en columna estado | Baja | Comparar como string igual que hoy `$from` |
 | Portal SHA desconocido (M6) | Media | Marcar requisitos Portal **no verificados** |
+| Plan `crud-p04-cas-bulk-equality.md` ausente (D10) | Media | AUTOMATION-04 debe generarlo antes de implementación; spec no sustituye plan ejecutable |
+| Drift checkboxes planes M3/M4 (D11) | Baja | Operador marca Tasks shippeadas en planes 2026-08-05/06 para no bloquear lectura humana |
+| `docs/release/v1.2.8.md` ausente (D9) | Baja | Hygiene REL-C1; no reabre M1 — añadir en release train si se quiere paridad de notas |
 
 ---
 
@@ -380,6 +386,87 @@ Cada test debe **existir** en plan p04 y ejecutarse con `php tests/run.php Crud`
 
 - [ ] Trío semver **`1.2.11`** sincronizado; tag **`v1.2.11`** tree ≡ tip merge.
 - [ ] `docs/release/v1.2.11.md` (notas mínimas C4 + harness) — hygiene REL-C1.
+
+### Deuda técnica (inventario)
+
+- [ ] **AC-D1:** Sección **Deuda técnica** lista abiertos verificados (CRUD-C4, G13, G1, G14, M11, M5, D6, M10, D9–D11) con evidencia ruta/línea en `main` @ `23e1dd2`.
+- [ ] **AC-D2:** REL-C1, CRUD-C6, INV-E1/E2, M3, M4, D7 reconciliados como **resueltos** en tip/tag; CRUD-C4/G13/G1/G14/M11 **abiertos → este spec** hasta merge p04.
+- [ ] **AC-D3:** P1, P2, P3, M6, D14, D15, H1 marcados **no verificados**; acción concreta documentada.
+- [ ] **AC-D4:** Verificado sin deuda nueva — migraciones 3 SQL ↔ 3 entradas manifiesto; `src/` sin `TODO`/`FIXME`; referencias operativas vivas a `feature/backoffice-api-integration` o `dev-feature/backoffice-api-integration` ausentes en `scripts/`, `docs/composer-setup.md` (§6 histórico OK), `docs/integration/`; capas CRUD sin violación Domain→Infra.
+
+---
+
+## Deuda técnica
+
+Fuente: auditoría `docs/audits/2026-08-11-auditoria-tecnica-diaria.md` (PR #115 mergeado `23e1dd2`); reconciliación con inventario carry-forward spec `2026-08-09-audit-crud-uploads-hardening-design.md` y tip `origin/main` @ `23e1dd219d5b2383ac6cbb02ca6681ad01638932` (pase deuda 2026-08-11).
+
+### Reconciliación heredada (cerrados)
+
+| ID | Tema | Estado | Resolución |
+|----|------|--------|------------|
+| **REL-C1** | Tip sin tags semver | **Resuelto** | #110 + tags `v1.2.7`…`v1.2.10`; tree `v1.2.10` ≡ tip merge `#114` @ `c822196` |
+| **CRUD-C6** | Uploads allowlist + path jail | **Resuelto** | #111 / tag `v1.2.8`; spec `2026-08-09-audit-crud-uploads-hardening-design.md` |
+| **INV-E1/E2** | Facturapi hardening | **Resuelto** | #109/#112; plan hardening 50/51 tasks código |
+| **M3** | CRUD/calendario sin `CrudRbacMiddleware` | **Resuelto** | #114 / `v1.2.10` — `routes/web.php` L19, L115 registra middleware |
+| **M4** | `/api/health` público ausente | **Resuelto** | #114 / `v1.2.10` — `routes/api.php` L15 antes de grupo Auth |
+| **D7** | Sin pipeline GitHub Actions | **Resuelto** | `.github/workflows/platform-tests.yml` presente; CI tip `main` success |
+| **M1/M2/M7/M8/M9** | Semver, env, ops docs, dompdf | **Resuelto** | Sin regresión — tip `1.2.10`, `composer.json` L6 |
+
+**Cierres desde corrida anterior (spec 2026-08-09 @ tip `5bf0863` / audit 2026-08-09):** **6** ítems verificados cerrados en intervalo `5bf0863..23e1dd2` (REL-C1, C6, INV-E1/E2, M3, M4, D7).
+
+### Alcance principal de este spec (abierto, verificado)
+
+| ID | Hallazgo | Evidencia (`main` @ `23e1dd2`) | Impacto | Capa | Owner | Acción |
+|----|----------|----------------------------------|---------|------|-------|--------|
+| **CRUD-C4** | Transitions sin CAS / TOCTOU | `CrudTransitionService.php` L76–77 lee `$from` en memoria; L104–107 `updateRecord` sin predicado estado; `GenericCrudRepository.php` L230–244 `UPDATE … WHERE pk = ?` sin `AND {state_column} = ?` ni `rowCount` check | Doble transición / estado inconsistente bajo concurrencia | `Application` / `Infrastructure` | Framework | CAS vía `updateRecordWhere` + tests (plan p04, AUTOMATION-04) |
+| **G13** | Race soft-delete en UPDATE | `CrudDataService.php` L460–486 carga `$existing`, valida, L486 `updateRecord` sin `deleted = 0` en WHERE | Fila soft-deleted puede mutarse tras lectura | `Application` | Framework | WHERE `deleted = 0`; 0 filas → ValidationException |
+| **G1** | Bulk sin re-check condiciones | `CrudActionService.php` L119–122 `run()` usa `isVisibleFor`/`isEnabledFor`; L163–198 `runBulk` salta esas comprobaciones antes de `dispatch` | Bulk ejecuta acciones «deshabilitadas» en UI | `Application` | Framework | Paridad `run()` en `runBulk` |
+| **G14** | `equalityMatches` fail-open | `CrudActionDefinition.php` L115–116 `$row[$column] ?? null`; columna ausente en SELECT bulk → `(string) null === (string) false` puede evaluar true | Acción habilitada incorrectamente en listados | `Domain` | Framework | Fail-closed si `!array_key_exists($column, $row)` |
+| **M11** | Contaminación sesión harness | `tests/lib/microtest.php` L7–18 — sin reset `$_SESSION` post-test; `tests/run.php` L6 carga todos `*Test.php` en un proceso; `ApiHealthPublicDispatchTest.php` L55–67 espera `/api/ping` ≠ 200 sin sesión | Suite monolítica local engañosa (2 fails post-Auth) | Harness / `tests/` | Framework | Reset sesión post-test en `microtest.php` |
+
+### Backlog Framework verificado (fuera alcance p04)
+
+| ID | Hallazgo | Evidencia (`main` @ `23e1dd2`) | Impacto | Capa | Owner | Acción |
+|----|----------|----------------------------------|---------|------|-------|--------|
+| **M5** | Slug `permisos.gestionar` ausente | `routes/web.php` L62–66 — comentario + workaround `administracion.ver`; `rg permisos.gestionar database/` → **0** | Catálogo RBAC acoplado a permiso amplio | `Domain` RBAC | Framework | Spec futuro CF8 |
+| **D6** | `skeleton.lebytek.com` pendiente | `docs/ENVIRONMENTS.md` L7, L13, L34, L43 — «pendiente de implementar»; plan `2026-07-26-skeleton-package-staging.md` Tasks 6–8 sin deploy | LAB package puro no desplegado | Ops / Framework | Framework/Ops | Ejecutar plan humano |
+| **M10** | Huecos auditorías diarias | Sin audit `2026-08-10`; cadena 03–05 cerrada en corridas previas; hueco 08-10 documentado en audit #115 | Narrativa automation incompleta | Proceso | Ops/automation | Corrida 00 diaria; no omitir paso audit |
+| **D9** | `docs/release/v1.2.8.md` ausente | Existen `v1.2.7.md`, `v1.2.9.md`, `v1.2.10.md`; tag `v1.2.8` publicado (#111) | Paridad notas release | Docs | Framework/Ops | Añadir en hygiene release si se desea |
+| **D10** | Plan p04 CAS ausente | `docs/superpowers/plans/2026-08-07-crud-p04-cas-bulk-equality.md` **no existe** (programa CRUD § punto 4) | AUTOMATION-04 bloqueada para implementación | Proceso | Automation | Generar plan antes de executor |
+| **D11** | Drift checkboxes planes M3/M4 | `docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md` y `2026-08-05-audit-api-health-public.md` — Tasks 0/5 sin marcar; `tests/Docs/CrudRbacRouterTest.php` y `routes/api.php` L15 ya shippeados en `v1.2.10` | Lectura humana confusa post-release | Docs | Framework/Ops | Marcar Tasks completadas en planes |
+
+### Planes activos — estado ejecución real
+
+| Plan | Tareas | Estado @ `23e1dd2` |
+|------|--------|-------------------|
+| `docs/superpowers/plans/2026-08-07-crud-p04-cas-bulk-equality.md` | **Ausente** | Pendiente AUTOMATION-04 — este spec es diseño |
+| `docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md` | 0/5 checkboxes | **Shippeado** `#114` / `v1.2.10` — drift D11 |
+| `docs/superpowers/plans/2026-08-05-audit-api-health-public.md` | 0/5 checkboxes | **Shippeado** `#114` / `v1.2.10` — drift D11 |
+| `docs/superpowers/plans/2026-08-04-audit-platform-ci-gates.md` | Implementado | CI verde — plan puede cerrarse en hygiene |
+
+### No verificados (declarados explícitamente)
+
+| ID | Hallazgo | Motivo | Acción |
+|----|----------|--------|--------|
+| **P1** | Portal lock ≥ `v1.2.10` / futuro `1.2.11` | `gh repo view Parzival2103/Lebytek_Portal` → GraphQL fail; última evidencia `v1.1.0` @ `a79d3ad` | Bump lock staging post-tag cuando M6 resuelva |
+| **P2** | Portal merge CRUD RBAC | Clone Portal inaccesible | Operador verifica registro middleware post-release |
+| **P3** | Portal CRUD JSON state machines | Repo Portal inaccesible | Smoke staging transiciones `dom_*` |
+| **M6** | Portal SHA / gh 404 | `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404 | Ops: conceder lectura Portal al token automation |
+| **D14** | Stripe subscription QA Portal | Framework `vertical.payments=false`; Portal no inspeccionable | Portal QA checkout antes de habilitar vertical |
+| **D15** | Bootstrap marketing Portal | Re-scopeado `Lebytek_Portal#4` | Portal issue #4 |
+| **H1** | `composer validate` lock content-hash | CI usa `--no-check-lock`; warnings pre-existentes en tip | Ejecutar en release train humano |
+
+### Verificado sin deuda nueva
+
+- **Migraciones ↔ manifiesto:** 3 archivos en `database/migrations/` ↔ 3 entradas en `config/modules/core.php` L16, `crud-engine.php` L15, `pdf-kit.php` L16 — sin drift.
+- **`src/`:** grep `TODO`/`FIXME` → **0** con impacto; sin `LebytekApiClient` ni Marketing.
+- **Capas:** transiciones/acciones en `Application`; `equalityMatches` en `Domain`; repo en `Infrastructure` — sin violación Domain→Presentation.
+- **Legacy operativo:** referencias vivas a `feature/backoffice-api-integration` o pin `dev-feature/backoffice-api-integration` **ausentes** en `scripts/`, `docs/integration/`; `docs/composer-setup.md` L128 remite tag `archive/backoffice-api-integration` (histórico, no pin operativo).
+- **Payments bootstrap:** `vertical.payments=false` en harness; requisitos Stripe documentados como gate ops Portal (D14), no auto-fix en `src/`.
+- **Semver:** trío `1.2.10` sync (`composer.json` L6, `config/app.php`, `skeleton/config/app.php`); tags `v1.2.7`…`v1.2.10` publicados.
+- **CI:** `.github/workflows/platform-tests.yml` — jobs aislados `php tests/run.php {Kernel,Crud,Docs,…}`; no gate «0 tests».
+
+**Conteo:** **11 abiertos verificados** (CRUD-C4, G13, G1, G14, M11 en alcance spec + M5, D6, M10, D9, D10, D11 en backlog) + **5 pendientes implementación p04** (C4/G13/G1/G14/M11); **7 no verificados** (P1, P2, P3, M6, D14, D15, H1); **6 heredados cerrados** esta corrida (REL-C1, C6, INV-E1/E2, M3, M4, D7).
 
 ---
 
