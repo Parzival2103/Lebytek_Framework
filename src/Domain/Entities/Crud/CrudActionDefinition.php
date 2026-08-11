@@ -105,7 +105,8 @@ final class CrudActionDefinition
 
     /**
      * Cada par columna→valor debe coincidir. El valor puede ser escalar (igualdad
-     * laxa por string) o lista (pertenencia). Mapa vacío => true.
+     * escalar estricta sin coerce null/false→'') o lista (pertenencia). Mapa vacío => true.
+     * Columna ausente en la fila => false (fail-closed G14).
      *
      * @param array<string, mixed> $conditions
      * @param array<string, mixed> $row
@@ -113,11 +114,15 @@ final class CrudActionDefinition
     public static function equalityMatches(array $conditions, array $row): bool
     {
         foreach ($conditions as $column => $expected) {
-            $actual = $row[$column] ?? null;
+            $column = (string) $column;
+            if (!array_key_exists($column, $row)) {
+                return false;
+            }
+            $actual = $row[$column];
             if (is_array($expected)) {
                 $ok = false;
                 foreach ($expected as $candidate) {
-                    if ((string) $actual === (string) $candidate) {
+                    if (self::scalarEquals($actual, $candidate)) {
                         $ok = true;
                         break;
                     }
@@ -125,10 +130,31 @@ final class CrudActionDefinition
                 if (!$ok) {
                     return false;
                 }
-            } elseif ((string) $actual !== (string) $expected) {
+                continue;
+            }
+            if (!self::scalarEquals($actual, $expected)) {
                 return false;
             }
         }
         return true;
+    }
+
+    /** Igualdad escalar sin coerce null/false → ''. */
+    private static function scalarEquals(mixed $actual, mixed $expected): bool
+    {
+        if ($actual === null || $expected === null) {
+            return $actual === $expected;
+        }
+        if (is_bool($actual) || is_bool($expected)) {
+            return $actual === $expected
+                || $actual === (int) $expected
+                || (int) $actual === $expected;
+        }
+        if (is_int($actual) || is_int($expected) || is_float($actual) || is_float($expected)) {
+            return (string) $actual === (string) $expected
+                && $actual !== null
+                && $expected !== null;
+        }
+        return (string) $actual === (string) $expected;
     }
 }
