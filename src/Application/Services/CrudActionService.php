@@ -184,6 +184,11 @@ final class CrudActionService
                     throw new ValidationException("Registro {$id} no existe.");
                 }
                 $this->assertActionOwnership($definition, $record, $userId);
+
+                if (!$action->isVisibleFor($record) || !$action->isEnabledFor($record)) {
+                    throw new ValidationException('La acción no está disponible para este registro.');
+                }
+
                 $ctx = new CrudActionContext(
                     $definition->key(),
                     $definition->table(),
