@@ -11,6 +11,9 @@ use Lebytek\Framework\Presentation\Controllers\Api\HealthController;
 | Responden con JSON. Autenticación futura mediante token.
 */
 
+// Público — liveness LB/cron (M4). NO usar /api/ping para monitoreo externo.
+$router->get('/api/health', [HealthController::class, 'health']);
+
 $router->group([
     'prefix'      => '/api',
     'middlewares' => [AuthMiddleware::class],

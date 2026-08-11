@@ -67,9 +67,23 @@ Definidos en [`routes/web.php`](../../routes/web.php) con `RbacMiddleware`. List
 | `/admin/administracion/usuarios` | `usuarios.gestionar` |
 | `/admin/administracion/roles` | `roles.gestionar` |
 | `/admin/administracion/permisos` | `administracion.ver` |
-| `/admin/crud/{resource}` | `{permission_prefix}.ver` \| `crear` \| `editar` \| `eliminar` (vía `CrudResourceService`) |
+| `/admin/crud/{resource}*` | `{permission_prefix}.ver` \| `crear` \| `editar` \| `eliminar` vía **`CrudRbacMiddleware`** (router) **y** `CrudResourceService` (servicio) |
+| `/admin/calendario/{key}*` | `{permission_prefix}.ver` del CRUD vinculado vía **`CrudRbacMiddleware`** **y** use cases calendario |
 
-El rol `administrador` sigue la política especial en [`RbacPolicy`](../../app/Domain/Policies/RbacPolicy.php) (`esAdministrador()` → acceso total a comprobaciones de permiso).
+### 5.1 RBAC dinámico CRUD/calendario
+
+Flujo de defensa doble (Enfoque A, M3):
+
+1. `AuthMiddleware` exige sesión.
+2. **`CrudRbacMiddleware`** resuelve el slug con `CrudRoutePermissionResolver` (JSON `permission_prefix` + verbo/URI) y aplica `RbacPolicy` → 403 accionable con slug (HTML o JSON AJAX) **antes** del controlador.
+3. Controlador CRUD/calendario.
+4. `CrudResourceService` / use cases calendario vuelven a llamar `RbacService::verificar()` (misma familia de slugs).
+
+Recurso o key inválidos: el resolver lanza `ValidationException` y el middleware **delega** al controlador (no convierte en 403 RBAC).
+
+Referencia de integridad: `php scripts/rbac_integrity_report.php` (cruza `config/rbac_route_permissions.php` + `config/cruds/*.json`).
+
+El rol `administrador` sigue la política especial en [`RbacPolicy`](../../src/Domain/Policies/RbacPolicy.php) (`esAdministrador()` → acceso total a comprobaciones de permiso).
 
 ---
 

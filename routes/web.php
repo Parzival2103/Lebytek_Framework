@@ -16,6 +16,7 @@ use Lebytek\Framework\Presentation\Controllers\Admin\ReportesController;
 use Lebytek\Framework\Presentation\Controllers\Admin\SistemaEstadoController;
 use Lebytek\Framework\Presentation\Controllers\PwaController;
 use Lebytek\Framework\Presentation\Middlewares\AuthMiddleware;
+use Lebytek\Framework\Presentation\Middlewares\CrudRbacMiddleware;
 use Lebytek\Framework\Presentation\Middlewares\CsrfMiddleware;
 use Lebytek\Framework\Presentation\Middlewares\RbacMiddleware;
 
@@ -111,18 +112,20 @@ $router->group([
         $router->delete('/permisos/{id}',        [PermisosController::class, 'eliminar'],   array_merge($rbacPermisos, [CsrfMiddleware::class]));
     });
 
-    $router->get('/crud/{resource}',                  [CrudController::class, 'index']);
-    $router->get('/crud/{resource}/crear',            [CrudController::class, 'create']);
-    $router->post('/crud/{resource}',                 [CrudController::class, 'store'],  [CsrfMiddleware::class]);
-    $router->get('/crud/{resource}/{id}/editar',      [CrudController::class, 'edit']);
-    $router->post('/crud/{resource}/{id}',            [CrudController::class, 'update'], [CsrfMiddleware::class]);
-    $router->get('/crud/{resource}/{id}',             [CrudController::class, 'show']);
-    $router->post('/crud/{resource}/{id}/eliminar',   [CrudController::class, 'delete'], [CsrfMiddleware::class]);
-    $router->post('/crud/{resource}/{id}/accion/{action}',   [CrudController::class, 'action'],     [CsrfMiddleware::class]);
-    $router->post('/crud/{resource}/accion-masiva/{action}', [CrudController::class, 'bulkAction'], [CsrfMiddleware::class]);
+    $crudRbac = [new CrudRbacMiddleware()];
 
-    $router->get('/calendario/{key}',         [CalendarioController::class, 'index']);
-    $router->get('/calendario/{key}/eventos', [CalendarioController::class, 'events']);
+    $router->get('/crud/{resource}',                  [CrudController::class, 'index'], $crudRbac);
+    $router->get('/crud/{resource}/crear',            [CrudController::class, 'create'], $crudRbac);
+    $router->post('/crud/{resource}',                 [CrudController::class, 'store'],  array_merge($crudRbac, [CsrfMiddleware::class]));
+    $router->get('/crud/{resource}/{id}/editar',      [CrudController::class, 'edit'], $crudRbac);
+    $router->post('/crud/{resource}/{id}',            [CrudController::class, 'update'], array_merge($crudRbac, [CsrfMiddleware::class]));
+    $router->get('/crud/{resource}/{id}',             [CrudController::class, 'show'], $crudRbac);
+    $router->post('/crud/{resource}/{id}/eliminar',   [CrudController::class, 'delete'], array_merge($crudRbac, [CsrfMiddleware::class]));
+    $router->post('/crud/{resource}/{id}/accion/{action}',   [CrudController::class, 'action'],     array_merge($crudRbac, [CsrfMiddleware::class]));
+    $router->post('/crud/{resource}/accion-masiva/{action}', [CrudController::class, 'bulkAction'], array_merge($crudRbac, [CsrfMiddleware::class]));
+
+    $router->get('/calendario/{key}',         [CalendarioController::class, 'index'], $crudRbac);
+    $router->get('/calendario/{key}/eventos', [CalendarioController::class, 'events'], $crudRbac);
 
     $rbacPdfKit = [new RbacMiddleware('pdf_kit.ver')];
     $router->get('/pdf-kit/demo',                    [PdfKitDemoController::class, 'index'], $rbacPdfKit);

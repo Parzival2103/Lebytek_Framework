@@ -280,6 +280,37 @@ La automation no configura branch protection; documentado aquí para el operador
 
 ---
 
+## Monitoreo / health checks
+
+Load balancers, paneles de hosting y cron externos deben usar el endpoint **público** de liveness. **No** usar `/api/ping` para monitoreo externo: requiere sesión activa y redirige a `/login` (302) sin cookie.
+
+| Endpoint | Autenticación | Uso | Respuesta esperada |
+|----------|---------------|-----|-------------------|
+| `GET /api/health` | **Ninguna** (público) | Liveness LB / cron / hosting | `200` JSON `{"status":"ok"}` (≤ 200 bytes) |
+| `GET /api/ping` | Sesión activa (`AuthMiddleware`) | Smoke interno post-login | `200` JSON `{"status":"ok","timestamp":"…"}` con cookie |
+
+### Verificar liveness (copy-paste)
+
+```bash
+curl -sf https://<host>/api/health
+```
+
+Expected: body `{"status":"ok"}` (formato puede incluir pretty-print) y exit code 0.
+
+### Verificar ping autenticado (interno)
+
+Tras iniciar sesión en el navegador, desde una sesión con cookie válida:
+
+```bash
+curl -sf -b cookies.txt https://<host>/api/ping
+```
+
+Sin cookie, un `302` hacia `/login` es **esperado** — no indica caída del sitio; usar `/api/health` para liveness externo.
+
+**WhatsApp API:** `GET /api/v1/health` en `WhatsApiLebytek` es un contrato distinto (Bearer token) — no confundir con el tenant PHP del framework.
+
+---
+
 ## Checklist pre/post deploy por entorno
 
 | Ítem | Local (`php -S … -t public`) | VPS Linux (auto-pull) | Hosting compartido Apache |
