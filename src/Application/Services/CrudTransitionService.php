@@ -97,15 +97,64 @@ final class CrudTransitionService
             throw new \LogicException('CrudTransitionService no está cableado para persistir.');
         }
 
+        $expected = ['deleted' => 0, $column => $from];
+        $payload = [
+            $column => $to,
+            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_by' => $userId,
+        ];
+
         if ($this->hookRunner !== null) {
             $this->hookRunner->run($definition, 'beforeTransition', $ctx);
         }
 
-        $this->repository->updateRecord($definition->table(), $definition->primaryKey(), $id, [
-            $column => $to,
-            'updated_at' => date('Y-m-d H:i:s'),
-            'updated_by' => $userId,
-        ]);
+        $updated = $this->repository->updateRecord(
+            $definition->table(),
+            $definition->primaryKey(),
+            $id,
+            $payload,
+            $expected
+        );
+
+        if ($updated === 0) {
+            $fresh = $this->repository->findById($definition->table(), $definition->primaryKey(), $id);
+            if (!is_array($fresh) || (int) ($fresh['deleted'] ?? 0) === 1) {
+                throw new ValidationException('El registro cambió; recarga e inténtalo de nuevo.');
+            }
+            $fromRetry = (string) ($fresh[$column] ?? '');
+            $ctxRetry = new CrudTransitionContext(
+                $definition->key(),
+                $definition->table(),
+                $definition->primaryKey(),
+                $userId,
+                $ip,
+                $fresh,
+                $column,
+                $fromRetry,
+                $to,
+                []
+            );
+            try {
+                $this->authorize($machine, $action->guard(), $ctxRetry);
+            } catch (ValidationException) {
+                throw new ValidationException('El registro cambió; recarga e inténtalo de nuevo.');
+            }
+            $updated = $this->repository->updateRecord(
+                $definition->table(),
+                $definition->primaryKey(),
+                $id,
+                [
+                    $column => $to,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                    'updated_by' => $userId,
+                ],
+                ['deleted' => 0, $column => $fromRetry]
+            );
+            if ($updated === 0) {
+                throw new ValidationException('El registro cambió; recarga e inténtalo de nuevo.');
+            }
+            $ctx = $ctxRetry;
+        }
 
         $this->bitacoraRepository->registrar(
             $userId,
