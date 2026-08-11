@@ -14,4 +14,9 @@ final class HealthController extends BaseController
     {
         return $this->json(['status' => 'ok', 'timestamp' => date('c')]);
     }
+
+    public function health(Request $request): Response
+    {
+        return $this->json(['status' => 'ok']);
+    }
 }
