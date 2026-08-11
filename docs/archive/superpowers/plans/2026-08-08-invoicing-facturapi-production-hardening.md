@@ -683,8 +683,9 @@ Expected: all PASS after Task 10.
 
 ## Estado de ejecución
 
-- **Reconciled:** 2026-08-10 — Tasks 1–10 completed on PR #112, branch `cursor/invoicing-hardening-p02-p10-896b` (Task 1 originally PR #109, rebased post-#111).
+- **Reconciled:** 2026-08-11 UTC — verificado en `origin/main` @ `23e1dd219d5b2383ac6cbb02ca6681ad01638932`
 - **Completed / total:** 10 / 10
 - **Next executable task:** none / closed
 - **Blockers:** none for Framework hardening closure.
 - **Human ops residual:** configure `FACTURAPI_WEBHOOK_SECRET` and consumer route; assign RBAC roles; programar el barrido `findOrphanClaims` (no hay cron en Framework); `forceReissueOrphanClaim` (A26) es siempre decisión humana con RBAC `invoicing.reconciliar`.
+- **Evidencia:** PR #109 (Task 1), PR #112 (Tasks 2–10); semver tip `1.2.9`/`1.2.10` en cadena posterior; `php tests/run.php Invoicing` verde en CI post-merge.

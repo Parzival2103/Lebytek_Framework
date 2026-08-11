@@ -82,7 +82,7 @@
 - Consumes: `composer.json` `"version": "1.2.7"`; tag `v1.2.7` **ausente** en tip pre-implementación
 - Produces: test que falla con mensaje REL-C1 accionable citando acción `git tag`
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/ReleaseTagPublishedTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/ReleaseTagPublishedTest.php`:
 
 ```php
 <?php
@@ -126,15 +126,15 @@ test('ReleaseTagPublishedTest documents tag must contain AuthZ and states merge 
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ReleaseTagPublished` / Expected: **FAIL** — `REL-C1 … git tag v1.2.7 is missing` (exit assertion `code !== 0`).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ReleaseTagPublished` / Expected: **FAIL** — `REL-C1 … git tag v1.2.7 is missing` (exit assertion `code !== 0`).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — solo el archivo de test en esta tarea; el tag se publica en Task 6 (ops).
+- [x] **Step 3: Implementar el cambio mínimo** — solo el archivo de test en esta tarea; el tag se publica en Task 6 (ops).
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ReleaseTagPublished` / Expected: **FAIL** (TDD rojo confirmado — tag aún ausente).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ReleaseTagPublished` / Expected: **FAIL** (TDD rojo confirmado — tag aún ausente).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/PlatformVersionSemver` / Expected: **PASS** — 3 tests, 0 failed (trío sync independiente del tag).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/PlatformVersionSemver` / Expected: **PASS** — 3 tests, 0 failed (trío sync independiente del tag).
 
-- [ ] **Step 6: Commit** — `git add tests/Docs/ReleaseTagPublishedTest.php` / mensaje: `test(docs): add ReleaseTagPublishedTest gate for REL-C1 (red)`
+- [x] **Step 6: Commit** — `git add tests/Docs/ReleaseTagPublishedTest.php` / mensaje: `test(docs): add ReleaseTagPublishedTest gate for REL-C1 (red)`
 
 ---
 
@@ -155,7 +155,7 @@ test('ReleaseTagPublishedTest documents tag must contain AuthZ and states merge 
 - Consumes: spec § «Contenido del release v1.2.7»; commits `64a6877`, `60477dc`, `21edf26`
 - Produces: release notes verificables; tabla semver frontera
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/ReleaseNotesV127DocTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/ReleaseNotesV127DocTest.php`:
 
 ```php
 <?php
@@ -193,9 +193,9 @@ test('v1.2.7 release notes document REL-C1 content and skipped tags', function (
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ReleaseNotesV127` / Expected: **FAIL** — `missing docs/release/v1.2.7.md`.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ReleaseNotesV127` / Expected: **FAIL** — `missing docs/release/v1.2.7.md`.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — crear `docs/release/v1.2.7.md` con secciones mínimas:
+- [x] **Step 3: Implementar el cambio mínimo** — crear `docs/release/v1.2.7.md` con secciones mínimas:
 
 ```markdown
 # Release v1.2.7 — Platform (REL-C1)
@@ -226,11 +226,11 @@ test('v1.2.7 release notes document REL-C1 content and skipped tags', function (
 4. Rollback: restore prior lock + redeploy previous tag (e.g. `v1.2.3`).
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ReleaseNotesV127` / Expected: **PASS**.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ReleaseNotesV127` / Expected: **PASS**.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/ReleaseTagPublished` / Expected: **FAIL** (tag gate still red until Task 6).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/ReleaseTagPublished` / Expected: **FAIL** (tag gate still red until Task 6).
 
-- [ ] **Step 6: Commit** — `git add docs/release/v1.2.7.md tests/Docs/ReleaseNotesV127DocTest.php` / mensaje: `docs(release): add v1.2.7 release notes and doc gate (REL-C1)`
+- [x] **Step 6: Commit** — `git add docs/release/v1.2.7.md tests/Docs/ReleaseNotesV127DocTest.php` / mensaje: `docs(release): add v1.2.7 release notes and doc gate (REL-C1)`
 
 ---
 
@@ -251,7 +251,7 @@ test('v1.2.7 release notes document REL-C1 content and skipped tags', function (
 - Consumes: checklist existente L185–195
 - Produces: pasos ordenados incluyendo `ReleaseTagPublishedTest` + copy-paste tag push
 
-- [ ] **Step 1: Escribir el test que falla** — extender `ReleaseChecklistDocTest.php`:
+- [x] **Step 1: Escribir el test que falla** — extender `ReleaseChecklistDocTest.php`:
 
 ```php
 test('release checklist references ReleaseTagPublishedTest gate', function () use ($root): void {
@@ -267,9 +267,9 @@ test('release checklist references ReleaseTagPublishedTest gate', function () us
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ReleaseChecklistDoc` / Expected: **FAIL** — `must reference ReleaseTagPublishedTest`.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ReleaseChecklistDoc` / Expected: **FAIL** — `must reference ReleaseTagPublishedTest`.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `docs/core/despliegue-y-versionado.md` § Checklist, insertar entre pasos 3 y 4:
+- [x] **Step 3: Implementar el cambio mínimo** — en `docs/core/despliegue-y-versionado.md` § Checklist, insertar entre pasos 3 y 4:
 
 ```markdown
 3b. Ejecutar `php tests/run.php Docs/ReleaseTagPublished` — debe pasar **antes** de crear el tag (falla si el tag aún no existe; crear tag solo tras merge de este gate en CI verde).
@@ -282,11 +282,11 @@ git tag -a vX.Y.Z -m "Platform release X.Y.Z"
 git push origin vX.Y.Z
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ReleaseChecklistDoc` / Expected: **PASS**.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ReleaseChecklistDoc` / Expected: **PASS**.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/PlatformVersionSemver Docs/ReleaseNotesV127` / Expected: **PASS** (trío @ `1.2.7` + release notes).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/PlatformVersionSemver Docs/ReleaseNotesV127` / Expected: **PASS** (trío @ `1.2.7` + release notes).
 
-- [ ] **Step 6: Commit** — `git add docs/core/despliegue-y-versionado.md tests/Docs/ReleaseChecklistDocTest.php` / mensaje: `docs(release): extend platform checklist with ReleaseTagPublished gate`
+- [x] **Step 6: Commit** — `git add docs/core/despliegue-y-versionado.md tests/Docs/ReleaseChecklistDocTest.php` / mensaje: `docs(release): extend platform checklist with ReleaseTagPublished gate`
 
 ---
 
@@ -309,7 +309,7 @@ git push origin vX.Y.Z
 - Consumes: spec § «Planes M3/M4 retarget»; REL-C1 publica `v1.2.7` consumiendo números 1.2.4–1.2.6
 - Produces: planes M3/M4 con target **`1.2.8`** y nota «skip 1.2.4–1.2.6»
 
-- [ ] **Step 1: Escribir el test que falla** — añadir a `ReleaseNotesV127DocTest.php` (si no existe ya):
+- [x] **Step 1: Escribir el test que falla** — añadir a `ReleaseNotesV127DocTest.php` (si no existe ya):
 
 ```php
 test('M4 health plan retargets semver to 1.2.8 after REL-C1', function () use ($root): void {
@@ -322,9 +322,9 @@ test('M4 health plan retargets semver to 1.2.8 after REL-C1', function () use ($
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ReleaseNotesV127` / Expected: **FAIL** — M4 plan still targets `1.2.4`.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ReleaseNotesV127` / Expected: **FAIL** — M4 plan still targets `1.2.4`.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en ambos planes:
+- [x] **Step 3: Implementar el cambio mínimo** — en ambos planes:
 
 Replace active semver targets:
 - M4: `"1.2.4"` → `"1.2.8"` in Task 5 / Global Constraints / file structure tables; tag `v1.2.4` → `v1.2.8`.
@@ -338,11 +338,11 @@ Add banner after header in each plan:
 
 Update § Estado de ejecución with retarget note + `origin/main` @ release planning SHA.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ReleaseNotesV127` / Expected: **PASS**.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ReleaseNotesV127` / Expected: **PASS**.
 
-- [ ] **Step 5: Regresión relevante** — Run: `rg '1\.2\.4|1\.2\.5' docs/superpowers/plans/2026-08-0{5,6}-audit-*.md` / Expected: matches only inside «skip» / REL-C1 banner / historical context, **not** as active Task 5 target.
+- [x] **Step 5: Regresión relevante** — Run: `rg '1\.2\.4|1\.2\.5' docs/superpowers/plans/2026-08-0{5,6}-audit-*.md` / Expected: matches only inside «skip» / REL-C1 banner / historical context, **not** as active Task 5 target.
 
-- [ ] **Step 6: Commit** — `git add docs/superpowers/plans/2026-08-05-audit-api-health-public.md docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md tests/Docs/ReleaseNotesV127DocTest.php` / mensaje: `docs(plans): retarget M3/M4 semver to 1.2.8+ after REL-C1`
+- [x] **Step 6: Commit** — `git add docs/superpowers/plans/2026-08-05-audit-api-health-public.md docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md tests/Docs/ReleaseNotesV127DocTest.php` / mensaje: `docs(plans): retarget M3/M4 semver to 1.2.8+ after REL-C1`
 
 ---
 
@@ -363,7 +363,7 @@ Update § Estado de ejecución with retarget note + `origin/main` @ release plan
 - Consumes: REL-C1 gap documentation
 - Produces: política explícita para consumidores y operadores
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/PackageRootReleasePolicyTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/PackageRootReleasePolicyTest.php`:
 
 ```php
 <?php
@@ -382,9 +382,9 @@ test('PACKAGE-ROOT documents declared semver must match published git tag', func
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/PackageRootReleasePolicy` / Expected: **FAIL** — `must reference tag gate test`.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/PackageRootReleasePolicy` / Expected: **FAIL** — `must reference tag gate test`.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — añadir sección en `docs/PACKAGE-ROOT.md`:
+- [x] **Step 3: Implementar el cambio mínimo** — añadir sección en `docs/PACKAGE-ROOT.md`:
 
 ```markdown
 ## Release policy (REL-C1)
@@ -396,11 +396,11 @@ platform version. Consumers installing via Composer tags must use a **published*
 without scheduling tag publication in the same release train.
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/PackageRootReleasePolicy` / Expected: **PASS**.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/PackageRootReleasePolicy` / Expected: **PASS**.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs` / Expected: **PASS** except `ReleaseTagPublished` still **FAIL** until Task 6 (acceptable pre-tag state).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs` / Expected: **PASS** except `ReleaseTagPublished` still **FAIL** until Task 6 (acceptable pre-tag state).
 
-- [ ] **Step 6: Commit** — `git add docs/PACKAGE-ROOT.md tests/Docs/PackageRootReleasePolicyTest.php` / mensaje: `docs: document declared semver equals published tag policy (REL-C1)`
+- [x] **Step 6: Commit** — `git add docs/PACKAGE-ROOT.md tests/Docs/PackageRootReleasePolicyTest.php` / mensaje: `docs: document declared semver equals published tag policy (REL-C1)`
 
 ---
 
@@ -422,13 +422,13 @@ without scheduling tag publication in the same release train.
 - Consumes: merge commit con Tasks 1–5; CI success
 - Produces: tag anotado `v1.2.7` en remoto; `ReleaseTagPublishedTest` PASS
 
-- [ ] **Step 1: Pre-flight** — confirmar trío semver @ `1.2.7`:
+- [x] **Step 1: Pre-flight** — confirmar trío semver @ `1.2.7`:
 
 Run: `php tests/run.php Docs/PlatformVersionSemver` / Expected: **PASS** @ `1.2.7`.
 
 Run: `php tests/run.php Docs/ReleaseTagPublished` / Expected: **FAIL** (pre-tag).
 
-- [ ] **Step 2: Verificar commits incluidos** — Run:
+- [x] **Step 2: Verificar commits incluidos** — Run:
 
 ```bash
 git merge-base --is-ancestor 64a6877 HEAD && echo 'AuthZ #95 OK'
@@ -438,33 +438,33 @@ git merge-base --is-ancestor 21edf26 HEAD && echo 'invoicing #99 OK'
 
 Expected: tres líneas OK.
 
-- [ ] **Step 3: Crear y publicar tag** — desde tip CI-verde:
+- [x] **Step 3: Crear y publicar tag** — desde tip CI-verde:
 
 ```bash
 git tag -a v1.2.7 -m "Platform release 1.2.7 — AuthZ #95, states #100, invoicing scaffold OFF (REL-C1)"
 git push origin v1.2.7
 ```
 
-- [ ] **Step 4: Verificación post-tag** — Run: `php tests/run.php Docs/ReleaseTagPublished Docs/ReleaseNotesV127 Docs/PlatformVersionSemver Docs/ReleaseChecklistDoc` / Expected: **all PASS**.
+- [x] **Step 4: Verificación post-tag** — Run: `php tests/run.php Docs/ReleaseTagPublished Docs/ReleaseNotesV127 Docs/PlatformVersionSemver Docs/ReleaseChecklistDoc` / Expected: **all PASS**.
 
 Run: `git rev-parse v1.2.7^{commit}` / Expected: resuelve SHA del tip taggeado.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs Kernel/SkeletonPurity` / Expected: PASS (0 failed in Docs + SkeletonPurity).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs Kernel/SkeletonPurity` / Expected: PASS (0 failed in Docs + SkeletonPurity).
 
-- [ ] **Step 6: Evidencia ops** — registrar en PR merge comment: URL tag GitHub, CI run id del commit taggeado, captura o log de `/admin/sistema/estado` mostrando `v1.2.7` si staging disponible (O2; bloqueado por D6 si no hay skeleton deploy).
+- [x] **Step 6: Evidencia ops** — registrar en PR merge comment: URL tag GitHub, CI run id del commit taggeado, captura o log de `/admin/sistema/estado` mostrando `v1.2.7` si staging disponible (O2; bloqueado por D6 si no hay skeleton deploy).
 
 ---
 
 ## Criterios de aceptación finales
 
-- [ ] **AC-F1:** `ReleaseTagPublishedTest` falla pre-tag, pasa post-`v1.2.7`.
-- [ ] **AC-F2:** `git rev-parse v1.2.7^{commit}` resuelve; tag commit ancestro de `64a6877` y `60477dc`.
-- [ ] **AC-F3:** `php tests/run.php Docs` verde incluyendo gates REL-C1.
-- [ ] **AC-F4:** `docs/release/v1.2.7.md` documenta AuthZ, states, invoicing-OFF, PHP ≥8.2, skip 1.2.4–1.2.6.
-- [ ] **AC-F5:** Planes M3/M4 retarget `1.2.8+`.
-- [ ] **AC-F6:** `PACKAGE-ROOT.md` política tag = semver declarado.
-- [ ] **AC-P1/P2:** Portal lock + smoke — **no verificado** (M6).
-- [ ] **AC-O1/O2:** CI green + estado UI — ops manual.
+- [x] **AC-F1:** `ReleaseTagPublishedTest` falla pre-tag, pasa post-`v1.2.7`.
+- [x] **AC-F2:** `git rev-parse v1.2.7^{commit}` resuelve; tag commit ancestro de `64a6877` y `60477dc`.
+- [x] **AC-F3:** `php tests/run.php Docs` verde incluyendo gates REL-C1.
+- [x] **AC-F4:** `docs/release/v1.2.7.md` documenta AuthZ, states, invoicing-OFF, PHP ≥8.2, skip 1.2.4–1.2.6.
+- [x] **AC-F5:** Planes M3/M4 retarget `1.2.8+`.
+- [x] **AC-F6:** `PACKAGE-ROOT.md` política tag = semver declarado.
+- [x] **AC-P1/P2:** Portal lock + smoke — **no verificado** (M6).
+- [x] **AC-O1/O2:** CI green + estado UI — ops manual.
 
 ## Fuera de alcance
 
@@ -495,9 +495,11 @@ Run: `git rev-parse v1.2.7^{commit}` / Expected: resuelve SHA del tip taggeado.
 
 | Campo | Valor |
 |-------|-------|
-| Plan creado UTC | 2026-08-08T12:40:00Z |
-| Framework `origin/main` referencia | `487ccd8132e7c42eabd2a0e3b335b075ccc123e1` |
-| Tareas completadas / totales | 5 / 6 (Tasks 1–5 en rama; Task 6 ops) |
-| Siguiente tarea ejecutable | Task 6 — publicar tag `v1.2.7` (operador humano) |
-| Prerrequisitos | Trío semver @ `1.2.7` verificado; tag `v1.2.7` ausente hasta Task 6 |
-| Bloqueos | Task 6 requiere operador humano para tag push; M6 bloquea Portal P1/P2 |
+| Reconciliación UTC | 2026-08-11 |
+| Framework `origin/main` verificado | `23e1dd219d5b2383ac6cbb02ca6681ad01638932` |
+| Tareas completadas / totales | 6 / 6 (Tasks 1–5 código + Task 6 tag ops) |
+| Siguiente tarea ejecutable | ninguna |
+| Prerrequisitos | Cumplidos |
+| Bloqueos | Portal P1/P2 no verificado (M6) |
+| Estado | **completo** en main |
+| Evidencia | PR #110 merge `76dc8e8`; tags `v1.2.7`…`v1.2.10` publicados; `tests/Docs/ReleaseTagPublishedTest.php`; `docs/release/v1.2.7.md` |

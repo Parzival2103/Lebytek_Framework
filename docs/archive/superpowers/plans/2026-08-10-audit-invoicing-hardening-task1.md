@@ -182,10 +182,9 @@ test('InvoicingFactory buildProviders rechaza mismatch mode/key al instanciar', 
 
 | Campo | Valor |
 |-------|-------|
-| Plan creado UTC | 2026-08-10 |
-| Framework `origin/main` referencia | `487ccd8132e7c42eabd2a0e3b335b075ccc123e1` |
+| Reconciliación UTC | 2026-08-11 |
+| Framework `origin/main` verificado | `23e1dd219d5b2383ac6cbb02ca6681ad01638932` |
 | Tareas completadas / totales | 1 / 1 |
-| Siguiente tarea ejecutable | — (cerrado; continuar plan padre Task 2+) |
-| Prerrequisitos | PHP ≥8.2, `composer install` |
-| Bloqueos | Ninguno |
-| Estado | Completado en PR #109 |
+| Siguiente tarea ejecutable | — (cerrado; ver plan padre Tasks 2–10 en PR #112) |
+| Estado | **completo** — superseded by plan padre cierre |
+| Evidencia | PR #109 merge; verificado en main vía PR #112 cadena |
