@@ -18,9 +18,24 @@ function fakeInvoiceProvider(string $key): InvoiceProviderInterface
             return $this->k;
         }
 
-        public function createInvoice(InvoiceDraft $draft): IssuedInvoice
+        public function createInvoice(InvoiceDraft $draft, string $idempotencyKey = ''): IssuedInvoice
         {
             return new IssuedInvoice('inv_x', 'uuid_x', InvoiceStatus::Valid);
+        }
+
+        public function externalIdForIssue(string $idempotencyKey): string
+        {
+            return 'fake-external:' . $idempotencyKey;
+        }
+
+        public function retrieveInvoice(string $providerInvoiceId): IssuedInvoice
+        {
+            return new IssuedInvoice($providerInvoiceId, 'uuid_x', InvoiceStatus::Valid);
+        }
+
+        public function listByExternalId(string $externalId): array
+        {
+            return [];
         }
 
         public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice

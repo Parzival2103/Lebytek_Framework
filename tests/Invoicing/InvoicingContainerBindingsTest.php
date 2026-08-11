@@ -15,6 +15,7 @@ test('root container gates invoicing bindings and keeps issue source conditional
     assert_true(str_contains($src, \Lebytek\Framework\Application\Invoicing\DownloadInvoiceDocument::class), 'container must bind download use case');
     assert_true(str_contains($src, \Lebytek\Framework\Application\Invoicing\SendInvoiceByEmail::class), 'container must bind send use case');
     assert_true(str_contains($src, \Lebytek\Framework\Application\Invoicing\ReconcileIssuedInvoice::class), 'container must bind reconcile use case');
+    assert_true(str_contains($src, \Lebytek\Framework\Application\Invoicing\ApplyInvoiceProviderEvent::class), 'container must bind webhook apply use case');
     assert_true(str_contains($src, \Lebytek\Framework\Application\Invoicing\SyncOrganizationSettingsFromConfig::class), 'container must sync organization settings');
     assert_true(str_contains($src, '$container->has(\\Lebytek\\Framework\\Domain\\Invoicing\\InvoiceableSourceInterface::class)'), 'IssueInvoiceFromSource must be conditional on consumer source binding');
     assert_true(str_contains($src, 'InvoicingFactory::makeIssueInvoiceFromSource'), 'IssueInvoiceFromSource must use factory helper');
@@ -32,6 +33,7 @@ test('skeleton container ships same gated invoicing contract with issue source c
     assert_true(str_contains($src, \Lebytek\Framework\Infrastructure\Invoicing\PdoOrganizationSettingsRepository::class), 'skeleton must bind PDO organization settings');
     assert_true(str_contains($src, \Lebytek\Framework\Application\Invoicing\InvoiceDraftValidator::class), 'skeleton must bind invoice validator');
     assert_true(str_contains($src, \Lebytek\Framework\Application\Invoicing\ReconcileIssuedInvoice::class), 'skeleton must bind reconcile use case');
+    assert_true(str_contains($src, \Lebytek\Framework\Application\Invoicing\ApplyInvoiceProviderEvent::class), 'skeleton must bind webhook apply use case');
     assert_true(str_contains($src, '$container->has(\\Lebytek\\Framework\\Domain\\Invoicing\\InvoiceableSourceInterface::class)'), 'skeleton IssueInvoiceFromSource must be conditional');
     assert_true(str_contains($src, 'InvoicingFactory::makeIssueInvoiceFromSource'), 'skeleton IssueInvoiceFromSource must use factory helper');
     assert_true(!str_contains($src, 'NullInvoiceableSource'), 'skeleton must not ship a null invoice source');

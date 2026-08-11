@@ -1,5 +1,7 @@
 {
   "type": "I",
+  "idempotency_key": "idem:iva16",
+  "external_id": "lebytek:invoice:9f4da178000b52ce9879d50442159cedd3917808",
   "customer": {
     "legal_name": "ACME SA DE CV",
     "tax_id": "ACM010101ABC",
@@ -32,6 +34,7 @@
     }
   ],
   "payment_form": "03",
+  "payment_method": "PUE",
   "use": "G03",
   "currency": "MXN"
 }

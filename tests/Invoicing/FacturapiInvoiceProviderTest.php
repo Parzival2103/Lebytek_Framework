@@ -59,13 +59,22 @@ function make_facturapi_fake_provider(): array
         public array $cancelCalls = [];
         /** @var array<int, array{id: string, email: string}> */
         public array $emailCalls = [];
+        /** @var list<string> */
+        public array $retrieveCalls = [];
+        /** @var list<string> */
+        public array $listByExternalIdCalls = [];
+        /** @var array<string, array<string, mixed>> */
+        public array $retrieveResponses = [];
+        /** @var array<string, array<int, array<string, mixed>>> */
+        public array $listResponses = [];
         public bool $throwOnCreate = false;
+        public string $throwOnCreateMessage = 'Facturapi rejected request for sk_test_SECRET';
 
         /** @param array<string, mixed> $payload */
         public function create(array $payload): array
         {
             if ($this->throwOnCreate) {
-                throw new RuntimeException('Facturapi rejected request for sk_test_SECRET');
+                throw new RuntimeException($this->throwOnCreateMessage);
             }
 
             $this->createdPayloads[] = $payload;
@@ -78,6 +87,25 @@ function make_facturapi_fake_provider(): array
                 'pdf_url' => 'https://example.test/invoice.pdf',
                 'xml_url' => 'https://example.test/invoice.xml',
             ];
+        }
+
+        public function retrieve(string $providerInvoiceId): array
+        {
+            $this->retrieveCalls[] = $providerInvoiceId;
+
+            return $this->retrieveResponses[$providerInvoiceId] ?? [
+                'id' => $providerInvoiceId,
+                'uuid' => '39c85a3f-275b-4341-b259-e8971d9f8a94',
+                'status' => 'valid',
+                'folio_number' => 914,
+            ];
+        }
+
+        public function listByExternalId(string $externalId): array
+        {
+            $this->listByExternalIdCalls[] = $externalId;
+
+            return $this->listResponses[$externalId] ?? [];
         }
 
         /** @param array<string, mixed> $payload */
@@ -173,10 +201,19 @@ test('FacturapiInvoiceProvider expone key facturapi', function (): void {
     assert_same('facturapi', $provider->key());
 });
 
+test('FacturapiInvoiceProvider externalIdForIssue usa algoritmo A23', function (): void {
+    [$provider] = make_facturapi_fake_provider();
+
+    assert_same(
+        'lebytek:invoice:' . substr(hash('sha256', "facturapi\x1fidem:iva16"), 0, 40),
+        $provider->externalIdForIssue('idem:iva16'),
+    );
+});
+
 test('FacturapiInvoiceProvider mapea IVA 16 a payload golden y convierte Money a precio mayor', function (): void {
     [$provider, $transport] = make_facturapi_fake_provider();
 
-    $issued = $provider->createInvoice(facturapi_iva16_draft());
+    $issued = $provider->createInvoice(facturapi_iva16_draft(), 'idem:iva16');
 
     assert_same('fact_inv_123', $issued->providerInvoiceId());
     assert_same('39c85a3f-275b-4341-b259-e8971d9f8a94', $issued->uuid());
@@ -189,7 +226,7 @@ test('FacturapiInvoiceProvider mapea IVA 16 a payload golden y convierte Money a
 test('FacturapiInvoiceProvider mapea taxExempt a IVA Exento en payload golden', function (): void {
     [$provider, $transport] = make_facturapi_fake_provider();
 
-    $provider->createInvoice(facturapi_exento_draft());
+    $provider->createInvoice(facturapi_exento_draft(), 'idem:exento');
 
     assert_facturapi_payload(facturapi_fixture('facturapi_payload_exento'), $transport->createdPayloads[0] ?? null);
 });
@@ -221,6 +258,75 @@ test('FacturapiInvoiceProvider envuelve errores del transporte sin filtrar secre
     } catch (InvoiceProviderException $exception) {
         assert_true(str_contains($exception->getMessage(), 'Facturapi create invoice failed'));
         assert_no_secret_leak($exception, ['sk_test', 'SECRET']);
+        return;
+    }
+
+    throw new RuntimeException('expected InvoiceProviderException');
+});
+
+test('FacturapiInvoiceProvider redacta sk_user en la cadena de excepciones', function (): void {
+    [$provider, $transport] = make_facturapi_fake_provider();
+    $transport->throwOnCreate = true;
+    $transport->throwOnCreateMessage = 'Facturapi rejected request for sk_user_ABC123';
+
+    try {
+        $provider->createInvoice(facturapi_iva16_draft());
+    } catch (InvoiceProviderException $exception) {
+        assert_no_secret_leak($exception, ['sk_user_ABC123', 'ABC123']);
+        return;
+    }
+
+    throw new RuntimeException('expected InvoiceProviderException');
+});
+
+test('FacturapiInvoiceProvider retrieveInvoice mapea la respuesta remota via mapIssuedInvoice', function (): void {
+    [$provider, $transport] = make_facturapi_fake_provider();
+    $transport->retrieveResponses['fact_inv_123'] = [
+        'id' => 'fact_inv_123',
+        'uuid' => '39c85a3f-275b-4341-b259-e8971d9f8a94',
+        'status' => 'pending',
+        'folio_number' => 914,
+    ];
+
+    $retrieved = $provider->retrieveInvoice('fact_inv_123');
+
+    assert_same(['fact_inv_123'], $transport->retrieveCalls);
+    assert_same('fact_inv_123', $retrieved->providerInvoiceId());
+    assert_same(InvoiceStatus::Pending, $retrieved->status(), 'retrieve must preserve provider pending status (A16)');
+    assert_same('pending', $retrieved->meta()['provider_status'] ?? null);
+});
+
+test('FacturapiInvoiceProvider listByExternalId mapea 0, 1 y N resultados', function (): void {
+    [$provider, $transport] = make_facturapi_fake_provider();
+
+    assert_same([], $provider->listByExternalId('lebytek:invoice:none'));
+
+    $transport->listResponses['lebytek:invoice:one'] = [
+        ['id' => 'fact_inv_one', 'uuid' => 'uuid-one', 'status' => 'valid'],
+    ];
+    $one = $provider->listByExternalId('lebytek:invoice:one');
+    assert_same(1, count($one));
+    assert_same('fact_inv_one', $one[0]->providerInvoiceId());
+
+    $transport->listResponses['lebytek:invoice:many'] = [
+        ['id' => 'fact_inv_a', 'uuid' => 'uuid-a', 'status' => 'valid'],
+        ['id' => 'fact_inv_b', 'uuid' => 'uuid-b', 'status' => 'canceled'],
+    ];
+    $many = $provider->listByExternalId('lebytek:invoice:many');
+    assert_same(2, count($many));
+    assert_same(['fact_inv_a', 'fact_inv_b'], array_map(fn ($i) => $i->providerInvoiceId(), $many));
+    assert_same(['lebytek:invoice:none', 'lebytek:invoice:one', 'lebytek:invoice:many'], $transport->listByExternalIdCalls);
+});
+
+test('FacturapiInvoiceProvider redacta Bearer en la cadena de excepciones', function (): void {
+    [$provider, $transport] = make_facturapi_fake_provider();
+    $transport->throwOnCreate = true;
+    $transport->throwOnCreateMessage = 'Unauthorized Bearer eyJhbGciOiJIUzI1NiJ9.payload.signature';
+
+    try {
+        $provider->createInvoice(facturapi_iva16_draft());
+    } catch (InvoiceProviderException $exception) {
+        assert_no_secret_leak($exception, ['Bearer eyJhbGciOiJIUzI1NiJ9', 'eyJhbGciOiJIUzI1NiJ9']);
         return;
     }
 

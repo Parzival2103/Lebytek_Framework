@@ -24,6 +24,7 @@
 | Checkout, orders, memberships, Stripe business rules | **Portal** | `App\Application\Marketing\`, `*mkt*` SQL |
 | Invoicing generic (Facturapi provider, CFDI I ports, `inv_*` ledger, reconcile) | **Framework** | `Lebytek\Framework\Domain\Invoicing\`, toggled OFF by default |
 | Invoice source data, fiscal CRM, invoice timing and domain UI | **Consumer** | `App\` implements `InvoiceableSourceInterface`; business SQL stays in `dom_*` |
+| Invoicing HTTP routes, RBAC checks and Facturapi webhook endpoint | **Consumer** | Routes call Framework use cases/provider; webhook uses `FacturapiInvoiceProvider::parseWebhook` and no fiscal payload logs |
 
 ## Release compatibility notes
 

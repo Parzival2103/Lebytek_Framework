@@ -271,11 +271,11 @@ Consumer webhook
 
 **Do not:** change claim/issue semantics; do not log payloads.
 
-- [ ] **Step 1: Failing tests** for redact + denylist.
-- [ ] **Step 2: Run** — FAIL.
-- [ ] **Step 3: Implement** sanitize + encodeMeta scrubbing (shared private trait/helper under Infrastructure\Invoicing OK).
-- [ ] **Step 4: Run** Invoicing provider + meta tests — PASS.
-- [ ] **Step 5: Commit** `fix(invoicing): redact sk_user/Bearer and denylist secret meta keys`
+- [x] **Step 1: Failing tests** for redact + denylist.
+- [x] **Step 2: Run** — FAIL.
+- [x] **Step 3: Implement** sanitize + encodeMeta scrubbing (shared private trait/helper under Infrastructure\Invoicing OK).
+- [x] **Step 4: Run** Invoicing provider + meta tests — PASS.
+- [x] **Step 5: Commit** `fix(invoicing): redact sk_user/Bearer and denylist secret meta keys`
 
 **Done when:** Regression tests green; no secret substrings in thrown previous messages or encoded meta fixtures.
 
@@ -322,11 +322,11 @@ replay same key while claimed-without-id → InvoiceAlreadyProcessed / Ambiguous
 
 **Do not:** implement retrieve/list yet (Task 5); do not change cancel; do not truncate `sourceRef` into `external_id`; do **not** add a `fromSourceRef` encoder.
 
-- [ ] **Step 1: Failing test** — fake provider throws after “create attempted” flag; assert `releaseCalls === 0`, second handle `createCalls` still 1; fixture asserts `idempotency_key` + A23 `external_id`; **el mismo `sourceRef` emitido con dos `idempotencyKey` distintas produce dos `external_id` distintos**; `tryClaim` recibe `meta.external_id`.
-- [ ] **Step 2: Run** `php tests/run.php Invoicing/IssueInvoiceFromSource` — FAIL.
-- [ ] **Step 3: Implement** A11/A12/A23 encoder + port method + mapDraft fields + claim meta.
-- [ ] **Step 4: Run** Issue + Facturapi provider + ports — PASS.
-- [ ] **Step 5: Commit** `fix(invoicing): keep claim on ambiguous create and send Facturapi idempotency_key`
+- [x] **Step 1: Failing test** — fake provider throws after “create attempted” flag; assert `releaseCalls === 0`, second handle `createCalls` still 1; fixture asserts `idempotency_key` + A23 `external_id`; **el mismo `sourceRef` emitido con dos `idempotencyKey` distintas produce dos `external_id` distintos**; `tryClaim` recibe `meta.external_id`.
+- [x] **Step 2: Run** `php tests/run.php Invoicing/IssueInvoiceFromSource` — FAIL.
+- [x] **Step 3: Implement** A11/A12/A23 encoder + port method + mapDraft fields + claim meta.
+- [x] **Step 4: Run** Issue + Facturapi provider + ports — PASS.
+- [x] **Step 5: Commit** `fix(invoicing): keep claim on ambiguous create and send Facturapi idempotency_key`
 
 **Done when:** Audit test (1) green: timeout post-create does not release; no second create; `external_id` is A23-stable per attempt, ≤100, y ya presente en `meta.external_id` del claim.
 
@@ -357,11 +357,11 @@ replay same key while claimed-without-id → InvoiceAlreadyProcessed / Ambiguous
 
 **Do not:** call retrieve yet; do not promote in Issue.
 
-- [ ] **Step 1: Failing tests** — dual mark failure exposes typed id; attach writes id into ledger (InMemory).
-- [ ] **Step 2: Run** — FAIL.
-- [ ] **Step 3: Implement**.
-- [ ] **Step 4: Run** Issue + contract — PASS.
-- [ ] **Step 5: Commit** `fix(invoicing): typed InvoiceNeedsReconcile and last-resort provider id attach`
+- [x] **Step 1: Failing tests** — dual mark failure exposes typed id; attach writes id into ledger (InMemory).
+- [x] **Step 2: Run** — FAIL.
+- [x] **Step 3: Implement**.
+- [x] **Step 4: Run** Issue + contract — PASS.
+- [x] **Step 5: Commit** `fix(invoicing): typed InvoiceNeedsReconcile and last-resort provider id attach`
 
 **Done when:** Audit test (2) green.
 
@@ -429,11 +429,11 @@ handle() NEVER calls createInvoice
 
 **Do not:** webhook HTTP; do not full SAT catalog; do not treat `listByExternalId` as optional residual; do **not** branch reconcile on `IssuedInvoice::status()`; do **not** llamar `findByIdempotencyKey` para leer huérfanos.
 
-- [ ] **Step 1: Failing tests** — retrieve mapping; pending survive markIssued+find **y reconcile de remoto `pending` deja ledger `issued` + `provider_status=pending`**; reconcile calls retrieve (spy); canceled remote does not become Valid; `findClaimByIdempotencyKey` devuelve la fila **sin** `provider_invoice_id`; orphan claimed-without-id: list 1 → attach + no create; list 0 → AmbiguousCreate keep claim; list >1 → fail-closed; claim **fresco** → “too fresh” sin llamar a list; attach con id ajeno preexistente → re-lee y devuelve (no lanza); `mark()` preserva `meta.external_id`; `forceReissueOrphanClaim` rechaza si edad < umbral o si list > 0.
-- [ ] **Step 2: Run** — FAIL.
-- [ ] **Step 3: Implement**.
-- [ ] **Step 4: Run** Invoicing reconcile/provider/contract — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): retrieve invoices, listByExternalId orphan recovery, reconcile against remote`
+- [x] **Step 1: Failing tests** — retrieve mapping; pending survive markIssued+find **y reconcile de remoto `pending` deja ledger `issued` + `provider_status=pending`**; reconcile calls retrieve (spy); canceled remote does not become Valid; `findClaimByIdempotencyKey` devuelve la fila **sin** `provider_invoice_id`; orphan claimed-without-id: list 1 → attach + no create; list 0 → AmbiguousCreate keep claim; list >1 → fail-closed; claim **fresco** → “too fresh” sin llamar a list; attach con id ajeno preexistente → re-lee y devuelve (no lanza); `mark()` preserva `meta.external_id`; `forceReissueOrphanClaim` rechaza si edad < umbral o si list > 0.
+- [x] **Step 2: Run** — FAIL.
+- [x] **Step 3: Implement**.
+- [x] **Step 4: Run** Invoicing reconcile/provider/contract — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): retrieve invoices, listByExternalId orphan recovery, reconcile against remote`
 
 **Done when:** Audit tests (2 continuity) + (3) green; A22 orphan path green sobre el read model A24; `handle()` never creates; `forceReissueOrphanClaim` cubierto y fail-closed en sus 3 precondiciones.
 
@@ -478,11 +478,11 @@ else:
 
 **Do not:** Portal UI; cancellation receipt download.
 
-- [ ] **Step 1: Failing tests** — claim order (spy: claim before cancel); issue row status canceled; replay no second remote; motive 01 requires substitution; invalid motive rejected.
-- [ ] **Step 2: Run** — FAIL.
-- [ ] **Step 3: Implement**.
-- [ ] **Step 4: Run** scaffold + contract — PASS.
-- [ ] **Step 5: Commit** `fix(invoicing): claim-before cancel, markCanceled, and SAT motive rules`
+- [x] **Step 1: Failing tests** — claim order (spy: claim before cancel); issue row status canceled; replay no second remote; motive 01 requires substitution; invalid motive rejected.
+- [x] **Step 2: Run** — FAIL.
+- [x] **Step 3: Implement**.
+- [x] **Step 4: Run** scaffold + contract — PASS.
+- [x] **Step 5: Commit** `fix(invoicing): claim-before cancel, markCanceled, and SAT motive rules`
 
 **Done when:** Audit tests (4)(5)(6) green.
 
@@ -508,11 +508,11 @@ else:
 
 **Do not:** download catálogos SAT; do not add régimen whitelist beyond 3-digit shape.
 
-- [ ] **Step 1: Failing validator + golden payload tests**.
-- [ ] **Step 2: Run** — FAIL.
-- [ ] **Step 3: Implement** VO/enum/validator/mapper/fixtures.
-- [ ] **Step 4: Run** Invoicing validator/provider — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): validate tax_system/unit_key/payment_method for CFDI I`
+- [x] **Step 1: Failing validator + golden payload tests**.
+- [x] **Step 2: Run** — FAIL.
+- [x] **Step 3: Implement** VO/enum/validator/mapper/fixtures.
+- [x] **Step 4: Run** Invoicing validator/provider — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): validate tax_system/unit_key/payment_method for CFDI I`
 
 **Done when:** Extra CFDI checks green; catalog still out of scope (documented).
 
@@ -545,11 +545,11 @@ else:
 
 **Do not:** invent menu UI; do not Portal controllers.
 
-- [ ] **Step 1: Failing config/schema/docs assertions** for slugs presence.
-- [ ] **Step 2: Run** — FAIL.
-- [ ] **Step 3: Implement** manifest + SQL inserts.
-- [ ] **Step 4: Run** config/schema tests + SkeletonPurity — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): define RBAC permission slugs in manifest and SQL`
+- [x] **Step 1: Failing config/schema/docs assertions** for slugs presence.
+- [x] **Step 2: Run** — FAIL.
+- [x] **Step 3: Implement** manifest + SQL inserts.
+- [x] **Step 4: Run** config/schema tests + SkeletonPurity — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): define RBAC permission slugs in manifest and SQL`
 
 **Done when:** Slugs exist in manifest+SQL; tests lock them.
 
@@ -592,11 +592,11 @@ never log raw body / customer / items
 
 **Do not:** add Framework public controller; do not store full fiscal JSON in `inv_events.meta`.
 
-- [ ] **Step 1: Failing tests** for signature + apply idempotency + meta safety.
-- [ ] **Step 2: Run** — FAIL.
-- [ ] **Step 3: Implement** validator + parse + Apply UC + config.
-- [ ] **Step 4: Run** new webhook tests + Invoicing subset — PASS.
-- [ ] **Step 5: Commit** `feat(invoicing): Facturapi webhook signature validation and apply-event use case`
+- [x] **Step 1: Failing tests** for signature + apply idempotency + meta safety.
+- [x] **Step 2: Run** — FAIL.
+- [x] **Step 3: Implement** validator + parse + Apply UC + config.
+- [x] **Step 4: Run** new webhook tests + Invoicing subset — PASS.
+- [x] **Step 5: Commit** `feat(invoicing): Facturapi webhook signature validation and apply-event use case`
 
 **Done when:** Audit point 7 covered at Framework layer; consumer HTTP remains documented-only.
 
@@ -632,11 +632,11 @@ never log raw body / customer / items
 
 **Do not:** Portal pages; do not enable vertical in harness.
 
-- [ ] **Step 1: Failing docs tests** for key phrases.
-- [ ] **Step 2: Run** — FAIL.
-- [ ] **Step 3: Write docs + pointers**.
-- [ ] **Step 4: Run** `php tests/run.php Invoicing` && `php tests/run.php Kernel/SkeletonPurity` && `php tests/run.php Payments` — all PASS.
-- [ ] **Step 5: Commit** `docs(invoicing): production hardening runbook, RBAC and webhook wiring`
+- [x] **Step 1: Failing docs tests** for key phrases.
+- [x] **Step 2: Run** — FAIL.
+- [x] **Step 3: Write docs + pointers**.
+- [x] **Step 4: Run** `php tests/run.php Invoicing` && `php tests/run.php Kernel/SkeletonPurity` && `php tests/run.php Payments` — all PASS.
+- [x] **Step 5: Commit** `docs(invoicing): production hardening runbook, RBAC and webhook wiring`
 
 **Done when:** Full suite green; all 🔥 points mapped to shipped tasks or explicit residual in docs.
 
@@ -683,8 +683,8 @@ Expected: all PASS after Task 10.
 
 ## Estado de ejecución
 
-- **Reconciled:** 2026-08-10 — Task 1 implemented on PR #109 (rebased onto main post-#111).
-- **Completed / total:** 1 / 10
-- **Next executable task:** Task 2 (secret redaction + meta denylist; parallel-safe) or Task 3 (depends on Task 1 ✅).
-- **Blockers:** none for Task 2. Para Tasks 3/5/6 rige **A23–A27**: no ejecutar la redacción previa de A21 (`fromSourceRef`), ni el contrato de Reconcile basado en `findByIdempotencyKey` / `IssuedInvoice::status()`.
+- **Reconciled:** 2026-08-10 — Tasks 1–10 completed on PR #112, branch `cursor/invoicing-hardening-p02-p10-896b` (Task 1 originally PR #109, rebased post-#111).
+- **Completed / total:** 10 / 10
+- **Next executable task:** none / closed
+- **Blockers:** none for Framework hardening closure.
 - **Human ops residual:** configure `FACTURAPI_WEBHOOK_SECRET` and consumer route; assign RBAC roles; programar el barrido `findOrphanClaims` (no hay cron en Framework); `forceReissueOrphanClaim` (A26) es siempre decisión humana con RBAC `invoicing.reconciliar`.

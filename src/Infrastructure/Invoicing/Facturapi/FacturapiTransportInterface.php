@@ -8,6 +8,12 @@ interface FacturapiTransportInterface
     /** @param array<string, mixed> $payload */
     public function create(array $payload): array;
 
+    /** @return array<string, mixed> */
+    public function retrieve(string $providerInvoiceId): array;
+
+    /** @return array<int, array<string, mixed>> */
+    public function listByExternalId(string $externalId): array;
+
     /** @param array<string, mixed> $payload */
     public function cancel(string $providerInvoiceId, array $payload): array;
 

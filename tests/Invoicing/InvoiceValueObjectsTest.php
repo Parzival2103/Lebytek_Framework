@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 use Lebytek\Framework\Domain\Invoicing\CfdiUse;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceNeedsReconcile;
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceProviderIdConflict;
 use Lebytek\Framework\Domain\Invoicing\InvoiceStatus;
 use Lebytek\Framework\Domain\Invoicing\PaymentForm;
+use Lebytek\Framework\Domain\Invoicing\PaymentMethod;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\Address;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\FiscalCustomer;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceDraft;
@@ -42,6 +44,7 @@ test('InvoiceDraft aplica defaults cfdiUse G01 y currency MXN', function (): voi
         productKey: '80101500',
         unitPrice: Money::fromMinor(100000, 'MXN'),
         taxes: [new InvoiceTax(type: 'IVA', rate: 0.16, factor: 'Tasa')],
+        unitKey: 'E48',
     );
     $draft = new InvoiceDraft(
         sourceRef: 'order:01JABCDEF',
@@ -52,6 +55,32 @@ test('InvoiceDraft aplica defaults cfdiUse G01 y currency MXN', function (): voi
     assert_same(CfdiUse::G01, $draft->cfdiUse());
     assert_same('MXN', $draft->currency());
     assert_same('order:01JABCDEF', $draft->sourceRef());
+    assert_same(PaymentMethod::Pue, $draft->paymentMethod());
+});
+
+test('InvoiceDraft acepta paymentMethod PPD explícito', function (): void {
+    $customer = new FiscalCustomer(
+        legalName: 'Acme SA de CV',
+        taxId: 'ACM010101ABC',
+        taxSystem: '601',
+        address: new Address(zip: '01000'),
+    );
+    $item = new InvoiceItem(
+        quantity: 1.0,
+        description: 'Servicio mensual',
+        productKey: '80101500',
+        unitPrice: Money::fromMinor(100000, 'MXN'),
+        taxes: [new InvoiceTax(type: 'IVA', rate: 0.16, factor: 'Tasa')],
+        unitKey: 'E48',
+    );
+    $draft = new InvoiceDraft(
+        sourceRef: 'order:ppd',
+        customer: $customer,
+        items: [$item],
+        paymentForm: PaymentForm::Transferencia,
+        paymentMethod: PaymentMethod::Ppd,
+    );
+    assert_same(PaymentMethod::Ppd, $draft->paymentMethod());
 });
 
 test('InvoiceStatus fromProvider mapea estados conocidos', function (): void {
@@ -59,6 +88,7 @@ test('InvoiceStatus fromProvider mapea estados conocidos', function (): void {
     assert_same(InvoiceStatus::Pending, InvoiceStatus::fromProvider('pending'));
     assert_same(InvoiceStatus::Valid, InvoiceStatus::fromProvider('valid'));
     assert_same(InvoiceStatus::Canceled, InvoiceStatus::fromProvider('canceled'));
+    assert_same(InvoiceStatus::NeedsReconcile, InvoiceStatus::fromProvider('needs_reconcile'));
 });
 
 test('InvoiceStatus fromProvider devuelve Unknown para strings desconocidos', function (): void {
@@ -83,8 +113,37 @@ test('InvoiceItem expone líneas de impuesto y taxExempt', function (): void {
     assert_false($item->taxExempt());
 });
 
+test('InvoiceProviderIdConflict es excepción de dominio instanciable', function (): void {
+    $ex = new InvoiceProviderIdConflict(
+        'provider invoice id conflict',
+        'facturapi',
+        'idem:attach-conflict',
+        'inv_existing',
+        'inv_attempted',
+    );
+
+    assert_true($ex instanceof \RuntimeException);
+    assert_same('provider invoice id conflict', $ex->getMessage());
+    assert_same('facturapi', $ex->providerKey());
+    assert_same('idem:attach-conflict', $ex->idempotencyKey());
+    assert_same('inv_existing', $ex->existingId());
+    assert_same('inv_attempted', $ex->attemptedId());
+});
+
 test('InvoiceNeedsReconcile es excepción de dominio instanciable', function (): void {
-    $ex = new InvoiceNeedsReconcile('remote issued but local persist failed');
+    $previous = new RuntimeException('local persist failed');
+    $ex = new InvoiceNeedsReconcile(
+        'remote issued but local persist failed',
+        'inv_needs_reconcile',
+        'facturapi',
+        'idem:needs-reconcile',
+        $previous,
+    );
+
     assert_true($ex instanceof \RuntimeException);
     assert_same('remote issued but local persist failed', $ex->getMessage());
+    assert_same('inv_needs_reconcile', $ex->providerInvoiceId());
+    assert_same('facturapi', $ex->providerKey());
+    assert_same('idem:needs-reconcile', $ex->idempotencyKey());
+    assert_same($previous, $ex->getPrevious());
 });

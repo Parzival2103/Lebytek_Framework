@@ -140,6 +140,14 @@ return static function (Container $container): void {
                 (string) Config::get('invoicing.default', 'facturapi')
             )
         );
+        $container->bind(
+            \Lebytek\Framework\Application\Invoicing\ApplyInvoiceProviderEvent::class,
+            static fn (Container $c) => new \Lebytek\Framework\Application\Invoicing\ApplyInvoiceProviderEvent(
+                $c->get(\Lebytek\Framework\Domain\Invoicing\InvoiceEventLogRepositoryInterface::class),
+                $c->get(\Lebytek\Framework\Application\Invoicing\InvoiceProviderRegistry::class),
+                (string) Config::get('invoicing.default', 'facturapi')
+            )
+        );
 
         if ($container->has(\Lebytek\Framework\Domain\Invoicing\InvoiceableSourceInterface::class)) {
             $container->bind(

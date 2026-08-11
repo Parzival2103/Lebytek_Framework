@@ -11,6 +11,7 @@ use Lebytek\Framework\Domain\Invoicing\ValueObjects\FiscalCustomer;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceCancellation;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceDraft;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceItem;
+use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceProviderEvent;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceTax;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\IssuedInvoice;
 use Lebytek\Framework\Domain\Invoicing\ValueObjects\Money;
@@ -21,16 +22,24 @@ use Throwable;
 
 final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterface
 {
-    public function __construct(private FacturapiTransportInterface $transport)
+    public function __construct(
+        private FacturapiTransportInterface $transport,
+        private string $webhookSecret = '',
+    )
     {
     }
 
     /** @param array<string, mixed> $sdkConfig */
-    public static function fromSecretKey(string $secretKey, array $sdkConfig = [], string $mode = 'test'): self
+    public static function fromSecretKey(
+        string $secretKey,
+        array $sdkConfig = [],
+        string $mode = 'test',
+        string $webhookSecret = '',
+    ): self
     {
         self::assertSecretKeyMatchesMode($secretKey, $mode);
 
-        return new self(SdkFacturapiTransport::fromSecretKey($secretKey, $sdkConfig));
+        return new self(SdkFacturapiTransport::fromSecretKey($secretKey, $sdkConfig), $webhookSecret);
     }
 
     public static function assertSecretKeyMatchesMode(string $secretKey, string $mode): void
@@ -54,9 +63,9 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
         return 'facturapi';
     }
 
-    public function createInvoice(InvoiceDraft $draft): IssuedInvoice
+    public function createInvoice(InvoiceDraft $draft, string $idempotencyKey = ''): IssuedInvoice
     {
-        $payload = $this->mapDraft($draft);
+        $payload = $this->mapDraft($draft, $idempotencyKey);
 
         try {
             $response = $this->transport->create($payload);
@@ -65,6 +74,67 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
         }
 
         return $this->mapIssuedInvoice($response, $draft->sourceRef());
+    }
+
+    public function externalIdForIssue(string $idempotencyKey): string
+    {
+        return FacturapiExternalId::forIssueClaim($this->key(), $idempotencyKey);
+    }
+
+    public function retrieveInvoice(string $providerInvoiceId): IssuedInvoice
+    {
+        try {
+            $response = $this->transport->retrieve($providerInvoiceId);
+        } catch (Throwable $exception) {
+            $this->fail('retrieve invoice', $exception);
+        }
+
+        return $this->mapIssuedInvoice($response);
+    }
+
+    public function parseWebhook(string $rawBody, string $signature): InvoiceProviderEvent
+    {
+        FacturapiWebhookSignature::assertValid($rawBody, $signature, $this->webhookSecret);
+
+        try {
+            $payload = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            throw new InvoiceProviderException('Facturapi webhook payload is invalid JSON.', previous: $exception);
+        }
+
+        if (! is_array($payload)) {
+            throw new InvoiceProviderException('Facturapi webhook payload must be a JSON object.');
+        }
+
+        $object = $payload['data']['object'] ?? [];
+        if (! is_array($object)) {
+            $object = [];
+        }
+
+        $providerEventId = $this->stringValue($payload['id'] ?? null);
+        if ($providerEventId === null) {
+            throw new InvoiceProviderException('Facturapi webhook payload missing event id.');
+        }
+
+        return new InvoiceProviderEvent(
+            providerEventId: $providerEventId,
+            type: $this->stringValue($payload['type'] ?? null) ?? '',
+            providerInvoiceId: $this->stringValue($object['id'] ?? null) ?? '',
+            status: $this->stringValue($object['status'] ?? null) ?? '',
+            meta: [],
+        );
+    }
+
+    /** @return IssuedInvoice[] */
+    public function listByExternalId(string $externalId): array
+    {
+        try {
+            $rows = $this->transport->listByExternalId($externalId);
+        } catch (Throwable $exception) {
+            $this->fail('list invoices by external id', $exception);
+        }
+
+        return array_map(fn (array $row): IssuedInvoice => $this->mapIssuedInvoice($row), $rows);
     }
 
     public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice
@@ -111,16 +181,25 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
     }
 
     /** @return array<string, mixed> */
-    private function mapDraft(InvoiceDraft $draft): array
+    private function mapDraft(InvoiceDraft $draft, string $idempotencyKey): array
     {
-        return [
+        $payload = [
             'type' => 'I',
+        ];
+
+        if ($idempotencyKey !== '') {
+            $payload['idempotency_key'] = $idempotencyKey;
+            $payload['external_id'] = $this->externalIdForIssue($idempotencyKey);
+        }
+
+        return array_merge($payload, [
             'customer' => $this->mapCustomer($draft->customer()),
             'items' => array_map(fn (InvoiceItem $item): array => $this->mapItem($item), $draft->items()),
             'payment_form' => $draft->paymentForm()->value,
+            'payment_method' => $draft->paymentMethod()->value,
             'use' => $draft->cfdiUse()->value,
             'currency' => $draft->currency(),
-        ];
+        ]);
     }
 
     /** @return array<string, mixed> */
@@ -159,10 +238,8 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
         $product = [
             'description' => $item->description(),
             'product_key' => $item->productKey(),
+            'unit_key' => $item->unitKey(),
         ];
-        if ($item->unitKey() !== null) {
-            $product['unit_key'] = $item->unitKey();
-        }
         $product['price'] = $this->majorAmount($item->unitPrice());
         $product['tax_included'] = false;
         $product['taxability'] = '02';
@@ -250,8 +327,6 @@ final readonly class FacturapiInvoiceProvider implements InvoiceProviderInterfac
 
     private function sanitizeSecretTokens(string $message): string
     {
-        $sanitized = preg_replace('/sk_(test|live)_[A-Za-z0-9]+/', '[redacted]', $message);
-
-        return is_string($sanitized) ? $sanitized : $message;
+        return InvoiceSecretScrubber::sanitizeSecretTokens($message);
     }
 }

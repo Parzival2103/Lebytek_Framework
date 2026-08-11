@@ -4,23 +4,17 @@ declare(strict_types=1);
 namespace Lebytek\Framework\Domain\Invoicing\Exceptions;
 
 use RuntimeException;
-use Throwable;
 
-final class InvoiceNeedsReconcile extends RuntimeException
+final class InvoiceProviderIdConflict extends RuntimeException
 {
     public function __construct(
         string $message,
-        private readonly string $providerInvoiceId,
         private readonly string $providerKey,
         private readonly string $idempotencyKey,
-        ?Throwable $previous = null,
+        private readonly string $existingId,
+        private readonly string $attemptedId,
     ) {
-        parent::__construct($message, 0, $previous);
-    }
-
-    public function providerInvoiceId(): string
-    {
-        return $this->providerInvoiceId;
+        parent::__construct($message);
     }
 
     public function providerKey(): string
@@ -31,5 +25,15 @@ final class InvoiceNeedsReconcile extends RuntimeException
     public function idempotencyKey(): string
     {
         return $this->idempotencyKey;
+    }
+
+    public function existingId(): string
+    {
+        return $this->existingId;
+    }
+
+    public function attemptedId(): string
+    {
+        return $this->attemptedId;
     }
 }

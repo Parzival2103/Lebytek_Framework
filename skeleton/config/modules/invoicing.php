@@ -12,7 +12,13 @@ return [
     'seeds'         => [],
     'bootstrap_sql' => 'database/schema/modules/invoicing.sql',
     'cruds'         => [],
-    'permisos'      => [],
+    'permisos'      => [
+        'invoicing.emitir',
+        'invoicing.cancelar',
+        'invoicing.descargar',
+        'invoicing.enviar',
+        'invoicing.reconciliar',
+    ],
     'menu'          => [],
     'providers'     => [],
 ];

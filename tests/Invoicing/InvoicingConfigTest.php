@@ -6,6 +6,7 @@ test('config invoicing define provider facturapi', function (): void {
     assert_true(isset($cfg['providers']['facturapi']));
     assert_same('facturapi', $cfg['providers']['facturapi']['driver']);
     assert_true(($cfg['providers']['facturapi']['enabled'] ?? true) === false, 'facturapi provider must be OFF by default');
+    assert_true(array_key_exists('webhook_secret', $cfg['providers']['facturapi']['config'] ?? []), 'facturapi config must expose webhook_secret');
 });
 
 test('vertical deja invoicing OFF en harness y skeleton', function (): void {
@@ -21,6 +22,28 @@ test('module manifest invoicing bootstrap_sql apunta a invoicing.sql', function 
     assert_same('database/schema/modules/invoicing.sql', $mod['bootstrap_sql'] ?? null);
     $skel = require ROOT_PATH . '/skeleton/config/modules/invoicing.php';
     assert_same('database/schema/modules/invoicing.sql', $skel['bootstrap_sql'] ?? null);
+});
+
+test('module manifest invoicing declara permisos RBAC de operaciones', function (): void {
+    $expected = [
+        'invoicing.emitir',
+        'invoicing.cancelar',
+        'invoicing.descargar',
+        'invoicing.enviar',
+        'invoicing.reconciliar',
+    ];
+    $mod = require ROOT_PATH . '/config/modules/invoicing.php';
+    assert_same($expected, $mod['permisos'] ?? null);
+    $skel = require ROOT_PATH . '/skeleton/config/modules/invoicing.php';
+    assert_same($expected, $skel['permisos'] ?? null);
+});
+
+test('env examples declare Facturapi webhook secret', function (): void {
+    $rootEnv = (string) file_get_contents(ROOT_PATH . '/.env.example');
+    $skeletonEnv = (string) file_get_contents(ROOT_PATH . '/skeleton/.env.example');
+
+    assert_true(str_contains($rootEnv, 'FACTURAPI_WEBHOOK_SECRET='), 'root env example must declare FACTURAPI_WEBHOOK_SECRET');
+    assert_true(str_contains($skeletonEnv, 'FACTURAPI_WEBHOOK_SECRET='), 'skeleton env example must declare FACTURAPI_WEBHOOK_SECRET');
 });
 
 test('composer exige PHP >=8.2 y facturapi/facturapi-php', function (): void {

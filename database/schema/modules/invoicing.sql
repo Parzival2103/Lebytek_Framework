@@ -36,4 +36,20 @@ CREATE TABLE IF NOT EXISTS `inv_organizations` (
   UNIQUE KEY `uq_inv_organizations_provider_external` (`provider_key`, `external_org_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ── Permisos RBAC ──────────────────────────────────────────────────────────────
+INSERT IGNORE INTO `auth_permisos` (`nombre`, `slug`, `modulo`, `descripcion`) VALUES
+('Emitir facturas',      'invoicing.emitir',      'invoicing', 'Emitir CFDI desde origen de negocio'),
+('Cancelar facturas',    'invoicing.cancelar',    'invoicing', 'Cancelar CFDI emitido'),
+('Descargar facturas',   'invoicing.descargar',   'invoicing', 'Descargar PDF/XML de facturas'),
+('Enviar facturas',      'invoicing.enviar',      'invoicing', 'Enviar factura por email'),
+('Reconciliar facturas', 'invoicing.reconciliar', 'invoicing', 'Reconciliar estado con proveedor y ops');
+
+INSERT IGNORE INTO `auth_roles_permisos` (`rol_id`, `permiso_id`)
+SELECT `r`.`id`, `p`.`id`
+FROM `auth_roles` `r`
+INNER JOIN `auth_permisos` `p` ON `p`.`slug` IN (
+  'invoicing.emitir','invoicing.cancelar','invoicing.descargar','invoicing.enviar','invoicing.reconciliar'
+)
+WHERE `r`.`slug` = 'administrador';
+
 SET FOREIGN_KEY_CHECKS = 1;

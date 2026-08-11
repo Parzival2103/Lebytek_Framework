@@ -11,7 +11,14 @@ interface InvoiceProviderInterface
 {
     public function key(): string;
 
-    public function createInvoice(InvoiceDraft $draft): IssuedInvoice;
+    public function createInvoice(InvoiceDraft $draft, string $idempotencyKey = ''): IssuedInvoice;
+
+    public function externalIdForIssue(string $idempotencyKey): string;
+
+    public function retrieveInvoice(string $providerInvoiceId): IssuedInvoice;
+
+    /** @return IssuedInvoice[] */
+    public function listByExternalId(string $externalId): array;
 
     public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice;
 

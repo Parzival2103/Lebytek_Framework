@@ -6,8 +6,10 @@ use Lebytek\Framework\Application\Invoicing\InvoiceProviderRegistry;
 use Lebytek\Framework\Application\Invoicing\IssueInvoiceFromSource;
 use Lebytek\Framework\Domain\Invoicing\CfdiUse;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceAlreadyProcessed;
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceAmbiguousCreate;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceDraftInvalid;
 use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceNeedsReconcile;
+use Lebytek\Framework\Domain\Invoicing\Exceptions\InvoiceSourceNotFound;
 use Lebytek\Framework\Domain\Invoicing\InvoiceableSourceInterface;
 use Lebytek\Framework\Domain\Invoicing\InvoiceEventLogRepositoryInterface;
 use Lebytek\Framework\Domain\Invoicing\InvoiceProviderInterface;
@@ -28,11 +30,12 @@ function task9_valid_customer(
     string $taxId = 'ACM010101ABC',
     string $legalName = 'ACME SA DE CV',
     string $zip = '01000',
+    string $taxSystem = '601',
 ): FiscalCustomer {
     return new FiscalCustomer(
         legalName: $legalName,
         taxId: $taxId,
-        taxSystem: '601',
+        taxSystem: $taxSystem,
         address: new Address(zip: $zip),
     );
 }
@@ -43,6 +46,7 @@ function task9_valid_item(
     string $productKey = '80101500',
     ?array $taxes = null,
     bool $taxExempt = false,
+    ?string $unitKey = 'E48',
 ): InvoiceItem {
     return new InvoiceItem(
         quantity: $quantity,
@@ -51,6 +55,7 @@ function task9_valid_item(
         unitPrice: Money::fromMinor(100000, 'MXN'),
         taxes: $taxes ?? [new InvoiceTax(type: 'IVA', rate: 0.16, factor: 'Tasa')],
         taxExempt: $taxExempt,
+        unitKey: $unitKey,
     );
 }
 
@@ -94,6 +99,10 @@ function task9_provider(
 ): InvoiceProviderInterface {
     return new class($invoice, $createFailure) implements InvoiceProviderInterface {
         public int $createCalls = 0;
+        /** @var list<string> */
+        public array $createIdempotencyKeys = [];
+        /** @var list<array{key: string, external_id: string}> */
+        public array $externalIdCalls = [];
 
         public function __construct(
             private readonly ?IssuedInvoice $invoice,
@@ -106,9 +115,10 @@ function task9_provider(
             return 'facturapi';
         }
 
-        public function createInvoice(InvoiceDraft $draft): IssuedInvoice
+        public function createInvoice(InvoiceDraft $draft, string $idempotencyKey = ''): IssuedInvoice
         {
             $this->createCalls++;
+            $this->createIdempotencyKeys[] = $idempotencyKey;
             if ($this->createFailure !== null) {
                 throw $this->createFailure;
             }
@@ -119,6 +129,24 @@ function task9_provider(
                 status: InvoiceStatus::Valid,
                 sourceRef: $draft->sourceRef(),
             );
+        }
+
+        public function externalIdForIssue(string $idempotencyKey): string
+        {
+            $externalId = 'fake-external:' . $idempotencyKey;
+            $this->externalIdCalls[] = ['key' => $idempotencyKey, 'external_id' => $externalId];
+
+            return $externalId;
+        }
+
+        public function retrieveInvoice(string $providerInvoiceId): IssuedInvoice
+        {
+            return new IssuedInvoice($providerInvoiceId, 'uuid_task9', InvoiceStatus::Valid);
+        }
+
+        public function listByExternalId(string $externalId): array
+        {
+            return [];
         }
 
         public function cancelInvoice(string $providerInvoiceId, InvoiceCancellation $cancellation): IssuedInvoice
@@ -154,6 +182,9 @@ function task9_failing_mark_needs_reconcile_log(InMemoryInvoiceEventLog $inner):
     return new class($inner) implements InvoiceEventLogRepositoryInterface {
         public int $releaseCalls = 0;
         public int $markNeedsReconcileCalls = 0;
+        public int $attachCalls = 0;
+        /** @var list<array{provider: string, idempotencyKey: string, providerInvoiceId: string, meta: array<string, mixed>}> */
+        public array $attached = [];
 
         public function __construct(private readonly InMemoryInvoiceEventLog $inner)
         {
@@ -192,6 +223,27 @@ function task9_failing_mark_needs_reconcile_log(InMemoryInvoiceEventLog $inner):
             throw new RuntimeException('simulated markNeedsReconcile failure');
         }
 
+        public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            $this->inner->markCanceled($provider, $idempotencyKey, $invoice);
+        }
+
+        public function attachProviderInvoiceId(
+            string $provider,
+            string $idempotencyKey,
+            string $providerInvoiceId,
+            array $meta = [],
+        ): void {
+            $this->attachCalls++;
+            $this->attached[] = [
+                'provider' => $provider,
+                'idempotencyKey' => $idempotencyKey,
+                'providerInvoiceId' => $providerInvoiceId,
+                'meta' => $meta,
+            ];
+            $this->inner->attachProviderInvoiceId($provider, $idempotencyKey, $providerInvoiceId, $meta);
+        }
+
         public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
         {
             return $this->inner->findByIdempotencyKey($provider, $idempotencyKey);
@@ -205,6 +257,21 @@ function task9_failing_mark_needs_reconcile_log(InMemoryInvoiceEventLog $inner):
         public function findNeedsReconcile(string $provider, int $limit = 100): array
         {
             return $this->inner->findNeedsReconcile($provider, $limit);
+        }
+
+        public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findClaimByIdempotencyKey($provider, $idempotencyKey);
+        }
+
+        public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findIssueByProviderInvoiceId($provider, $providerInvoiceId);
+        }
+
+        public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
+        {
+            return $this->inner->findOrphanClaims($provider, $minAgeSeconds, $limit);
         }
     };
 }
@@ -254,6 +321,20 @@ function task9_failing_mark_issued_log(InMemoryInvoiceEventLog $inner): InvoiceE
             $this->inner->markNeedsReconcile($provider, $idempotencyKey, $invoice);
         }
 
+        public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            $this->inner->markCanceled($provider, $idempotencyKey, $invoice);
+        }
+
+        public function attachProviderInvoiceId(
+            string $provider,
+            string $idempotencyKey,
+            string $providerInvoiceId,
+            array $meta = [],
+        ): void {
+            $this->inner->attachProviderInvoiceId($provider, $idempotencyKey, $providerInvoiceId, $meta);
+        }
+
         public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
         {
             return $this->inner->findByIdempotencyKey($provider, $idempotencyKey);
@@ -267,6 +348,120 @@ function task9_failing_mark_issued_log(InMemoryInvoiceEventLog $inner): InvoiceE
         public function findNeedsReconcile(string $provider, int $limit = 100): array
         {
             return $this->inner->findNeedsReconcile($provider, $limit);
+        }
+
+        public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findClaimByIdempotencyKey($provider, $idempotencyKey);
+        }
+
+        public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findIssueByProviderInvoiceId($provider, $providerInvoiceId);
+        }
+
+        public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
+        {
+            return $this->inner->findOrphanClaims($provider, $minAgeSeconds, $limit);
+        }
+    };
+}
+
+function task9_spy_event_log(InMemoryInvoiceEventLog $inner): InvoiceEventLogRepositoryInterface
+{
+    return new class($inner) implements InvoiceEventLogRepositoryInterface {
+        public int $releaseCalls = 0;
+        /** @var list<array{provider: string, idempotencyKey: string, sourceRef: string, type: string, meta: array<string, mixed>}> */
+        public array $claims = [];
+
+        public function __construct(private readonly InMemoryInvoiceEventLog $inner)
+        {
+        }
+
+        public function hasProcessed(string $provider, string $idempotencyKey): bool
+        {
+            return $this->inner->hasProcessed($provider, $idempotencyKey);
+        }
+
+        public function tryClaim(
+            string $provider,
+            string $idempotencyKey,
+            string $sourceRef,
+            string $type,
+            array $meta = [],
+        ): bool {
+            $claimed = $this->inner->tryClaim($provider, $idempotencyKey, $sourceRef, $type, $meta);
+            if ($claimed) {
+                $this->claims[] = [
+                    'provider' => $provider,
+                    'idempotencyKey' => $idempotencyKey,
+                    'sourceRef' => $sourceRef,
+                    'type' => $type,
+                    'meta' => $meta,
+                ];
+            }
+
+            return $claimed;
+        }
+
+        public function releaseClaim(string $provider, string $idempotencyKey): void
+        {
+            $this->releaseCalls++;
+            $this->inner->releaseClaim($provider, $idempotencyKey);
+        }
+
+        public function markIssued(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            $this->inner->markIssued($provider, $idempotencyKey, $invoice);
+        }
+
+        public function markNeedsReconcile(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            $this->inner->markNeedsReconcile($provider, $idempotencyKey, $invoice);
+        }
+
+        public function markCanceled(string $provider, string $idempotencyKey, IssuedInvoice $invoice): void
+        {
+            $this->inner->markCanceled($provider, $idempotencyKey, $invoice);
+        }
+
+        public function attachProviderInvoiceId(
+            string $provider,
+            string $idempotencyKey,
+            string $providerInvoiceId,
+            array $meta = [],
+        ): void {
+            $this->inner->attachProviderInvoiceId($provider, $idempotencyKey, $providerInvoiceId, $meta);
+        }
+
+        public function findByIdempotencyKey(string $provider, string $idempotencyKey): ?IssuedInvoice
+        {
+            return $this->inner->findByIdempotencyKey($provider, $idempotencyKey);
+        }
+
+        public function findIssuedBySourceRef(string $sourceRef): array
+        {
+            return $this->inner->findIssuedBySourceRef($sourceRef);
+        }
+
+        public function findNeedsReconcile(string $provider, int $limit = 100): array
+        {
+            return $this->inner->findNeedsReconcile($provider, $limit);
+        }
+
+        public function findClaimByIdempotencyKey(string $provider, string $idempotencyKey): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findClaimByIdempotencyKey($provider, $idempotencyKey);
+        }
+
+        public function findIssueByProviderInvoiceId(string $provider, string $providerInvoiceId): ?\Lebytek\Framework\Domain\Invoicing\ValueObjects\InvoiceClaimRow
+        {
+            return $this->inner->findIssueByProviderInvoiceId($provider, $providerInvoiceId);
+        }
+
+        public function findOrphanClaims(string $provider, int $minAgeSeconds, int $limit = 100): array
+        {
+            return $this->inner->findOrphanClaims($provider, $minAgeSeconds, $limit);
         }
     };
 }
@@ -283,11 +478,42 @@ test('InvoiceDraftValidator rechaza drafts fiscales inválidos', function (): vo
         task9_valid_draft(items: [task9_valid_item(productKey: 'bad')]),
         task9_valid_draft(currency: 'USD'),
         task9_valid_draft(items: [task9_valid_item(taxes: [])]),
+        task9_valid_draft(customer: task9_valid_customer(taxSystem: '60')),
+        task9_valid_draft(customer: task9_valid_customer(taxSystem: '6012')),
+        task9_valid_draft(customer: task9_valid_customer(taxSystem: 'abc')),
+        task9_valid_draft(items: [task9_valid_item(unitKey: null)]),
+        task9_valid_draft(items: [task9_valid_item(unitKey: '  ')]),
     ];
 
     foreach ($invalidDrafts as $draft) {
         assert_throws(InvoiceDraftInvalid::class, fn () => $validator->validate($draft));
     }
+});
+
+test('InvoiceDraftValidator rechaza tax_system inválido con path customer.taxSystem', function (): void {
+    $validator = new InvoiceDraftValidator();
+
+    try {
+        $validator->validate(task9_valid_draft(customer: task9_valid_customer(taxSystem: 'XX')));
+    } catch (InvoiceDraftInvalid $exception) {
+        assert_true(str_contains($exception->getMessage(), 'customer.taxSystem'));
+        return;
+    }
+
+    throw new RuntimeException('expected InvoiceDraftInvalid');
+});
+
+test('InvoiceDraftValidator rechaza unitKey vacío con path items.0.unitKey', function (): void {
+    $validator = new InvoiceDraftValidator();
+
+    try {
+        $validator->validate(task9_valid_draft(items: [task9_valid_item(unitKey: '')]));
+    } catch (InvoiceDraftInvalid $exception) {
+        assert_true(str_contains($exception->getMessage(), 'items.0.unitKey'));
+        return;
+    }
+
+    throw new RuntimeException('expected InvoiceDraftInvalid');
 });
 
 test('InvoiceDraftValidator permite item exento sin impuestos', function (): void {
@@ -359,9 +585,27 @@ test('IssueInvoiceFromSource devuelve replay issued sin crear otra factura', fun
     assert_same(0, $provider->createCalls);
 });
 
-test('IssueInvoiceFromSource libera claim si createInvoice falla sin provider id', function (): void {
-    $events = new InMemoryInvoiceEventLog();
-    $provider = task9_provider(createFailure: new RuntimeException('remote down'));
+test('IssueInvoiceFromSource libera claim si falla antes de invocar createInvoice', function (): void {
+    $inner = new InMemoryInvoiceEventLog();
+    $events = task9_spy_event_log($inner);
+    $provider = task9_provider();
+    $useCase = new IssueInvoiceFromSource(
+        source: task9_source(null),
+        events: $events,
+        registry: task9_registry($provider),
+        validator: new InvoiceDraftValidator(),
+        defaultProviderKey: 'facturapi',
+    );
+
+    assert_throws(InvoiceSourceNotFound::class, fn () => $useCase->handle('order:task9', 'idem:source-missing'));
+    assert_same(1, $events->releaseCalls);
+    assert_same(0, $provider->createCalls);
+});
+
+test('IssueInvoiceFromSource conserva claim si createInvoice queda ambiguo y replay no recrea', function (): void {
+    $inner = new InMemoryInvoiceEventLog();
+    $events = task9_spy_event_log($inner);
+    $provider = task9_provider(createFailure: new RuntimeException('timeout after remote stamp'));
     $useCase = new IssueInvoiceFromSource(
         source: task9_source(task9_valid_draft()),
         events: $events,
@@ -370,12 +614,46 @@ test('IssueInvoiceFromSource libera claim si createInvoice falla sin provider id
         defaultProviderKey: 'facturapi',
     );
 
-    assert_throws(RuntimeException::class, fn () => $useCase->handle('order:task9', 'idem:create-fails'));
+    $firstThrown = null;
+    try {
+        $useCase->handle('order:task9', 'idem:ambiguous');
+    } catch (Throwable $e) {
+        $firstThrown = $e;
+    }
+
+    assert_same(0, $events->releaseCalls, 'ambiguous create must keep the claim');
+    assert_true($firstThrown instanceof InvoiceAmbiguousCreate, 'ambiguous create must throw typed exception');
+    assert_same(1, $provider->createCalls);
+    assert_same('idem:ambiguous', $provider->createIdempotencyKeys[0] ?? null);
+    assert_same('fake-external:idem:ambiguous', $events->claims[0]['meta']['external_id'] ?? null);
 
     $provider->createFailure = null;
-    $issued = $useCase->handle('order:task9', 'idem:create-fails');
-    assert_same('inv_task9', $issued->providerInvoiceId());
-    assert_same(2, $provider->createCalls);
+    assert_throws(InvoiceAlreadyProcessed::class, fn () => $useCase->handle('order:task9', 'idem:ambiguous'));
+    assert_same(1, $provider->createCalls, 'claimed-without-id replay must not call create again');
+});
+
+test('IssueInvoiceFromSource persiste external_id por idempotencyKey aunque sourceRef sea el mismo', function (): void {
+    $inner = new InMemoryInvoiceEventLog();
+    $events = task9_spy_event_log($inner);
+    $provider = task9_provider();
+    $useCase = new IssueInvoiceFromSource(
+        source: task9_source(task9_valid_draft()),
+        events: $events,
+        registry: task9_registry($provider),
+        validator: new InvoiceDraftValidator(),
+        defaultProviderKey: 'facturapi',
+    );
+
+    $useCase->handle('order:task9', 'idem:first');
+    $useCase->handle('order:task9', 'idem:second');
+
+    assert_same(['idem:first', 'idem:second'], $provider->createIdempotencyKeys);
+    assert_same('fake-external:idem:first', $events->claims[0]['meta']['external_id'] ?? null);
+    assert_same('fake-external:idem:second', $events->claims[1]['meta']['external_id'] ?? null);
+    assert_true(
+        ($events->claims[0]['meta']['external_id'] ?? null) !== ($events->claims[1]['meta']['external_id'] ?? null),
+        'same sourceRef with distinct idempotency keys must produce distinct external_id values',
+    );
 });
 
 test('IssueInvoiceFromSource marca needs_reconcile si markIssued falla tras create y replay no recrea', function (): void {
@@ -405,7 +683,8 @@ test('IssueInvoiceFromSource marca needs_reconcile si markIssued falla tras crea
     $replayed = $useCase->handle('order:task9', 'idem:partial');
 
     assert_same('inv_remote_observed', $replayed->providerInvoiceId());
-    assert_same(InvoiceStatus::NeedsReconcile, $replayed->status());
+    assert_same(InvoiceStatus::Valid, $replayed->status(), 'A16 keeps the fiscal provider status even while ledger needs reconcile');
+    assert_same('needs_reconcile', $inner->findClaimByIdempotencyKey('facturapi', 'idem:partial')?->ledgerStatus());
     assert_same(1, $provider->createCalls);
 });
 
@@ -435,7 +714,15 @@ test('IssueInvoiceFromSource lanza InvoiceNeedsReconcile aunque markNeedsReconci
 
     assert_true($thrown instanceof InvoiceNeedsReconcile);
     assert_true(str_contains($thrown->getMessage(), 'inv_reconcile_fail'));
+    assert_same('inv_reconcile_fail', $thrown->providerInvoiceId());
+    assert_same('facturapi', $thrown->providerKey());
+    assert_same('idem:reconcile-fails', $thrown->idempotencyKey());
     assert_same(1, $provider->createCalls);
     assert_same(1, $events->markNeedsReconcileCalls);
+    assert_same(1, $events->attachCalls);
+    assert_same('inv_reconcile_fail', $events->attached[0]['providerInvoiceId'] ?? null);
+    assert_same('fake-external:idem:reconcile-fails', $events->attached[0]['meta']['external_id'] ?? null);
+    assert_same('inv_reconcile_fail', $inner->findByIdempotencyKey('facturapi', 'idem:reconcile-fails')?->providerInvoiceId());
+    assert_same(InvoiceStatus::NeedsReconcile, $inner->findByIdempotencyKey('facturapi', 'idem:reconcile-fails')?->status());
     assert_same(0, $events->releaseCalls);
 });

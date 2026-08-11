@@ -49,7 +49,11 @@ test('InvoiceProviderInterface expone métodos del contrato v1', function (): vo
     assert_interface_method($ref, 'key', [], 'string');
     assert_interface_method($ref, 'createInvoice', [
         ['name' => 'draft', 'type' => InvoiceDraft::class],
+        ['name' => 'idempotencyKey', 'type' => 'string', 'optional' => true, 'default' => ''],
     ], IssuedInvoice::class);
+    assert_interface_method($ref, 'externalIdForIssue', [
+        ['name' => 'idempotencyKey', 'type' => 'string'],
+    ], 'string');
     assert_interface_method($ref, 'cancelInvoice', [
         ['name' => 'providerInvoiceId', 'type' => 'string'],
         ['name' => 'cancellation', 'type' => InvoiceCancellation::class],
@@ -102,6 +106,12 @@ test('InvoiceEventLogRepositoryInterface expone ledger incluyendo reconcile (D1)
         ['name' => 'provider', 'type' => 'string'],
         ['name' => 'idempotencyKey', 'type' => 'string'],
         ['name' => 'invoice', 'type' => IssuedInvoice::class],
+    ], 'void');
+    assert_interface_method($ref, 'attachProviderInvoiceId', [
+        ['name' => 'provider', 'type' => 'string'],
+        ['name' => 'idempotencyKey', 'type' => 'string'],
+        ['name' => 'providerInvoiceId', 'type' => 'string'],
+        ['name' => 'meta', 'type' => 'array', 'optional' => true, 'default' => []],
     ], 'void');
     assert_interface_method($ref, 'findByIdempotencyKey', [
         ['name' => 'provider', 'type' => 'string'],

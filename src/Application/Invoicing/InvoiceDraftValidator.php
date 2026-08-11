@@ -26,6 +26,10 @@ final class InvoiceDraftValidator
             $errors[] = 'customer.address.zip';
         }
 
+        if (! preg_match('/^\d{3}$/', trim($customer->taxSystem()))) {
+            $errors[] = 'customer.taxSystem';
+        }
+
         if (strtoupper(trim($draft->currency())) !== 'MXN') {
             $errors[] = 'currency';
         }
@@ -47,6 +51,11 @@ final class InvoiceDraftValidator
 
             if (! preg_match('/^\d{8}$/', trim($item->productKey()))) {
                 $errors[] = "items.{$index}.productKey";
+            }
+
+            $unitKey = $item->unitKey();
+            if ($unitKey === null || trim($unitKey) === '') {
+                $errors[] = "items.{$index}.unitKey";
             }
 
             if (! $item->taxExempt() && $item->taxes() === []) {

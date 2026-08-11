@@ -16,7 +16,10 @@ test('InvoiceEventLog shared contract passes for PDO implementation when DB is a
         return;
     }
 
-    $pdo->exec((string) file_get_contents(ROOT_PATH . '/database/schema/modules/invoicing.sql'));
+    $sql = (string) file_get_contents(ROOT_PATH . '/database/schema/modules/invoicing.sql');
+    $ddl = preg_split('/^-- ── Permisos RBAC/m', $sql)[0] ?? $sql;
+    $pdo->exec($ddl);
+    $pdo->exec('DELETE FROM inv_events');
 
     run_invoice_event_log_contract(new PdoInvoiceEventLogRepository());
 });
