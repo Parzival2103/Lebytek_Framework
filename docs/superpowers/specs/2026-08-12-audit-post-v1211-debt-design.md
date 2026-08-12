@@ -43,6 +43,7 @@
 | CI tip `main` | **success** @ `cf9e67e` (run `31550181578`) |
 | Semver tip | `1.2.11` (trío sincronizado); tag `v1.2.11` publicado; tree tip ≡ tag |
 | Pase UX (AUTOMATION-03) | `2026-08-12T12:30:00Z` — modo **normal** (superficie admin permisos M5 + DX harness M11 + flujos ops P-LOCK) |
+| Pase deuda (AUTOMATION-02) | `2026-08-12T13:05:26Z` — modo **normal** — `origin/main` @ `dc587b92ff7a646f744630d15625752290b9ef94` |
 
 ---
 
@@ -204,6 +205,8 @@ Lote **Framework-first** en un plan `docs/superpowers/plans/2026-08-12-audit-pos
 - Cierre de PRs `#116`/`#117`/`#120` — AUTOMATION-03.
 - Auto-fix M10 (huecos audits) ni M6 (credenciales) en esta corrida.
 - Renombrar slugs existentes distintos de añadir `permisos.gestionar`.
+- Parchear `composer.lock` del harness ni habilitar `vertical.payments` / `STRIPE_ENABLED` / `FACTURAPI_ENABLED` como auto-fix de deuda.
+- Crear migraciones RBAC M5 sin registrarlas en manifiesto `config/modules/core.php` (violación `SchemaBootstrapTest` L75–84).
 
 ---
 
@@ -211,7 +214,7 @@ Lote **Framework-first** en un plan `docs/superpowers/plans/2026-08-12-audit-pos
 
 | Ámbito | Repo / rama | Responsabilidad |
 |--------|-------------|-----------------|
-| Paquete plataforma | `Lebytek_Framework` / `main` @ `cf9e67e` | M11 harness, M5 RBAC seed/rutas, docs hygiene, tag `v1.2.12` |
+| Paquete plataforma | `Lebytek_Framework` / `main` @ `dc587b9` | M11 harness, M5 RBAC seed/rutas, docs hygiene, tag `v1.2.12` |
 | Release semver | Tags `v1.2.7`…`v1.2.11` (actual); siguiente **`v1.2.12`** post M5+M11 | Mantener tip↔tag |
 | App desplegable | `Lebytek_Portal` / `main` | Bump lock ≥ `v1.2.11`, smoke CAS, SQL `dom_*` — **no verificado** |
 | CRM / tenants | Consumidores desde skeleton | Mismo bump lock vía Composer |
@@ -269,7 +272,9 @@ Lote **Framework-first** en un plan `docs/superpowers/plans/2026-08-12-audit-pos
 | M11 enmascara tests que dependían de sesión cruzada | Baja | Revisar tests Auth; setup explícito |
 | Portal SHA desconocido (M6) | Media | Marcar P1/P2 **no verificados** |
 | Plan duplicado C4 (#116/#117) confunde implementadores | Baja | Cerrar en AUTOMATION-03 |
-| `composer validate` lock warning (exit 2) | Baja | Fuera de alcance; CI usa `--no-check-lock` |
+| `composer validate` lock warning (exit 2) | Baja | Fuera de alcance; CI usa `--no-check-lock` (`.github/workflows/platform-tests.yml` L25) |
+| Gates TDD M11/M5 ausentes pre-implementación | Media | `MonolithicHarnessSessionIsolationTest` y `PermisosGestionarSlugTest` no existen en tip — AC-M11-1 / AC-M5-1 bloquean cierre |
+| Consumidor en lock &lt; `1.2.11` mantiene TOCTOU CRUD | Alta | P-LOCK checklist + nota release; no asumir prod al día solo por tag Framework |
 
 ---
 
@@ -394,6 +399,73 @@ duplicado.
 - [ ] **AC-UX2:** Requisitos U1–U11 (403 accionable, empty state, validación formularios, gates M11/M5, release notes secuencia bump, planes M3/M4) incluidos como criterios del spec.
 - [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF9–CF11 documentado; CF7 (M4) y CF8 (M5) no arrastrados (resueltos o cubiertos por este spec); C4 CAS referenciado vía U11 sin duplicar.
 - [ ] **AC-UX4:** Smoke responsive en **320–768px** para listado y formularios permisos admin + página 403 RBAC post-implementación M5.
+
+### Deuda técnica (inventario)
+
+- [ ] **AC-D1:** Sección **Deuda técnica** lista abiertos verificados (M11, M5, M6, M10, D6, P-LOCK, H1–H3) con evidencia ruta/línea en `main` @ `dc587b9`.
+- [ ] **AC-D2:** CRUD-C4, M3, M4, D7, M1, REL-C1 reconciliados como **resueltos** en tip + tags; no re-listados como abiertos.
+- [ ] **AC-D3:** P1, P2, Portal SHA marcados **no verificados** (M6); acción concreta documentada.
+- [ ] **AC-D4:** Verificado sin deuda nueva en bootstrap/schema (3 migraciones SQL ↔ manifiestos); `src/` sin `TODO`/`FIXME`; referencias operativas vivas a `feature/backoffice-api-integration` ausentes en `scripts/`, `docs/integration/`, `docs/composer-setup.md` (solo mención histórica tag archive L128); Payments/Invoicing OFF @ `config/vertical.php` L20–23.
+
+---
+
+## Deuda técnica
+
+Fuente: auditoría `docs/audits/2026-08-12-auditoria-tecnica-diaria.md` (PR #120 @ `dc587b9`); reconciliación con inventario spec `2026-08-08-audit-release-semver-tag-design.md` (último inventario formal previo con tabla deuda) y tip `origin/main` @ `dc587b9` (pase deuda 2026-08-12).
+
+### Reconciliación heredada (cerrados)
+
+| ID | Tema | Estado | Resolución |
+|----|------|--------|------------|
+| **CRUD-C4** | CAS/TOCTOU transitions | **Resuelto** | PR #118 / tag `v1.2.11` @ `cf9e67e`; `CrudTransitionService` + tests CAS en tip |
+| **REL-C1** | Tags semver publicados | **Resuelto** | `v1.2.7`…`v1.2.11`; trío `1.2.11` sync (`composer.json` L6, `config/app.php`, `skeleton/config/app.php`) |
+| **M3** | CRUD/calendario sin RBAC router | **Resuelto** | PR #114 / `v1.2.10` — `CrudRbacMiddleware` en `routes/web.php` L19+ y skeleton espejo |
+| **M4** | `/api/health` público | **Resuelto** | PR #114 / `v1.2.10` — `routes/api.php` L15 `$router->get('/api/health', …)` fuera de grupo Auth |
+| **D7** | Sin pipeline GitHub Actions | **Resuelto** | `.github/workflows/platform-tests.yml` presente; `tests/Docs/CiWorkflowPresentTest.php` en tip |
+| **M1** | Sync semver trío | **Resuelto** | Tip `1.2.11`; `PlatformVersionSemverTest` en suite Docs |
+| **M2/M7/M8/M9** | Env Portal / ops docs / dompdf | **Resuelto** | Sin regresión en audit 2026-08-12 |
+| **INV-E1/E2** | Invoicing vertical OFF | **Resuelto** | `config/vertical.php` L23 `invoicing => false`; gates Invoicing presentes |
+
+**Cierres desde corrida anterior (2026-08-08 inventario @ tip `60477dc`):** **4** — CRUD-C4 (#118), REL-C1 extendido a `v1.2.11`, M3/M4 (#114) confirmados resueltos en tip (planes aún desactualizados → H2).
+
+### Alcance principal de este spec (abiertos, verificados)
+
+| ID | Hallazgo | Evidencia (`main` @ `dc587b9`) | Impacto | Capa | Owner | Acción |
+|----|----------|--------------------------------|---------|------|-------|--------|
+| **M11** | Contaminación sesión suite monolítica | `tests/run.php` L29–31 — `sort($files)` + `require` secuencial sin aislamiento; `tests/lib/microtest.php` L7–17 — `test()` sin reset de `$_SESSION`; `LoginUseCaseTest.php` L91–98 — login exitoso vía `AuthService` deja `auth_user` (`AuthService.php` L60–69); `ApiHealthPublicDispatchTest.php` L30–36, L55–67 — esperan 302 / no-200 en `/api/ping` sin sesión; `MonolithicHarnessSessionIsolationTest` **ausente** | `php tests/run.php` monolito → falso negativo Auth/ping (audit: 802/9); CI aislada verde | `tests/` harness | Framework | F1–F2 |
+| **M5** | Slug `permisos.gestionar` ausente | `routes/web.php` L62–66 — comentario + `$rbacPermisos = [new RbacMiddleware('administracion.ver')]`; `skeleton/routes/web.php` L63–66 espejo; `config/modules/core.php` L20–23 — `permisos` sin `permisos.gestionar`; `database/seeds_legacy/010_auth_permisos.sql` L2–11 — slugs base sin catálogo dedicado; `rg permisos.gestionar database/` → **0**; `PermisosGestionarSlugTest` **ausente** | Rol con `administracion.ver` gestiona catálogo RBAC — permiso más amplio de lo deseado | `Domain` RBAC / `routes/` | Framework | F3–F5 |
+| **P-LOCK** | Consumidores sin bump ≥ `v1.2.11` | Framework tip tagueado `v1.2.11`; Portal `composer.lock` **no verificado** (M6) — última evidencia documentada `v1.1.0` @ `a79d3ad` | Portal/CRM desplegados sin CAS/C6/M3/M4 aunque paquete ya los tenga | Consumidor Composer | `Lebytek_Portal` | P1–P2 manual |
+
+### Backlog verificado (fuera alcance F1–F8 implementación Framework)
+
+| ID | Hallazgo | Evidencia (`main` @ `dc587b9`) | Impacto | Capa | Owner | Acción |
+|----|----------|--------------------------------|---------|------|-------|--------|
+| **M6** | Portal SHA / lock no inspeccionable | Audit 2026-08-12 — `gh repo view Parzival2103/Lebytek_Portal` GraphQL fail; `gh api …/commits/main` HTTP 404 | Automation no verifica bump consumidor ni smoke Portal | Ops / credenciales | Ops | Conceder lectura gh al token |
+| **M10** | Huecos auditorías diarias | `docs/audits/` — ausentes `2026-08-03`, `2026-08-04`, `2026-08-05`, `2026-08-10`; presentes 06–09, 11–12 | Cadena diseño sin ancla audit en esas fechas | Proceso automation | Ops | Backfill o aceptación documentada |
+| **D6** | `skeleton.lebytek.com` pendiente | `docs/ENVIRONMENTS.md` L7, L13, L34 — «pendiente de implementar» | LAB package puro no desplegado; CF11 bloqueado | Ops | Framework/Ops | Plan `2026-07-26-skeleton-package-staging.md` Tasks 6–8 |
+| **H1** | Release notes `v1.2.8` ausentes | `docs/release/` — existen `v1.2.7.md`, `v1.2.9.md`, `v1.2.10.md`, `v1.2.11.md`; **sin** `v1.2.8.md` | Paridad cadena release C6 uploads | `docs/` | Framework | F7 stub retroactivo |
+| **H2** | Planes M3/M4 con checkboxes obsoletos | `docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md` — steps L92+ mayoritariamente `[ ]`; `2026-08-05-audit-api-health-public.md` L90+ idem — ship real en #114 / `v1.2.10` | Implementador puede reabrir trabajo cerrado | `docs/` | Framework | F7 marcar shipped + PR/tag |
+| **H3** | PRs spec C4 duplicados/obsoletos | PRs abiertos `#116` (C4+M11 residual), `#117` (draft C4 duplicado) — C4 ya mergeado #118 | Ruido proceso; confusión prioridad | GitHub | AUTOMATION-03 | Cerrar PRs obsoletos |
+| **H4** | `composer validate` lock drift | `.github/workflows/platform-tests.yml` L23–25 — `--no-check-lock`; audit documenta exit 2 posible | Hygiene semver/lock; no bloquea CI | CI | Framework | PR hygiene opcional post-`1.2.12` |
+
+### Verificado sin deuda nueva (registro)
+
+| Comprobación | Resultado @ `dc587b9` |
+|--------------|-------------------------|
+| Migraciones ↔ manifiesto | 3 archivos `database/migrations/*.sql` ↔ declarados en `core.php` L15–17, `crud-engine.php` L14–16, `pdf-kit.php`; gate `SchemaBootstrapTest.php` L75–84 |
+| Capas `src/` | Sin `TODO`/`FIXME` en `src/` (grep vacío) |
+| Legacy operativo | `scripts/` sin refs `backoffice-api-integration`; `docs/integration/` limpio; `docs/composer-setup.md` L128 solo tag archive histórico |
+| Payments bootstrap | `config/vertical.php` L20–23 — `marketing`/`payments`/`invoicing` = `false`; no auto-habilitar en prod |
+| Bootstrap schema | Sin migraciones huérfanas ni drift manifiesto detectado en tip |
+
+### No verificados (declarados explícitamente)
+
+| ID | Hallazgo | Motivo | Acción |
+|----|----------|--------|--------|
+| **P1** | Portal lock ≥ `1.2.11` | M6 — gh 404 Portal | Operador: `composer require lebytek/framework:^1.2.11` en Portal tras tag |
+| **P2** | Smoke CAS staging Portal | M6 | Operador manual post-P1 |
+| **P3** | Portal semver en `/admin/sistema/estado` | M6 + D6 | Verificación manual staging/prod |
+| **H5** | `composer validate --strict` en tip | Composer CLI no ejecutado en corrida cloud (PHP ausente en agente) | Maintainer en release train humano |
 
 ---
 
