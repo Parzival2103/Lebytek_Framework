@@ -105,3 +105,39 @@ test('CrudActionDefinition: guard is null when absent or empty', function (): vo
     $b = \Lebytek\Framework\Domain\Entities\Crud\CrudActionDefinition::fromArray(['name' => 'x', 'type' => 'transition', 'to' => 't', 'guard' => '']);
     assert_null($b->guard());
 });
+
+test('equalityMatches: null no equivale a string vacío (G14)', function (): void {
+    $a = CrudActionDefinition::fromArray([
+        'name' => 'x', 'type' => 'handler', 'handler' => 'h',
+        'enabled_when' => ['nota' => ''],
+    ]);
+    assert_true(
+        !$a->isEnabledFor(['nota' => null]),
+        'null no debe satisfacer expected string vacío (fail-closed G14)'
+    );
+});
+
+test('equalityMatches: false tipado no equivale a string vacío (G14)', function (): void {
+    $a = CrudActionDefinition::fromArray([
+        'name' => 'x', 'type' => 'handler', 'handler' => 'h',
+        'enabled_when' => ['flag' => false],
+    ]);
+    assert_true($a->isEnabledFor(['flag' => false]), 'false === false');
+    assert_true(
+        !$a->isEnabledFor(['flag' => '']),
+        'string vacío no debe satisfacer expected false'
+    );
+    assert_true(
+        !$a->isEnabledFor([]),
+        'columna ausente no debe satisfacer enabled_when flag=false (fail-open histórico)'
+    );
+});
+
+test('equalityMatches: columna ausente nunca matchea escalar no-vacío', function (): void {
+    $a = CrudActionDefinition::fromArray([
+        'name' => 'x', 'type' => 'handler', 'handler' => 'h',
+        'visible_when' => ['status' => 'pendiente'],
+    ]);
+    assert_true(!$a->isVisibleFor([]));
+    assert_true(!$a->isVisibleFor(['otra' => 'pendiente']));
+});

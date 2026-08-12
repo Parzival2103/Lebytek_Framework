@@ -8,7 +8,7 @@ use Lebytek\Framework\Domain\Interfaces\CrudConstraintRepositoryInterface;
 use Lebytek\Framework\Domain\Interfaces\CrudRelationRepositoryInterface;
 use Lebytek\Framework\Kernel\BaseClasses\BaseRepository;
 
-final class GenericCrudRepository extends BaseRepository implements CrudConstraintRepositoryInterface, CrudRelationRepositoryInterface
+class GenericCrudRepository extends BaseRepository implements CrudConstraintRepositoryInterface, CrudRelationRepositoryInterface
 {
     private const IDENTIFIER_PATTERN = '/^[a-zA-Z_][a-zA-Z0-9_]*$/';
 
@@ -227,7 +227,7 @@ final class GenericCrudRepository extends BaseRepository implements CrudConstrai
         return $this->insert($sql, array_values($payload));
     }
 
-    public function updateRecord(string $table, string $primaryKey, int $id, array $payload): int
+    public function updateRecord(string $table, string $primaryKey, int $id, array $payload, array $expected = []): int
     {
         $sets = [];
         $params = [];
@@ -235,11 +235,15 @@ final class GenericCrudRepository extends BaseRepository implements CrudConstrai
             $sets[] = $this->quoteIdentifier((string) $column) . ' = ?';
             $params[] = $value;
         }
+        $where = [$this->quoteIdentifier($primaryKey) . ' = ?'];
         $params[] = $id;
-
+        foreach ($expected as $column => $value) {
+            $where[] = $this->quoteIdentifier((string) $column) . ' = ?';
+            $params[] = $value;
+        }
         $sql = 'UPDATE ' . $this->quoteIdentifier($table)
             . ' SET ' . implode(', ', $sets)
-            . ' WHERE ' . $this->quoteIdentifier($primaryKey) . ' = ?';
+            . ' WHERE ' . implode(' AND ', $where);
 
         return $this->execute($sql, $params);
     }

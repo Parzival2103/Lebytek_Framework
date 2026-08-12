@@ -262,6 +262,21 @@ final class CrudResourceDefinition
         return $this->bulkActions;
     }
 
+    /** @return list<string> */
+    public function actionConditionColumnNames(): array
+    {
+        $names = [];
+        foreach (array_merge($this->rowActions, $this->bulkActions) as $action) {
+            foreach (array_keys($action->visibleWhen()) as $col) {
+                $names[] = (string) $col;
+            }
+            foreach (array_keys($action->enabledWhen()) as $col) {
+                $names[] = (string) $col;
+            }
+        }
+        return array_values(array_unique(array_filter($names, static fn(string $c): bool => $c !== '')));
+    }
+
     public function hasStates(): bool
     {
         return $this->stateMachine !== null;

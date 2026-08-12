@@ -61,6 +61,9 @@ final class CrudDataService
 
         $selectColumns[] = $definition->primaryKey();
         $selectColumns[] = 'deleted';
+        foreach ($definition->actionConditionColumnNames() as $condCol) {
+            $selectColumns[] = $condCol;
+        }
         $selectColumns = array_values(array_filter(array_unique($selectColumns)));
 
         $pagina  = max(1, (int) ($query['pagina'] ?? 1));
@@ -483,7 +486,7 @@ final class CrudDataService
         // Read-back con columnas de sistema preservadas.
         $payload = array_merge($ctx->data(), $systemColumns);
 
-        $this->repository->updateRecord($definition->table(), $definition->primaryKey(), $id, $payload);
+        $this->updateWithCas($definition, $id, $payload, ['deleted' => 0]);
         $this->bitacoraRepository->registrar(
             $userId,
             'crud.update',
@@ -523,7 +526,7 @@ final class CrudDataService
         );
         $this->hookRunner->run($definition, 'beforeDelete', $ctx);
 
-        $this->repository->updateRecord($definition->table(), $definition->primaryKey(), $id, $payload);
+        $this->updateWithCas($definition, $id, $payload, ['deleted' => 0]);
 
         $this->bitacoraRepository->registrar(
             $userId,
@@ -535,6 +538,38 @@ final class CrudDataService
         );
 
         $this->hookRunner->run($definition, 'afterDelete', $ctx);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, mixed> $expected
+     */
+    private function updateWithCas(CrudResourceDefinition $definition, int $id, array $payload, array $expected): void
+    {
+        $n = $this->repository->updateRecord(
+            $definition->table(),
+            $definition->primaryKey(),
+            $id,
+            $payload,
+            $expected
+        );
+        if ($n === 1) {
+            return;
+        }
+        $fresh = $this->repository->findById($definition->table(), $definition->primaryKey(), $id);
+        if (!is_array($fresh) || (int) ($fresh['deleted'] ?? 0) === 1) {
+            throw new ValidationException('El registro cambió; recarga e inténtalo de nuevo.');
+        }
+        $n = $this->repository->updateRecord(
+            $definition->table(),
+            $definition->primaryKey(),
+            $id,
+            $payload,
+            $expected
+        );
+        if ($n !== 1) {
+            throw new ValidationException('El registro cambió; recarga e inténtalo de nuevo.');
+        }
     }
 
     private function buildPayload(CrudResourceDefinition $definition, array $input, array $files, bool $isCreate, ?array $existingRow, ?int $userId = null, string $ip = ''): array
