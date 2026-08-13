@@ -21,15 +21,9 @@
 ## Baseline asumida (puntos 1..2)
 
 | Punto | Plan | Estado verificado | Evidencia |
-|------:|------|-------------------|----## Estado de ejecución
-
-| Campo | Valor |
-|-------|-------|
-| Plan creado UTC | 2026-08-09 |
-| Framework `origin/main` referencia | tip post-REL-C1 (`v1.2.7` publicado) |
-| Tareas completadas / totales | 5 / 5 (código); tag `v1.2.8` ops post-merge |
-| Siguiente | Publicar tag `v1.2.8` + Portal lock bump (humano) |
-| Estado | Implementación en `cursor/crud-p03-uploads-hardening-c292` |
+|------:|------|-------------------|-----------|
+| 1 | `2026-08-07-crud-p01-authz-multi-canal` | Cerrado | PR #95 / `v1.2.5`+ |
+| 2 | `2026-08-07-crud-p02-states-form-options` | Cerrado | PR #100 / `v1.2.6`+ |
 
 **Implicaciones:** AuthZ y states cerrados. Demos harness/skeleton tienen `uploads.enabled=false` — no requieren allowlist hasta que un operador habilite uploads. **Prerrequisito release:** tag Git `v1.2.7` (REL-C1, PR #105) debe publicarse **antes** del tag `v1.2.8` de este punto; el código puede implementarse en paralelo.
 
@@ -101,7 +95,7 @@
 - Consumes: `ValidationException`
 - Produces: `assertValid` fail-closed para `null`/`[]`; denylist `GLOBAL_DENIED_EXTENSIONS`
 
-- [ ] **Step 1: Escribir el test que falla** — en `tests/Security/UploadValidatorTest.php`:
+- [x] **Step 1: Escribir el test que falla** — en `tests/Security/UploadValidatorTest.php`:
 
 **Reemplazar** el test permisivo existente:
 
@@ -144,9 +138,9 @@ test('UploadValidator mensaje accionable lista extensiones permitidas (U2)', fun
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Security/UploadValidator` / Expected: FAIL — test «acepta cuando no hay lista blanca» eliminado; nuevos casos FAIL (allowlist null pasa hoy).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Security/UploadValidator` / Expected: FAIL — test «acepta cuando no hay lista blanca» eliminado; nuevos casos FAIL (allowlist null pasa hoy).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `UploadValidator.php`:
+- [x] **Step 3: Implementar el cambio mínimo** — en `UploadValidator.php`:
 
 ```php
 private const GLOBAL_DENIED_EXTENSIONS = ['php', 'phtml', 'phar', 'htaccess', 'svg'];
@@ -176,11 +170,11 @@ if ($extension === '' || !in_array($extension, $allowedLower, true)) {
 }
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Security/UploadValidator` / Expected: PASS (todos los casos, incluidos MIME/tamaño legacy).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Security/UploadValidator` / Expected: PASS (todos los casos, incluidos MIME/tamaño legacy).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Archivos/FileUploadService` / Expected: PASS (caso feliz usa allowlist implícita vía config — ver Task 2 si falla por allowlist null en helper `upload_config`; ajustar helper a `['txt']` default en tests Archivos si necesario).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Archivos/FileUploadService` / Expected: PASS (caso feliz usa allowlist implícita vía config — ver Task 2 si falla por allowlist null en helper `upload_config`; ajustar helper a `['txt']` default en tests Archivos si necesario).
 
-- [ ] **Step 6: Commit** — `git add src/Application/Services/UploadValidator.php tests/Security/UploadValidatorTest.php` · mensaje: `fix(crud): require upload allowlist and deny dangerous extensions (C6)`
+- [x] **Step 6: Commit** — `git add src/Application/Services/UploadValidator.php tests/Security/UploadValidatorTest.php` · mensaje: `fix(crud): require upload allowlist and deny dangerous extensions (C6)`
 
 ---
 
@@ -197,7 +191,7 @@ if ($extension === '' || !in_array($extension, $allowedLower, true)) {
 - Consumes: `PUBLIC_PATH`, `FileUploadConfig::directorio`
 - Produces: escritura solo bajo `{realpath(PUBLIC_PATH)}/uploads/...`
 
-- [ ] **Step 1: Escribir el test que falla** — añadir al final de `tests/Archivos/FileUploadServiceTest.php`:
+- [x] **Step 1: Escribir el test que falla** — añadir al final de `tests/Archivos/FileUploadServiceTest.php`:
 
 ```php
 test('FileUploadService rechaza directorio con .. fuera del jail uploads (C6)', function (): void {
@@ -247,9 +241,9 @@ Actualizar helper `upload_config()` en el mismo archivo — default `allowedExte
 allowedExtensions: $overrides['allowedExtensions'] ?? ['txt'],
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Archivos/FileUploadService` / Expected: FAIL en casos jail (hoy escribe fuera o crea directorio sin validar).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Archivos/FileUploadService` / Expected: FAIL en casos jail (hoy escribe fuera o crea directorio sin validar).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `FileUploadService.php`, extraer método privado y usarlo en L62–67:
+- [x] **Step 3: Implementar el cambio mínimo** — en `FileUploadService.php`, extraer método privado y usarlo en L62–67:
 
 ```php
 private function resolvePublicUploadDirectory(string $directorio): string
@@ -286,11 +280,11 @@ private function resolvePublicUploadDirectory(string $directorio): string
 
 Reemplazar construcción de `$publicAbsolute` por `$publicAbsolute = $this->resolvePublicUploadDirectory($cfg->directorio);`
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Archivos/FileUploadService` / Expected: PASS.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Archivos/FileUploadService` / Expected: PASS.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Crud/Upload/CrudUploadLedger` / Expected: PASS (rutas relativas `/uploads/...` conservadas).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Crud/Upload/CrudUploadLedger` / Expected: PASS (rutas relativas `/uploads/...` conservadas).
 
-- [ ] **Step 6: Commit** — `git add src/Application/Services/FileUploadService.php tests/Archivos/FileUploadServiceTest.php` · mensaje: `fix(crud): jail CRUD upload paths under public/uploads (C6)`
+- [x] **Step 6: Commit** — `git add src/Application/Services/FileUploadService.php tests/Archivos/FileUploadServiceTest.php` · mensaje: `fix(crud): jail CRUD upload paths under public/uploads (C6)`
 
 ---
 
@@ -307,7 +301,7 @@ Reemplazar construcción de `$publicAbsolute` por `$publicAbsolute = $this->reso
 - Consumes: shape JSON `uploads`, `form.fields[].type=file`, `validation.allowed_extensions`
 - Produces: strings de error agregados a `validate()`
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Crud/Upload/CrudConfigValidatorUploadsTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Crud/Upload/CrudConfigValidatorUploadsTest.php`:
 
 ```php
 <?php
@@ -360,9 +354,9 @@ test('uploadsBlockErrors: allowed_extensions con php en denylist falla', functio
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Crud/Upload/CrudConfigValidatorUploads` / Expected: FAIL — método `uploadsBlockErrors` no existe / reglas ausentes.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Crud/Upload/CrudConfigValidatorUploads` / Expected: FAIL — método `uploadsBlockErrors` no existe / reglas ausentes.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `CrudConfigValidator.php`:
+- [x] **Step 3: Implementar el cambio mínimo** — en `CrudConfigValidator.php`:
 
 Añadir constante (junto a `BLOCKED_PREFIXES`):
 
@@ -430,11 +424,11 @@ foreach (self::uploadsBlockErrors($config) as $uploadError) {
 }
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Crud/Upload/CrudConfigValidatorUploads` / Expected: PASS.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Crud/Upload/CrudConfigValidatorUploads` / Expected: PASS.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Crud/State/CrudConfigValidatorStates Crud/CrudConfigValidatorShape` / Expected: PASS (sin regresión validator existente).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Crud/State/CrudConfigValidatorStates Crud/CrudConfigValidatorShape` / Expected: PASS (sin regresión validator existente).
 
-- [ ] **Step 6: Commit** — `git add src/Application/Services/CrudConfigValidator.php tests/Crud/Upload/CrudConfigValidatorUploadsTest.php` · mensaje: `fix(crud): validate uploads block and require file allowlists (C6)`
+- [x] **Step 6: Commit** — `git add src/Application/Services/CrudConfigValidator.php tests/Crud/Upload/CrudConfigValidatorUploadsTest.php` · mensaje: `fix(crud): validate uploads block and require file allowlists (C6)`
 
 ---
 
@@ -452,7 +446,7 @@ foreach (self::uploadsBlockErrors($config) as $uploadError) {
 - Consumes: trío semver @ `1.2.7`
 - Produces: trío @ `1.2.8`; docs con ejemplo seguro
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/CrudModuleUploadsTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/CrudModuleUploadsTest.php`:
 
 ```php
 <?php
@@ -470,9 +464,9 @@ test('modulo-crud-engine documenta allowlist obligatoria para uploads', function
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/CrudModuleUploads` / Expected: FAIL (doc incompleta).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/CrudModuleUploads` / Expected: FAIL (doc incompleta).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — en `docs/modules/crud/modulo-crud-engine.md`, ampliar la sección de uploads (≈L264) con:
+- [x] **Step 3: Implementar el cambio mínimo** — en `docs/modules/crud/modulo-crud-engine.md`, ampliar la sección de uploads (≈L264) con:
 
 ```markdown
 ### Uploads seguros (C6)
@@ -504,11 +498,11 @@ Consumidores (`Lebytek_Portal`, tenants): auditar `config/cruds/**/*.json` antes
 
 Bump semver a **`1.2.8`** en `composer.json`, `config/app.php`, `skeleton/config/app.php`.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/CrudModuleUploads PlatformVersionSemver` / Expected: PASS @ `1.2.8`.
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/CrudModuleUploads PlatformVersionSemver` / Expected: PASS @ `1.2.8`.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel/SkeletonPurity` / Expected: 13/13 PASS.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel/SkeletonPurity` / Expected: 13/13 PASS.
 
-- [ ] **Step 6: Commit** — `git add docs/modules/crud/modulo-crud-engine.md tests/Docs/CrudModuleUploadsTest.php composer.json config/app.php skeleton/config/app.php` · mensaje: `docs(crud): uploads hardening runbook and bump 1.2.8 (C6)`
+- [x] **Step 6: Commit** — `git add docs/modules/crud/modulo-crud-engine.md tests/Docs/CrudModuleUploadsTest.php composer.json config/app.php skeleton/config/app.php` · mensaje: `docs(crud): uploads hardening runbook and bump 1.2.8 (C6)`
 
 ---
 
@@ -523,7 +517,7 @@ Bump semver a **`1.2.8`** en `composer.json`, `config/app.php`, `skeleton/config
 - Consumes: todas las tareas previas
 - Produces: evidencia PASS para PR Framework
 
-- [ ] **Step 1: Escribir el test que falla** — N/A (gate de integración). Confirmar demos cargan:
+- [x] **Step 1: Escribir el test que falla** — N/A (gate de integración). Confirmar demos cargan:
 
 ```bash
 php -r "
@@ -534,7 +528,7 @@ require 'vendor/autoload.php';
 
 Usar tests existentes como gate.
 
-- [ ] **Step 2: Ejecutar regresión funcional completa** — Run:
+- [x] **Step 2: Ejecutar regresión funcional completa** — Run:
 
 ```bash
 php tests/run.php Security/UploadValidator
@@ -546,7 +540,7 @@ php tests/run.php Kernel/SkeletonPurity
 
 Expected: **0 failed** en todas.
 
-- [ ] **Step 3: Verificar avatares sin regresión (U8)** — Run: `php tests/run.php Archivos` (incluye paths avatar si existen) y, si presente en harness, suite Avatares:
+- [x] **Step 3: Verificar avatares sin regresión (U8)** — Run: `php tests/run.php Archivos` (incluye paths avatar si existen) y, si presente en harness, suite Avatares:
 
 ```bash
 php tests/run.php 2>&1 | rg -i avatar || true
@@ -555,7 +549,7 @@ php tests/run.php Archivos
 
 Expected: PASS; `SubirAvatarUseCase` sigue pasando allowlist `['jpg','jpeg','png','webp']`.
 
-- [ ] **Step 4: Verificación espejo demos** — Run:
+- [x] **Step 4: Verificación espejo demos** — Run:
 
 ```bash
 cmp config/cruds/demo_productos.json skeleton/config/cruds/demo_productos.json
@@ -565,9 +559,9 @@ rg '"enabled": true' config/cruds skeleton/config/cruds || true
 
 Expected: `cmp` exit 0; ningún demo con `uploads.enabled=true` (mitigación accidental intacta).
 
-- [ ] **Step 5: Regresión cross-suite** — Run: `php tests/run.php Crud/State Crud/Action/Security` / Expected: PASS (p01/p02 no regresionados).
+- [x] **Step 5: Regresión cross-suite** — Run: `php tests/run.php Crud/State Crud/Action/Security` / Expected: PASS (p01/p02 no regresionados).
 
-- [ ] **Step 6: Commit** — solo si fixes de gate: `git add <archivos>` · mensaje: `test(crud): uploads C6 regression gate fixes`
+- [x] **Step 6: Commit** — solo si fixes de gate: `git add <archivos>` · mensaje: `test(crud): uploads C6 regression gate fixes`
 
 **Requiere operador humano:** sí — publicar tag `v1.2.8` **después** de tag `v1.2.7` (REL-C1); bump `composer.lock` Portal; auditar JSON `dom_*` en `Lebytek_Portal` (repo no verificable desde automation — M6).
 
@@ -575,17 +569,17 @@ Expected: `cmp` exit 0; ningún demo con `uploads.enabled=true` (mitigación acc
 
 ## Criterios de aceptación
 
-- [ ] **C6 config:** recurso con `uploads.enabled=true` y campo `file` sin `allowed_extensions` no carga (validator).
-- [ ] **C6 config:** `public_path` con `..` o fuera de patrón `uploads/...` rechazado.
-- [ ] **C6 runtime:** `UploadValidator` rechaza `null`/`[]` allowlist.
-- [ ] **C6 runtime:** denylist bloquea `php`, `svg`, etc. incluso en allowlist.
-- [ ] **C6 path:** `FileUploadService` no escribe fuera de `{PUBLIC_PATH}/uploads/`.
-- [ ] **U2:** mensaje runtime incluye extensiones permitidas cuando allowlist conocida.
-- [ ] **U4/U5:** errores config vs runtime distinguibles (validator load vs POST form).
-- [ ] **U8:** avatares sin regresión.
-- [ ] Semver trío @ `1.2.8`; tag Git publicado post-merge y post-REL-C1.
-- [ ] `php tests/run.php SkeletonPurity` PASS.
-- [ ] Sin cambios Portal en este repo.
+- [x] **C6 config:** recurso con `uploads.enabled=true` y campo `file` sin `allowed_extensions` no carga (validator).
+- [x] **C6 config:** `public_path` con `..` o fuera de patrón `uploads/...` rechazado.
+- [x] **C6 runtime:** `UploadValidator` rechaza `null`/`[]` allowlist.
+- [x] **C6 runtime:** denylist bloquea `php`, `svg`, etc. incluso en allowlist.
+- [x] **C6 path:** `FileUploadService` no escribe fuera de `{PUBLIC_PATH}/uploads/`.
+- [x] **U2:** mensaje runtime incluye extensiones permitidas cuando allowlist conocida.
+- [x] **U4/U5:** errores config vs runtime distinguibles (validator load vs POST form).
+- [x] **U8:** avatares sin regresión.
+- [x] Semver trío @ `1.2.8`; tag Git publicado post-merge y post-REL-C1.
+- [x] `php tests/run.php SkeletonPurity` PASS.
+- [x] Sin cambios Portal en este repo.
 
 ## Fuera de alcance
 
@@ -621,10 +615,12 @@ Expected: `cmp` exit 0; ningún demo con `uploads.enabled=true` (mitigación acc
 
 | Campo | Valor |
 |-------|-------|
+| Reconciliación UTC | 2026-08-13 |
 | Plan creado UTC | 2026-08-09 |
-| Framework `origin/main` referencia | `487ccd8132e7c42eabd2a0e3b335b075ccc123e1` |
-| Tareas completadas / totales | 0 / 5 |
-| Siguiente tarea ejecutable | Task 1 |
-| Prerrequisitos | p01 (#95) + p02 (#100) en main; PHP ≥8.2 |
-| Bloqueos | Tag `v1.2.7` (REL-C1, PR #105) no publicado — bloquea release tag `v1.2.8`, no bloquea rama feature. Portal SHA no verificable (M6). |
-| Estado | Pendiente de implementación |
+| Framework `origin/main` verificado | `dc587b92ff7a646f744630d15625752290b9ef94` |
+| Tareas completadas / totales | 5 / 5 |
+| Evidencia | PR #111 merge `e9f1607` — `UploadValidator`, `FileUploadService`, `CrudConfigValidator::uploadsBlockErrors`, tests C6, semver `1.2.8`; tag `v1.2.8` publicado |
+| Siguiente tarea ejecutable | — (plan completo) |
+| Prerrequisitos | Ninguno |
+| Bloqueos | Portal lock bump (M6); operador humano tag ya publicado |
+| Estado | **Completo** — archivado 2026-08-13 |

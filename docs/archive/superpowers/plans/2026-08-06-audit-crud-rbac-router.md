@@ -89,7 +89,7 @@
 - Consumes: `routes/web.php`, `skeleton/routes/web.php` sin `CrudRbacMiddleware` @ `ddc55ec`
 - Produces: test que falla citando spec M3 y acción concreta
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/CrudRbacRouterTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/CrudRbacRouterTest.php`:
 
 ```php
 <?php
@@ -150,15 +150,15 @@ test('CrudRbacMiddleware class exists in Presentation layer', function () use ($
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/CrudRbacRouter` / Expected: **FAIL** — `missing CrudRbacMiddleware in routes/web.php` (test 1).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/CrudRbacRouter` / Expected: **FAIL** — `missing CrudRbacMiddleware in routes/web.php` (test 1).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 4 registra middleware.
+- [x] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 4 registra middleware.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/CrudRbacRouter` / Expected: FAIL (TDD rojo confirmado).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/CrudRbacRouter` / Expected: FAIL (TDD rojo confirmado).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/DeployScriptsRemoved` / Expected: PASS — 3 tests, 0 failed.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/DeployScriptsRemoved` / Expected: PASS — 3 tests, 0 failed.
 
-- [ ] **Step 6: Commit** — archivos: `tests/Docs/CrudRbacRouterTest.php` / mensaje: `test(docs): add CrudRbacRouterTest gate for M3 router RBAC (red)`
+- [x] **Step 6: Commit** — archivos: `tests/Docs/CrudRbacRouterTest.php` / mensaje: `test(docs): add CrudRbacRouterTest gate for M3 router RBAC (red)`
 
 ---
 
@@ -178,7 +178,7 @@ test('CrudRbacMiddleware class exists in Presentation layer', function () use ($
 - Consumes: `config/cruds/demo_clientes.json` (`permission_prefix`: `demo_clientes`), `config/calendars/demo_citas.json` → recurso `demo_citas`
 - Produces: asserts de mapeo `{prefix}.{acción}` por URI
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Kernel/CrudRoutePermissionResolverTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Kernel/CrudRoutePermissionResolverTest.php`:
 
 ```php
 <?php
@@ -249,15 +249,15 @@ test('CrudRoutePermissionResolver throws ValidationException for unknown CRUD re
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Kernel/CrudRoutePermissionResolver` / Expected: **FAIL** — `CrudRoutePermissionResolver missing` (test 1).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Kernel/CrudRoutePermissionResolver` / Expected: **FAIL** — `CrudRoutePermissionResolver missing` (test 1).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 4 implementa resolver.
+- [x] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 4 implementa resolver.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Kernel/CrudRoutePermissionResolver` / Expected: FAIL (TDD rojo).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Kernel/CrudRoutePermissionResolver` / Expected: FAIL (TDD rojo).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Calendar/CalendarViewModelBuilder` / Expected: PASS — 3 tests, 0 failed.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Calendar/CalendarViewModelBuilder` / Expected: PASS — 3 tests, 0 failed.
 
-- [ ] **Step 6: Commit** — archivos: `tests/Kernel/CrudRoutePermissionResolverTest.php` / mensaje: `test(kernel): add CrudRoutePermissionResolverTest gate (red)`
+- [x] **Step 6: Commit** — archivos: `tests/Kernel/CrudRoutePermissionResolverTest.php` / mensaje: `test(kernel): add CrudRoutePermissionResolverTest gate (red)`
 
 ---
 
@@ -277,7 +277,7 @@ test('CrudRoutePermissionResolver throws ValidationException for unknown CRUD re
 - Consumes: sesión autenticada sin permiso `demo_clientes.ver`
 - Produces: 403 con slug en cuerpo/mensaje (U1, U3, U6)
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Kernel/CrudRbacMiddlewareTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Kernel/CrudRbacMiddlewareTest.php`:
 
 ```php
 <?php
@@ -355,15 +355,15 @@ test('CrudRbacMiddleware delegates unknown CRUD resource to next handler (Valida
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Kernel/CrudRbacMiddleware` / Expected: **FAIL** — `CrudRbacMiddleware missing` (test 1).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Kernel/CrudRbacMiddleware` / Expected: **FAIL** — `CrudRbacMiddleware missing` (test 1).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 4 implementa middleware.
+- [x] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 4 implementa middleware.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Kernel/CrudRbacMiddleware` / Expected: FAIL (TDD rojo).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Kernel/CrudRbacMiddleware` / Expected: FAIL (TDD rojo).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel/SkeletonPurity` / Expected: PASS — 13 tests, 0 failed.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel/SkeletonPurity` / Expected: PASS — 13 tests, 0 failed.
 
-- [ ] **Step 6: Commit** — archivos: `tests/Kernel/CrudRbacMiddlewareTest.php` / mensaje: `test(kernel): add CrudRbacMiddlewareTest gate (red)`
+- [x] **Step 6: Commit** — archivos: `tests/Kernel/CrudRbacMiddlewareTest.php` / mensaje: `test(kernel): add CrudRbacMiddlewareTest gate (red)`
 
 ---
 
@@ -386,11 +386,11 @@ test('CrudRbacMiddleware delegates unknown CRUD resource to next handler (Valida
 - Consumes: tests Task 1–3 rojos
 - Produces: `resolve()` + `handle()` + rutas registradas
 
-- [ ] **Step 1: Escribir el test que falla** — tests Task 1–3 ya rojos.
+- [x] **Step 1: Escribir el test que falla** — tests Task 1–3 ya rojos.
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/CrudRbacRouter Kernel/CrudRoutePermissionResolver Kernel/CrudRbacMiddleware` / Expected: FAIL.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/CrudRbacRouter Kernel/CrudRoutePermissionResolver Kernel/CrudRbacMiddleware` / Expected: FAIL.
 
-- [ ] **Step 3: Implementar el cambio mínimo**
+- [x] **Step 3: Implementar el cambio mínimo**
 
 Crear `src/Application/Services/CrudRoutePermissionResolver.php`:
 
@@ -557,7 +557,7 @@ En `routes/web.php` y `skeleton/routes/web.php`:
     $router->get('/calendario/{key}/eventos', [CalendarioController::class, 'events'], $crudRbac);
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run:
+- [x] **Step 4: Verificación enfocada** — Run:
 
 ```bash
 php tests/run.php Docs/CrudRbacRouter
@@ -567,9 +567,9 @@ php tests/run.php Kernel/CrudRbacMiddleware
 
 Expected: **PASS** — 4 + 7 + 3 tests, 0 failed.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel` / Expected: 0 failed.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel` / Expected: 0 failed.
 
-- [ ] **Step 6: Commit** — archivos: `src/Application/Services/CrudRoutePermissionResolver.php`, `src/Presentation/Middlewares/CrudRbacMiddleware.php`, `routes/web.php`, `skeleton/routes/web.php` / mensaje: `feat(rbac): add CrudRbacMiddleware for CRUD/calendario router defense (M3)`
+- [x] **Step 6: Commit** — archivos: `src/Application/Services/CrudRoutePermissionResolver.php`, `src/Presentation/Middlewares/CrudRbacMiddleware.php`, `routes/web.php`, `skeleton/routes/web.php` / mensaje: `feat(rbac): add CrudRbacMiddleware for CRUD/calendario router defense (M3)`
 
 ---
 
@@ -591,11 +591,11 @@ Expected: **PASS** — 4 + 7 + 3 tests, 0 failed.
 - Consumes: Task 4
 - Produces: doc § RBAC CRUD router; tag `v1.2.8`; PR hacia `main`
 
-- [ ] **Step 1: Escribir el test que falla** — N/A (doc/semver).
+- [x] **Step 1: Escribir el test que falla** — N/A (doc/semver).
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` **antes** del bump / Expected: PASS @ `1.2.3`.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` **antes** del bump / Expected: PASS @ `1.2.3`.
 
-- [ ] **Step 3: Implementar el cambio mínimo**
+- [x] **Step 3: Implementar el cambio mínimo**
 
 Actualizar `config/rbac_route_permissions.php`:
 
@@ -638,7 +638,7 @@ Añadir subsección **§5.1 RBAC dinámico CRUD/calendario** con diagrama de flu
 
 Bump semver en tres archivos a **`1.2.8`**.
 
-- [ ] **Step 4: Verificación enfocada** — Run:
+- [x] **Step 4: Verificación enfocada** — Run:
 
 ```bash
 php tests/run.php PlatformVersionSemver
@@ -649,7 +649,7 @@ git diff origin/main...HEAD --name-only
 
 Expected: semver 3 tests PASS; gates M3 PASS; grep ≥ `2`; diff sólo archivos del plan.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed.
 
 Distinción entorno: si PHP CLI ausente en agente cloud (bloqueador verificado 2026-08-06), ejecutar en runner local o CI post-merge; no marcar verde sin evidencia.
 
@@ -678,7 +678,7 @@ Audit: #84 (M3)
 Plan: docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md"
 ```
 
-- [ ] **Step 6: Commit / tag** — commit doc/config: `docs(rbac): document CrudRbacMiddleware router layer (M3)`; commit semver: `chore(release): bump platform version to 1.2.8 for CRUD router RBAC`; tag post-merge en `main`.
+- [x] **Step 6: Commit / tag** — commit doc/config: `docs(rbac): document CrudRbacMiddleware router layer (M3)`; commit semver: `chore(release): bump platform version to 1.2.8 for CRUD router RBAC`; tag post-merge en `main`.
 
 **Requiere operador humano:** sí — smoke O1 staging con rol restringido; bump Portal lock P1 (M6); QA responsive 403 en 320–768px (AC-UX4).
 
@@ -700,16 +700,16 @@ Plan: docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md"
 
 ## Criterios finales de aceptación
 
-- [ ] Rutas CRUD/calendario registran `CrudRbacMiddleware` harness + skeleton (AC1).
-- [ ] Usuario sin permiso recibe 403 **antes** del controlador (AC2).
-- [ ] Mensaje 403 incluye slug requerido HTML/JSON (AC3, U1–U3).
-- [ ] `CrudResourceService` / calendario mantienen `RbacService::verificar()` (AC4).
-- [ ] `php tests/run.php Docs/CrudRbacRouter` PASS (AC5).
-- [ ] `php tests/run.php Kernel/CrudRbacMiddleware` PASS (AC6).
-- [ ] Doc § RBAC + `rbac_route_permissions.php` actualizados (AC7, U8).
-- [ ] Tag `v1.2.8`; trío semver sincronizado; `PlatformVersionSemverTest` PASS (AC8).
-- [ ] Diff sin Marketing/Portal en `src/`; `SkeletonPurityTest` PASS (AC9).
-- [ ] AC-UX1–AC-UX4: modo normal documentado; U1–U8; carry-forward CF3–CF4, CF5′, CF7–CF10; smoke responsive 403.
+- [x] Rutas CRUD/calendario registran `CrudRbacMiddleware` harness + skeleton (AC1).
+- [x] Usuario sin permiso recibe 403 **antes** del controlador (AC2).
+- [x] Mensaje 403 incluye slug requerido HTML/JSON (AC3, U1–U3).
+- [x] `CrudResourceService` / calendario mantienen `RbacService::verificar()` (AC4).
+- [x] `php tests/run.php Docs/CrudRbacRouter` PASS (AC5).
+- [x] `php tests/run.php Kernel/CrudRbacMiddleware` PASS (AC6).
+- [x] Doc § RBAC + `rbac_route_permissions.php` actualizados (AC7, U8).
+- [x] Tag `v1.2.8`; trío semver sincronizado; `PlatformVersionSemverTest` PASS (AC8).
+- [x] Diff sin Marketing/Portal en `src/`; `SkeletonPurityTest` PASS (AC9).
+- [x] AC-UX1–AC-UX4: modo normal documentado; U1–U8; carry-forward CF3–CF4, CF5′, CF7–CF10; smoke responsive 403.
 
 ## Riesgos y rollback
 
@@ -736,13 +736,11 @@ Plan: docs/superpowers/plans/2026-08-06-audit-crud-rbac-router.md"
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-06T13:30:00Z (AUTOMATION-08) |
-| Plan creado UTC | 2026-08-06T12:40:00Z |
-| Framework `origin/main` referencia | `2d4bc7ae6420c609690e95cd845e7b7c45376cb4` |
-| Tareas completadas / totales | **0 / 5** |
-| Modo fuente | normal (spec+plan mergeados PR #85 @ `2d4bc7a`; audit #84 mergeado) |
-| Siguiente tarea ejecutable | **Task 1** — `CrudRbacRouterTest` (TDD rojo) |
-| Prerrequisitos | Ninguno — rutas CRUD/calendario existen sin middleware @ `2d4bc7a`; `demo_clientes` / `demo_citas` JSON verificados |
-| Bloqueos | AUTOMATION-07 no ejecutado (06 BLOCKED B1); Portal P1/P2 (M6); rama `feature/crud-rbac-router-m3` no existe aún (creable desde `main`) |
-| REL-C1 | REL-C1 retarget → semver **1.2.8+**; tags v1.2.4–v1.2.6 skip |
-| Estado | **Pendiente de implementación** |
+| Reconciliación UTC | 2026-08-13 |
+| Plan creado UTC | 2026-08-06 |
+| Framework `origin/main` verificado | `dc587b92ff7a646f744630d15625752290b9ef94` |
+| Tareas completadas / totales | 5 / 5 |
+| Evidencia | PR #114 / tag `v1.2.10` — `CrudRbacMiddleware`, `CrudRoutePermissionResolver`, tests Docs/CrudRbacRouter + Kernel/CrudRbacMiddleware |
+| Siguiente tarea ejecutable | — |
+| Bloqueos | Portal P1/P2 (M6) |
+| Estado | **Completo** — archivado 2026-08-13 |
