@@ -87,7 +87,7 @@
 - Consumes: `routes/api.php` y `skeleton/routes/api.php` sin `/api/health` (estado pre-implementación @ `42c3a0a`)
 - Produces: test que falla con mensaje accionable citando spec M4
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Docs/ApiHealthPublicRouteTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Docs/ApiHealthPublicRouteTest.php`:
 
 ```php
 <?php
@@ -141,15 +141,15 @@ test('HealthController declares public health() method', function () use ($root)
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ApiHealthPublicRoute` / Expected: **FAIL** — `missing GET /api/health in routes/api.php` (test 1); test 3 **FAIL** — `health()` ausente.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ApiHealthPublicRoute` / Expected: **FAIL** — `missing GET /api/health in routes/api.php` (test 1); test 3 **FAIL** — `health()` ausente.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 3 crea ruta y método.
+- [x] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 3 crea ruta y método.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ApiHealthPublicRoute` / Expected: FAIL (TDD rojo confirmado).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Docs/ApiHealthPublicRoute` / Expected: FAIL (TDD rojo confirmado).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/DeployScriptsRemoved` / Expected: PASS — 3 tests, 0 failed.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs/DeployScriptsRemoved` / Expected: PASS — 3 tests, 0 failed.
 
-- [ ] **Step 6: Commit** — archivos: `tests/Docs/ApiHealthPublicRouteTest.php` / mensaje: `test(docs): add ApiHealthPublicRouteTest gate for public /api/health (red)`
+- [x] **Step 6: Commit** — archivos: `tests/Docs/ApiHealthPublicRouteTest.php` / mensaje: `test(docs): add ApiHealthPublicRouteTest gate for public /api/health (red)`
 
 ---
 
@@ -169,7 +169,7 @@ test('HealthController declares public health() method', function () use ($root)
 - Consumes: Router + rutas actuales (sin `/api/health` pública)
 - Produces: test que demuestra ausencia de liveness pública y preservación de redirect en `/api/ping`
 
-- [ ] **Step 1: Escribir el test que falla** — crear `tests/Kernel/ApiHealthPublicDispatchTest.php`:
+- [x] **Step 1: Escribir el test que falla** — crear `tests/Kernel/ApiHealthPublicDispatchTest.php`:
 
 ```php
 <?php
@@ -242,15 +242,15 @@ test('Router dispatch does not return 200 JSON ok for /api/ping without session'
 });
 ```
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Kernel/ApiHealthPublicDispatch` / Expected: **FAIL** — test 1 (`health()` missing) y test 3 (body no JSON ok / 404).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Kernel/ApiHealthPublicDispatch` / Expected: **FAIL** — test 1 (`health()` missing) y test 3 (body no JSON ok / 404).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 3 implementa.
+- [x] **Step 3: Implementar el cambio mínimo** — **no en esta tarea**; Task 3 implementa.
 
-- [ ] **Step 4: Verificación enfocada** — Run: `php tests/run.php Kernel/ApiHealthPublicDispatch` / Expected: FAIL (TDD rojo).
+- [x] **Step 4: Verificación enfocada** — Run: `php tests/run.php Kernel/ApiHealthPublicDispatch` / Expected: FAIL (TDD rojo).
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel/SkeletonPurity` / Expected: PASS — 13 tests, 0 failed (rutas no afectan purity).
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel/SkeletonPurity` / Expected: PASS — 13 tests, 0 failed (rutas no afectan purity).
 
-- [ ] **Step 6: Commit** — archivos: `tests/Kernel/ApiHealthPublicDispatchTest.php` / mensaje: `test(kernel): add ApiHealthPublicDispatchTest gate (red)`
+- [x] **Step 6: Commit** — archivos: `tests/Kernel/ApiHealthPublicDispatchTest.php` / mensaje: `test(kernel): add ApiHealthPublicDispatchTest gate (red)`
 
 ---
 
@@ -272,11 +272,11 @@ test('Router dispatch does not return 200 JSON ok for /api/ping without session'
 - Consumes: tests Task 1–2 rojos
 - Produces: `GET /api/health` → 200 `{ "status": "ok" }`; `/api/ping` sin cambio
 
-- [ ] **Step 1: Escribir el test que falla** — tests Task 1–2 ya rojos.
+- [x] **Step 1: Escribir el test que falla** — tests Task 1–2 ya rojos.
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ApiHealthPublicRoute Kernel/ApiHealthPublicDispatch` / Expected: FAIL.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php Docs/ApiHealthPublicRoute Kernel/ApiHealthPublicDispatch` / Expected: FAIL.
 
-- [ ] **Step 3: Implementar el cambio mínimo**
+- [x] **Step 3: Implementar el cambio mínimo**
 
 En `src/Presentation/Controllers/Api/HealthController.php`, añadir método **después** de `ping()`:
 
@@ -307,7 +307,7 @@ $router->group([
 });
 ```
 
-- [ ] **Step 4: Verificación enfocada** — Run:
+- [x] **Step 4: Verificación enfocada** — Run:
 
 ```bash
 php tests/run.php Docs/ApiHealthPublicRoute
@@ -328,9 +328,9 @@ kill %1
 
 Expected: `{"status":"ok"}` (pretty-print opcional) y exit 0 de curl.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel` / Expected: 0 failed.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Kernel` / Expected: 0 failed.
 
-- [ ] **Step 6: Commit** — archivos: `routes/api.php`, `skeleton/routes/api.php`, `src/Presentation/Controllers/Api/HealthController.php` / mensaje: `feat(api): add public GET /api/health liveness endpoint (M4)`
+- [x] **Step 6: Commit** — archivos: `routes/api.php`, `skeleton/routes/api.php`, `src/Presentation/Controllers/Api/HealthController.php` / mensaje: `feat(api): add public GET /api/health liveness endpoint (M4)`
 
 ---
 
@@ -350,11 +350,11 @@ Expected: `{"status":"ok"}` (pretty-print opcional) y exit 0 de curl.
 - Consumes: endpoint Task 3
 - Produces: § Monitoreo con tabla `/api/health` vs `/api/ping` y curl copy-paste
 
-- [ ] **Step 1: Escribir el test que falla** — N/A (doc-only; gates Task 1–2 ya verdes).
+- [x] **Step 1: Escribir el test que falla** — N/A (doc-only; gates Task 1–2 ya verdes).
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — N/A.
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — N/A.
 
-- [ ] **Step 3: Implementar el cambio mínimo** — insertar antes de `## Checklist pre/post deploy por entorno`:
+- [x] **Step 3: Implementar el cambio mínimo** — insertar antes de `## Checklist pre/post deploy por entorno`:
 
 ````markdown
 ## Monitoreo / health checks
@@ -387,11 +387,11 @@ Sin cookie, un `302` hacia `/login` es **esperado** — no indica caída del sit
 **WhatsApp API:** `GET /api/v1/health` en `WhatsApiLebytek` es un contrato distinto (Bearer token) — no confundir con el tenant PHP del framework.
 ````
 
-- [ ] **Step 4: Verificación enfocada** — Run: `grep -c '/api/health' docs/core/despliegue-y-versionado.md` / Expected: salida ≥ `3`.
+- [x] **Step 4: Verificación enfocada** — Run: `grep -c '/api/health' docs/core/despliegue-y-versionado.md` / Expected: salida ≥ `3`.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs` / Expected: PASS incluyendo `ApiHealthPublicRouteTest`.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php Docs` / Expected: PASS incluyendo `ApiHealthPublicRouteTest`.
 
-- [ ] **Step 6: Commit** — archivos: `docs/core/despliegue-y-versionado.md` / mensaje: `docs: add Monitoreo section distinguishing /api/health vs /api/ping`
+- [x] **Step 6: Commit** — archivos: `docs/core/despliegue-y-versionado.md` / mensaje: `docs: add Monitoreo section distinguishing /api/health vs /api/ping`
 
 ---
 
@@ -413,11 +413,11 @@ Sin cookie, un `302` hacia `/login` es **esperado** — no indica caída del sit
 - Consumes: Tasks 1–4
 - Produces: tag Git `v1.2.8`; PR hacia `main`
 
-- [ ] **Step 1: Escribir el test que falla** — N/A.
+- [x] **Step 1: Escribir el test que falla** — N/A.
 
-- [ ] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` **antes** del bump / Expected: PASS @ `1.2.3` (baseline).
+- [x] **Step 2: Ejecutar el test y comprobar el fallo** — Run: `php tests/run.php PlatformVersionSemver` **antes** del bump / Expected: PASS @ `1.2.3` (baseline).
 
-- [ ] **Step 3: Implementar el cambio mínimo** — actualizar **los tres** archivos al mismo valor `1.2.8`:
+- [x] **Step 3: Implementar el cambio mínimo** — actualizar **los tres** archivos al mismo valor `1.2.8`:
 
 ```bash
 # composer.json → "version": "1.2.8"
@@ -427,7 +427,7 @@ Sin cookie, un `302` hacia `/login` es **esperado** — no indica caída del sit
 
 No modificar `composer.lock` del paquete library (no aplica en package source).
 
-- [ ] **Step 4: Verificación enfocada** — Run:
+- [x] **Step 4: Verificación enfocada** — Run:
 
 ```bash
 php tests/run.php PlatformVersionSemver
@@ -438,7 +438,7 @@ git diff origin/main...HEAD --name-only
 
 Expected: semver 3 tests PASS; health gates PASS; diff contiene **solo** archivos del plan (routes, skeleton routes, HealthController, tests, doc, tres versiones) — **sin** Marketing/Portal en `src/`.
 
-- [ ] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed.
+- [x] **Step 5: Regresión relevante** — Run: `php tests/run.php` / Expected: 0 failed.
 
 Distinción entorno: si PHP CLI ausente en agente cloud, ejecutar en runner local o post-merge CI (plan D7); no marcar verde sin evidencia.
 
@@ -467,7 +467,7 @@ Audit: #67 (M4)
 Plan: docs/superpowers/plans/2026-08-05-audit-api-health-public.md"
 ```
 
-- [ ] **Step 6: Commit / tag** — commit semver: `chore(release): bump platform version to 1.2.8 for /api/health`; tag post-merge en `main`.
+- [x] **Step 6: Commit / tag** — commit semver: `chore(release): bump platform version to 1.2.8 for /api/health`; tag post-merge en `main`.
 
 **Requiere operador humano:** sí — reconfigurar LB/cron de `/api/ping` → `/api/health` en VPS (P2); bump `composer.lock` Portal post-tag (P1/M6).
 
@@ -489,14 +489,14 @@ Plan: docs/superpowers/plans/2026-08-05-audit-api-health-public.md"
 
 ## Criterios finales de aceptación
 
-- [ ] `GET /api/health` → 200 `{ "status": "ok" }` sin cookie (AC1).
-- [ ] `GET /api/ping` sin sesión no retorna 200 JSON ok (AC2).
-- [ ] `php tests/run.php Docs/ApiHealthPublicRoute` PASS (AC3).
-- [ ] `php tests/run.php Kernel/ApiHealthPublicDispatch` PASS (AC4).
-- [ ] `skeleton/routes/api.php` espeja harness (AC5).
-- [ ] § Monitoreo documentado (AC6).
-- [ ] Tag `v1.2.8`; tres fuentes semver sincronizadas; `PlatformVersionSemverTest` PASS (AC7).
-- [ ] Diff sin lógica Marketing/Portal en `src/` (AC8).
+- [x] `GET /api/health` → 200 `{ "status": "ok" }` sin cookie (AC1).
+- [x] `GET /api/ping` sin sesión no retorna 200 JSON ok (AC2).
+- [x] `php tests/run.php Docs/ApiHealthPublicRoute` PASS (AC3).
+- [x] `php tests/run.php Kernel/ApiHealthPublicDispatch` PASS (AC4).
+- [x] `skeleton/routes/api.php` espeja harness (AC5).
+- [x] § Monitoreo documentado (AC6).
+- [x] Tag `v1.2.8`; tres fuentes semver sincronizadas; `PlatformVersionSemverTest` PASS (AC7).
+- [x] Diff sin lógica Marketing/Portal en `src/` (AC8).
 
 ## Riesgos y rollback
 
@@ -522,13 +522,11 @@ Plan: docs/superpowers/plans/2026-08-05-audit-api-health-public.md"
 
 | Campo | Valor |
 |-------|-------|
-| Reconciliación UTC | 2026-08-06T12:40:00Z (AUTOMATION-03 — reconciliación diaria) |
-| Plan creado UTC | 2026-08-05T12:40:00Z |
-| Framework `origin/main` verificado | `ddc55ec8fb025acfada9500d711bbbe8843f5997` |
-| Tareas completadas / totales | **0 / 5** |
-| Modo fuente | normal (spec PR #81 @ `automation/spec-2026-08-05`) |
-| Siguiente tarea ejecutable | **Task 1** — `ApiHealthPublicRouteTest` (TDD rojo) |
-| Prerrequisitos | Ninguno — `HealthController::ping()` existe @ `ddc55ec`; `/api/health` ausente; tests `ApiHealthPublicRouteTest` / `ApiHealthPublicDispatchTest` ausentes; semver `1.2.3` |
-| Bloqueos | PHP CLI ausente en agente cloud (verificado 2026-08-06) — ejecutor debe correr gates en entorno PHP ≥8.1; Portal P1/P2 requiere operador (M6 gh 404); rama `feature/api-health-public-m4` no existe aún (creable desde `main`) |
-| REL-C1 | REL-C1 retarget → semver **1.2.8+**; tags v1.2.4–v1.2.6 skip |
-| Estado | **Pendiente de implementación** |
+| Reconciliación UTC | 2026-08-13 |
+| Plan creado UTC | 2026-08-05 |
+| Framework `origin/main` verificado | `dc587b92ff7a646f744630d15625752290b9ef94` |
+| Tareas completadas / totales | 5 / 5 |
+| Evidencia | PR #114 / tag `v1.2.10` — `routes/api.php` L15, `HealthController::health()`, tests Docs/ApiHealthPublic + Kernel/ApiHealthPublicDispatch |
+| Siguiente tarea ejecutable | — |
+| Bloqueos | Portal P1/P2 (M6); tag publicado en tren `v1.2.10` (no `v1.2.8` como plan original) |
+| Estado | **Completo** — archivado 2026-08-13 |
