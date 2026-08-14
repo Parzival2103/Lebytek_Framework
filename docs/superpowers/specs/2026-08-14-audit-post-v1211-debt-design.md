@@ -42,7 +42,7 @@ Este spec **consolida y actualiza** la línea `#121`/`#123` con provenance 2026-
 | SHA Portal inspeccionado | **No verificado** — `gh api repos/Parzival2103/Lebytek_Portal/commits/main` → HTTP 404; `gh repo view Parzival2103/Lebytek_Portal` → GraphQL «Could not resolve to a Repository». Última evidencia operativa documentada: `a79d3ad` @ Portal `main` con `lebytek/framework` v1.1.0 (auditoría 2026-07-27, verificación SSH). |
 | SHA WhatsApi inspeccionado | `f3f3ec79202b09fff947fa034e5beeb2b0aa12e3` @ `main` (sin cambio desde 2026-08-02) |
 | Rama generada | `automation/spec-2026-08-14` |
-| Timestamp UTC | trigger cron `2026-08-14T12:13:10Z` / corrida agente `2026-08-14T12:13:10Z` |
+| Timestamp UTC | trigger cron `2026-08-14T12:13:10Z` / corrida agente `2026-08-14T12:13:10Z` / pase ux `2026-08-14T12:38:46Z` (modo **normal**) |
 | Nivel de fuente | **A** — PR #124 abierto, título `docs(audit): auditoría técnica diaria 2026-08-14`, `baseRefName=main`, `mergeable=MERGEABLE`. Diff único: `docs/audits/2026-08-14-auditoria-tecnica-diaria.md`. `git merge-base --is-ancestor origin/main 9af4cae` → exit 0; ningún commit de `origin/main..refs/tags/archive/backoffice-api-integration` es ancestro del head audit. |
 | PR auditoría fuente | #124 — https://github.com/Parzival2103/Lebytek_Framework/pull/124 |
 | headRefOid fuente | `9af4cae465faff1c28c0f50eda2bbd6fdda61ee0` (rama audit; **no heredada**) |
@@ -305,6 +305,75 @@ Lote **Framework-first** en plan `docs/superpowers/plans/2026-08-14-audit-post-v
 
 ---
 
+## Compatibilidad, UX y responsive
+
+### Modo del pase: normal
+
+Este spec es **deuda post-v1.2.11** (M11 harness, M5 RBAC permisos, P-LOCK consumidor, hygiene docs). La superficie UI verificable concentra **M5**: rutas `/admin/administracion/permisos/*`, pantallas **403** (HTML flash + JSON AJAX) y catálogo permisos existente (`src/Presentation/Views/admin/permisos/*` con `table-responsive`). **M11** afecta DX desarrollador (`php tests/run.php` monolítico). **P-LOCK** afecta flujos ops (checklist bump lock). No modifica login, dashboard nav ni layouts globales — permanecen carry-forward.
+
+### Compatibilidad (verificado vs carry-forward)
+
+| Área | Este spec (F1–F8, P1) | Evidencia / carry-forward |
+|------|------------------------|---------------------------|
+| PHP soportado | Sin cambio runtime | `composer.json` exige `>=8.2`; VPS documentado PHP **8.4.22** CLI/pool (`2026-07-26-skeleton-package-staging-design.md`) — compatible. M11/M5 no requieren extensiones nuevas. Consumidores en **8.1** deben subir runtime antes de bump ≥ `1.2.11`. |
+| Instalación vía `vendor/` | **Contrato P-LOCK** | Consumidores obtienen M5 + M11 fix tras bump `lebytek/framework` al tag ≥ `1.2.12` (propuesto) o mínimo `1.2.11` para C4 — **no** checkout de rama ni parche en `vendor/`. Migración M5 vía manifiesto `config/modules/core.php`; skeleton espeja rutas. |
+| Health sin cookie de sesión | **Resuelto (M4)** — sin alcance | `routes/api.php` L14–15 — `GET /api/health` público (M4 ship `#114` / `v1.2.10`). Smoke LB: **no** usar `/api/ping` (exige sesión). M11 no debe reintroducir contaminación que falsee tests ping en monolito. |
+| `.env.example` sin vars Portal | **Resuelto (M2)** — sin alcance | Root `.env.example` L53–55 remite `MKT_*`/`LEBYTEK_API_*`/`WAAPI_PORTAL_*` a Portal; M5/M11 no introducen env vars nuevas. |
+| Navegadores objetivo | Superficie admin permisos + 403 | Baseline `docs/core/ui_ux.md`: admin breakpoint **992px (`lg`)**. Chrome, Firefox, Safari, Edge últimas 2 versiones + iOS Safari ≥ 15; sin IE11. Flash 403 y tablas permisos legibles en **320–768px**. |
+
+### UX — flujos admin permisos (M5, F3–F5)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U1** | 403 HTML en rutas permisos incluye slug **`permisos.gestionar`** explícito — operador distingue permiso faltante de error genérico (extiende `RbacMiddleware` actual que no expone slug en flash) | F4, AC-M5-4 |
+| **U2** | Copy accionable: qué falló (acceso al catálogo permisos denegado) + qué hacer (solicitar `permisos.gestionar` al administrador o revisar rol en **Usuarios/Roles**) — no sólo «No tienes permiso para acceder a esta sección.» | F4, CF10 parcial |
+| **U3** | Peticiones AJAX: JSON 403 `{ "error": "Acceso denegado.", "permiso": "permisos.gestionar" }` — coherente con contrato M3 spec 2026-08-06 | F4 |
+| **U4** | Usuario con solo `administracion.ver` (ajustes) **no** accede a `/admin/administracion/permisos/*` — comportamiento deseado documentado en doc RBAC § catálogo permisos (F6) para evitar confusión «regresión» | F6, AC-M5-4 |
+| **U5** | `PermisosGestionarSlugTest`: mensaje de fallo cita spec M5, archivo SQL/seed y acción («INSERT slug permisos.gestionar + registrar migración en core.php») | F5 |
+| **U6** | Empty state catálogo permisos (`index.php` L22–23): hint accionable «Crea permisos para usarlos en roles y menú» + CTA «Crear permiso» visible — sin regresión post-M5 | F4 |
+
+### UX — harness desarrollador (M11, F1–F2)
+
+| Requisito | Criterio | Deuda |
+|-----------|----------|-------|
+| **U7** | `php tests/run.php` monolítico (sin MySQL): 0 fails en `ApiHealthPublicDispatchTest` por sesión residual — desarrollador no interpreta falso negativo M4 | F1, AC-M11-3 |
+| **U8** | `MonolithicHarnessSessionIsolationTest`: mensaje de fallo indica helper `microtest_reset_session()` ausente y acción («invocar reset tras cada test() en microtest.php») | F2 |
+| **U9** | Doc release `v1.2.12`: nota explícita «M11 = fix DX local monolito; CI aislado no afectado» — operador no confunde con regresión producción | F8 |
+
+### UX — cadena consumidor P-LOCK (P1, ops)
+
+| Requisito | Criterio | Estado |
+|-----------|----------|--------|
+| **U10** | Checklist ops § `docs/release/v1.2.11.md` consumidores: pasos ordenados (bump lock → migrate → smoke CAS staging → prod) con copy-paste — operador no adivina secuencia | P1 — **no verificado** M6 |
+| **U11** | Smoke CAS post-bump: mensaje conflicto transición indica **qué hacer** (refrescar, revisar versión, reintentar) — validación de C4 consumido, no error opaco | P2 — **bloqueado** M6 |
+| **U12** | `composer update` fallido por semver: mensaje Composer indica versión mínima (`>=1.2.11` / ideal `1.2.12`) y acción («composer require lebytek/framework:^1.2.12») | P-LOCK |
+
+### Responsive — smoke en superficies tocadas (M5)
+
+Referencia: `docs/core/ui_ux.md` §542 — breakpoint admin **992px (`lg`)**; tablas exigen `table-responsive` (`ui_ux.md` L222).
+
+| Superficie | Verificación post-merge | Rango |
+|------------|-------------------------|-------|
+| Página 403 / flash RBAC permisos | Mensaje U1–U2 legible; enlace «volver» usable; sin scroll horizontal; tap targets ≥44px | **320–768px** |
+| Catálogo permisos (`permisos/index.php`) | `table-responsive` + agrupación por módulo sin overflow; toolbar «Crear permiso» accesible | **320–768px** |
+| Formularios crear/editar permiso | Campos apilados legibles; botones Cancelar/Guardar sin solapamiento | **320–768px** |
+| Login / dashboard nav (sin alcance directo) | Carry-forward CF3–CF4 — smoke opcional post-merge | **320–768px** |
+
+### Carry-forward UX — próximo spec con superficie UI más amplia
+
+Ítems derivados de deuda abierta verificada; **CF8 (permisos admin catálogo / M5) queda cubierto por este spec** — no arrastrar. **CF7 (health público / M4)**, **CF6 (RBAC router CRUD / M3)** y **CRUD-C4** resueltos — no arrastrar. CF1–CF2 (trío semver + env purge), CF5 parcial (`mkt_leads` spec 2026-08-03) y D7 (CI spec 2026-08-04) tampoco se arrastran.
+
+| # | Ítem | Origen | Requisito concreto |
+|---|------|--------|-------------------|
+| CF3 | Login responsive 320–768px | `ui_ux.md` | `.ct-login-page`, `.ct-login-card` sin overflow horizontal; tap targets ≥44px; sin scroll lateral en 320px. |
+| CF4 | Dashboard admin responsive 320–768px | layouts side/top/bottom | Nav colapsable; KPI grid legible; topbar sin solapamiento de acciones. |
+| CF5′ | Tablas CRUD restantes | módulo CRUD, D6 | `table-responsive` + `list.columns[].priority` en recursos distintos de `mkt_leads`; toolbar móvil. |
+| CF9 | Estados vacío / error / carga (global) | `ui_ux.md` §8 | Unificar empty states en CRUDs sin hook; spinners list; validación con hint de corrección — más allá de U6 permisos. |
+| CF10 | Copy errores accionables (transversal) | transversal | Auth, wizard install, CRUD save: qué falló + qué hacer — extiende U2 fuera de RBAC 403 permisos. |
+| CF11 | Pantalla estado sistema post-tag | O2, D6 | `/admin/sistema/estado` muestra versión Framework legible en 320–768px tras deploy skeleton/staging — verificación manual bloqueada por D6/M6. |
+
+---
+
 ## Criterios de aceptación
 
 ### M11 harness
@@ -336,6 +405,13 @@ Lote **Framework-first** en plan `docs/superpowers/plans/2026-08-14-audit-post-v
 
 - [ ] **AC-D3:** CRUD-C4, M3, M4, REL-C1 reconciliados como **resueltos**; M11/M5/P-LOCK como abiertos con evidencia tip `cea890e`.
 - [ ] **AC-D4:** M6, M10, D6 documentados como ops — sin auto-fix en corrida desatendida.
+
+### Compatibilidad, UX y responsive
+
+- [ ] **AC-UX1:** Sección **Compatibilidad, UX y responsive** declara modo **normal** con requisitos K/U/R verificables para M5 (403 permisos, catálogo admin), M11 (DX monolito) y P-LOCK (checklist ops).
+- [ ] **AC-UX2:** Requisitos U1–U12 (slug en 403, copy accionable, JSON AJAX, distinción administracion.ver vs permisos.gestionar, hints test gate M5/M11, empty state permisos, checklist P-LOCK) incluidos como criterios del spec.
+- [ ] **AC-UX3:** Carry-forward CF3–CF4, CF5′, CF9–CF11 documentado; CF8 no arrastrado (cubierto por M5 este spec); CF6, CF7, CRUD-C4 no arrastrados (resueltos); CF1–CF2, CF5 parcial y D7 no arrastrados (resueltos o cubiertos en specs previos).
+- [ ] **AC-UX4:** Smoke responsive en **320–768px** para 403/flash permisos y catálogo/formularios permisos post-implementación M5 (sin regresión `table-responsive`).
 
 ---
 
