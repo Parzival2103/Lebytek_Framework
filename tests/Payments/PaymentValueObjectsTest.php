@@ -37,6 +37,33 @@ test('CheckoutRequest exige mode payment o subscription', function (): void {
     assert_same('01JABCDEF', $req->externalRef());
 });
 
+test('CheckoutRequest idempotencyKey es null por defecto y acepta override', function (): void {
+    $default = new CheckoutRequest(
+        money: Money::fromMajor(100.0, 'mxn'),
+        description: 'Cobro',
+        customerEmail: 'a@b.com',
+        successUrl: 'https://example.com/ok',
+        cancelUrl: 'https://example.com/ko',
+        externalRef: '01JCOBROREF00000000000001',
+        metadata: ['cobro_public_id' => '01JCOBROREF00000000000001'],
+        mode: 'payment',
+    );
+    assert_true($default->idempotencyKey() === null);
+
+    $custom = new CheckoutRequest(
+        money: Money::fromMajor(100.0, 'mxn'),
+        description: 'Cobro',
+        customerEmail: 'a@b.com',
+        successUrl: 'https://example.com/ok',
+        cancelUrl: 'https://example.com/ko',
+        externalRef: '01JCOBROREF00000000000001',
+        metadata: ['cobro_public_id' => '01JCOBROREF00000000000001'],
+        mode: 'payment',
+        idempotencyKey: '01JCOBROREF00000000000001-a2',
+    );
+    assert_same('01JCOBROREF00000000000001-a2', $custom->idempotencyKey());
+});
+
 test('PaymentEvent normaliza tipo completado e Ignored', function (): void {
     $done = new PaymentEvent(
         type: PaymentEventType::CheckoutCompleted,

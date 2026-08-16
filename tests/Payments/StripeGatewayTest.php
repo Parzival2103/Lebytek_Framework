@@ -95,8 +95,9 @@ test('StripeGateway evento no mapeado devuelve Ignored', function (): void {
     assert_same(PaymentEventType::Ignored, $event->type());
 });
 
-test('StripeGateway createCheckout documenta idempotency_key = externalRef', function (): void {
+test('StripeGateway createCheckout usa idempotencyKey o cae a externalRef', function (): void {
     $source = (string) file_get_contents(ROOT_PATH . '/src/Infrastructure/Payments/StripeGateway.php');
     assert_true(str_contains($source, 'idempotency_key'));
+    assert_true(str_contains($source, 'idempotencyKey()'));
     assert_true(str_contains($source, 'externalRef()'));
 });

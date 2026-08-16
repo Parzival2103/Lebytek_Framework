@@ -16,6 +16,7 @@ final class CheckoutRequest
         private readonly string $externalRef,
         private readonly array $metadata,
         private readonly string $mode,
+        private readonly ?string $idempotencyKey = null,
     ) {
         if (! in_array($mode, ['payment', 'subscription'], true)) {
             throw new \InvalidArgumentException('mode must be payment or subscription');
@@ -31,4 +32,5 @@ final class CheckoutRequest
     /** @return array<string, string> */
     public function metadata(): array { return $this->metadata; }
     public function mode(): string { return $this->mode; }
+    public function idempotencyKey(): ?string { return $this->idempotencyKey; }
 }

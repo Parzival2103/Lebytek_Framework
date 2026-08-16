@@ -29,6 +29,10 @@ final class StripeGateway implements PaymentGatewayInterface, SupportsSubscripti
     public function createCheckout(CheckoutRequest $request): CheckoutSession
     {
         $money = $request->money();
+        $idempotencyKey = trim((string) ($request->idempotencyKey() ?? ''));
+        if ($idempotencyKey === '') {
+            $idempotencyKey = $request->externalRef();
+        }
         $session = Session::create(
             [
                 'mode' => $request->mode(),
@@ -47,7 +51,7 @@ final class StripeGateway implements PaymentGatewayInterface, SupportsSubscripti
                     'order_public_id' => $request->externalRef(),
                 ]),
             ],
-            ['idempotency_key' => $request->externalRef()],
+            ['idempotency_key' => $idempotencyKey],
         );
 
         return new CheckoutSession(
